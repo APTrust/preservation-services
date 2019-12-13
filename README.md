@@ -23,3 +23,17 @@ You also need Go 1.11 or later. Preferably Go 1.13 or later.
 With all that, you can run:
 
 `go run poc.go`
+
+
+## Redis
+
+On Mac: `brew install redis`
+
+Start: `brew services start redis`
+
+Stop: `brew services stop redis`
+
+Or: `redis-server /usr/local/etc/redis.conf`
+
+Redis runs on localhost, port 6379. By default, its DB files are in
+/usr/local/var/db/redis/.
