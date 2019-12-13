@@ -27,6 +27,9 @@ With all that, you can run:
 
 ## Redis
 
+You'll need redis installed to run redis.go, which doesn't do much yet other than
+prove it can connect, save a key and retrieve a key.
+
 On Mac: `brew install redis`
 
 Start: `brew services start redis`
@@ -35,5 +38,5 @@ Stop: `brew services stop redis`
 
 Or: `redis-server /usr/local/etc/redis.conf`
 
-Redis runs on localhost, port 6379. By default, its DB files are in
+Redis runs on localhost:6379. By default, its DB files are in
 /usr/local/var/db/redis/.
