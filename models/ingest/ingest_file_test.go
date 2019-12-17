@@ -12,7 +12,7 @@ const objIdentifier = "test.edu/test-bag"
 func TestNewIngestFile(t *testing.T) {
 	f := ingest.NewIngestFile(objIdentifier, "data/image.jpg")
 	assert.NotNil(t, f.Checksums)
-	assert.EqualValues(t, 0, f.ExistingVersionId)
+	assert.EqualValues(t, 0, f.Id)
 	assert.Equal(t, objIdentifier, f.ObjectIdentifier)
 	assert.True(t, f.NeedsSave)
 	assert.Equal(t, "data/image.jpg", f.PathInBag)

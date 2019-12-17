@@ -7,28 +7,27 @@ import (
 )
 
 type IngestFile struct {
-	Checksums         []*IngestChecksum `json:"checksums"`
-	ErrorMessage      string            `json:"ingesterror_message,omitempty"`
-	ExistingVersionId int64             `json:"existing_version_id,omitempty"`
-	FileFormat        string            `json:"file_format,omitempty"`
-	NeedsSave         bool              `json:"needs_save,omitempty"`
-	ObjectIdentifier  string            `json:"object_identifier,omitempty"`
-	PathInBag         string            `json:"path_in_bag,omitempty"`
-	Size              int64             `json:"size,omitempty"`
-	StorageOption     string            `json:"storage_option"`
-	StorageRecords    []*StorageRecord  `json:"storage_records"`
-	UUID              string            `json:"uuid,omitempty"`
+	Checksums        []*IngestChecksum `json:"checksums"`
+	ErrorMessage     string            `json:"ingesterror_message,omitempty"`
+	FileFormat       string            `json:"file_format,omitempty"`
+	Id               int64             `json:"id,omitempty"`
+	NeedsSave        bool              `json:"needs_save,omitempty"`
+	ObjectIdentifier string            `json:"object_identifier,omitempty"`
+	PathInBag        string            `json:"path_in_bag,omitempty"`
+	Size             int64             `json:"size,omitempty"`
+	StorageOption    string            `json:"storage_option"`
+	StorageRecords   []*StorageRecord  `json:"storage_records"`
+	UUID             string            `json:"uuid,omitempty"`
 }
 
 func NewIngestFile(objIdentifier, pathInBag string) *IngestFile {
 	return &IngestFile{
-		Checksums:         make([]*IngestChecksum, 0),
-		ExistingVersionId: 0,
-		NeedsSave:         true,
-		ObjectIdentifier:  objIdentifier,
-		PathInBag:         pathInBag,
-		StorageOption:     "Standard",
-		StorageRecords:    make([]*StorageRecord, 0),
+		Checksums:        make([]*IngestChecksum, 0),
+		NeedsSave:        true,
+		ObjectIdentifier: objIdentifier,
+		PathInBag:        pathInBag,
+		StorageOption:    "Standard",
+		StorageRecords:   make([]*StorageRecord, 0),
 	}
 }
 
