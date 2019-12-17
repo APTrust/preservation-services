@@ -11,14 +11,18 @@ import (
 )
 
 type PreProcessor struct {
-	TarReader    *tar.Reader
 	IngestObject *ingest.IngestObject
+	TarReader    *tar.Reader
+	TempDir      string
+	TempFiles    []string
 }
 
-func NewPreProcessor(reader *io.Reader, ingestObject *ingest.IngestObject) *PreProcessor {
+func NewPreProcessor(reader *io.Reader, ingestObject *ingest.IngestObject, tempDir string) *PreProcessor {
 	return &PreProcessor{
-		TarReader:    tar.NewReader(reader),
 		IngestObject: ingestObject,
+		TarReader:    tar.NewReader(reader),
+		TempDir:      tempDir,
+		TempFiles:    make([]string, 0),
 	}
 }
 
@@ -32,7 +36,7 @@ func (p *PreProcessor) ProcessNextEntry(tarReader *tar.Reader) (ingestFile *inge
 	}
 	if header.Typeflag == tar.TypeReg || header.Typeflag == tar.TypeRegA {
 		ingestFile = p.initIngestFile(header)
-		p.addChecksums(ingestFile)
+		p.processFile(ingestFile)
 	}
 	return ingestFile, nil
 }
@@ -49,14 +53,38 @@ func (p *PreProcessor) initIngestFile(header *tar.Header) (ingestFile *ingest.In
 	return ingestFile
 }
 
-func (p *PreProcessor) addChecksums(header *tar.Header) error {
+// Calculates the file's checksums, and saves it to a temp file
+// if the file is a manifest, tag manifest, or parsable tag file.
+func (p *PreProcessor) processFile(ingestFile *ingest.IngestFile) error {
 	md5Hash := md5.New()
 	sha256Hash := sha256.New()
-	multiWriter := io.MultiWriter(md5Hash, sha256Hash)
+	writers := []*io.Writer{
+		md5Hash,
+		sha256Hash,
+	}
+	tempFilePath := p.getTempFilePath(ingestFile)
+	if tempFilePath != "" {
+		tempFile, err := os.Create(tempFilePath)
+		if err != nil {
+			return fmt.Errorf(
+				"Cannot write temp file for ingestFile.Identifier: %s",
+				err.Error())
+		}
+		defer tempFile.Close()
+		writers = append(writers, tempFile)
+		p.TempFiles = append(p.TempFiles, tempFilePath)
+	}
+	multiWriter := io.MultiWriter(writers...)
 	_, err := io.Copy(multiWriter, tarReader)
 	if err != nil {
 		return err
 	}
+	p.addChecksums(ingestFile, md5Hash, sha256Hash)
+	return nil
+}
+
+// Adds the checksums to the IngestFile object.
+func (p *PreProcessor) addChecksums(ingestFile *ingest.IngestFile, md5Hash, sha256Hash hash.Hash) {
 	now := time.Now()
 	md5Checksum := &IngestChecksum{
 		Algorithm: constants.AlgMd5,
@@ -70,6 +98,21 @@ func (p *PreProcessor) addChecksums(header *tar.Header) error {
 		Digest:    fmt.Sprintf("%x", sha256Hash.Sum(nil)),
 		Source:    constants.SourceIngest,
 	}
+	ingestFile.SetChecksum(md5Checksum)
+	ingestFile.SetChecksum(sha256Checksum)
 }
 
-// Need to read manifests, tag manifests, and tag files.
+// Returns a tempfile path for a manifest, tagmanifest, or parsable
+// tag file that we want to write to disk for further processing.
+// Returns an empty string if we don't need to write this file to
+// a tempfile.
+func (p *PreProcessor) getTempFilePath(ingestFile *ingest.IngestFile) string {
+	tempFilePath := ""
+	fileType := ingestFile.FileType()
+	if fileType == constants.FileTypeManifest ||
+		fileType == FileTypeTagManifest ||
+		ingestFile.IsParsableTagFile() {
+		tempFilePath = path.Join(p.TempDir, ingestFile.PathInBag)
+	}
+	return tempFilePath
+}
