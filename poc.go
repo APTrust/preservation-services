@@ -1,6 +1,6 @@
 package main
 
-// required env GO111MODULE=on
+// requires env GO111MODULE=on
 import (
 	"archive/tar"
 	"crypto/md5"
