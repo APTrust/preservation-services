@@ -138,6 +138,10 @@ Example: `31337:State`
 
 Value: ObjectJSON (similar to the operation results collection in WorkItemState)
 
+## Storage and Fetching
+
+To get all keys related to a WorkItem, use [scan](https://redis.io/commands/scan) or store items as hashes using [hset](https://redis.io/commands/hset) and [hget](https://redis.io/commands/hget). Use (hscan)[https://redis.io/commands/hscan] and/or (hkeys)[https://redis.io/commands/hkeys] to list keys.
+
 # Fixity and Deletion
 
 The fixity and deletion workers would not be affected by the architectural changes described above.
