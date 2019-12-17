@@ -45,11 +45,6 @@ func (p *PreProcessor) initIngestFile(header *tar.Header) (ingestFile *ingest.In
 	fileIdentifier := fmt.Sprintf(p.IngestObject.Identifier, header.Name)
 	ingestFile = ingest.NewIngestFile(fileIdentifier)
 	ingestFile.Size = header.Size
-	ingestFile.Mode = header.Mode
-	ingestFile.Uid = header.Uid
-	ingestFile.Gid = header.Gid
-	ingestFile.Uname = header.Uname
-	ingestFile.Gname = header.Gname
 	return ingestFile
 }
 

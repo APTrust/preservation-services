@@ -4,55 +4,49 @@ import (
 	"fmt"
 	"github.com/APTrust/preservation-services/constants"
 	"strings"
-	"time"
 )
 
 type IngestFile struct {
 	Checksums         []*IngestChecksum `json:"checksums"`
 	ErrorMessage      string            `json:"ingesterror_message,omitempty"`
 	ExistingVersionId int64             `json:"existing_version_id,omitempty"`
-	FileCreated       time.Time         `json:"file_created,omitempty"`
-	Format            string            `json:"file_format,omitempty"`
-	Gid               int               `json:"file_gid,omitempty"`
-	Gname             string            `json:"file_gname,omitempty"`
-	Id                int               `json:"id,omitempty"`
-	Identifier        string            `json:"identifier,omitempty"`
-	Mode              int64             `json:"file_mode,omitempty"`
-	Modified          time.Time         `json:"file_modified,omitempty"`
+	FileFormat        string            `json:"file_format,omitempty"`
 	NeedsSave         bool              `json:"needs_save,omitempty"`
+	ObjectIdentifier  string            `json:"object_identifier,omitempty"`
 	PathInBag         string            `json:"path_in_bag,omitempty"`
 	Size              int64             `json:"size,omitempty"`
-	State             string            `json:"state,omitempty"`
 	StorageOption     string            `json:"storage_option"`
 	StorageRecords    []*StorageRecord  `json:"storage_records"`
 	UUID              string            `json:"uuid,omitempty"`
-	Uid               int               `json:"file_uid,omitempty"`
-	Uname             string            `json:"file_uname,omitempty"`
 }
 
 func NewIngestFile(objIdentifier, pathInBag string) *IngestFile {
 	return &IngestFile{
 		Checksums:         make([]*IngestChecksum, 0),
 		ExistingVersionId: 0,
-		Identifier:        fmt.Sprintf("%s/%s", objIdentifier, pathInBag),
 		NeedsSave:         true,
+		ObjectIdentifier:  objIdentifier,
 		PathInBag:         pathInBag,
-		State:             "A",
 		StorageOption:     "Standard",
 		StorageRecords:    make([]*StorageRecord, 0),
 	}
 }
 
+// Returns the file's GenericFile.Identifier.
+func (f *IngestFile) Identifier() string {
+	return fmt.Sprintf("%s/%s", f.ObjectIdentifier, f.PathInBag)
+}
+
 // Returns the type of bag file: payload_file, manifest, tag_manifest,
 // or tag_file.
 func (f *IngestFile) FileType() string {
-	fileType := constants.FileTypePayloadFile
+	fileType := constants.FileTypePayload
 	if strings.HasPrefix(f.PathInBag, "tagmanifest-") {
 		fileType = constants.FileTypeTagManifest
 	} else if strings.HasPrefix(f.PathInBag, "manifest-") {
 		fileType = constants.FileTypeManifest
-	} else {
-		fileType = constants.FileTypeTagFile
+	} else if !strings.HasPrefix(f.PathInBag, "data/") {
+		fileType = constants.FileTypeTag
 	}
 	return fileType
 }
