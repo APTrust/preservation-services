@@ -7,6 +7,7 @@ const (
 	AlgMd5              = "md5"
 	AlgSha256           = "sha256"
 	AlgSha512           = "sha512"
+	EmptyUUID           = "00000000-0000-0000-0000-000000000000"
 	FileTypeManifest    = "manifest"
 	FileTypePayload     = "payload_file"
 	FileTypeTag         = "tag_file"

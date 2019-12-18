@@ -1,16 +1,18 @@
-package ingest_test
+package service_test
 
 import (
 	"github.com/APTrust/preservation-services/constants"
-	"github.com/APTrust/preservation-services/models/ingest"
+	"github.com/APTrust/preservation-services/models/service"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 const objIdentifier = "test.edu/test-bag"
 
+const fileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"first","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"second","source":"registry"}],"error_message":"no error","file_format":"text/javascript","id":999,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","size":5555,"storage_option":"Standard","storage_records":[],"uuid":"00000000-0000-0000-0000-000000000000"}`
+
 func TestNewIngestFile(t *testing.T) {
-	f := ingest.NewIngestFile(objIdentifier, "data/image.jpg")
+	f := service.NewIngestFile(objIdentifier, "data/image.jpg")
 	assert.NotNil(t, f.Checksums)
 	assert.EqualValues(t, 0, f.Id)
 	assert.Equal(t, objIdentifier, f.ObjectIdentifier)
@@ -20,13 +22,29 @@ func TestNewIngestFile(t *testing.T) {
 	assert.NotNil(t, f.StorageRecords)
 }
 
+func TestFileFromJson(t *testing.T) {
+	expectedFile := getFile()
+	f, err := service.IngestFileFromJson(fileJson)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedFile.Checksums, f.Checksums)
+	assert.Equal(t, expectedFile.ObjectIdentifier, f.ObjectIdentifier)
+	assert.Equal(t, expectedFile.PathInBag, f.PathInBag)
+}
+
+func TestFileToJson(t *testing.T) {
+	f := getFile()
+	data, err := f.ToJson()
+	assert.Nil(t, err)
+	assert.Equal(t, fileJson, data)
+}
+
 func TestIdentifier(t *testing.T) {
-	f := ingest.NewIngestFile(objIdentifier, "data/image.jpg")
+	f := service.NewIngestFile(objIdentifier, "data/image.jpg")
 	assert.Equal(t, "test.edu/test-bag/data/image.jpg", f.Identifier())
 }
 
 func TestFileType(t *testing.T) {
-	f := ingest.NewIngestFile(objIdentifier, "data/image.jpg")
+	f := service.NewIngestFile(objIdentifier, "data/image.jpg")
 	assert.Equal(t, constants.FileTypePayload, f.FileType())
 
 	f.PathInBag = "manifest-md5.txt"
@@ -43,7 +61,7 @@ func TestFileType(t *testing.T) {
 }
 
 func TestIsParsableTagFile(t *testing.T) {
-	f := ingest.NewIngestFile(objIdentifier, "data/image.jpg")
+	f := service.NewIngestFile(objIdentifier, "data/image.jpg")
 	assert.False(t, f.IsParsableTagFile())
 
 	files := []string{
@@ -57,19 +75,34 @@ func TestIsParsableTagFile(t *testing.T) {
 	}
 }
 
-func getFileAndChecksums() (*ingest.IngestFile, *ingest.IngestChecksum, *ingest.IngestChecksum) {
-	f := ingest.NewIngestFile(objIdentifier, "data/image.jpg")
-	firstMd5 := &ingest.IngestChecksum{
+func getFileAndChecksums() (*service.IngestFile, *service.IngestChecksum, *service.IngestChecksum) {
+	f := service.NewIngestFile(objIdentifier, "data/image.jpg")
+	firstMd5 := &service.IngestChecksum{
 		Algorithm: constants.AlgMd5,
 		Source:    constants.SourceIngest,
 		Digest:    "first",
 	}
-	secondMd5 := &ingest.IngestChecksum{
+	secondMd5 := &service.IngestChecksum{
 		Algorithm: constants.AlgMd5,
 		Source:    constants.SourceRegistry,
 		Digest:    "second",
 	}
 	return f, firstMd5, secondMd5
+}
+
+func getFile() *service.IngestFile {
+	f, firstMd5, secondMd5 := getFileAndChecksums()
+	f.SetChecksum(firstMd5)
+	f.SetChecksum(secondMd5)
+	f.ErrorMessage = "no error"
+	f.FileFormat = "text/javascript"
+	f.Id = 999
+	f.ObjectIdentifier = "test.edu/some-bag"
+	f.PathInBag = "data/text/file.txt"
+	f.Size = 5555
+	f.StorageOption = "Standard"
+	f.UUID = constants.EmptyUUID
+	return f
 }
 
 func TestSetChecksum(t *testing.T) {

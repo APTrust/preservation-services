@@ -1,6 +1,7 @@
-package ingest
+package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/APTrust/preservation-services/constants"
 	"strings"
@@ -8,7 +9,7 @@ import (
 
 type IngestFile struct {
 	Checksums        []*IngestChecksum `json:"checksums"`
-	ErrorMessage     string            `json:"ingesterror_message,omitempty"`
+	ErrorMessage     string            `json:"error_message,omitempty"`
 	FileFormat       string            `json:"file_format,omitempty"`
 	Id               int64             `json:"id,omitempty"`
 	NeedsSave        bool              `json:"needs_save,omitempty"`
@@ -29,6 +30,23 @@ func NewIngestFile(objIdentifier, pathInBag string) *IngestFile {
 		StorageOption:    "Standard",
 		StorageRecords:   make([]*StorageRecord, 0),
 	}
+}
+
+func IngestFileFromJson(jsonData string) (*IngestFile, error) {
+	f := &IngestFile{}
+	err := json.Unmarshal([]byte(jsonData), f)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}
+
+func (f *IngestFile) ToJson() (string, error) {
+	bytes, err := json.Marshal(f)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }
 
 // Returns the file's GenericFile.Identifier.

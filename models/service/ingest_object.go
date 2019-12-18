@@ -1,6 +1,7 @@
-package ingest
+package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/APTrust/preservation-services/models/bagit"
 	"strings"
@@ -12,7 +13,7 @@ type IngestObject struct {
 	ETag                   string    `json:"etag,omitempty"`
 	ErrorMessage           string    `json:"error_message,omitempty"`
 	Id                     int       `json:"id,omitempty"`
-	Identifier             string    `json:"id,omitempty"`
+	Identifier             string    `json:"identifier,omitempty"`
 	Institution            string    `json:"institution,omitempty"`
 	Manifests              []string  `json:"manifests"`
 	ParsableTagFiles       []string  `json:"parsable_tag_files"`
@@ -38,4 +39,21 @@ func NewIngestObject(s3Bucket, s3Key, eTag, institution string, size int64) *Ing
 		TagManifests:     make([]string, 0),
 		TopLevelDirs:     make([]string, 0),
 	}
+}
+
+func IngestObjectFromJson(jsonData string) (*IngestObject, error) {
+	obj := &IngestObject{}
+	err := json.Unmarshal([]byte(jsonData), obj)
+	if err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+func (obj *IngestObject) ToJson() (string, error) {
+	bytes, err := json.Marshal(obj)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }
