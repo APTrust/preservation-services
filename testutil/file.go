@@ -1,10 +1,13 @@
 package testutil
 
 import (
+	"io/ioutil"
 	"path"
 	"path/filepath"
 	"runtime"
 )
+
+var TempDir, _ = ioutil.TempDir("", "prod-serv-test")
 
 func ProjectRoot() string {
 	_, thisFile, _, _ := runtime.Caller(1)
