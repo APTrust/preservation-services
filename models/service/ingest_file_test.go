@@ -3,19 +3,17 @@ package service_test
 import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/testutil"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
-const objIdentifier = "test.edu/test-bag"
-
-const fileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"first","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"second","source":"registry"}],"error_message":"no error","file_format":"text/javascript","id":999,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","size":5555,"storage_option":"Standard","storage_records":[],"uuid":"00000000-0000-0000-0000-000000000000"}`
-
 func TestNewIngestFile(t *testing.T) {
-	f := service.NewIngestFile(objIdentifier, "data/image.jpg")
+	f := service.NewIngestFile(testutil.ObjIdentifier, "data/image.jpg")
 	assert.NotNil(t, f.Checksums)
 	assert.EqualValues(t, 0, f.Id)
-	assert.Equal(t, objIdentifier, f.ObjectIdentifier)
+	assert.Equal(t, testutil.ObjIdentifier, f.ObjectIdentifier)
 	assert.True(t, f.NeedsSave)
 	assert.Equal(t, "data/image.jpg", f.PathInBag)
 	assert.Equal(t, "Standard", f.StorageOption)
@@ -23,8 +21,8 @@ func TestNewIngestFile(t *testing.T) {
 }
 
 func TestFileFromJson(t *testing.T) {
-	expectedFile := getFile()
-	f, err := service.IngestFileFromJson(fileJson)
+	expectedFile := testutil.GetIngestFile(true, true)
+	f, err := service.IngestFileFromJson(testutil.IngestFileJson)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedFile.Checksums, f.Checksums)
 	assert.Equal(t, expectedFile.ObjectIdentifier, f.ObjectIdentifier)
@@ -32,19 +30,19 @@ func TestFileFromJson(t *testing.T) {
 }
 
 func TestFileToJson(t *testing.T) {
-	f := getFile()
+	f := testutil.GetIngestFile(true, true)
 	data, err := f.ToJson()
 	assert.Nil(t, err)
-	assert.Equal(t, fileJson, data)
+	assert.Equal(t, testutil.IngestFileJson, data)
 }
 
 func TestIdentifier(t *testing.T) {
-	f := service.NewIngestFile(objIdentifier, "data/image.jpg")
+	f := service.NewIngestFile(testutil.ObjIdentifier, "data/image.jpg")
 	assert.Equal(t, "test.edu/test-bag/data/image.jpg", f.Identifier())
 }
 
 func TestFileType(t *testing.T) {
-	f := service.NewIngestFile(objIdentifier, "data/image.jpg")
+	f := testutil.GetIngestFile(false, false)
 	assert.Equal(t, constants.FileTypePayload, f.FileType())
 
 	f.PathInBag = "manifest-md5.txt"
@@ -61,7 +59,7 @@ func TestFileType(t *testing.T) {
 }
 
 func TestIsParsableTagFile(t *testing.T) {
-	f := service.NewIngestFile(objIdentifier, "data/image.jpg")
+	f := testutil.GetIngestFile(false, false)
 	assert.False(t, f.IsParsableTagFile())
 
 	files := []string{
@@ -75,46 +73,18 @@ func TestIsParsableTagFile(t *testing.T) {
 	}
 }
 
-func getFileAndChecksums() (*service.IngestFile, *service.IngestChecksum, *service.IngestChecksum) {
-	f := service.NewIngestFile(objIdentifier, "data/image.jpg")
-	firstMd5 := &service.IngestChecksum{
-		Algorithm: constants.AlgMd5,
-		Source:    constants.SourceIngest,
-		Digest:    "first",
-	}
-	secondMd5 := &service.IngestChecksum{
-		Algorithm: constants.AlgMd5,
-		Source:    constants.SourceRegistry,
-		Digest:    "second",
-	}
-	return f, firstMd5, secondMd5
-}
-
-func getFile() *service.IngestFile {
-	f, firstMd5, secondMd5 := getFileAndChecksums()
-	f.SetChecksum(firstMd5)
-	f.SetChecksum(secondMd5)
-	f.ErrorMessage = "no error"
-	f.FileFormat = "text/javascript"
-	f.Id = 999
-	f.ObjectIdentifier = "test.edu/some-bag"
-	f.PathInBag = "data/text/file.txt"
-	f.Size = 5555
-	f.StorageOption = "Standard"
-	f.UUID = constants.EmptyUUID
-	return f
-}
-
 func TestSetChecksum(t *testing.T) {
-	f, firstMd5, secondMd5 := getFileAndChecksums()
+	f := testutil.GetIngestFile(false, false)
+	firstMd5 := testutil.GetIngestChecksum(constants.AlgMd5, constants.SourceIngest)
+	secondMd5 := testutil.GetIngestChecksum(constants.AlgMd5, constants.SourceRegistry)
 
 	f.SetChecksum(firstMd5)
 	assert.Equal(t, 1, len(f.Checksums))
-	assert.Equal(t, "first", f.Checksums[0].Digest)
+	assert.Equal(t, "md5:ingest", f.Checksums[0].Digest)
 
 	f.SetChecksum(secondMd5)
 	assert.Equal(t, 2, len(f.Checksums))
-	assert.Equal(t, "second", f.Checksums[1].Digest)
+	assert.Equal(t, "md5:registry", f.Checksums[1].Digest)
 
 	// Reseting the a checksum should update, not append
 	firstMd5.Digest = "first-updated"
@@ -124,20 +94,39 @@ func TestSetChecksum(t *testing.T) {
 }
 
 func TestGetChecksum(t *testing.T) {
-	f, firstMd5, secondMd5 := getFileAndChecksums()
-	f.SetChecksum(firstMd5)
-	f.SetChecksum(secondMd5)
+	f := testutil.GetIngestFile(true, false)
 
 	ingestMd5 := f.GetChecksum(constants.SourceIngest, constants.AlgMd5)
 	assert.Equal(t, constants.SourceIngest, ingestMd5.Source)
 	assert.Equal(t, constants.AlgMd5, ingestMd5.Algorithm)
-	assert.Equal(t, "first", ingestMd5.Digest)
+	assert.Equal(t, "md5:ingest", ingestMd5.Digest)
 
 	registryMd5 := f.GetChecksum(constants.SourceRegistry, constants.AlgMd5)
 	assert.Equal(t, constants.SourceRegistry, registryMd5.Source)
 	assert.Equal(t, constants.AlgMd5, registryMd5.Algorithm)
-	assert.Equal(t, "second", registryMd5.Digest)
+	assert.Equal(t, "md5:registry", registryMd5.Digest)
 
 	nilChecksum := f.GetChecksum(constants.SourceManifest, constants.AlgSha256)
 	assert.Nil(t, nilChecksum)
+}
+
+func TestSetStorageRecord(t *testing.T) {
+	f := testutil.GetIngestFile(false, false)
+	rec1 := testutil.GetStorageRecord("http://example.com/rec1")
+	rec2 := testutil.GetStorageRecord("http://example.com/rec2")
+
+	f.SetStorageRecord(rec1)
+	assert.Equal(t, 1, len(f.StorageRecords))
+	assert.Equal(t, "http://example.com/rec1", f.StorageRecords[0].URL)
+
+	f.SetStorageRecord(rec2)
+	assert.Equal(t, 2, len(f.StorageRecords))
+	assert.Equal(t, "http://example.com/rec2", f.StorageRecords[1].URL)
+
+	// Reseting the a storage record should update, not append
+	now := time.Now()
+	rec1.StoredAt = now
+	f.SetStorageRecord(rec1)
+	assert.Equal(t, 2, len(f.StorageRecords))
+	assert.Equal(t, now, f.StorageRecords[0].StoredAt)
 }

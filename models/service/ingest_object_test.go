@@ -2,32 +2,10 @@ package service_test
 
 import (
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/testutil"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"time"
 )
-
-var timestamp, _ = time.Parse(time.RFC3339, "2020-01-02T15:04:05Z")
-
-const objJson = `{"deleted_from_receiving_at":"2020-01-02T15:04:05Z","etag":"12345678","error_message":"No error","id":555,"institution":"test.edu","manifests":["manifest-md5.txt","manifest-sha256.txt"],"parsable_tag_files":["bag-info.txt","aptrust-info.txt"],"s3_bucket":"aptrust.receiving.test.edu","s3_key":"some-bag.tar","size":99999,"storage_option":"Standard","tag_manifests":["tagmanifest-md5.txt","tagmanifest-sha256.txt"],"top_level_dirs":["some-bag"]}`
-
-func getObject() *service.IngestObject {
-	return &service.IngestObject{
-		DeletedFromReceivingAt: timestamp,
-		ETag:                   "12345678",
-		ErrorMessage:           "No error",
-		Id:                     555,
-		Institution:            "test.edu",
-		Manifests:              []string{"manifest-md5.txt", "manifest-sha256.txt"},
-		ParsableTagFiles:       []string{"bag-info.txt", "aptrust-info.txt"},
-		S3Bucket:               "aptrust.receiving.test.edu",
-		S3Key:                  "some-bag.tar",
-		Size:                   99999,
-		StorageOption:          "Standard",
-		TagManifests:           []string{"tagmanifest-md5.txt", "tagmanifest-sha256.txt"},
-		TopLevelDirs:           []string{"some-bag"},
-	}
-}
 
 func TestNewIngestObject(t *testing.T) {
 	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", int64(500))
@@ -53,16 +31,16 @@ func TestIngestObjectIdentifier(t *testing.T) {
 }
 
 func TestObjFromJson(t *testing.T) {
-	expectedObj := getObject()
-	obj, err := service.IngestObjectFromJson(objJson)
+	expectedObj := testutil.GetIngestObject()
+	obj, err := service.IngestObjectFromJson(testutil.IngestObjectJson)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedObj.Identifier(), obj.Identifier())
 	assert.Equal(t, expectedObj.ParsableTagFiles, obj.ParsableTagFiles)
 }
 
 func TestObjToJson(t *testing.T) {
-	obj := getObject()
+	obj := testutil.GetIngestObject()
 	data, err := obj.ToJson()
 	assert.Nil(t, err)
-	assert.Equal(t, objJson, data)
+	assert.Equal(t, testutil.IngestObjectJson, data)
 }

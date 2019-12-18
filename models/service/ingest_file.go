@@ -101,3 +101,25 @@ func (f *IngestFile) GetChecksum(source, algorithm string) *IngestChecksum {
 	}
 	return nil
 }
+
+func (f *IngestFile) SetStorageRecord(record *StorageRecord) {
+	updated := false
+	for i, rec := range f.StorageRecords {
+		if rec.URL == record.URL {
+			f.StorageRecords[i] = record
+			updated = true
+		}
+	}
+	if updated == false {
+		f.StorageRecords = append(f.StorageRecords, record)
+	}
+}
+
+func (f *IngestFile) GetStorageRecord(url string) *StorageRecord {
+	for _, rec := range f.StorageRecords {
+		if rec.URL == url {
+			return rec
+		}
+	}
+	return nil
+}

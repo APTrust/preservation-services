@@ -1,4 +1,4 @@
-package ingest
+package services
 
 import (
 	"archive/tar"
@@ -10,15 +10,15 @@ import (
 	"io"
 )
 
-type PreProcessor struct {
+type TarredBagScanner struct {
 	IngestObject *service.IngestObject
 	TarReader    *tar.Reader
 	TempDir      string
 	TempFiles    []string
 }
 
-func NewPreProcessor(reader *io.Reader, ingestObject *service.IngestObject, tempDir string) *PreProcessor {
-	return &PreProcessor{
+func NewTarredBagScanner(reader *io.Reader, ingestObject *service.IngestObject, tempDir string) *TarredBagScanner {
+	return &TarredBagScanner{
 		IngestObject: ingestObject,
 		TarReader:    tar.NewReader(reader),
 		TempDir:      tempDir,
@@ -26,8 +26,8 @@ func NewPreProcessor(reader *io.Reader, ingestObject *service.IngestObject, temp
 	}
 }
 
-func (p *PreProcessor) ProcessNextEntry(tarReader *tar.Reader) (ingestFile *service.IngestFile, err error) {
-	header, err := p.TarReader.Next()
+func (scanner *TarredBagScanner) ProcessNextEntry(tarReader *tar.Reader) (ingestFile *service.IngestFile, err error) {
+	header, err := scanner.TarReader.Next()
 	if err == io.EOF {
 		return nil, nil
 	}
@@ -35,14 +35,14 @@ func (p *PreProcessor) ProcessNextEntry(tarReader *tar.Reader) (ingestFile *serv
 		return nil, err
 	}
 	if header.Typeflag == tar.TypeReg || header.Typeflag == tar.TypeRegA {
-		ingestFile = p.initIngestFile(header)
-		p.processFile(ingestFile)
+		ingestFile = scanner.initIngestFile(header)
+		scanner.processFile(ingestFile)
 	}
 	return ingestFile, nil
 }
 
-func (p *PreProcessor) initIngestFile(header *tar.Header) (ingestFile *service.IngestFile, err error) {
-	fileIdentifier := fmt.Sprintf(p.IngestObject.Identifier, header.Name)
+func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (ingestFile *service.IngestFile, err error) {
+	fileIdentifier := fmt.Sprintf(scanner.IngestObject.Identifier, header.Name)
 	ingestFile = service.NewIngestFile(fileIdentifier)
 	ingestFile.Size = header.Size
 	return ingestFile
@@ -50,14 +50,14 @@ func (p *PreProcessor) initIngestFile(header *tar.Header) (ingestFile *service.I
 
 // Calculates the file's checksums, and saves it to a temp file
 // if the file is a manifest, tag manifest, or parsable tag file.
-func (p *PreProcessor) processFile(ingestFile *service.IngestFile) error {
+func (scanner *TarredBagScanner) processFile(ingestFile *service.IngestFile) error {
 	md5Hash := md5.New()
 	sha256Hash := sha256.New()
 	writers := []*io.Writer{
 		md5Hash,
 		sha256Hash,
 	}
-	tempFilePath := p.getTempFilePath(ingestFile)
+	tempFilePath := scanner.getTempFilePath(ingestFile)
 	if tempFilePath != "" {
 		tempFile, err := os.Create(tempFilePath)
 		if err != nil {
@@ -67,19 +67,19 @@ func (p *PreProcessor) processFile(ingestFile *service.IngestFile) error {
 		}
 		defer tempFile.Close()
 		writers = append(writers, tempFile)
-		p.TempFiles = append(p.TempFiles, tempFilePath)
+		scanner.TempFiles = append(scanner.TempFiles, tempFilePath)
 	}
 	multiWriter := io.MultiWriter(writers...)
 	_, err := io.Copy(multiWriter, tarReader)
 	if err != nil {
 		return err
 	}
-	p.addChecksums(ingestFile, md5Hash, sha256Hash)
+	scanner.addChecksums(ingestFile, md5Hash, sha256Hash)
 	return nil
 }
 
 // Adds the checksums to the IngestFile object.
-func (p *PreProcessor) addChecksums(ingestFile *service.IngestFile, md5Hash, sha256Hash hash.Hash) {
+func (scanner *TarredBagScanner) addChecksums(ingestFile *service.IngestFile, md5Hash, sha256Hash hash.Hash) {
 	now := time.Now()
 	md5Checksum := &IngestChecksum{
 		Algorithm: constants.AlgMd5,
@@ -101,13 +101,13 @@ func (p *PreProcessor) addChecksums(ingestFile *service.IngestFile, md5Hash, sha
 // tag file that we want to write to disk for further processing.
 // Returns an empty string if we don't need to write this file to
 // a tempfile.
-func (p *PreProcessor) getTempFilePath(ingestFile *service.IngestFile) string {
+func (scanner *TarredBagScanner) getTempFilePath(ingestFile *service.IngestFile) string {
 	tempFilePath := ""
 	fileType := ingestFile.FileType()
 	if fileType == constants.FileTypeManifest ||
 		fileType == FileTypeTagManifest ||
 		ingestFile.IsParsableTagFile() {
-		tempFilePath = path.Join(p.TempDir, ingestFile.PathInBag)
+		tempFilePath = path.Join(scanner.TempDir, ingestFile.PathInBag)
 	}
 	return tempFilePath
 }
