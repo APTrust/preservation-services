@@ -55,7 +55,10 @@ func (obj *IngestObject) ToJson() (string, error) {
 	return string(bytes), nil
 }
 
+func (obj *IngestObject) BagName() string {
+	return bagit.CleanBagName(obj.S3Key)
+}
+
 func (obj *IngestObject) Identifier() string {
-	bagName := bagit.CleanBagName(obj.S3Key)
-	return fmt.Sprintf("%s/%s", obj.Institution, bagName)
+	return fmt.Sprintf("%s/%s", obj.Institution, obj.BagName())
 }

@@ -21,6 +21,14 @@ func TestNewIngestObject(t *testing.T) {
 	assert.NotNil(t, obj.TopLevelDirs)
 }
 
+func TestIngestObjectBagName(t *testing.T) {
+	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", int64(500))
+	assert.Equal(t, "test-bag", obj.BagName())
+
+	obj.S3Key = "photos.tar"
+	assert.Equal(t, "photos", obj.BagName())
+}
+
 func TestIngestObjectIdentifier(t *testing.T) {
 	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", int64(500))
 	assert.Equal(t, "test.edu/test-bag", obj.Identifier())
