@@ -20,15 +20,7 @@ func TestRedisPing(t *testing.T) {
 	assert.Equal(t, "PONG", response)
 }
 
-func TestIngestObjectSave(t *testing.T) {
-	client := network.NewRedisClient("localhost:6379", "", 0)
-	require.NotNil(t, client)
-	obj := service.NewIngestObject("bucket", "key", "etag", "test.edu", int64(555))
-	err := client.IngestObjectSave(9999, obj)
-	assert.Nil(t, err)
-}
-
-func TestIngestObjectGet(t *testing.T) {
+func TestIngestObjectSaveAndGet(t *testing.T) {
 	client := network.NewRedisClient("localhost:6379", "", 0)
 	require.NotNil(t, client)
 	obj := service.NewIngestObject("bucket", "key", "etag", "test.edu", int64(555))
@@ -51,5 +43,30 @@ func TestIngestObjectDelete(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = client.IngestObjectDelete(9999, obj.Identifier())
+	assert.Nil(t, err)
+}
+
+func TestIngestFileSaveAndGet(t *testing.T) {
+	client := network.NewRedisClient("localhost:6379", "", 0)
+	require.NotNil(t, client)
+	f := service.NewIngestFile("test.edu/bag1", "data/images.photo.jpg")
+	err := client.IngestFileSave(9999, f)
+	assert.Nil(t, err)
+
+	retrievedFile, err := client.IngestFileGet(9999, f.Identifier())
+	assert.Nil(t, err)
+	assert.NotNil(t, retrievedFile)
+	assert.Equal(t, f.ObjectIdentifier, retrievedFile.ObjectIdentifier)
+	assert.Equal(t, f.PathInBag, retrievedFile.PathInBag)
+}
+
+func TestIngestFileDelete(t *testing.T) {
+	client := network.NewRedisClient("localhost:6379", "", 0)
+	require.NotNil(t, client)
+	f := service.NewIngestFile("test.edu/bag1", "data/images.photo.jpg")
+	err := client.IngestFileSave(9999, f)
+	assert.Nil(t, err)
+
+	err = client.IngestFileDelete(9999, f.Identifier())
 	assert.Nil(t, err)
 }
