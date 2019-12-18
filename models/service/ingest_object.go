@@ -13,7 +13,6 @@ type IngestObject struct {
 	ETag                   string    `json:"etag,omitempty"`
 	ErrorMessage           string    `json:"error_message,omitempty"`
 	Id                     int       `json:"id,omitempty"`
-	Identifier             string    `json:"identifier,omitempty"`
 	Institution            string    `json:"institution,omitempty"`
 	Manifests              []string  `json:"manifests"`
 	ParsableTagFiles       []string  `json:"parsable_tag_files"`
@@ -26,10 +25,8 @@ type IngestObject struct {
 }
 
 func NewIngestObject(s3Bucket, s3Key, eTag, institution string, size int64) *IngestObject {
-	bagName := bagit.CleanBagName(s3Key)
 	return &IngestObject{
 		ETag:             strings.Replace(eTag, "\"", "", -1),
-		Identifier:       fmt.Sprintf("%s/%s", institution, bagName),
 		Institution:      institution,
 		Manifests:        make([]string, 0),
 		ParsableTagFiles: make([]string, 0),
@@ -56,4 +53,9 @@ func (obj *IngestObject) ToJson() (string, error) {
 		return "", err
 	}
 	return string(bytes), nil
+}
+
+func (obj *IngestObject) Identifier() string {
+	bagName := bagit.CleanBagName(obj.S3Key)
+	return fmt.Sprintf("%s/%s", obj.Institution, bagName)
 }

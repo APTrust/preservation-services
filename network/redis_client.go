@@ -21,6 +21,10 @@ func NewRedisClient(address, password string, db int) *RedisClient {
 	}
 }
 
+func (c *RedisClient) Ping() (string, error) {
+	return c.client.Ping().Result()
+}
+
 func (c *RedisClient) IngestObjectGet(workItemId int, objIdentifier string) (*service.IngestObject, error) {
 	key := strconv.Itoa(workItemId)
 	field := fmt.Sprintf("object:%s", objIdentifier)
@@ -34,7 +38,7 @@ func (c *RedisClient) IngestObjectGet(workItemId int, objIdentifier string) (*se
 
 func (c *RedisClient) IngestObjectSave(workItemId int, obj *service.IngestObject) error {
 	key := strconv.Itoa(workItemId)
-	field := fmt.Sprintf("object:%s", obj.Identifier)
+	field := fmt.Sprintf("object:%s", obj.Identifier())
 	jsonData, err := obj.ToJson()
 	if err != nil {
 		return err
