@@ -1,4 +1,4 @@
-package services
+package ingest
 
 import (
 	"archive/tar"

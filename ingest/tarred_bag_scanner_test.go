@@ -1,9 +1,9 @@
-package services_test
+package ingest_test
 
 import (
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/service"
-	"github.com/APTrust/preservation-services/services"
 	"github.com/APTrust/preservation-services/testutil"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/stretchr/testify/assert"
@@ -23,10 +23,10 @@ func getTarFileReader(t *testing.T, filename string) io.ReadCloser {
 }
 
 // Call defer scanner.CloseReader()
-func getScanner(t *testing.T, bagname string) *services.TarredBagScanner {
+func getScanner(t *testing.T, bagname string) *ingest.TarredBagScanner {
 	obj := service.NewIngestObject("bucket", "example.edu.tagsample_good.tar", "1234", "example.edu", int64(300))
 	reader := getTarFileReader(t, bagname)
-	return services.NewTarredBagScanner(reader, obj, testutil.TempDir)
+	return ingest.NewTarredBagScanner(reader, obj, testutil.TempDir)
 }
 
 func TestNewTarredBagScanner(t *testing.T) {
