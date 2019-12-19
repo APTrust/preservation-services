@@ -1,25 +1,26 @@
-package testutil
+package network
 
 import (
 	"context"
-	"github.com/APTrust/preservation-services/models/service"
 	"github.com/minio/minio-go/v6"
 	"github.com/minio/minio-go/v6/pkg/encrypt"
 	"io"
 	"net/http"
 )
 
-// This file contains interface definitions that allow us to generate mocks
-// for testing. See mocks/README.md
+// Formally define the Minio client interface so we can mock it for testing.
+// See https://github.com/minio/minio-go/blob/master/core.go for the basics,
+// and https://docs.min.io/docs/golang-client-api-reference.html for how
+// Client differs from Core.
 
-// Interface from https://github.com/minio/minio-go/blob/master/core.go
-type MinioClient interface {
+type MinioClientInterface interface {
 	ListObjects(bucket, prefix, marker, delimiter string, maxKeys int) (result minio.ListBucketResult, err error)
 	ListObjectsV2(bucketName, objectPrefix, continuationToken string, fetchOwner bool, delimiter string, maxkeys int, startAfter string) (minio.ListBucketV2Result, error)
 	CopyObjectWithContext(ctx context.Context, sourceBucket, sourceObject, destBucket, destObject string, metadata map[string]string) (minio.ObjectInfo, error)
 	CopyObject(sourceBucket, sourceObject, destBucket, destObject string, metadata map[string]string) (minio.ObjectInfo, error)
 	CopyObjectPartWithContext(ctx context.Context, srcBucket, srcObject, destBucket, destObject string, uploadID string, partID int, startOffset, length int64, metadata map[string]string) (p minio.CompletePart, err error)
 	CopyObjectPart(srcBucket, srcObject, destBucket, destObject string, uploadID string, partID int, startOffset, length int64, metadata map[string]string) (p minio.CompletePart, err error)
+	FPutObject(bucketName, objectName, filePath string, opts minio.PutObjectOptions) (length int64, err error)
 	PutObjectWithContext(ctx context.Context, bucket, object string, data io.Reader, size int64, md5Base64, sha256Hex string, metadata map[string]string, sse encrypt.ServerSide) (minio.ObjectInfo, error)
 	PutObject(bucket, object string, data io.Reader, size int64, md5Base64, sha256Hex string, metadata map[string]string, sse encrypt.ServerSide) (minio.ObjectInfo, error)
 	NewMultipartUpload(bucket, object string, opts minio.PutObjectOptions) (uploadID string, err error)
@@ -35,19 +36,7 @@ type MinioClient interface {
 	PutBucketPolicy(bucket, bucketPolicy string) error
 	PutBucketPolicyWithContext(ctx context.Context, bucket, bucketPolicy string) error
 	GetObjectWithContext(ctx context.Context, bucketName, objectName string, opts minio.GetObjectOptions) (io.ReadCloser, minio.ObjectInfo, http.Header, error)
-	GetObject(bucketName, objectName string, opts minio.GetObjectOptions) (io.ReadCloser, minio.ObjectInfo, http.Header, error)
+	GetObject(bucketName, objectName string, opts minio.GetObjectOptions) (*minio.Object, error)
 	StatObjectWithContext(ctx context.Context, bucketName, objectName string, opts minio.StatObjectOptions) (minio.ObjectInfo, error)
 	StatObject(bucketName, objectName string, opts minio.StatObjectOptions) (minio.ObjectInfo, error)
-}
-
-// https://github.com/APTrust/preservation-services/blob/master/network/redis_client.go
-// This will need to be updated as the interface evolves
-type RedisClient interface {
-	Ping() (string, error)
-	IngestObjectGet(workItemId int, objIdentifier string) (*service.IngestObject, error)
-	IngestObjectSave(workItemId int, obj *service.IngestObject) error
-	IngestObjectDelete(workItemId int, objIdentifier string) error
-	IngestFileGet(workItemId int, fileIdentifier string) (*service.IngestFile, error)
-	IngestFileSave(workItemId int, f *service.IngestFile) error
-	IngestFileDelete(workItemId int, fileIdentifier string) error
 }
