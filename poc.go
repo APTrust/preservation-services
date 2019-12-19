@@ -20,13 +20,18 @@ const prefix = "0001"
 
 var s3Client *minio.Client
 
-func main() {
-	initS3Client()
-	readTarFile()
-	copyTarFileContents()
-	copyToPreservation()
-	return
-}
+//
+// Commented out to avoid errors in go test ./...
+// redis.go also has a main function & we can't have two.
+// Uncomment if you want to run this.
+//
+// func main() {
+// 	initS3Client()
+// 	readTarFile()
+// 	copyTarFileContents()
+// 	copyToPreservation()
+// 	return
+// }
 
 func copyTarFileContents() {
 	s3Stream := getS3FileStream()

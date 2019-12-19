@@ -24,7 +24,6 @@ With all that, you can run:
 
 `go run poc.go`
 
-
 ## Redis
 
 You'll need redis installed to run redis.go, which doesn't do much yet other than
@@ -40,3 +39,20 @@ Or: `redis-server /usr/local/etc/redis.conf`
 
 Redis runs on localhost:6379. By default, its DB files are in
 /usr/local/var/db/redis/.
+
+# Testing
+
+`go test ./...`
+
+For dev and local test environments, you'll need write permissions in your own
+home directory, which you should already have. Specifically, in dev and local
+test modes, models/common/config.go will panic if it can't create and write to
+these directories:
+
+```
+~/tmp/pres-serv/ingest
+~/tmp/pres-serv/logs
+~/tmp/pres-serv/restore
+```
+
+All of those files are considered temporary, so no worries if you delete them.
