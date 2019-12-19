@@ -12,4 +12,3 @@ regenerate the mocks using the following commands:
 `mockery -dir testutil -name RedisClient`
 
 If the mockery binary is not in your path, use `$GOPATH/bin/mockery`.
-
