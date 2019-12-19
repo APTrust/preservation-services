@@ -41,7 +41,12 @@
        - Mark WorkItem failed with error messages
        - Delete data from redis
 
-3. Unpack to staging bucket
+3. Check to see if this is an update of an existing bag
+   - If so:
+      - Overwrite UUIDs in Redis data with UUIDs of existing files
+      - Check fixity of new files vs. existing & mark files that need re-save.
+
+4. Unpack to staging bucket
    - Download through tar reader, saving each file individually to staging bucket.
    - Update redis JSON record for each successfully unpacked file to show file
      was copied to staging bucket.
@@ -53,7 +58,7 @@
        - Mark WorkItem failed with error messages
        - Delete data from redis
 
-4. Store
+5. Store
    - Copy each file from staging bucket to preservation and/or glacier, using
      minio's CopyObject method.
    - Update each file's JSON record in redis
@@ -68,7 +73,7 @@
        - Mark WorkItem failed with error messages
        - Delete data from redis
 
-5. Storage validation
+6. Storage validation
    - Validate that each generic file exists at each of its preservation URLs
        - etag
        - size
@@ -83,7 +88,7 @@
        - Mark WorkItem failed with error messages
        - Delete data from redis
 
-6. Record
+7. Record
    - Pull object record from redis, transform and copy to Pharos.
    - Pull file records from redis, transform and copy to Pharos.
    - OK?
@@ -94,6 +99,11 @@
    - Fatal errors?
        - Mark WorkItem failed with error messages
        - Delete data from redis
+
+8. Cleanup
+   - Delete S3 files from staging
+   - Delete tar file from ingest bucket
+   - Delete Redis metadate (or copy as JSON to S3)
 
 # Redis Persistence
 
