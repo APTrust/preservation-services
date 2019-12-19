@@ -11,7 +11,7 @@ var TempDir, _ = ioutil.TempDir("", "prod-serv-test")
 
 func ProjectRoot() string {
 	_, thisFile, _, _ := runtime.Caller(1)
-	absPath, _ := filepath.Abs(path.Join(thisFile, "..", ".."))
+	absPath, _ := filepath.Abs(path.Join(thisFile, "..", "..", ".."))
 	return absPath
 }
 

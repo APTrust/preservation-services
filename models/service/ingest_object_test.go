@@ -2,7 +2,7 @@ package service_test
 
 import (
 	"github.com/APTrust/preservation-services/models/service"
-	"github.com/APTrust/preservation-services/testutil"
+	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

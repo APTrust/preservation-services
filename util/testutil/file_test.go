@@ -1,7 +1,7 @@
 package testutil_test
 
 import (
-	"github.com/APTrust/preservation-services/testutil"
+	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path"

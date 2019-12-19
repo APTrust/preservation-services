@@ -1,8 +1,8 @@
 package util_test
 
 import (
-	"github.com/APTrust/preservation-services/testutil"
 	"github.com/APTrust/preservation-services/util"
+	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
