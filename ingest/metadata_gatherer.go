@@ -49,7 +49,7 @@ func (m *MetadataGatherer) ScanBag(workItemId int, ingestObject *service.IngestO
 }
 
 func (m *MetadataGatherer) GetS3Object(ingestObject *service.IngestObject) (*minio.Object, error) {
-	return m.Context.S3Client.GetObject(
+	return m.Context.S3Clients["AWS"].GetObject(
 		ingestObject.S3Bucket,
 		ingestObject.S3Key,
 		minio.GetObjectOptions{})
@@ -66,7 +66,8 @@ func (m *MetadataGatherer) CopyTempFilesToS3(workItemId int, tempFiles []string)
 
 		//m.Context.Logger.Info("Copying %s to %s/%s", filePath, bucket, key)
 
-		_, err := m.Context.S3Client.FPutObject(
+		// TODO: Fatal vs. transient errors. Retries.
+		_, err := m.Context.S3Clients["AWS"].FPutObject(
 			bucket,
 			key,
 			filePath,

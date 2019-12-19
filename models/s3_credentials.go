@@ -1,7 +1,7 @@
 package models
 
-type S3EndPoint struct {
+type S3Credentials struct {
+	Host      string
 	KeyId     string
 	SecretKey string
-	URL       string
 }
