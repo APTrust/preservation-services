@@ -1,4 +1,4 @@
-package models
+package common
 
 import (
 	"github.com/APTrust/preservation-services/network"

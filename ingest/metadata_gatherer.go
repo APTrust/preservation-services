@@ -2,7 +2,7 @@ package ingest
 
 import (
 	"fmt"
-	"github.com/APTrust/preservation-services/models"
+	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/minio/minio-go/v6"
 	"io"
@@ -10,10 +10,10 @@ import (
 )
 
 type MetadataGatherer struct {
-	Context *models.Context
+	Context *common.Context
 }
 
-func NewMetaDataGatherer(context *models.Context) *MetadataGatherer {
+func NewMetaDataGatherer(context *common.Context) *MetadataGatherer {
 	return &MetadataGatherer{
 		Context: context,
 	}
