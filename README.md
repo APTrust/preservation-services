@@ -42,7 +42,7 @@ Redis runs on localhost:6379. By default, its DB files are in
 
 # Testing
 
-`go test ./...`
+`APT_SERVICES_CONFIG=test go test ./...`
 
 For dev and local test environments, you'll need write permissions in your own
 home directory, which you should already have. Specifically, in dev and local
