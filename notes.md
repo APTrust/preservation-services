@@ -178,3 +178,7 @@ It's possible to mount a temporary disk to handle restorations. Full bag restora
 This could allow restoration to scale horizontally, and could be less painful than autoscaling logical volumes, which requires temporary service interruptions.
 
 This would present a problem in the theoretical case of mass restoration. If we're restoring dozens of bags at once, would we have trouble mounting and unmounting dozens of drives?
+
+## TODOs
+
+See todos in util/testutil/mock_services.go and in models/common/config.go

@@ -7,6 +7,16 @@ import (
 )
 
 // These functions allow us to mock http responses from S3, Redis, and Pharos.
+//
+// TODO: Http passthrough set and get: pass data through to Redis so
+// we can examine it later in tests.
+//
+// HttpPassThroughSetter(headers map[string]string, setUUID, data, getUUID string)
+//    sets value data with key setUUID in redis,
+//    and returns value getUUID from redis
+//
+// HttpPassThroughGetter(headers map[string]string, uuid string)
+//    returns value of key uuid from redis
 
 var EmptyHeaders = make(map[string]string, 0)
 
