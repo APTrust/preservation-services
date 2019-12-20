@@ -13,7 +13,7 @@ type MetadataGatherer struct {
 	Context *common.Context
 }
 
-func NewMetaDataGatherer(context *common.Context) *MetadataGatherer {
+func NewMetadataGatherer(context *common.Context) *MetadataGatherer {
 	return &MetadataGatherer{
 		Context: context,
 	}

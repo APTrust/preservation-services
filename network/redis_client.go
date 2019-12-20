@@ -11,18 +11,6 @@ type RedisClient struct {
 	client *redis.Client
 }
 
-// We formally define the interface, so we can mock it for testing.
-// See mocks/README.md for more info.
-type RedisClientInterface interface {
-	Ping() (string, error)
-	IngestObjectGet(workItemId int, objIdentifier string) (*service.IngestObject, error)
-	IngestObjectSave(workItemId int, obj *service.IngestObject) error
-	IngestObjectDelete(workItemId int, objIdentifier string) error
-	IngestFileGet(workItemId int, fileIdentifier string) (*service.IngestFile, error)
-	IngestFileSave(workItemId int, f *service.IngestFile) error
-	IngestFileDelete(workItemId int, fileIdentifier string) error
-}
-
 func NewRedisClient(address, password string, db int) *RedisClient {
 	return &RedisClient{
 		client: redis.NewClient(&redis.Options{

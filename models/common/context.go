@@ -15,10 +15,10 @@ import (
 type Context struct {
 	Config       *Config
 	Logger       *logging.Logger
-	NSQClient    network.NSQClientInterface
-	PharosClient network.PharosClientInterface
-	RedisClient  network.RedisClientInterface
-	S3Clients    map[string]network.MinioClientInterface
+	NSQClient    *network.NSQClient
+	PharosClient *network.PharosClient
+	RedisClient  *network.RedisClient
+	S3Clients    map[string]*minio.Client
 }
 
 func NewContext() *Context {
@@ -38,19 +38,19 @@ func getLogger(config *Config) *logging.Logger {
 	return logger
 }
 
-func getNsqClient(config *Config) network.NSQClientInterface {
+func getNsqClient(config *Config) *network.NSQClient {
 	return network.NewNSQClient(config.NsqURL)
 }
 
-func getRedisClient(config *Config) network.RedisClientInterface {
+func getRedisClient(config *Config) *network.RedisClient {
 	return network.NewRedisClient(
 		config.RedisURL,
 		config.RedisPassword,
 		config.RedisDefaultDB)
 }
 
-func getS3Clients(config *Config) map[string]network.MinioClientInterface {
-	s3Clients := make(map[string]network.MinioClientInterface, len(config.S3Credentials))
+func getS3Clients(config *Config) map[string]*minio.Client {
+	s3Clients := make(map[string]*minio.Client, len(config.S3Credentials))
 	for name, creds := range config.S3Credentials {
 		client, err := minio.New(
 			creds.Host,

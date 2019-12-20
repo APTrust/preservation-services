@@ -44,6 +44,9 @@ Redis runs on localhost:6379. By default, its DB files are in
 
 `APT_SERVICES_CONFIG=test go test ./...`
 
+If you omit the env variable `APT_SERVICES_CONFIG=test` Go will panic because
+it doesn't know which configuration to load. That is by design.
+
 For dev and local test environments, you'll need write permissions in your own
 home directory, which you should already have. Specifically, in dev and local
 test modes, models/common/config.go will panic if it can't create and write to

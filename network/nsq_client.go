@@ -12,11 +12,6 @@ type NSQClient struct {
 	URL string
 }
 
-// Formally define this so we can generate mocks for testing.
-type NSQClientInterface interface {
-	Enqueue(topic string, workItemId int) error
-}
-
 // NewNSQClient returns a new NSQ client that will connect to the NSQ
 // server and the specified url. The URL is typically available through
 // Config.NsqdHttpAddress, and usually ends with :4151. This is

@@ -8,20 +8,22 @@ import (
 	"testing"
 )
 
+// Note that network/main_test starts and stops RedisTestServer
+
 func TestNewRedisClient(t *testing.T) {
-	client := network.NewRedisClient("localhost:6379", "", 0)
+	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
 	assert.NotNil(t, client)
 }
 
 func TestRedisPing(t *testing.T) {
-	client := network.NewRedisClient("localhost:6379", "", 0)
+	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
 	response, err := client.Ping()
 	assert.Nil(t, err)
 	assert.Equal(t, "PONG", response)
 }
 
 func TestIngestObjectSaveAndGet(t *testing.T) {
-	client := network.NewRedisClient("localhost:6379", "", 0)
+	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
 	require.NotNil(t, client)
 	obj := service.NewIngestObject("bucket", "key", "etag", "test.edu", int64(555))
 	err := client.IngestObjectSave(9999, obj)
@@ -36,7 +38,7 @@ func TestIngestObjectSaveAndGet(t *testing.T) {
 }
 
 func TestIngestObjectDelete(t *testing.T) {
-	client := network.NewRedisClient("localhost:6379", "", 0)
+	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
 	require.NotNil(t, client)
 	obj := service.NewIngestObject("bucket", "key", "etag", "test.edu", int64(555))
 	err := client.IngestObjectSave(9999, obj)
@@ -47,7 +49,7 @@ func TestIngestObjectDelete(t *testing.T) {
 }
 
 func TestIngestFileSaveAndGet(t *testing.T) {
-	client := network.NewRedisClient("localhost:6379", "", 0)
+	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
 	require.NotNil(t, client)
 	f := service.NewIngestFile("test.edu/bag1", "data/images.photo.jpg")
 	err := client.IngestFileSave(9999, f)
@@ -61,7 +63,7 @@ func TestIngestFileSaveAndGet(t *testing.T) {
 }
 
 func TestIngestFileDelete(t *testing.T) {
-	client := network.NewRedisClient("localhost:6379", "", 0)
+	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
 	require.NotNil(t, client)
 	f := service.NewIngestFile("test.edu/bag1", "data/images.photo.jpg")
 	err := client.IngestFileSave(9999, f)

@@ -116,12 +116,12 @@ func newDefaultConfig() *Config {
 		RestoreDir:              path.Join(filesDir, "restore"),
 		S3Credentials: map[string]S3Credentials{
 			"AWS": S3Credentials{
-				Host:      "s3.amazonaws.com",
+				Host:      "localhost",
 				KeyId:     os.Getenv("AWS_ACCESS_KEY_ID"),
 				SecretKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
 			},
 			"Wasabi": S3Credentials{
-				Host:      "s3.wasabisys.com",
+				Host:      "localhost",
 				KeyId:     os.Getenv("WASABI_ACCESS_KEY_ID"),
 				SecretKey: os.Getenv("WASABI_SECRET_ACCESS_KEY"),
 			},
