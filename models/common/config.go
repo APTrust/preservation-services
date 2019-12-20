@@ -61,6 +61,7 @@ func NewConfig() *Config {
 		config = newDevConfig()
 	case "test":
 		config = newTestConfig()
+		// TODO: Consider automatically starting test S3 & Redis in this case
 	default:
 		panic(fmt.Sprintf("No such config: %s", environment))
 	}
