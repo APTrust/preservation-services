@@ -58,7 +58,26 @@
        - Mark WorkItem failed with error messages
        - Delete data from redis
 
-5. Store
+5. File Characterization
+   - Ideally, we find a package that allows for stream-based characterization,
+     so we don't have to write all the files to disk.
+   - Consider JHOVE, which works with URIs.
+     See https://github.com/openpreserve/jhove
+     http://jhove.openpreservation.org/getting-started/#running
+     __JHOVE may be the best of the lot for our purposes.__
+   - Apache Tika also can examine URLs and supports JSON output
+     See https://tika.apache.org/1.4/gettingstarted.html
+     Tika also has a server mode, averting Java's huge startup costs,
+     but server mode requires a PUT of the entire file contents.
+   - DROID does not seem to work against URLs
+   - FITS does not see to work against URLs
+   - Maybe use DROID or FITS with s3fs.
+     See https://github.com/s3fs-fuse/s3fs-fuse
+     But this could also be a huge pain in the ass.
+   - FIDO does not fetch URLs but can read from STDIN.
+     See https://github.com/openpreserve/fido
+
+6. Store
    - Copy each file from staging bucket to preservation and/or glacier, using
      minio's CopyObject method.
    - Update each file's JSON record in redis
@@ -73,7 +92,7 @@
        - Mark WorkItem failed with error messages
        - Delete data from redis
 
-6. Storage validation
+7. Storage validation
    - Validate that each generic file exists at each of its preservation URLs
        - etag
        - size
@@ -88,7 +107,7 @@
        - Mark WorkItem failed with error messages
        - Delete data from redis
 
-7. Record
+8. Record
    - Pull object record from redis, transform and copy to Pharos.
    - Pull file records from redis, transform and copy to Pharos.
    - OK?
@@ -100,7 +119,7 @@
        - Mark WorkItem failed with error messages
        - Delete data from redis
 
-8. Cleanup
+9. Cleanup
    - Delete S3 files from staging
    - Delete tar file from ingest bucket
    - Delete Redis metadate (or copy as JSON to S3)
