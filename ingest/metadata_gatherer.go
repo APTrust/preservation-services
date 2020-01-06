@@ -9,16 +9,37 @@ import (
 	"path/filepath"
 )
 
+// MetadataGatherer scans a tarred bag, collects metadata such as
+// filenames and checksums, and stores that metadata in an external
+// datastore (currently Redis) for other ingest workers. It also
+// copies payload manifests and parsable tag files to an S3 staging
+// bucket.
+//
+// The worker performing the initial phase of the ingest process uses
+// this object to gather the metadata that subsequent workers will
+// need to perform their jobs.
 type MetadataGatherer struct {
 	Context *common.Context
 }
 
+// NewMetadataGatherer creates a new MetadataGatherer.
+// The context parameter provides methods for communicating
+// with S3 and our working data store (Redis).
 func NewMetadataGatherer(context *common.Context) *MetadataGatherer {
 	return &MetadataGatherer{
 		Context: context,
 	}
 }
 
+// ScanBag scans a tarred bag for metadata. This function can take
+// less than a second or more than 24 hours to run, depending on the
+// size of the bag we're scanning. (100kb takes less than a second,
+// while multi-TB bags take more than 24 hours.) While it runs, it saves
+// one IngestFile record at a time to the working data store.
+//
+// After scanning all files, it copies a handful of text files to our
+// S3 staging bucket. The text files include manifests, tag manifests,
+// and selected tag files.
 func (m *MetadataGatherer) ScanBag(workItemId int, ingestObject *service.IngestObject) error {
 	s3Obj, err := m.GetS3Object(ingestObject)
 	if err != nil {
@@ -48,6 +69,7 @@ func (m *MetadataGatherer) ScanBag(workItemId int, ingestObject *service.IngestO
 	return nil
 }
 
+// GetS3Object retrieves a tarred bag from a depositor's receiving bucket.
 func (m *MetadataGatherer) GetS3Object(ingestObject *service.IngestObject) (*minio.Object, error) {
 	return m.Context.S3Clients["AWS"].GetObject(
 		ingestObject.S3Bucket,
@@ -55,6 +77,11 @@ func (m *MetadataGatherer) GetS3Object(ingestObject *service.IngestObject) (*min
 		minio.GetObjectOptions{})
 }
 
+// CopyTempFilesToS3 copies payload manifests, tag manifests, bagit.txt,
+// bag-info.txt, and aptrust-info.txt to a staging bucket. At a later phase
+// of ingest, the validator will examine the tag files for required tags,
+// and it will compare the file checksums in the working data store with
+// the checksums in the manifests.
 func (m *MetadataGatherer) CopyTempFilesToS3(workItemId int, tempFiles []string) error {
 	bucket := m.Context.Config.IngestStagingBucket
 	for _, filePath := range tempFiles {
