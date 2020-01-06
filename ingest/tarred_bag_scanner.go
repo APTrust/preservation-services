@@ -17,6 +17,8 @@ import (
 	"time"
 )
 
+// TarredBagScanner reads a tarred BagIt file to collect metadata for
+// validation and ingest processing. See ProcessNextEntry() below.
 type TarredBagScanner struct {
 	IngestObject *service.IngestObject
 	reader       io.ReadCloser
@@ -25,6 +27,26 @@ type TarredBagScanner struct {
 	TempFiles    []string
 }
 
+// NewTarredBagScanner creates a new TarredBagScanner.
+//
+// Param reader is an io.ReadCloser from which to read the tarred
+// BagIt file.
+//
+// Param ingestObject contains info about the bag in the tarred BagIt
+// file.
+//
+// Param tempDir should be the path to a directory in which the scanner
+// can temporarily store files it extracts from the tarred bag. These
+// files include manifests, tag manifests, and 2-3 tag files. All of the
+// extracted files are text files, and they are typically small.
+//
+// Note that the TarredBagScanner does NOT delete temp files when it's
+// done. It stores the paths to the temp files in the TempFiles attribute
+// (a string slice). The caller should process the temp files as it pleases,
+// and then delete them using this object's DeleteTempFiles method.
+//
+// For an example of how to use this object, see the ScanBag method in
+// https://github.com/APTrust/preservation-services/blob/master/ingest/metadata_gatherer.go
 func NewTarredBagScanner(reader io.ReadCloser, ingestObject *service.IngestObject, tempDir string) *TarredBagScanner {
 	return &TarredBagScanner{
 		IngestObject: ingestObject,
@@ -35,8 +57,13 @@ func NewTarredBagScanner(reader io.ReadCloser, ingestObject *service.IngestObjec
 	}
 }
 
-// expect io.EOF at end. Other errors mean something went wrong.
-// Returns nil, nil for non-file entries.
+// ProcessNextEntry processes the next file in the tarred bag, returning an
+// IngestFile object with metadata about the file. This method returns
+// io.EOF after it reads the last file in the tarball. Any error other than
+// io.EOF means something went wrong.
+//
+// This method returns nil, nil for non-file entries such as directories or
+// symlinks, neither of which can be usefully archived in S3.
 func (scanner *TarredBagScanner) ProcessNextEntry() (ingestFile *service.IngestFile, err error) {
 	header, err := scanner.TarReader.Next()
 	if err != nil {
@@ -49,6 +76,7 @@ func (scanner *TarredBagScanner) ProcessNextEntry() (ingestFile *service.IngestF
 	}
 }
 
+// Process a single file in the tarball.
 func (scanner *TarredBagScanner) processFileEntry(header *tar.Header) (*service.IngestFile, error) {
 	ingestFile, err := scanner.initIngestFile(header)
 	if err != nil {
@@ -58,6 +86,7 @@ func (scanner *TarredBagScanner) processFileEntry(header *tar.Header) (*service.
 	return ingestFile, nil
 }
 
+// Creates an IngestFile object to describe a file in a tarball.
 func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.IngestFile, error) {
 	prefix := scanner.IngestObject.BagName() + "/"
 	pathInBag := strings.Replace(header.Name, prefix, "", 1)
@@ -135,12 +164,18 @@ func (scanner *TarredBagScanner) getTempFilePath(ingestFile *service.IngestFile)
 	return tempFilePath
 }
 
+// CloseReader closes the io.ReadCloser() that was passed into
+// NewTarredBagScanner. If you neglect this call in a long-running
+// worker process, you'll run the system out of filehandles.
+// See also Finish().
 func (scanner *TarredBagScanner) CloseReader() {
 	if scanner.reader != nil {
 		scanner.reader.Close()
 	}
 }
 
+// DeleteTempFiles deletes all of the temp files that this scanner created.
+// See also Finish().
 func (scanner *TarredBagScanner) DeleteTempFiles() {
 	for _, filepath := range scanner.TempFiles {
 		// TODO: what to do on err here?
@@ -150,6 +185,10 @@ func (scanner *TarredBagScanner) DeleteTempFiles() {
 	}
 }
 
+// Finish closes the io.ReadCloser from which the tarred bag was read,
+// and it deletes the manifests and tag files that the scanner wrote into
+// a temporary directory. Be sure to call this after all calls to
+// ProcessNextEntry are complete.
 func (scanner *TarredBagScanner) Finish() {
 	scanner.CloseReader()
 	scanner.DeleteTempFiles()
