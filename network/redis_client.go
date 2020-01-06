@@ -7,10 +7,16 @@ import (
 	"strconv"
 )
 
+// RedisClient is a client that lets workers store and retrieve working
+// data from a Redis server.
 type RedisClient struct {
 	client *redis.Client
 }
 
+// NewRedisClient creates a new RedisClient. Param address is the net address
+// of the Redis server. Param password is the password required to connect.
+// It may be blank, but shouldn't be in production. Param db is the id of the
+// Redis database.
 func NewRedisClient(address, password string, db int) *RedisClient {
 	return &RedisClient{
 		client: redis.NewClient(&redis.Options{
@@ -21,10 +27,13 @@ func NewRedisClient(address, password string, db int) *RedisClient {
 	}
 }
 
+// Ping pings the Redis server. It should return "PONG" if the server is
+// running and we can connect.
 func (c *RedisClient) Ping() (string, error) {
 	return c.client.Ping().Result()
 }
 
+// IngestObjectGet returns an IngestObject from Redis.
 func (c *RedisClient) IngestObjectGet(workItemId int, objIdentifier string) (*service.IngestObject, error) {
 	key := strconv.Itoa(workItemId)
 	field := fmt.Sprintf("object:%s", objIdentifier)
@@ -36,6 +45,7 @@ func (c *RedisClient) IngestObjectGet(workItemId int, objIdentifier string) (*se
 	return service.IngestObjectFromJson(data)
 }
 
+// IngestObjectSave saves an IngestObject to Redis.
 func (c *RedisClient) IngestObjectSave(workItemId int, obj *service.IngestObject) error {
 	key := strconv.Itoa(workItemId)
 	field := fmt.Sprintf("object:%s", obj.Identifier())
@@ -47,6 +57,8 @@ func (c *RedisClient) IngestObjectSave(workItemId int, obj *service.IngestObject
 	return err
 }
 
+// IngestObjectDelete deletes an IngestObject from Redis.
+// Note that this deletes the object record only, not the file records.
 func (c *RedisClient) IngestObjectDelete(workItemId int, objIdentifier string) error {
 	key := strconv.Itoa(workItemId)
 	field := fmt.Sprintf("object:%s", objIdentifier)
@@ -54,6 +66,7 @@ func (c *RedisClient) IngestObjectDelete(workItemId int, objIdentifier string) e
 	return err
 }
 
+// IngestFileGet returns an IngestFile from Redis.
 func (c *RedisClient) IngestFileGet(workItemId int, fileIdentifier string) (*service.IngestFile, error) {
 	key := strconv.Itoa(workItemId)
 	field := fmt.Sprintf("file:%s", fileIdentifier)
@@ -65,6 +78,7 @@ func (c *RedisClient) IngestFileGet(workItemId int, fileIdentifier string) (*ser
 	return service.IngestFileFromJson(data)
 }
 
+// IngestFileSave saves an IngestFile to Redis.
 func (c *RedisClient) IngestFileSave(workItemId int, f *service.IngestFile) error {
 	key := strconv.Itoa(workItemId)
 	field := fmt.Sprintf("file:%s", f.Identifier())
@@ -76,9 +90,44 @@ func (c *RedisClient) IngestFileSave(workItemId int, f *service.IngestFile) erro
 	return err
 }
 
+// IngestFileDelete deletes an IngestFile from Redis.
 func (c *RedisClient) IngestFileDelete(workItemId int, fileIdentifier string) error {
 	key := strconv.Itoa(workItemId)
 	field := fmt.Sprintf("file:%s", fileIdentifier)
 	_, err := c.client.HDel(key, field).Result()
 	return err
+}
+
+// WorkItemDelete deletes the Redis copy (NOT the Pharos copy) of a WorkItem,
+// along with its associated IngestObject and IngestFile records. Call
+// this only when ingest is complete and no further workers will need to
+// access the working data.
+func (c *RedisClient) WorkItemDelete(workItemId int) error {
+	key := strconv.Itoa(workItemId)
+
+	// Rename the key, so no other processes access the object
+	// while we're deleting it.
+	tempKey := fmt.Sprintf("%s:deleted", key)
+	c.client.Rename(key, tempKey)
+
+	// Now delete the items in the hash in batches of 200.
+	// In production, most APTrust bags will generate fewer than
+	// 50 keys during ingest: one per file, plus ~5-10 required
+	// for internal housekeeping. But there are outliers that may
+	// contain as many as 350,000+ keys. Those are rare.
+	for {
+		cursor := uint64(0)
+		keys, cursor, err := c.client.HScan(tempKey, cursor, "*", 200).Result()
+		if err != nil {
+			return fmt.Errorf("Error scanning Redis hash keys for WorkItem %d: %v",
+				workItemId, err)
+		}
+		if len(keys) > 0 {
+			c.client.HDel(tempKey, keys...)
+		}
+		if cursor == 0 {
+			break // no more keys
+		}
+	}
+	return nil
 }
