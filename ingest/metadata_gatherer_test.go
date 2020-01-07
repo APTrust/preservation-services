@@ -1,7 +1,7 @@
 package ingest_test
 
 import (
-	"bytes"
+	//"bytes"
 	"fmt"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
@@ -10,6 +10,9 @@ import (
 	"github.com/minio/minio-go/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"io"
+	//"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -31,7 +34,6 @@ var s3files = []string{
 // Make sure the bag we want to work on is in S3 before we
 // start our tests.
 func setupS3(t *testing.T, context *common.Context) {
-	require.NotNil(t, S3TestServer)
 	initS3TestClient(t, context)
 	clearS3Files(t, context)
 	putBagInS3(t, context)
@@ -51,6 +53,7 @@ func clearS3Files(t *testing.T, context *common.Context) {
 
 // Copy testbag to local in-memory S3 service.
 func putBagInS3(t *testing.T, context *common.Context) {
+	//context.S3Clients["LocalTest"].TraceOn(os.Stderr)
 	bytesWritten, err := context.S3Clients["LocalTest"].FPutObject(
 		testutil.ReceivingBucket,
 		key,
@@ -79,10 +82,6 @@ func TestNewMetadataGatherer(t *testing.T) {
 	assert.Equal(t, context, g.Context)
 }
 
-func TestScanBag(t *testing.T) {
-
-}
-
 func TestGetS3Object(t *testing.T) {
 	context := common.NewContext()
 	setupS3(t, context)
@@ -94,11 +93,21 @@ func TestGetS3Object(t *testing.T) {
 	defer minioObj.Close()
 	require.Nil(t, err)
 
-	var buf bytes.Buffer
-	bytesRead, err := buf.ReadFrom(minioObj)
+	fmt.Println(minioObj)
+	localFile, _ := os.Create("/Users/diamond/Desktop/bag.tar")
+	io.Copy(localFile, minioObj)
 
-	//fmt.Println(bytesRead)
-	//fmt.Println(minioObj)
+	fmt.Println(minioObj.Stat())
 	require.Nil(t, err)
-	assert.True(t, (bytesRead > testbagSize))
+	//assert.True(t, (bytesRead > testbagSize))
+}
+
+func TestScanBag(t *testing.T) {
+	context := common.NewContext()
+	setupS3(t, context)
+	g := ingest.NewMetadataGatherer(context)
+	ingestObject := getIngestObject()
+
+	err := g.ScanBag(9999, ingestObject)
+	require.Nil(t, err)
 }
