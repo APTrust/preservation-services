@@ -71,7 +71,11 @@ func (m *MetadataGatherer) ScanBag(workItemId int, ingestObject *service.IngestO
 
 // GetS3Object retrieves a tarred bag from a depositor's receiving bucket.
 func (m *MetadataGatherer) GetS3Object(ingestObject *service.IngestObject) (*minio.Object, error) {
-	return m.Context.S3Clients["AWS"].GetObject(
+	// s3ClientName will be constants.S3ClientAWS for staging, demo, prod;
+	// will be S3ClientLocalTest for test config
+	s3ClientName := m.Context.Config.DefaultS3ClientName()
+	fmt.Println(ingestObject.S3Bucket, ingestObject.S3Key)
+	return m.Context.S3Clients[s3ClientName].GetObject(
 		ingestObject.S3Bucket,
 		ingestObject.S3Key,
 		minio.GetObjectOptions{})
@@ -94,7 +98,8 @@ func (m *MetadataGatherer) CopyTempFilesToS3(workItemId int, tempFiles []string)
 		//m.Context.Logger.Info("Copying %s to %s/%s", filePath, bucket, key)
 
 		// TODO: Fatal vs. transient errors. Retries.
-		_, err := m.Context.S3Clients["AWS"].FPutObject(
+		s3ClientName := m.Context.Config.DefaultS3ClientName()
+		_, err := m.Context.S3Clients[s3ClientName].FPutObject(
 			bucket,
 			key,
 			filePath,

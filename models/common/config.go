@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/op/go-logging"
 	"os"
@@ -69,6 +70,14 @@ func NewConfig() *Config {
 	return config
 }
 
+func (config *Config) DefaultS3ClientName() string {
+	clientName := constants.S3ClientAWS
+	if config.ConfigName == "test" {
+		clientName = constants.S3ClientLocalTest
+	}
+	return clientName
+}
+
 // Each env starts with default config and overrides items
 // as necessary.
 func newDevConfig() *Config {
@@ -116,12 +125,12 @@ func newDefaultConfig() *Config {
 		RedisUser:               "",
 		RestoreDir:              path.Join(filesDir, "restore"),
 		S3Credentials: map[string]S3Credentials{
-			"AWS": S3Credentials{
+			constants.S3ClientAWS: S3Credentials{
 				Host:      "localhost",
 				KeyId:     os.Getenv("AWS_ACCESS_KEY_ID"),
 				SecretKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
 			},
-			"Wasabi": S3Credentials{
+			constants.S3ClientWasabi: S3Credentials{
 				Host:      "localhost",
 				KeyId:     os.Getenv("WASABI_ACCESS_KEY_ID"),
 				SecretKey: os.Getenv("WASABI_SECRET_ACCESS_KEY"),

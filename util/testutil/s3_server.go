@@ -16,6 +16,8 @@ type S3Server struct {
 	URL    string
 }
 
+// NewS3Server creates a new S3 server that stores objects in memory.
+// This is used only for automated testing.
 func NewS3Server() *S3Server {
 	backend := s3mem.New()
 	backend.CreateBucket(ReceivingBucket)
@@ -30,6 +32,7 @@ func NewS3Server() *S3Server {
 	}
 }
 
+// Close shuts down the S3 test server.
 func (s *S3Server) Close() {
 	s.server.Close()
 }
