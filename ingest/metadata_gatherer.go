@@ -74,7 +74,6 @@ func (m *MetadataGatherer) GetS3Object(ingestObject *service.IngestObject) (*min
 	// s3ClientName will be constants.S3ClientAWS for staging, demo, prod;
 	// will be S3ClientLocalTest for test config
 	s3ClientName := m.Context.Config.DefaultS3ClientName()
-	fmt.Println(ingestObject.S3Bucket, ingestObject.S3Key)
 	return m.Context.S3Clients[s3ClientName].GetObject(
 		ingestObject.S3Bucket,
 		ingestObject.S3Key,
