@@ -29,7 +29,6 @@ type Config struct {
 	ConfigName              string
 	GathererUploadRetries   int
 	GathererUploadRetryMs   int
-	IngestStagingBucket     string
 	IngestTempDir           string
 	LogDir                  string
 	LogLevel                logging.Level
@@ -49,15 +48,14 @@ type Config struct {
 	RedisUser               string
 	RestoreDir              string
 	S3Credentials           map[string]S3Credentials
-	TestReceivingBucket     string
-	TestUnpackBucket        string
-	TestPreservationBucket  string
+	StagingBucket           string
 	VolumeServiceURL        string
 }
 
 var ValidConfigs = []string{
 	"demo",
 	"dev",
+	"integration",
 	"production",
 	"staging",
 	"test",
@@ -82,13 +80,15 @@ func NewConfig() *Config {
 func newConfig(environment string) *Config {
 	config := newDefaultConfig()
 	config.addS3Credentials(environment)
+	config.customizeDirs(environment)
+	config.customizeBuckets(environment)
 	// Customize here...
 	config.makeDirs()
 	return config
 }
 
 func newDefaultConfig() *Config {
-	filesDir, err := util.ExpandTilde(path.Join("~", "tmp", "pres-serv"))
+	filesDir, err := util.ExpandTilde(path.Join("~", "tmp"))
 	// Config is necessary for the app to run, so we should just
 	// die now if we can't determine basic info.
 	if err != nil {
@@ -98,12 +98,11 @@ func newDefaultConfig() *Config {
 		ConfigName:              "default",
 		GathererUploadRetries:   3,
 		GathererUploadRetryMs:   150,
-		IngestStagingBucket:     "",
-		IngestTempDir:           path.Join(filesDir, "ingest"),
+		IngestTempDir:           path.Join(filesDir, "pres-serv", "ingest"),
 		LogDir:                  path.Join(filesDir, "logs"),
 		LogLevel:                logging.DEBUG,
 		MaxDaysSinceFixityCheck: 90,
-		MaxFileSize:             int64(5000000000),
+		MaxFileSize:             int64(5497558138880),
 		NsqLookupd:              "localhost:4161",
 		NsqURL:                  "http://localhost:4151",
 		PharosAPIKey:            os.Getenv("PHAROS_API_KEY"),
@@ -116,11 +115,39 @@ func newDefaultConfig() *Config {
 		RedisRetryMs:            150,
 		RedisURL:                "localhost:6379",
 		RedisUser:               "",
-		RestoreDir:              path.Join(filesDir, "restore"),
-		TestReceivingBucket:     "aptrust.poc.receiving",
-		TestUnpackBucket:        "aptrust.poc.unpacked",
-		TestPreservationBucket:  "aptrust.poc.preservation",
+		RestoreDir:              path.Join(filesDir, "pres-serv", "restore"),
+		StagingBucket:           "",
 		VolumeServiceURL:        "http://localhost:8898",
+	}
+}
+
+func (c *Config) customizeDirs(environment string) {
+	switch environment {
+	case "dev", "integration", "test":
+		return // leave defaults as-is
+	case "staging", "demo", "prod":
+		c.IngestTempDir = "/mnt/lvm/apt/ingest"
+		c.LogDir = "/mnt/lvm/apt/logs"
+		c.RestoreDir = "/mnt/lvm/apt/restore"
+	default:
+		panic(fmt.Sprintf("No such config: %s", environment))
+	}
+}
+
+func (c *Config) customizeBuckets(environment string) {
+	switch environment {
+	case "dev", "test":
+		c.StagingBucket = constants.TestBucketStaging
+	case "integration":
+		c.StagingBucket = "aptrust.integration.staging"
+	case "demo":
+		c.StagingBucket = "aptrust.demo.staging"
+	case "prod":
+		c.StagingBucket = "aptrust.prod.staging"
+	case "staging":
+		c.StagingBucket = "aptrust.staging.staging"
+	default:
+		panic(fmt.Sprintf("No such config: %s", environment))
 	}
 }
 
@@ -166,7 +193,7 @@ func (c *Config) makeDirs() error {
 	for _, dir := range dirs {
 		err := os.MkdirAll(dir, 0755)
 		if err != nil {
-			return err
+			panic(err)
 		}
 	}
 	return nil
