@@ -1,22 +1,6 @@
-require 'fileutils'
-
 # Run unit and integration tests for preservation-services.
-# First we need to start redis and minio servers.
-#
-# Minio user:     minioadmin
-# Minio password: minioadmin
-# Run with: minio  server --quiet --address=127.0.0.1:9899 ~/tmp/minio
-#
-# Need to make the following buckets:
-# const ReceivingBucket = "receiving"
-# const StagingBucket = "staging"
-# const PreservationBucket = "preservation"
-# const ReplicationBucket = "replication"
-#
-# This script should ensure ~/tmp/minio exists.
-# It may be able to create the buckets listed above as well.
-#
-# Need to start redis server with in-memory storage.
+
+require 'fileutils'
 
 class TestRunner
 
@@ -65,9 +49,7 @@ class TestRunner
       start_service(svc)
     end
     run_go_unit_tests
-    @unit_test_services.each do |svc|
-      stop_service(svc)
-    end
+    # at_exit handler will stop all services
   end
 
   def run_go_unit_tests()
@@ -92,14 +74,13 @@ class TestRunner
   def stop_service(svc)
 	pid = @pids[svc[:name]]
 	if pid.nil? || pid == 0
-	  puts "Cannot stop service #{svc[:name]} - no pid"
 	  return
 	end
 	puts "Stopping #{svc[:name]} service (pid #{pid})"
 	begin
 	  Process.kill('TERM', pid)
 	rescue
-	  puts "#{svc[:name]} wasn't even running."
+	  puts "No need to stop #{svc[:name]}: not running."
 	end
   end
 
@@ -137,9 +118,20 @@ class TestRunner
     File.join(project_root, "bin", os)
   end
 
+  def stop_all_services
+    puts "Stopping all services"
+    services = @unit_test_services.concat(@integration_test_services)
+    services.each do |svc|
+      stop_service(svc)
+    end
+  end
+
 end
 
+# TODO: Add command line args to specify whether to run unit tests
+# or integration tests. For now, we're only running unit tests.
 if __FILE__ == $0
   t = TestRunner.new
   t.run_unit_tests
+  at_exit { t.stop_all_services }
 end
