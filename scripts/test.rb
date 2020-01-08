@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # Run unit and integration tests for preservation-services.
 
 require 'fileutils'
@@ -43,7 +45,7 @@ class TestRunner
     ]
   end
 
-  def run_unit_tests()
+  def run_unit_tests
     make_test_dirs
     @unit_test_services.each do |svc|
       start_service(svc)
@@ -52,10 +54,16 @@ class TestRunner
     # at_exit handler will stop all services
   end
 
-  def run_go_unit_tests()
+  def run_go_unit_tests
     puts "Starting go unit tests"
     pid = Process.spawn(env_hash, "go test ./...", chdir: project_root)
     Process.wait pid
+  end
+
+  def run_integration_tests
+    puts "You're ahead of your time, my friend. Integration tests "
+    puts "have not even been written yet. Try the unit tests."
+    print_help
   end
 
   def start_service(svc)
@@ -130,12 +138,27 @@ class TestRunner
     end
   end
 
+  def print_help
+	puts "Usage: "
+    puts "       test.rb units        # Run unit tests"
+    puts "       test.rb integration  # Run integration tests \n"
+  end
+
 end
 
 # TODO: Add command line args to specify whether to run unit tests
 # or integration tests. For now, we're only running unit tests.
 if __FILE__ == $0
   t = TestRunner.new
-  t.run_unit_tests
+  test_name = ARGV[0]
+  if !['units', 'integration'].include?(test_name)
+    t.print_help
+	exit(false)
+  end
+  if test_name == 'units'
+    t.run_unit_tests
+  elsif test_name == 'integration'
+    t.run_integration_tests
+  end
   at_exit { t.stop_all_services }
 end

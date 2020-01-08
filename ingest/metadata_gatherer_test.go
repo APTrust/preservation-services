@@ -53,13 +53,17 @@ func clearS3Files(t *testing.T, context *common.Context) {
 
 // Copy testbag to local in-memory S3 service.
 func putBagInS3(t *testing.T, context *common.Context) {
-	//context.S3Clients[constants.S3ClientAWS].TraceOn(os.Stderr)
+	context.S3Clients[constants.S3ClientAWS].TraceOn(os.Stderr)
 	bytesWritten, err := context.S3Clients[constants.S3ClientAWS].FPutObject(
 		constants.TestBucketReceiving,
 		key,
 		testbag,
 		minio.PutObjectOptions{})
-	require.Nil(t, err)
+	msg := ""
+	if err != nil {
+		msg = err.Error()
+	}
+	require.Nil(t, err, msg)
 	assert.True(t, (bytesWritten >= testbagSize))
 }
 
