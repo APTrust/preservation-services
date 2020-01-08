@@ -46,6 +46,8 @@ class TestRunner
   end
 
   def run_unit_tests
+    puts "Deleting test cache from last run"
+    `go clean -testcache`
     make_test_dirs
     @unit_test_services.each do |svc|
       start_service(svc)
@@ -106,6 +108,10 @@ class TestRunner
 
   def make_test_dirs
     base = File.join(ENV['HOME'], "tmp")
+    if base.end_with?("tmp") # So we don't delete anyone's home dir
+      puts "Deleting #{base}"
+    end
+    FileUtils.remove_dir(base ,true)
     dirs = ["bin", "logs", "minio", "nsq", "redis", "restore"]
     dirs.each do |dir|
       full_dir = File.join(base, dir)

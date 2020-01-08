@@ -121,23 +121,23 @@ func (m *MetadataGatherer) CopyTempFilesToS3(workItemId int, tempFiles []string)
 // ------------ Logging ------------
 
 func (m *MetadataGatherer) logFileSaved(workItemId int, filename string) {
-	m.Context.Logger.Info("Copied %s from WorkItem %d to staging bucket.",
-		filename, workItemId)
+	m.Context.Logger.Infof("Copied to staging: WorkItem %d, %s",
+		workItemId, filename)
 }
 
 func (m *MetadataGatherer) logFileNotSaved(workItemId int, filename string, err error) {
-	m.Context.Logger.Error(
-		"Error copying %s from WorkItem %s to staging bucket: %s",
-		filename, workItemId, err.Error())
+	m.Context.Logger.Errorf(
+		"Failed copy to staging: WorkItem %d, %s: %s",
+		workItemId, filename, err.Error())
 }
 
 func (m *MetadataGatherer) logIngestFileSaved(workItemId int, ingestFile *service.IngestFile) {
-	m.Context.Logger.Info("Saved %s medatata to redis for WorkItem %d",
-		ingestFile.Identifier(), workItemId)
+	m.Context.Logger.Infof("Saved to redis: WorkItem %d, %s",
+		workItemId, ingestFile.Identifier())
 }
 
 func (m *MetadataGatherer) logIngestFileNotSaved(workItemId int, ingestFile *service.IngestFile, err error) {
-	m.Context.Logger.Error(
-		"Error saving %s from WorkItem %s to redis: %s",
-		ingestFile.Identifier(), workItemId, err.Error())
+	m.Context.Logger.Errorf(
+		"Faild save to redis: WorkItem %d, %s: %s",
+		workItemId, ingestFile.Identifier(), err.Error())
 }

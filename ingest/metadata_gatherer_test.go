@@ -1,19 +1,18 @@
 package ingest_test
 
 import (
-	//"bytes"
 	"fmt"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/minio/minio-go/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
-	//"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 )
@@ -21,7 +20,7 @@ import (
 var key = "example.edu.tagsample_good.tar"
 var testbag = testutil.PathToUnitTestBag(key)
 var testbagMd5 = "f4323e5e631834c50d077fc3e03c2fed"
-var testbagSize = int64(32256)
+var testbagSize = int64(40960)
 var s3files = []string{
 	"aptrust-info.txt",
 	"bag-info.txt",
@@ -31,6 +30,26 @@ var s3files = []string{
 	"tagmanifest-md5.txt",
 	"tagmanifest-sha256.txt",
 }
+var s3FileSizes = []int64{
+	int64(67),
+	int64(297),
+	int64(55),
+	int64(230),
+	int64(358),
+	int64(438),
+	int64(694),
+}
+var otherFilesInBag = []string{
+	"data/datastream-DC",
+	"data/datastream-descMetadata",
+	"data/datastream-MARC",
+	"data/datastream-RELS-EXT",
+	"custom_tags/tracked_file_custom.xml",
+	"custom_tags/tracked_tag_file.txt",
+	"custom_tags/untracked_tag_file.txt",
+}
+
+const emptyTimeValue = "0001-01-01 00:00:00 +0000 UTC"
 
 // Make sure the bag we want to work on is in S3 before we
 // start our tests.
@@ -53,7 +72,10 @@ func clearS3Files(t *testing.T, context *common.Context) {
 
 // Copy testbag to local in-memory S3 service.
 func putBagInS3(t *testing.T, context *common.Context) {
-	context.S3Clients[constants.S3ClientAWS].TraceOn(os.Stderr)
+	// Uncomment the following to get a full printout
+	// of the client's HTTP exchanges on Stderr.
+	//context.S3Clients[constants.S3ClientAWS].TraceOn(os.Stderr)
+
 	bytesWritten, err := context.S3Clients[constants.S3ClientAWS].FPutObject(
 		constants.TestBucketReceiving,
 		key,
@@ -96,14 +118,11 @@ func TestGetS3Object(t *testing.T) {
 	require.NotNil(t, minioObj)
 	defer minioObj.Close()
 	require.Nil(t, err)
+	assert.NotNil(t, minioObj)
 
-	fmt.Println(minioObj)
-	localFile, _ := os.Create("/Users/diamond/Desktop/bag.tar")
-	io.Copy(localFile, minioObj)
-
-	fmt.Println(minioObj.Stat())
+	stats, err := minioObj.Stat()
 	require.Nil(t, err)
-	//assert.True(t, (bytesRead > testbagSize))
+	assert.Equal(t, stats.Size, testbagSize)
 }
 
 func TestScanBag(t *testing.T) {
@@ -114,12 +133,60 @@ func TestScanBag(t *testing.T) {
 
 	err := g.ScanBag(9999, ingestObject)
 	require.Nil(t, err)
+
+	testS3Files(t, context)
+	testRedisRecords(t, context)
+
+	// TODO: Clean up files and Redis records here?
 }
 
-func testRedisRecords(t *testing.T) {
+func testRedisRecords(t *testing.T, context *common.Context) {
 	// Make sure all expected records are in local redis server.
+	allFilesInBag := append(s3files, otherFilesInBag...)
+	for _, f := range allFilesInBag {
+		// force forward slashes
+		fullpath := fmt.Sprintf("example.edu/example.edu.tagsample_good/%s", f)
+		ingestFile, err := context.RedisClient.IngestFileGet(9999, fullpath)
+		require.Nil(t, err)
+		require.NotNil(t, ingestFile)
+		testIngestFile(t, ingestFile)
+	}
 }
 
-func testS3Files(t *testing.T) {
+func testIngestFile(t *testing.T, ingestFile *service.IngestFile) {
+	assert.NotEmpty(t, ingestFile.UUID)
+	assert.Empty(t, ingestFile.StorageRecords)
+	assert.Equal(t, "Standard", ingestFile.StorageOption)
+	assert.True(t, ingestFile.Size > 0)
+	assert.NotEmpty(t, ingestFile.PathInBag)
+	assert.Equal(t, "example.edu/example.edu.tagsample_good", ingestFile.ObjectIdentifier)
+	assert.True(t, ingestFile.NeedsSave)
+	assert.Equal(t, 2, len(ingestFile.Checksums))
+	for i, checksum := range ingestFile.Checksums {
+		alg := "md5"
+		if i == 1 {
+			alg = "sha256"
+		}
+		testChecksum(t, checksum, alg)
+	}
+}
+
+func testChecksum(t *testing.T, checksum *service.IngestChecksum, alg string) {
+	assert.Equal(t, alg, checksum.Algorithm)
+	assert.NotEmpty(t, checksum.DateTime)
+	assert.NotEqual(t, emptyTimeValue, checksum.DateTime)
+	assert.NotEmpty(t, checksum.Digest)
+	assert.Equal(t, "ingest", checksum.Source)
+}
+
+func testS3Files(t *testing.T, context *common.Context) {
 	// Make sure all expected files were copied to local S3 server.
+	for i, file := range s3files {
+		fullpath := path.Join(context.Config.BaseWorkingDir,
+			"minio", "staging", "9999", file)
+		require.True(t, util.FileExists(fullpath))
+		stats, err := os.Stat(fullpath)
+		require.Nil(t, err)
+		assert.Equal(t, s3FileSizes[i], stats.Size())
+	}
 }

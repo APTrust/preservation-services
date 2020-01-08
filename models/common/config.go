@@ -26,6 +26,7 @@ import (
 // DEBUG
 
 type Config struct {
+	BaseWorkingDir          string
 	ConfigName              string
 	GathererUploadRetries   int
 	GathererUploadRetryMs   int
@@ -88,18 +89,19 @@ func newConfig(environment string) *Config {
 }
 
 func newDefaultConfig() *Config {
-	filesDir, err := util.ExpandTilde(path.Join("~", "tmp"))
+	baseWorkingDir, err := util.ExpandTilde(path.Join("~", "tmp"))
 	// Config is necessary for the app to run, so we should just
 	// die now if we can't determine basic info.
 	if err != nil {
 		panic(err)
 	}
 	return &Config{
+		BaseWorkingDir:          baseWorkingDir,
 		ConfigName:              "default",
 		GathererUploadRetries:   3,
 		GathererUploadRetryMs:   150,
-		IngestTempDir:           path.Join(filesDir, "pres-serv", "ingest"),
-		LogDir:                  path.Join(filesDir, "logs"),
+		IngestTempDir:           path.Join(baseWorkingDir, "pres-serv", "ingest"),
+		LogDir:                  path.Join(baseWorkingDir, "logs"),
 		LogLevel:                logging.DEBUG,
 		MaxDaysSinceFixityCheck: 90,
 		MaxFileSize:             int64(5497558138880),
@@ -115,7 +117,7 @@ func newDefaultConfig() *Config {
 		RedisRetryMs:            150,
 		RedisURL:                "localhost:6379",
 		RedisUser:               "",
-		RestoreDir:              path.Join(filesDir, "pres-serv", "restore"),
+		RestoreDir:              path.Join(baseWorkingDir, "pres-serv", "restore"),
 		StagingBucket:           "",
 		VolumeServiceURL:        "http://localhost:8898",
 	}
@@ -126,6 +128,7 @@ func (c *Config) customizeDirs(environment string) {
 	case "dev", "integration", "test":
 		return // leave defaults as-is
 	case "staging", "demo", "prod":
+		c.BaseWorkingDir = "/mnt/lvm/apt/"
 		c.IngestTempDir = "/mnt/lvm/apt/ingest"
 		c.LogDir = "/mnt/lvm/apt/logs"
 		c.RestoreDir = "/mnt/lvm/apt/restore"
