@@ -115,3 +115,11 @@ func TestScanBag(t *testing.T) {
 	err := g.ScanBag(9999, ingestObject)
 	require.Nil(t, err)
 }
+
+func testRedisRecords(t *testing.T) {
+	// Make sure all expected records are in local redis server.
+}
+
+func testS3Files(t *testing.T) {
+	// Make sure all expected files were copied to local S3 server.
+}

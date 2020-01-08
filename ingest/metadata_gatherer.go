@@ -61,10 +61,19 @@ func (m *MetadataGatherer) ScanBag(workItemId int, ingestObject *service.IngestO
 		if err != nil {
 			return err
 		}
+		// ProcessNextEntry returns nil for directories,
+		// symlinks, and anything else that's not a file.
+		// We can't store these non-objects in S3, so we
+		// ignore them.
+		if ingestFile == nil {
+			continue
+		}
 		err = m.Context.RedisClient.IngestFileSave(workItemId, ingestFile)
 		if err != nil {
+			m.logIngestFileNotSaved(workItemId, ingestFile, err)
 			return err
 		}
+		m.logIngestFileSaved(workItemId, ingestFile)
 	}
 	m.CopyTempFilesToS3(workItemId, scanner.TempFiles)
 	return nil
@@ -84,7 +93,7 @@ func (m *MetadataGatherer) GetS3Object(ingestObject *service.IngestObject) (*min
 // and it will compare the file checksums in the working data store with
 // the checksums in the manifests.
 func (m *MetadataGatherer) CopyTempFilesToS3(workItemId int, tempFiles []string) error {
-	bucket := m.Context.Config.IngestStagingBucket
+	bucket := m.Context.Config.StagingBucket
 	for _, filePath := range tempFiles {
 		// All the files we save are in the top-level directory:
 		// manifests, tag manifests, bagit.txt, bag-info.txt, and aptrust-info.txt
@@ -100,10 +109,35 @@ func (m *MetadataGatherer) CopyTempFilesToS3(workItemId int, tempFiles []string)
 			key,
 			filePath,
 			minio.PutObjectOptions{})
-
 		if err != nil {
+			m.logFileNotSaved(workItemId, basename, err)
 			return err
 		}
+		m.logFileSaved(workItemId, basename)
 	}
 	return nil
+}
+
+// ------------ Logging ------------
+
+func (m *MetadataGatherer) logFileSaved(workItemId int, filename string) {
+	m.Context.Logger.Info("Copied %s from WorkItem %d to staging bucket.",
+		filename, workItemId)
+}
+
+func (m *MetadataGatherer) logFileNotSaved(workItemId int, filename string, err error) {
+	m.Context.Logger.Error(
+		"Error copying %s from WorkItem %s to staging bucket: %s",
+		filename, workItemId, err.Error())
+}
+
+func (m *MetadataGatherer) logIngestFileSaved(workItemId int, ingestFile *service.IngestFile) {
+	m.Context.Logger.Info("Saved %s medatata to redis for WorkItem %d",
+		ingestFile.Identifier(), workItemId)
+}
+
+func (m *MetadataGatherer) logIngestFileNotSaved(workItemId int, ingestFile *service.IngestFile, err error) {
+	m.Context.Logger.Error(
+		"Error saving %s from WorkItem %s to redis: %s",
+		ingestFile.Identifier(), workItemId, err.Error())
 }
