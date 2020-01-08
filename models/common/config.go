@@ -7,6 +7,8 @@ import (
 	"github.com/op/go-logging"
 	"os"
 	"path"
+	"runtime"
+	"strings"
 )
 
 // TODO: Config should be modifiable on the fly, without having
@@ -53,42 +55,33 @@ type Config struct {
 	VolumeServiceURL        string
 }
 
+var ValidConfigs = []string{
+	"demo",
+	"dev",
+	"production",
+	"staging",
+	"test",
+}
+
 // Returns a new config based on ENV var APT_SERVICES_CONFIG
 func NewConfig() *Config {
 	environment := os.Getenv("APT_SERVICES_CONFIG")
-	var config *Config
-	switch environment {
-	case "dev":
-		config = newDevConfig()
-	case "test":
-		config = newTestConfig()
-		// TODO: Consider automatically starting test S3 & Redis in this case
-	default:
-		panic(fmt.Sprintf("No such config: %s", environment))
+	if runtime.GOOS == "darwin" && (environment != "dev" && environment != "test") {
+		panic("On Mac dev box, APT_SERVICES_CONFIG must be 'dev' or 'test'")
 	}
+	if !util.StringListContains(ValidConfigs, environment) {
+		msg := fmt.Sprintf("No such environment: %s. Try APT_SERVICES_CONFIG=%s",
+			environment, strings.Join(ValidConfigs, " | "))
+		panic(msg)
+	}
+	config := newConfig(environment)
 	config.ConfigName = environment
 	return config
 }
 
-func (config *Config) DefaultS3ClientName() string {
-	clientName := constants.S3ClientAWS
-	if config.ConfigName == "test" {
-		clientName = constants.S3ClientLocalTest
-	}
-	return clientName
-}
-
-// Each env starts with default config and overrides items
-// as necessary.
-func newDevConfig() *Config {
+func newConfig(environment string) *Config {
 	config := newDefaultConfig()
-	// Customize here...
-	config.makeDirs()
-	return config
-}
-
-func newTestConfig() *Config {
-	config := newDefaultConfig()
+	config.addS3Credentials(environment)
 	// Customize here...
 	config.makeDirs()
 	return config
@@ -124,22 +117,43 @@ func newDefaultConfig() *Config {
 		RedisURL:                "localhost:6379",
 		RedisUser:               "",
 		RestoreDir:              path.Join(filesDir, "restore"),
-		S3Credentials: map[string]S3Credentials{
+		TestReceivingBucket:     "aptrust.poc.receiving",
+		TestUnpackBucket:        "aptrust.poc.unpacked",
+		TestPreservationBucket:  "aptrust.poc.preservation",
+		VolumeServiceURL:        "http://localhost:8898",
+	}
+}
+
+func (c *Config) addS3Credentials(environment string) {
+	switch environment {
+	case "dev", "test":
+		c.S3Credentials = map[string]S3Credentials{
 			constants.S3ClientAWS: S3Credentials{
-				Host:      "localhost",
+				Host:      constants.TestMinioServerURL,
+				KeyId:     constants.TestMinioUser,
+				SecretKey: constants.TestMinioPwd,
+			},
+			constants.S3ClientWasabi: S3Credentials{
+				Host:      constants.TestMinioServerURL,
+				KeyId:     constants.TestMinioUser,
+				SecretKey: constants.TestMinioPwd,
+			},
+		}
+	case "staging", "demo", "prod":
+		c.S3Credentials = map[string]S3Credentials{
+			constants.S3ClientAWS: S3Credentials{
+				Host:      "--TBD--",
 				KeyId:     os.Getenv("AWS_ACCESS_KEY_ID"),
 				SecretKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
 			},
 			constants.S3ClientWasabi: S3Credentials{
-				Host:      "localhost",
+				Host:      "--TBD--",
 				KeyId:     os.Getenv("WASABI_ACCESS_KEY_ID"),
 				SecretKey: os.Getenv("WASABI_SECRET_ACCESS_KEY"),
 			},
-		},
-		TestReceivingBucket:    "aptrust.poc.receiving",
-		TestUnpackBucket:       "aptrust.poc.unpacked",
-		TestPreservationBucket: "aptrust.poc.preservation",
-		VolumeServiceURL:       "http://localhost:8898",
+		}
+	default:
+		panic(fmt.Sprintf("No such config: %s", environment))
 	}
 }
 

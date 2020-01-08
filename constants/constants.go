@@ -13,7 +13,6 @@ const (
 	FileTypeTag         = "tag_file"
 	FileTypeTagManifest = "tag_manifest"
 	S3ClientAWS         = "AWS"
-	S3ClientLocalTest   = "LocalTest"
 	S3ClientWasabi      = "Wasabi"
 	SourceIngest        = "ingest"
 	SourceManifest      = "manifest"

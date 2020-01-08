@@ -10,12 +10,3 @@ func TestNewConfig(t *testing.T) {
 	config := common.NewConfig()
 	assert.Equal(t, "test", config.ConfigName)
 }
-
-func TestDefaultS3ClientName(t *testing.T) {
-	config := common.NewConfig()
-	assert.Equal(t, "test", config.ConfigName)
-	assert.Equal(t, "LocalTest", config.DefaultS3ClientName())
-
-	config.ConfigName = "staging"
-	assert.Equal(t, "AWS", config.DefaultS3ClientName())
-}

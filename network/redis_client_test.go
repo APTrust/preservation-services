@@ -2,6 +2,7 @@ package network_test
 
 import (
 	"fmt"
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/network"
 	"github.com/stretchr/testify/assert"
@@ -9,22 +10,28 @@ import (
 	"testing"
 )
 
-// Note that network/main_test starts and stops RedisTestServer
+func getRedisClient() *network.RedisClient {
+	return network.NewRedisClient(
+		constants.TestRedisServerURL,
+		constants.TestRedisPwd,
+		constants.TestRedisDB,
+	)
+}
 
 func TestNewRedisClient(t *testing.T) {
-	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
+	client := getRedisClient()
 	assert.NotNil(t, client)
 }
 
 func TestRedisPing(t *testing.T) {
-	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
+	client := getRedisClient()
 	response, err := client.Ping()
 	assert.Nil(t, err)
 	assert.Equal(t, "PONG", response)
 }
 
 func TestIngestObjectSaveAndGet(t *testing.T) {
-	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
+	client := getRedisClient()
 	require.NotNil(t, client)
 	obj := service.NewIngestObject("bucket", "key", "etag", "test.edu", int64(555))
 	err := client.IngestObjectSave(9999, obj)
@@ -39,7 +46,7 @@ func TestIngestObjectSaveAndGet(t *testing.T) {
 }
 
 func TestIngestObjectDelete(t *testing.T) {
-	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
+	client := getRedisClient()
 	require.NotNil(t, client)
 	obj := service.NewIngestObject("bucket", "key", "etag", "test.edu", int64(555))
 	err := client.IngestObjectSave(9999, obj)
@@ -50,7 +57,7 @@ func TestIngestObjectDelete(t *testing.T) {
 }
 
 func TestIngestFileSaveAndGet(t *testing.T) {
-	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
+	client := getRedisClient()
 	require.NotNil(t, client)
 	f := service.NewIngestFile("test.edu/bag1", "data/images.photo.jpg")
 	err := client.IngestFileSave(9999, f)
@@ -64,7 +71,7 @@ func TestIngestFileSaveAndGet(t *testing.T) {
 }
 
 func TestIngestFileDelete(t *testing.T) {
-	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
+	client := getRedisClient()
 	require.NotNil(t, client)
 	f := service.NewIngestFile("test.edu/bag1", "data/images.photo.jpg")
 	err := client.IngestFileSave(9999, f)
@@ -75,7 +82,7 @@ func TestIngestFileDelete(t *testing.T) {
 }
 
 func TestWorkItemDelete(t *testing.T) {
-	client := network.NewRedisClient(RedisTestServer.Addr(), "", 0)
+	client := getRedisClient()
 	require.NotNil(t, client)
 
 	// Save an object...

@@ -3,6 +3,7 @@ package ingest_test
 import (
 	//"bytes"
 	"fmt"
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
@@ -34,7 +35,6 @@ var s3files = []string{
 // Make sure the bag we want to work on is in S3 before we
 // start our tests.
 func setupS3(t *testing.T, context *common.Context) {
-	initS3TestClient(t, context)
 	clearS3Files(t, context)
 	putBagInS3(t, context)
 }
@@ -44,8 +44,8 @@ func setupS3(t *testing.T, context *common.Context) {
 func clearS3Files(t *testing.T, context *common.Context) {
 	for _, filename := range s3files {
 		key := fmt.Sprintf("9999/%s", filename)
-		_ = context.S3Clients["LocalTest"].RemoveObject(
-			testutil.ReceivingBucket,
+		_ = context.S3Clients[constants.S3ClientAWS].RemoveObject(
+			constants.TestBucketReceiving,
 			key)
 		//require.Nil(t, err)
 	}
@@ -53,9 +53,9 @@ func clearS3Files(t *testing.T, context *common.Context) {
 
 // Copy testbag to local in-memory S3 service.
 func putBagInS3(t *testing.T, context *common.Context) {
-	//context.S3Clients["LocalTest"].TraceOn(os.Stderr)
-	bytesWritten, err := context.S3Clients["LocalTest"].FPutObject(
-		testutil.ReceivingBucket,
+	//context.S3Clients[constants.S3ClientAWS].TraceOn(os.Stderr)
+	bytesWritten, err := context.S3Clients[constants.S3ClientAWS].FPutObject(
+		constants.TestBucketReceiving,
 		key,
 		testbag,
 		minio.PutObjectOptions{})
@@ -67,11 +67,11 @@ func putBagInS3(t *testing.T, context *common.Context) {
 // in our receiving bucket.
 func getIngestObject() *service.IngestObject {
 	return service.NewIngestObject(
-		testutil.ReceivingBucket, // bucket
-		filepath.Base(testbag),   // key
-		testbagMd5,               // eTag
-		"example.edu",            // institution
-		testbagSize,              // size
+		constants.TestBucketReceiving, // bucket
+		filepath.Base(testbag),        // key
+		testbagMd5,                    // eTag
+		"example.edu",                 // institution
+		testbagSize,                   // size
 	)
 }
 

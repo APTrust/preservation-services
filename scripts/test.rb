@@ -92,6 +92,7 @@ class TestRunner
 	ENV.each{ |k,v| env[k] = v }
 	#env['RBENV_VERSION'] = `cat #{@pharos_root}/.ruby-version`.chomp
 	env['RAILS_ENV'] = 'integration'
+    env['APT_SERVICES_CONFIG'] = 'test'
 	env
   end
 
