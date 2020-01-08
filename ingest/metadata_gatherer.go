@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"fmt"
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/minio/minio-go/v6"
@@ -60,10 +61,19 @@ func (m *MetadataGatherer) ScanBag(workItemId int, ingestObject *service.IngestO
 		if err != nil {
 			return err
 		}
+		// ProcessNextEntry returns nil for directories,
+		// symlinks, and anything else that's not a file.
+		// We can't store these non-objects in S3, so we
+		// ignore them.
+		if ingestFile == nil {
+			continue
+		}
 		err = m.Context.RedisClient.IngestFileSave(workItemId, ingestFile)
 		if err != nil {
+			m.logIngestFileNotSaved(workItemId, ingestFile, err)
 			return err
 		}
+		m.logIngestFileSaved(workItemId, ingestFile)
 	}
 	m.CopyTempFilesToS3(workItemId, scanner.TempFiles)
 	return nil
@@ -71,7 +81,7 @@ func (m *MetadataGatherer) ScanBag(workItemId int, ingestObject *service.IngestO
 
 // GetS3Object retrieves a tarred bag from a depositor's receiving bucket.
 func (m *MetadataGatherer) GetS3Object(ingestObject *service.IngestObject) (*minio.Object, error) {
-	return m.Context.S3Clients["AWS"].GetObject(
+	return m.Context.S3Clients[constants.S3ClientAWS].GetObject(
 		ingestObject.S3Bucket,
 		ingestObject.S3Key,
 		minio.GetObjectOptions{})
@@ -83,7 +93,7 @@ func (m *MetadataGatherer) GetS3Object(ingestObject *service.IngestObject) (*min
 // and it will compare the file checksums in the working data store with
 // the checksums in the manifests.
 func (m *MetadataGatherer) CopyTempFilesToS3(workItemId int, tempFiles []string) error {
-	bucket := m.Context.Config.IngestStagingBucket
+	bucket := m.Context.Config.StagingBucket
 	for _, filePath := range tempFiles {
 		// All the files we save are in the top-level directory:
 		// manifests, tag manifests, bagit.txt, bag-info.txt, and aptrust-info.txt
@@ -94,15 +104,40 @@ func (m *MetadataGatherer) CopyTempFilesToS3(workItemId int, tempFiles []string)
 		//m.Context.Logger.Info("Copying %s to %s/%s", filePath, bucket, key)
 
 		// TODO: Fatal vs. transient errors. Retries.
-		_, err := m.Context.S3Clients["AWS"].FPutObject(
+		_, err := m.Context.S3Clients[constants.S3ClientAWS].FPutObject(
 			bucket,
 			key,
 			filePath,
 			minio.PutObjectOptions{})
-
 		if err != nil {
+			m.logFileNotSaved(workItemId, basename, err)
 			return err
 		}
+		m.logFileSaved(workItemId, basename)
 	}
 	return nil
+}
+
+// ------------ Logging ------------
+
+func (m *MetadataGatherer) logFileSaved(workItemId int, filename string) {
+	m.Context.Logger.Infof("Copied to staging: WorkItem %d, %s",
+		workItemId, filename)
+}
+
+func (m *MetadataGatherer) logFileNotSaved(workItemId int, filename string, err error) {
+	m.Context.Logger.Errorf(
+		"Failed copy to staging: WorkItem %d, %s: %s",
+		workItemId, filename, err.Error())
+}
+
+func (m *MetadataGatherer) logIngestFileSaved(workItemId int, ingestFile *service.IngestFile) {
+	m.Context.Logger.Infof("Saved to redis: WorkItem %d, %s",
+		workItemId, ingestFile.Identifier())
+}
+
+func (m *MetadataGatherer) logIngestFileNotSaved(workItemId int, ingestFile *service.IngestFile, err error) {
+	m.Context.Logger.Errorf(
+		"Faild save to redis: WorkItem %d, %s: %s",
+		workItemId, ingestFile.Identifier(), err.Error())
 }

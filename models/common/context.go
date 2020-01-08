@@ -51,12 +51,16 @@ func getRedisClient(config *Config) *network.RedisClient {
 
 func getS3Clients(config *Config) map[string]*minio.Client {
 	s3Clients := make(map[string]*minio.Client, len(config.S3Credentials))
+	useSSL := true
+	if config.ConfigName == "dev" || config.ConfigName == "test" {
+		useSSL = false // talking to localhost in dev and test
+	}
 	for name, creds := range config.S3Credentials {
 		client, err := minio.New(
 			creds.Host,
 			creds.KeyId,
 			creds.SecretKey,
-			true) // true = use ssl
+			useSSL)
 		if err != nil {
 			panic(err)
 		}

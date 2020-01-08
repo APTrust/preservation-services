@@ -12,6 +12,8 @@ const (
 	FileTypePayload     = "payload_file"
 	FileTypeTag         = "tag_file"
 	FileTypeTagManifest = "tag_manifest"
+	S3ClientAWS         = "AWS"
+	S3ClientWasabi      = "Wasabi"
 	SourceIngest        = "ingest"
 	SourceManifest      = "manifest"
 	SourceRegistry      = "registry"
