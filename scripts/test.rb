@@ -62,13 +62,16 @@ class TestRunner
     log_file = File.join(ENV['HOME'], "tmp", "logs", "#{svc[:name]}.log")
     pid = Process.spawn(env_hash, svc[:cmd], out: log_file, err: log_file)
     Process.detach pid
-    log_started(svc, pid)
+    log_started(svc, pid, log_file)
 	@pids[svc[:name]] = pid
   end
 
-  def log_started(svc, pid)
+  def log_started(svc, pid, log_file)
+    puts ""
     puts "Started #{svc[:name]} with command '#{svc[:cmd]}' and pid #{pid}"
     puts svc[:msg]
+    puts "Log file is #{log_file}"
+    puts ""
   end
 
   def stop_service(svc)
