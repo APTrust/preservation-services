@@ -10,3 +10,5 @@ func TestNewConfig(t *testing.T) {
 	config := common.NewConfig()
 	assert.Equal(t, "test", config.ConfigName)
 }
+
+// TODO: Test that different configs get the right settings.
