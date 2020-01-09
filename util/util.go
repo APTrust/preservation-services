@@ -1,5 +1,11 @@
 package util
 
+import (
+	"fmt"
+	"github.com/APTrust/preservation-services/constants"
+	"strings"
+)
+
 // StringListContains returns true if the list of strings contains item.
 func StringListContains(list []string, item string) bool {
 	if list != nil {
@@ -10,4 +16,17 @@ func StringListContains(list []string, item string) bool {
 		}
 	}
 	return false
+}
+
+// GetAlgFromManifestName returns the algorithm used in a tag manifest.
+// For example, arg "manifest-sha256.txt" returns "sha256", while
+// "tagmanifest-sha512.txt" returns "sha512". This returns an error if
+// it can't find the algorithm in the manifest name.
+func GetAlgFromManifestName(manifestName string) (string, error) {
+	for _, alg := range constants.DigestAlgorithms {
+		if strings.Contains(manifestName, alg) {
+			return alg, nil
+		}
+	}
+	return "", fmt.Errorf("Can't parse algorithm from filename %s", manifestName)
 }
