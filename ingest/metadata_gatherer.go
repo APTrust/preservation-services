@@ -3,11 +3,16 @@ package ingest
 import (
 	"fmt"
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/models/bagit"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util"
+	"github.com/APTrust/preservation-services/util/bagit_util"
 	"github.com/minio/minio-go/v6"
 	"io"
+	"os"
 	"path/filepath"
+	"time"
 )
 
 // MetadataGatherer scans a tarred bag, collects metadata such as
@@ -20,15 +25,19 @@ import (
 // this object to gather the metadata that subsequent workers will
 // need to perform their jobs.
 type MetadataGatherer struct {
-	Context *common.Context
+	Context      *common.Context
+	IngestObject *service.IngestObject
+	WorkItemId   int
 }
 
 // NewMetadataGatherer creates a new MetadataGatherer.
 // The context parameter provides methods for communicating
 // with S3 and our working data store (Redis).
-func NewMetadataGatherer(context *common.Context) *MetadataGatherer {
+func NewMetadataGatherer(context *common.Context, workItemId int, ingestObject *service.IngestObject) *MetadataGatherer {
 	return &MetadataGatherer{
-		Context: context,
+		Context:      context,
+		IngestObject: ingestObject,
+		WorkItemId:   workItemId,
 	}
 }
 
@@ -41,14 +50,14 @@ func NewMetadataGatherer(context *common.Context) *MetadataGatherer {
 // After scanning all files, it copies a handful of text files to our
 // S3 staging bucket. The text files include manifests, tag manifests,
 // and selected tag files.
-func (m *MetadataGatherer) ScanBag(workItemId int, ingestObject *service.IngestObject) error {
-	s3Obj, err := m.GetS3Object(ingestObject)
+func (m *MetadataGatherer) ScanBag() error {
+	s3Obj, err := m.GetS3Object()
 	if err != nil {
 		return err
 	}
 	scanner := NewTarredBagScanner(
 		s3Obj,
-		ingestObject,
+		m.IngestObject,
 		m.Context.Config.IngestTempDir)
 	defer scanner.Finish()
 	for {
@@ -68,22 +77,32 @@ func (m *MetadataGatherer) ScanBag(workItemId int, ingestObject *service.IngestO
 		if ingestFile == nil {
 			continue
 		}
-		err = m.Context.RedisClient.IngestFileSave(workItemId, ingestFile)
+		err = m.Context.RedisClient.IngestFileSave(m.WorkItemId, ingestFile)
 		if err != nil {
-			m.logIngestFileNotSaved(workItemId, ingestFile, err)
+			m.logIngestFileNotSaved(ingestFile, err)
 			return err
 		}
-		m.logIngestFileSaved(workItemId, ingestFile)
+		m.logIngestFileSaved(ingestFile)
 	}
-	m.CopyTempFilesToS3(workItemId, scanner.TempFiles)
+
+	err = m.CopyTempFilesToS3(scanner.TempFiles)
+	if err != nil {
+		return err
+	}
+
+	err = m.parseTempFiles(scanner.TempFiles)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // GetS3Object retrieves a tarred bag from a depositor's receiving bucket.
-func (m *MetadataGatherer) GetS3Object(ingestObject *service.IngestObject) (*minio.Object, error) {
+func (m *MetadataGatherer) GetS3Object() (*minio.Object, error) {
 	return m.Context.S3Clients[constants.S3ClientAWS].GetObject(
-		ingestObject.S3Bucket,
-		ingestObject.S3Key,
+		m.IngestObject.S3Bucket,
+		m.IngestObject.S3Key,
 		minio.GetObjectOptions{})
 }
 
@@ -92,14 +111,14 @@ func (m *MetadataGatherer) GetS3Object(ingestObject *service.IngestObject) (*min
 // of ingest, the validator will examine the tag files for required tags,
 // and it will compare the file checksums in the working data store with
 // the checksums in the manifests.
-func (m *MetadataGatherer) CopyTempFilesToS3(workItemId int, tempFiles []string) error {
+func (m *MetadataGatherer) CopyTempFilesToS3(tempFiles []string) error {
 	bucket := m.Context.Config.StagingBucket
 	for _, filePath := range tempFiles {
 		// All the files we save are in the top-level directory:
 		// manifests, tag manifests, bagit.txt, bag-info.txt, and aptrust-info.txt
 		basename := filepath.Base(filePath)
 		// s3Key will look like 425005/manifest-sha256.txt
-		key := fmt.Sprintf("%d/%s", workItemId, basename)
+		key := fmt.Sprintf("%d/%s", m.WorkItemId, basename)
 
 		//m.Context.Logger.Info("Copying %s to %s/%s", filePath, bucket, key)
 
@@ -110,34 +129,105 @@ func (m *MetadataGatherer) CopyTempFilesToS3(workItemId int, tempFiles []string)
 			filePath,
 			minio.PutObjectOptions{})
 		if err != nil {
-			m.logFileNotSaved(workItemId, basename, err)
+			m.logFileNotSaved(basename, err)
 			return err
 		}
-		m.logFileSaved(workItemId, basename)
+		m.logFileSaved(basename)
 	}
+	return nil
+}
+
+func (m *MetadataGatherer) parseTempFiles(tempFiles []string) error {
+	var err error
+	for _, filename := range tempFiles {
+		if util.LooksLikeManifest(filepath.Base(filename)) {
+			err = m.parseManifest(filename)
+		} else {
+			err = m.parseTagFile(filename)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *MetadataGatherer) parseManifest(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	alg, err := util.GetAlgFromManifestName(filepath.Base(filename))
+	checksums, err := bagit_util.ParseManifest(file, alg)
+	if err != nil {
+		return err
+	}
+
+	return m.updateChecksums(checksums)
+}
+
+func (m *MetadataGatherer) updateChecksums(checksums []*bagit.Checksum) error {
+	for _, checksum := range checksums {
+		err := m.addManifestChecksum(checksum)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum) error {
+	ingestChecksum := &service.IngestChecksum{
+		Algorithm: checksum.Algorithm,
+		DateTime:  time.Now().UTC(),
+		Digest:    checksum.Digest,
+		Source:    constants.SourceManifest,
+	}
+	ingestFile, err := m.Context.RedisClient.IngestFileGet(m.WorkItemId,
+		m.IngestObject.FileIdentifier(checksum.Path))
+	if err != nil {
+		return err
+	}
+
+	// If the Redis record already has this checksum, update it.
+	// Otherwise, add it.
+	existingChecksum := ingestFile.GetChecksum(ingestChecksum.Algorithm, ingestChecksum.Source)
+	if existingChecksum != nil {
+		existingChecksum.Digest = ingestChecksum.Digest
+		existingChecksum.DateTime = ingestChecksum.DateTime
+	} else {
+		ingestFile.Checksums = append(ingestFile.Checksums, ingestChecksum)
+	}
+
+	return m.Context.RedisClient.IngestFileSave(m.WorkItemId, ingestFile)
+}
+
+func (m *MetadataGatherer) parseTagFile(filename string) error {
 	return nil
 }
 
 // ------------ Logging ------------
 
-func (m *MetadataGatherer) logFileSaved(workItemId int, filename string) {
+func (m *MetadataGatherer) logFileSaved(filename string) {
 	m.Context.Logger.Infof("Copied to staging: WorkItem %d, %s",
-		workItemId, filename)
+		m.WorkItemId, filename)
 }
 
-func (m *MetadataGatherer) logFileNotSaved(workItemId int, filename string, err error) {
+func (m *MetadataGatherer) logFileNotSaved(filename string, err error) {
 	m.Context.Logger.Errorf(
 		"Failed copy to staging: WorkItem %d, %s: %s",
-		workItemId, filename, err.Error())
+		m.WorkItemId, filename, err.Error())
 }
 
-func (m *MetadataGatherer) logIngestFileSaved(workItemId int, ingestFile *service.IngestFile) {
+func (m *MetadataGatherer) logIngestFileSaved(ingestFile *service.IngestFile) {
 	m.Context.Logger.Infof("Saved to redis: WorkItem %d, %s",
-		workItemId, ingestFile.Identifier())
+		m.WorkItemId, ingestFile.Identifier())
 }
 
-func (m *MetadataGatherer) logIngestFileNotSaved(workItemId int, ingestFile *service.IngestFile, err error) {
+func (m *MetadataGatherer) logIngestFileNotSaved(ingestFile *service.IngestFile, err error) {
 	m.Context.Logger.Errorf(
 		"Faild save to redis: WorkItem %d, %s: %s",
-		workItemId, ingestFile.Identifier(), err.Error())
+		m.WorkItemId, ingestFile.Identifier(), err.Error())
 }

@@ -1,4 +1,4 @@
-package bagit
+package bagit_util
 
 import (
 	"bufio"

@@ -30,3 +30,7 @@ func GetAlgFromManifestName(manifestName string) (string, error) {
 	}
 	return "", fmt.Errorf("Can't parse algorithm from filename %s", manifestName)
 }
+
+func LooksLikeManifest(name string) bool {
+	return strings.Contains(name, "manifest-") && strings.HasSuffix(name, ".txt")
+}

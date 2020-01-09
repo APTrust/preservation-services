@@ -14,6 +14,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -103,18 +104,21 @@ func getIngestObject() *service.IngestObject {
 
 func TestNewMetadataGatherer(t *testing.T) {
 	context := common.NewContext()
-	g := ingest.NewMetadataGatherer(context)
+	obj := getIngestObject()
+	g := ingest.NewMetadataGatherer(context, 9999, obj)
 	require.NotNil(t, g)
 	assert.Equal(t, context, g.Context)
+	assert.Equal(t, 9999, g.WorkItemId)
+	assert.Equal(t, obj, g.IngestObject)
 }
 
 func TestGetS3Object(t *testing.T) {
 	context := common.NewContext()
 	setupS3(t, context)
-	g := ingest.NewMetadataGatherer(context)
-	ingestObject := getIngestObject()
+	obj := getIngestObject()
+	g := ingest.NewMetadataGatherer(context, 9999, obj)
 
-	minioObj, err := g.GetS3Object(ingestObject)
+	minioObj, err := g.GetS3Object()
 	require.NotNil(t, minioObj)
 	defer minioObj.Close()
 	require.Nil(t, err)
@@ -128,10 +132,10 @@ func TestGetS3Object(t *testing.T) {
 func TestScanBag(t *testing.T) {
 	context := common.NewContext()
 	setupS3(t, context)
-	g := ingest.NewMetadataGatherer(context)
-	ingestObject := getIngestObject()
+	obj := getIngestObject()
+	g := ingest.NewMetadataGatherer(context, 9999, obj)
 
-	err := g.ScanBag(9999, ingestObject)
+	err := g.ScanBag()
 	require.Nil(t, err)
 
 	testS3Files(t, context)
@@ -161,22 +165,37 @@ func testIngestFile(t *testing.T, ingestFile *service.IngestFile) {
 	assert.NotEmpty(t, ingestFile.PathInBag)
 	assert.Equal(t, "example.edu/example.edu.tagsample_good", ingestFile.ObjectIdentifier)
 	assert.True(t, ingestFile.NeedsSave)
-	assert.Equal(t, 2, len(ingestFile.Checksums))
+	filetype := ingestFile.FileType()
+	if strings.HasSuffix(ingestFile.Identifier(), "untracked_tag_file.txt") {
+		// Untracked tag file does not appear in manifests.
+		// This is a legal case per the BagIt spec.
+		// TODO: Is there a reliable way to identify untracked tag files?
+		assert.Equal(t, 2, len(ingestFile.Checksums), ingestFile.Identifier())
+	} else if filetype != constants.FileTypeTagManifest {
+		assert.Equal(t, 4, len(ingestFile.Checksums), ingestFile.Identifier())
+	} else {
+		// Manifest files don't include manifest checksums
+		assert.Equal(t, 2, len(ingestFile.Checksums), ingestFile.Identifier())
+	}
 	for i, checksum := range ingestFile.Checksums {
 		alg := "md5"
-		if i == 1 {
+		if i%2 == 1 {
 			alg = "sha256"
 		}
-		testChecksum(t, checksum, alg)
+		testChecksum(t, checksum, alg, i)
 	}
 }
 
-func testChecksum(t *testing.T, checksum *service.IngestChecksum, alg string) {
+func testChecksum(t *testing.T, checksum *service.IngestChecksum, alg string, index int) {
 	assert.Equal(t, alg, checksum.Algorithm)
 	assert.NotEmpty(t, checksum.DateTime)
 	assert.NotEqual(t, emptyTimeValue, checksum.DateTime)
 	assert.NotEmpty(t, checksum.Digest)
-	assert.Equal(t, "ingest", checksum.Source)
+	if index < 2 {
+		assert.Equal(t, "ingest", checksum.Source)
+	} else {
+		assert.Equal(t, "manifest", checksum.Source)
+	}
 }
 
 func testS3Files(t *testing.T, context *common.Context) {

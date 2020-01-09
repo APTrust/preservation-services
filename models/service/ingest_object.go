@@ -62,3 +62,7 @@ func (obj *IngestObject) BagName() string {
 func (obj *IngestObject) Identifier() string {
 	return fmt.Sprintf("%s/%s", obj.Institution, obj.BagName())
 }
+
+func (obj *IngestObject) FileIdentifier(filename string) string {
+	return fmt.Sprintf("%s/%s/%s", obj.Institution, obj.BagName(), filename)
+}
