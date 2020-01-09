@@ -9,19 +9,19 @@ import (
 )
 
 type IngestObject struct {
-	DeletedFromReceivingAt time.Time `json:"deleted_from_receiving_at,omitempty"`
-	ETag                   string    `json:"etag,omitempty"`
-	ErrorMessage           string    `json:"error_message,omitempty"`
-	Id                     int       `json:"id,omitempty"`
-	Institution            string    `json:"institution,omitempty"`
-	Manifests              []string  `json:"manifests"`
-	ParsableTagFiles       []string  `json:"parsable_tag_files"`
-	S3Bucket               string    `json:"s3_bucket,omitempty"`
-	S3Key                  string    `json:"s3_key,omitempty"`
-	Size                   int64     `json:"size,omitempty"`
-	StorageOption          string    `json:"storage_option"`
-	TagManifests           []string  `json:"tag_manifests"`
-	TopLevelDirs           []string  `json:"top_level_dirs"`
+	DeletedFromReceivingAt time.Time    `json:"deleted_from_receiving_at,omitempty"`
+	ETag                   string       `json:"etag,omitempty"`
+	ErrorMessage           string       `json:"error_message,omitempty"`
+	Id                     int          `json:"id,omitempty"`
+	Institution            string       `json:"institution,omitempty"`
+	Manifests              []string     `json:"manifests"`
+	ParsableTagFiles       []string     `json:"parsable_tag_files"`
+	S3Bucket               string       `json:"s3_bucket,omitempty"`
+	S3Key                  string       `json:"s3_key,omitempty"`
+	Size                   int64        `json:"size,omitempty"`
+	StorageOption          string       `json:"storage_option"`
+	TagManifests           []string     `json:"tag_manifests"`
+	Tags                   []*bagit.Tag `json:"tags"`
 }
 
 func NewIngestObject(s3Bucket, s3Key, eTag, institution string, size int64) *IngestObject {
@@ -34,7 +34,7 @@ func NewIngestObject(s3Bucket, s3Key, eTag, institution string, size int64) *Ing
 		S3Key:            s3Key,
 		Size:             size,
 		TagManifests:     make([]string, 0),
-		TopLevelDirs:     make([]string, 0),
+		Tags:             make([]*bagit.Tag, 0),
 	}
 }
 

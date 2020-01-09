@@ -205,6 +205,10 @@ func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum) error {
 }
 
 func (m *MetadataGatherer) parseTagFile(filename string) error {
+
+	// START HERE
+	// Parse tag file, add tags to IngestObject if they're not already there.
+
 	return nil
 }
 

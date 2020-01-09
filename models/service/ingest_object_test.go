@@ -18,7 +18,7 @@ func TestNewIngestObject(t *testing.T) {
 	assert.Equal(t, "test-bag.b001.of200.tar", obj.S3Key)
 	assert.EqualValues(t, 500, obj.Size)
 	assert.NotNil(t, obj.TagManifests)
-	assert.NotNil(t, obj.TopLevelDirs)
+	assert.NotNil(t, obj.Tags)
 }
 
 func TestIngestObjectBagName(t *testing.T) {
