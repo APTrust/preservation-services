@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/APTrust/preservation-services/models/bagit"
 	"io"
+	"regexp"
 	"strings"
-	"time"
 )
 
 // ParseTagFile parses the tags in a tag file that conforms to the
@@ -28,6 +28,7 @@ func ParseTagFile(reader io.Reader, relFilePath string) ([]*bagit.Tag, error) {
 	re := regexp.MustCompile(`^(\S*\:)?(\s*.*)?$`)
 	tags := make([]*bagit.Tag, 0)
 	scanner := bufio.NewScanner(reader)
+	var tag *bagit.Tag
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.TrimSpace(line) == "" {
@@ -66,9 +67,8 @@ func ParseTagFile(reader io.Reader, relFilePath string) ([]*bagit.Tag, error) {
 	return tags, nil
 }
 
-func (validator *Validator) ParseManifest(reader io.Reader, algorithm string) ([]*bagit.Checksum, error) {
-	checksums := make([]*bagit.Checksum)
-	timestamp := time.Now().UTC()
+func ParseManifest(reader io.Reader, algorithm string) ([]*bagit.Checksum, error) {
+	checksums := make([]*bagit.Checksum, 0)
 	re := regexp.MustCompile(`^(\S*)\s*(.*)`)
 	scanner := bufio.NewScanner(reader)
 	lineNum := 1

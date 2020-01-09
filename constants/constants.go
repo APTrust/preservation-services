@@ -18,3 +18,9 @@ const (
 	SourceManifest      = "manifest"
 	SourceRegistry      = "registry"
 )
+
+var DigestAlgorithms []string = []string{
+	AlgMd5,
+	AlgSha256,
+	AlgSha512,
+}

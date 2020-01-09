@@ -16,6 +16,8 @@ import (
 // in from Pharos. We should be able to update config settings in
 // Pharos and have them applied on the fly.
 
+// TODO: https://trello.com/c/ItIoo7WG/540-dynamic-configuration-for-preserveration-services
+
 // Log Levels:
 //
 // CRITICAL

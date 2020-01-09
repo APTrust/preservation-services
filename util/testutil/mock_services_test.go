@@ -21,7 +21,7 @@ var headers = map[string]string{
 // Should return the contents of the file at testdata/test_http_file.txt,
 // along with the specified headers.
 func TestHttpFileResponder(t *testing.T) {
-	filePath := path.Join(testutil.PathToTestData(), "test_http_file.txt")
+	filePath := path.Join(testutil.PathToTestData(), "files", "test_http_file.txt")
 	handler := testutil.HttpFileResponder(headers, filePath)
 	testServer := httptest.NewServer(handler)
 	defer testServer.Close()
