@@ -32,5 +32,9 @@ func GetAlgFromManifestName(manifestName string) (string, error) {
 }
 
 func LooksLikeManifest(name string) bool {
-	return strings.Contains(name, "manifest-") && strings.HasSuffix(name, ".txt")
+	return strings.HasPrefix(name, "manifest-") && strings.HasSuffix(name, ".txt")
+}
+
+func LooksLikeTagManifest(name string) bool {
+	return strings.HasPrefix(name, "tagmanifest-") && strings.HasSuffix(name, ".txt")
 }

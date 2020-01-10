@@ -99,7 +99,7 @@ func (m *MetadataGatherer) ScanBag() error {
 		return err
 	}
 
-	return nil
+	return m.Context.RedisClient.IngestObjectSave(m.WorkItemId, m.IngestObject)
 }
 
 // GetS3Object retrieves a tarred bag from a depositor's receiving bucket.
@@ -142,7 +142,9 @@ func (m *MetadataGatherer) CopyTempFilesToS3(tempFiles []string) error {
 func (m *MetadataGatherer) parseTempFiles(tempFiles []string) error {
 	var err error
 	for _, filename := range tempFiles {
-		if util.LooksLikeManifest(filepath.Base(filename)) {
+		basename := filepath.Base(filename)
+		m.addMetafilePathToObject(filename)
+		if util.LooksLikeManifest(basename) || util.LooksLikeTagManifest(basename) {
 			err = m.parseManifest(filename)
 		} else {
 			err = m.parseTagFile(filename)
@@ -152,6 +154,18 @@ func (m *MetadataGatherer) parseTempFiles(tempFiles []string) error {
 		}
 	}
 	return nil
+}
+
+func (m *MetadataGatherer) addMetafilePathToObject(filename string) {
+	obj := m.IngestObject
+	basename := filepath.Base(filename)
+	if util.LooksLikeTagManifest(basename) {
+		obj.TagManifests = append(obj.TagManifests, basename)
+	} else if util.LooksLikeManifest(basename) {
+		obj.Manifests = append(obj.Manifests, basename)
+	} else {
+		obj.ParsableTagFiles = append(obj.ParsableTagFiles, basename)
+	}
 }
 
 func (m *MetadataGatherer) parseManifest(filename string) error {
@@ -218,7 +232,7 @@ func (m *MetadataGatherer) parseTagFile(filename string) error {
 		return err
 	}
 	m.IngestObject.Tags = append(m.IngestObject.Tags, tags...)
-	return m.Context.RedisClient.IngestObjectSave(m.WorkItemId, m.IngestObject)
+	return nil
 }
 
 // ------------ Logging ------------

@@ -159,26 +159,40 @@ func testRedisRecords(t *testing.T, context *common.Context, objIdentifier strin
 }
 
 func testIngestObject(t *testing.T, context *common.Context, objIdentifier string) {
-	ingestObject, err := context.RedisClient.IngestObjectGet(9999, objIdentifier)
+	obj, err := context.RedisClient.IngestObjectGet(9999, objIdentifier)
 	require.Nil(t, err)
-	require.NotNil(t, ingestObject)
-	assert.Equal(t, testbagMd5, ingestObject.ETag)
-	assert.Equal(t, "example.edu", ingestObject.Institution)
-	assert.Equal(t, "receiving", ingestObject.S3Bucket)
-	assert.Equal(t, key, ingestObject.S3Key)
-	assert.Equal(t, testbagSize, ingestObject.Size)
-	assert.Equal(t, "receiving", ingestObject.S3Bucket)
-	require.Equal(t, 10, len(ingestObject.Tags))
-	for _, tag := range ingestObject.Tags {
+	require.NotNil(t, obj)
+	assert.Equal(t, testbagMd5, obj.ETag)
+	assert.Equal(t, "example.edu", obj.Institution)
+	assert.Equal(t, "receiving", obj.S3Bucket)
+	assert.Equal(t, key, obj.S3Key)
+	assert.Equal(t, testbagSize, obj.Size)
+	assert.Equal(t, "receiving", obj.S3Bucket)
+	require.Equal(t, 10, len(obj.Tags))
+	for _, tag := range obj.Tags {
 		assert.NotEmpty(t, tag.SourceFile)
 		assert.NotEmpty(t, tag.Label)
 		assert.NotEmpty(t, tag.Value)
 	}
 	// Spot check one tag
-	tag := ingestObject.Tags[4]
+	tag := obj.Tags[4]
 	assert.Equal(t, "bag-info.txt", tag.SourceFile)
 	assert.Equal(t, "Bag-Count", tag.Label)
 	assert.Equal(t, "1 of 1", tag.Value)
+
+	// Confirm metafile paths
+	require.Equal(t, 2, len(obj.Manifests))
+	assert.Equal(t, "manifest-md5.txt", obj.Manifests[0])
+	assert.Equal(t, "manifest-sha256.txt", obj.Manifests[1])
+
+	require.Equal(t, 2, len(obj.TagManifests))
+	assert.Equal(t, "tagmanifest-md5.txt", obj.TagManifests[0])
+	assert.Equal(t, "tagmanifest-sha256.txt", obj.TagManifests[1])
+
+	require.Equal(t, 3, len(obj.ParsableTagFiles))
+	assert.Equal(t, "aptrust-info.txt", obj.ParsableTagFiles[0])
+	assert.Equal(t, "bag-info.txt", obj.ParsableTagFiles[1])
+	assert.Equal(t, "bagit.txt", obj.ParsableTagFiles[2])
 }
 
 func testIngestFile(t *testing.T, ingestFile *service.IngestFile) {

@@ -28,3 +28,25 @@ func TestGetAlgFromManifestName(t *testing.T) {
 	_, err := util.GetAlgFromManifestName("bad-file-name.txt")
 	assert.NotNil(t, err)
 }
+
+func TestLooksLikeManifest(t *testing.T) {
+	assert.True(t, util.LooksLikeManifest("manifest-md5.txt"))
+	assert.True(t, util.LooksLikeManifest("manifest-sha256.txt"))
+	// No: is tag manifest
+	assert.False(t, util.LooksLikeManifest("tagmanifest-md5.txt"))
+	// No: is tag file
+	assert.False(t, util.LooksLikeManifest("bag-info.txt"))
+	// No: is payload file
+	assert.False(t, util.LooksLikeManifest("data/manifest-sha256.txt"))
+}
+
+func TestLooksLikeTagManifest(t *testing.T) {
+	assert.True(t, util.LooksLikeTagManifest("tagmanifest-md5.txt"))
+	assert.True(t, util.LooksLikeTagManifest("tagmanifest-sha256.txt"))
+	// No: is manifest
+	assert.False(t, util.LooksLikeTagManifest("manifest-md5.txt"))
+	// No: is tag file
+	assert.False(t, util.LooksLikeTagManifest("bag-info.txt"))
+	// No: is payload file
+	assert.False(t, util.LooksLikeTagManifest("data/manifest-sha256.txt"))
+}
