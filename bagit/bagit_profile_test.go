@@ -4,6 +4,7 @@ import (
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"path"
 	"testing"
 )

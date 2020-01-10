@@ -139,12 +139,12 @@ func TestScanBag(t *testing.T) {
 	require.Nil(t, err)
 
 	testS3Files(t, context)
-	testRedisRecords(t, context)
+	testRedisRecords(t, context, obj.Identifier())
 
 	// TODO: Clean up files and Redis records here?
 }
 
-func testRedisRecords(t *testing.T, context *common.Context) {
+func testRedisRecords(t *testing.T, context *common.Context, objIdentifier string) {
 	// Make sure all expected records are in local redis server.
 	allFilesInBag := append(s3files, otherFilesInBag...)
 	for _, f := range allFilesInBag {
@@ -155,6 +155,30 @@ func testRedisRecords(t *testing.T, context *common.Context) {
 		require.NotNil(t, ingestFile)
 		testIngestFile(t, ingestFile)
 	}
+	testIngestObject(t, context, objIdentifier)
+}
+
+func testIngestObject(t *testing.T, context *common.Context, objIdentifier string) {
+	ingestObject, err := context.RedisClient.IngestObjectGet(9999, objIdentifier)
+	require.Nil(t, err)
+	require.NotNil(t, ingestObject)
+	assert.Equal(t, testbagMd5, ingestObject.ETag)
+	assert.Equal(t, "example.edu", ingestObject.Institution)
+	assert.Equal(t, "receiving", ingestObject.S3Bucket)
+	assert.Equal(t, key, ingestObject.S3Key)
+	assert.Equal(t, testbagSize, ingestObject.Size)
+	assert.Equal(t, "receiving", ingestObject.S3Bucket)
+	require.Equal(t, 10, len(ingestObject.Tags))
+	for _, tag := range ingestObject.Tags {
+		assert.NotEmpty(t, tag.SourceFile)
+		assert.NotEmpty(t, tag.Label)
+		assert.NotEmpty(t, tag.Value)
+	}
+	// Spot check one tag
+	tag := ingestObject.Tags[4]
+	assert.Equal(t, "bag-info.txt", tag.SourceFile)
+	assert.Equal(t, "Bag-Count", tag.Label)
+	assert.Equal(t, "1 of 1", tag.Value)
 }
 
 func testIngestFile(t *testing.T, ingestFile *service.IngestFile) {

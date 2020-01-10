@@ -217,12 +217,7 @@ func (m *MetadataGatherer) parseTagFile(filename string) error {
 	if err != nil {
 		return err
 	}
-	ingestObject, err := m.Context.RedisClient.IngestObjectGet(m.WorkItemId,
-		m.IngestObject.Identifier())
-	if err != nil {
-		return err
-	}
-	ingestObject.Tags = append(m.IngestObject.Tags, tags...)
+	m.IngestObject.Tags = append(m.IngestObject.Tags, tags...)
 	return m.Context.RedisClient.IngestObjectSave(m.WorkItemId, m.IngestObject)
 }
 
