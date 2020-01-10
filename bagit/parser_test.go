@@ -1,9 +1,9 @@
-package bagit_util_test
+package bagit_test
 
 import (
+	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/util"
-	"github.com/APTrust/preservation-services/util/bagit_util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -48,7 +48,7 @@ func TestParseTagFile(t *testing.T) {
 	file, err := os.Open(tagfile)
 	require.Nil(t, err)
 	defer file.Close()
-	tags, err := bagit_util.ParseTagFile(file, "bag-info.txt")
+	tags, err := bagit.ParseTagFile(file, "bag-info.txt")
 	require.Nil(t, err)
 	assert.Equal(t, len(tagLabels), len(tags))
 	for i, tag := range tags {
@@ -68,7 +68,7 @@ func TestParseManifest(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, constants.AlgSha256, alg)
 
-	checksums, err := bagit_util.ParseManifest(file, alg)
+	checksums, err := bagit.ParseManifest(file, alg)
 	require.Nil(t, err)
 
 	assert.Equal(t, len(digests), len(checksums))

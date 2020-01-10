@@ -2,8 +2,8 @@ package testutil
 
 import (
 	"fmt"
+	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
-	"github.com/APTrust/preservation-services/models/bagit"
 	"github.com/APTrust/preservation-services/models/service"
 	"time"
 )

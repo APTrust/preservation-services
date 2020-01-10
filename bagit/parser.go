@@ -1,9 +1,8 @@
-package bagit_util
+package bagit
 
 import (
 	"bufio"
 	"fmt"
-	"github.com/APTrust/preservation-services/models/bagit"
 	"io"
 	"regexp"
 	"strings"
@@ -24,11 +23,11 @@ import (
 // This returns a slice of Tag objects as parsed from the bag. Note that
 // the BagIt spec permits some tags to appear more than once in a file,
 // so you may get multiple tags with the same label.
-func ParseTagFile(reader io.Reader, relFilePath string) ([]*bagit.Tag, error) {
+func ParseTagFile(reader io.Reader, relFilePath string) ([]*Tag, error) {
 	re := regexp.MustCompile(`^(\S*\:)?(\s*.*)?$`)
-	tags := make([]*bagit.Tag, 0)
+	tags := make([]*Tag, 0)
 	scanner := bufio.NewScanner(reader)
-	var tag *bagit.Tag
+	var tag *Tag
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.TrimSpace(line) == "" {
@@ -42,7 +41,7 @@ func ParseTagFile(reader io.Reader, relFilePath string) ([]*bagit.Tag, error) {
 				if tag != nil && tag.Label != "" {
 					tags = append(tags, tag)
 				}
-				tag = bagit.NewTag(relFilePath, data[1], strings.TrimSpace(data[2]))
+				tag = NewTag(relFilePath, data[1], strings.TrimSpace(data[2]))
 				continue
 			}
 			value := strings.TrimSpace(data[2])
@@ -67,8 +66,8 @@ func ParseTagFile(reader io.Reader, relFilePath string) ([]*bagit.Tag, error) {
 	return tags, nil
 }
 
-func ParseManifest(reader io.Reader, algorithm string) ([]*bagit.Checksum, error) {
-	checksums := make([]*bagit.Checksum, 0)
+func ParseManifest(reader io.Reader, algorithm string) ([]*Checksum, error) {
+	checksums := make([]*Checksum, 0)
 	re := regexp.MustCompile(`^(\S*)\s*(.*)`)
 	scanner := bufio.NewScanner(reader)
 	lineNum := 1
@@ -79,7 +78,7 @@ func ParseManifest(reader io.Reader, algorithm string) ([]*bagit.Checksum, error
 		}
 		if re.MatchString(line) {
 			data := re.FindStringSubmatch(line)
-			checksum := &bagit.Checksum{
+			checksum := &Checksum{
 				Algorithm: algorithm,
 				Digest:    data[1],
 				Path:      data[2],

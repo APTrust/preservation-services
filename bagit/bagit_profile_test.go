@@ -1,7 +1,7 @@
 package bagit_test
 
 import (
-	"github.com/APTrust/preservation-services/models/bagit"
+	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"path"
@@ -13,7 +13,7 @@ func TestBagItProfileLoad(t *testing.T) {
 	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
 	profile, err := bagit.BagItProfileLoad(filename)
 	assert.Nil(t, err)
-	assert.NotNil(t, profile)
+	require.NotNil(t, profile)
 
 	// Spot check
 	assert.Equal(t, "support@aptrust.org", profile.BagItProfileInfo.ContactEmail)

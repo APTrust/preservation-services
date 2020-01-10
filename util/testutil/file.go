@@ -10,7 +10,7 @@ import (
 var TempDir, _ = ioutil.TempDir("", "prod-serv-test")
 
 func ProjectRoot() string {
-	_, thisFile, _, _ := runtime.Caller(1)
+	_, thisFile, _, _ := runtime.Caller(0)
 	absPath, _ := filepath.Abs(path.Join(thisFile, "..", "..", ".."))
 	return absPath
 }

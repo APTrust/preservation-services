@@ -3,7 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/APTrust/preservation-services/models/bagit"
+	"github.com/APTrust/preservation-services/bagit"
 	"strings"
 	"time"
 )

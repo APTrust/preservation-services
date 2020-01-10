@@ -1,5 +1,6 @@
 package bagit
 
+// Tag describes a tag parsed from a BagIt file such as bag-info.txt.
 type Tag struct {
 	SourceFile string `json:"source_file"`
 	Label      string `json:"label"`

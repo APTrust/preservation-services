@@ -1,7 +1,7 @@
 package bagit_test
 
 import (
-	"github.com/APTrust/preservation-services/models/bagit"
+	"github.com/APTrust/preservation-services/bagit"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

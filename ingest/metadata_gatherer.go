@@ -2,12 +2,11 @@ package ingest
 
 import (
 	"fmt"
+	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
-	"github.com/APTrust/preservation-services/models/bagit"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
-	"github.com/APTrust/preservation-services/util/bagit_util"
 	"github.com/minio/minio-go/v6"
 	"github.com/satori/go.uuid"
 	"io"
@@ -163,7 +162,7 @@ func (m *MetadataGatherer) parseManifest(filename string) error {
 	defer file.Close()
 
 	alg, err := util.GetAlgFromManifestName(filepath.Base(filename))
-	checksums, err := bagit_util.ParseManifest(file, alg)
+	checksums, err := bagit.ParseManifest(file, alg)
 	if err != nil {
 		return err
 	}
@@ -214,7 +213,7 @@ func (m *MetadataGatherer) parseTagFile(filename string) error {
 	}
 	defer file.Close()
 	basename := filepath.Base(filename)
-	tags, err := bagit_util.ParseTagFile(file, basename)
+	tags, err := bagit.ParseTagFile(file, basename)
 	if err != nil {
 		return err
 	}
