@@ -9,6 +9,7 @@ import (
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/bagit_util"
 	"github.com/minio/minio-go/v6"
+	"github.com/satori/go.uuid"
 	"io"
 	"os"
 	"path/filepath"
@@ -52,6 +53,10 @@ func NewMetadataGatherer(context *common.Context, workItemId int, ingestObject *
 // and selected tag files.
 func (m *MetadataGatherer) ScanBag() error {
 	s3Obj, err := m.GetS3Object()
+	if err != nil {
+		return err
+	}
+	err = m.Context.RedisClient.IngestObjectSave(m.WorkItemId, m.IngestObject)
 	if err != nil {
 		return err
 	}
@@ -119,8 +124,6 @@ func (m *MetadataGatherer) CopyTempFilesToS3(tempFiles []string) error {
 		basename := filepath.Base(filePath)
 		// s3Key will look like 425005/manifest-sha256.txt
 		key := fmt.Sprintf("%d/%s", m.WorkItemId, basename)
-
-		//m.Context.Logger.Info("Copying %s to %s/%s", filePath, bucket, key)
 
 		// TODO: Fatal vs. transient errors. Retries.
 		_, err := m.Context.S3Clients[constants.S3ClientAWS].FPutObject(
@@ -190,26 +193,38 @@ func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum) error {
 	if err != nil {
 		return err
 	}
-
-	// If the Redis record already has this checksum, update it.
-	// Otherwise, add it.
-	existingChecksum := ingestFile.GetChecksum(ingestChecksum.Algorithm, ingestChecksum.Source)
-	if existingChecksum != nil {
-		existingChecksum.Digest = ingestChecksum.Digest
-		existingChecksum.DateTime = ingestChecksum.DateTime
-	} else {
-		ingestFile.Checksums = append(ingestFile.Checksums, ingestChecksum)
+	// File is in manifest, but not in bag
+	if ingestFile == nil {
+		ingestFile = m.newIngestFile(checksum.Path)
 	}
-
+	ingestFile.Checksums = append(ingestFile.Checksums, ingestChecksum)
 	return m.Context.RedisClient.IngestFileSave(m.WorkItemId, ingestFile)
 }
 
+func (m *MetadataGatherer) newIngestFile(relFilePath string) *service.IngestFile {
+	ingestFile := service.NewIngestFile(m.IngestObject.Identifier(), relFilePath)
+	ingestFile.UUID = uuid.NewV4().String()
+	return ingestFile
+}
+
 func (m *MetadataGatherer) parseTagFile(filename string) error {
-
-	// START HERE
-	// Parse tag file, add tags to IngestObject if they're not already there.
-
-	return nil
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	basename := filepath.Base(filename)
+	tags, err := bagit_util.ParseTagFile(file, basename)
+	if err != nil {
+		return err
+	}
+	ingestObject, err := m.Context.RedisClient.IngestObjectGet(m.WorkItemId,
+		m.IngestObject.Identifier())
+	if err != nil {
+		return err
+	}
+	ingestObject.Tags = append(m.IngestObject.Tags, tags...)
+	return m.Context.RedisClient.IngestObjectSave(m.WorkItemId, m.IngestObject)
 }
 
 // ------------ Logging ------------
