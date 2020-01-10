@@ -50,6 +50,17 @@ var otherFilesInBag = []string{
 	"custom_tags/untracked_tag_file.txt",
 }
 
+var allTagFiles = []string{
+	"aptrust-info.txt",
+	"bag-info.txt",
+	"bagit.txt",
+	"custom_tag_file.txt",
+	"junk_file.txt",
+	"custom_tags/tracked_file_custom.xml",
+	"custom_tags/tracked_tag_file.txt",
+	"custom_tags/untracked_tag_file.txt",
+}
+
 const emptyTimeValue = "0001-01-01 00:00:00 +0000 UTC"
 
 // Make sure the bag we want to work on is in S3 before we
@@ -193,6 +204,11 @@ func testIngestObject(t *testing.T, context *common.Context, objIdentifier strin
 	assert.Equal(t, "aptrust-info.txt", obj.ParsableTagFiles[0])
 	assert.Equal(t, "bag-info.txt", obj.ParsableTagFiles[1])
 	assert.Equal(t, "bagit.txt", obj.ParsableTagFiles[2])
+
+	require.Equal(t, len(allTagFiles), len(obj.TagFiles))
+	for i, filename := range obj.TagFiles {
+		assert.Equal(t, allTagFiles[i], filename)
+	}
 }
 
 func testIngestFile(t *testing.T, ingestFile *service.IngestFile) {

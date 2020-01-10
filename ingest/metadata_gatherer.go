@@ -51,19 +51,33 @@ func NewMetadataGatherer(context *common.Context, workItemId int, ingestObject *
 // S3 staging bucket. The text files include manifests, tag manifests,
 // and selected tag files.
 func (m *MetadataGatherer) ScanBag() error {
-	s3Obj, err := m.GetS3Object()
+	tarredBag, err := m.GetS3Object()
 	if err != nil {
 		return err
 	}
-	err = m.Context.RedisClient.IngestObjectSave(m.WorkItemId, m.IngestObject)
-	if err != nil {
-		return err
-	}
+	defer tarredBag.Close()
 	scanner := NewTarredBagScanner(
-		s3Obj,
+		tarredBag,
 		m.IngestObject,
 		m.Context.Config.IngestTempDir)
 	defer scanner.Finish()
+
+	err = m.scan(scanner)
+	if err != nil {
+		return err
+	}
+	err = m.CopyTempFilesToS3(scanner.TempFiles)
+	if err != nil {
+		return err
+	}
+	err = m.parseTempFiles(scanner.TempFiles)
+	if err != nil {
+		return err
+	}
+	return m.Context.RedisClient.IngestObjectSave(m.WorkItemId, m.IngestObject)
+}
+
+func (m *MetadataGatherer) scan(scanner *TarredBagScanner) error {
 	for {
 		ingestFile, err := scanner.ProcessNextEntry()
 		// EOF expected at end of file
@@ -81,6 +95,11 @@ func (m *MetadataGatherer) ScanBag() error {
 		if ingestFile == nil {
 			continue
 		}
+
+		// Make a note of tag files and fetch.txt file
+		// for validator.
+		m.noteSpecialFileType(ingestFile)
+
 		err = m.Context.RedisClient.IngestFileSave(m.WorkItemId, ingestFile)
 		if err != nil {
 			m.logIngestFileNotSaved(ingestFile, err)
@@ -88,18 +107,7 @@ func (m *MetadataGatherer) ScanBag() error {
 		}
 		m.logIngestFileSaved(ingestFile)
 	}
-
-	err = m.CopyTempFilesToS3(scanner.TempFiles)
-	if err != nil {
-		return err
-	}
-
-	err = m.parseTempFiles(scanner.TempFiles)
-	if err != nil {
-		return err
-	}
-
-	return m.Context.RedisClient.IngestObjectSave(m.WorkItemId, m.IngestObject)
+	return nil
 }
 
 // GetS3Object retrieves a tarred bag from a depositor's receiving bucket.
@@ -137,6 +145,15 @@ func (m *MetadataGatherer) CopyTempFilesToS3(tempFiles []string) error {
 		m.logFileSaved(basename)
 	}
 	return nil
+}
+
+func (m *MetadataGatherer) noteSpecialFileType(ingestFile *service.IngestFile) {
+	fileType := ingestFile.FileType()
+	if fileType == constants.FileTypeTag {
+		m.IngestObject.TagFiles = append(m.IngestObject.TagFiles, ingestFile.PathInBag)
+	} else if fileType == constants.FileTypeFetchTxt {
+		m.IngestObject.HasFetchTxt = true
+	}
 }
 
 func (m *MetadataGatherer) parseTempFiles(tempFiles []string) error {

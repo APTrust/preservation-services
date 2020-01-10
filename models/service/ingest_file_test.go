@@ -56,6 +56,9 @@ func TestFileType(t *testing.T) {
 
 	f.PathInBag = "custom-tags/somefile.txt"
 	assert.Equal(t, constants.FileTypeTag, f.FileType())
+
+	f.PathInBag = "fetch.txt"
+	assert.Equal(t, constants.FileTypeFetchTxt, f.FileType())
 }
 
 func TestIsParsableTagFile(t *testing.T) {

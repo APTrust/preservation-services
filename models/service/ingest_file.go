@@ -62,6 +62,8 @@ func (f *IngestFile) FileType() string {
 		fileType = constants.FileTypeTagManifest
 	} else if strings.HasPrefix(f.PathInBag, "manifest-") {
 		fileType = constants.FileTypeManifest
+	} else if f.PathInBag == "fetch.txt" {
+		fileType = constants.FileTypeFetchTxt
 	} else if !strings.HasPrefix(f.PathInBag, "data/") {
 		fileType = constants.FileTypeTag
 	}

@@ -18,6 +18,18 @@ func StringListContains(list []string, item string) bool {
 	return false
 }
 
+// StringListContainsAll returns true if all items in listToCheck are also
+// in masterList. Be sure you pass the params in the right order. Note
+// that this can get expensive if the lists are long.
+func StringListContainsAll(masterList []string, listToCheck []string) bool {
+	for _, item := range listToCheck {
+		if !StringListContains(masterList, item) {
+			return false
+		}
+	}
+	return true
+}
+
 // GetAlgFromManifestName returns the algorithm used in a tag manifest.
 // For example, arg "manifest-sha256.txt" returns "sha256", while
 // "tagmanifest-sha512.txt" returns "sha512". This returns an error if

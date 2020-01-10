@@ -14,6 +14,15 @@ func TestStringListContains(t *testing.T) {
 	assert.False(t, util.StringListContains(nil, "mars"))
 }
 
+func TestStringListContainsAll(t *testing.T) {
+	list1 := []string{"apple", "orange", "banana"}
+	list2 := []string{"apple", "orange", "banana"}
+	list3 := []string{"apple", "orange", "fig"}
+
+	assert.True(t, util.StringListContainsAll(list1, list2))
+	assert.False(t, util.StringListContainsAll(list1, list3))
+}
+
 func TestGetAlgFromManifestName(t *testing.T) {
 	names := map[string]string{
 		"manifest-md5.txt":       "md5",

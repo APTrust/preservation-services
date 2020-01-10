@@ -13,6 +13,7 @@ type IngestObject struct {
 	DeletedFromReceivingAt time.Time    `json:"deleted_from_receiving_at,omitempty"`
 	ETag                   string       `json:"etag,omitempty"`
 	ErrorMessage           string       `json:"error_message,omitempty"`
+	HasFetchTxt            bool         `json:"has_fetch_txt"`
 	Id                     int          `json:"id,omitempty"`
 	Institution            string       `json:"institution,omitempty"`
 	Manifests              []string     `json:"manifests"`
@@ -21,6 +22,7 @@ type IngestObject struct {
 	S3Key                  string       `json:"s3_key,omitempty"`
 	Size                   int64        `json:"size,omitempty"`
 	StorageOption          string       `json:"storage_option"`
+	TagFiles               []string     `json:"tag_files"`
 	TagManifests           []string     `json:"tag_manifests"`
 	Tags                   []*bagit.Tag `json:"tags"`
 }
@@ -28,12 +30,14 @@ type IngestObject struct {
 func NewIngestObject(s3Bucket, s3Key, eTag, institution string, size int64) *IngestObject {
 	return &IngestObject{
 		ETag:             strings.Replace(eTag, "\"", "", -1),
+		HasFetchTxt:      false,
 		Institution:      institution,
 		Manifests:        make([]string, 0),
 		ParsableTagFiles: make([]string, 0),
 		S3Bucket:         s3Bucket,
 		S3Key:            s3Key,
 		Size:             size,
+		TagFiles:         make([]string, 0),
 		TagManifests:     make([]string, 0),
 		Tags:             make([]*bagit.Tag, 0),
 	}
@@ -68,6 +72,8 @@ func (obj *IngestObject) FileIdentifier(filename string) string {
 	return fmt.Sprintf("%s/%s/%s", obj.Institution, obj.BagName(), filename)
 }
 
+// GetTags returns all instances of tags in specified file with
+// specified name.
 func (obj *IngestObject) GetTags(tagFile, tagName string) []*bagit.Tag {
 	tags := make([]*bagit.Tag, 0)
 	for _, tag := range obj.Tags {
@@ -76,6 +82,17 @@ func (obj *IngestObject) GetTags(tagFile, tagName string) []*bagit.Tag {
 		}
 	}
 	return tags
+}
+
+// GetTags returns first instance of tag in specified file with
+// specified name.
+func (obj *IngestObject) GetTag(tagFile, tagName string) *bagit.Tag {
+	var tag *bagit.Tag
+	tags := obj.GetTags(tagFile, tagName)
+	if len(tags) > 0 {
+		tag = tags[0]
+	}
+	return tag
 }
 
 func (obj *IngestObject) BagItProfileFormat() string {

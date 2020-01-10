@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 // BagItProfile represents a DART-type BagItProfile, as described at
@@ -60,9 +61,16 @@ func (p *BagItProfile) ToJson() (string, error) {
 	return string(bytes), nil
 }
 
+// Note: BagIt spec section 2.2.2 says tag names are case-insensitive.
+// https://tools.ietf.org/html/rfc8493#section-2.2.2
 func (p *BagItProfile) GetTagDef(tagFile, tagName string) *TagDefinition {
 	for _, tagDef := range p.Tags {
+		// Try exact match first
 		if tagDef.TagFile == tagFile && tagDef.TagName == tagName {
+			return tagDef
+		}
+		// Try case-insensitve match
+		if tagDef.TagFile == tagFile && strings.EqualFold(tagDef.TagName, tagName) {
 			return tagDef
 		}
 	}

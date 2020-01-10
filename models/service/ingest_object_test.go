@@ -10,6 +10,17 @@ import (
 	"testing"
 )
 
+func getObjectWithTags() *service.IngestObject {
+	tags := make([]*bagit.Tag, 3)
+	tags[0] = bagit.NewTag("bag-info.txt", "label1", "value1")
+	tags[1] = bagit.NewTag("bag-info.txt", "label1", "value2")
+	tags[2] = bagit.NewTag("aptrust-info.txt", "Access", "Institution")
+
+	obj := testutil.GetIngestObject()
+	obj.Tags = append(obj.Tags, tags...)
+	return obj
+}
+
 func TestNewIngestObject(t *testing.T) {
 	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", int64(500))
 	assert.Equal(t, "123456", obj.ETag)
@@ -57,14 +68,7 @@ func TestObjToJson(t *testing.T) {
 }
 
 func TestGetTags(t *testing.T) {
-	tags := make([]*bagit.Tag, 3)
-	tags[0] = bagit.NewTag("bag-info.txt", "label1", "value1")
-	tags[1] = bagit.NewTag("bag-info.txt", "label1", "value2")
-	tags[2] = bagit.NewTag("aptrust-info.txt", "Access", "Institution")
-
-	obj := testutil.GetIngestObject()
-	obj.Tags = append(obj.Tags, tags...)
-
+	obj := getObjectWithTags()
 	label1Tags := obj.GetTags("bag-info.txt", "label1")
 	require.Equal(t, 2, len(label1Tags))
 	for _, tag := range label1Tags {
@@ -76,6 +80,21 @@ func TestGetTags(t *testing.T) {
 
 	assert.Equal(t, 1, len(obj.GetTags("aptrust-info.txt", "Access")))
 	assert.Equal(t, 0, len(obj.GetTags("bag-info.txt", "Does-Not-Exist")))
+}
+
+func TestGetTag(t *testing.T) {
+	obj := getObjectWithTags()
+	tag := obj.GetTag("bag-info.txt", "label1")
+	assert.Equal(t, "bag-info.txt", tag.SourceFile)
+	assert.Equal(t, "label1", tag.Label)
+	assert.Equal(t, "value1", tag.Value)
+
+	tag = obj.GetTag("aptrust-info.txt", "Access")
+	assert.Equal(t, "aptrust-info.txt", tag.SourceFile)
+	assert.Equal(t, "Access", tag.Label)
+	assert.Equal(t, "Institution", tag.Value)
+
+	assert.Nil(t, obj.GetTag("bag-info.txt", "Does-Not-Exist"))
 }
 
 func TestBagItProfileFormat(t *testing.T) {
