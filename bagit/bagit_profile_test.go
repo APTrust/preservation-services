@@ -32,3 +32,18 @@ func TestBagItProfileLoad(t *testing.T) {
 	_, err = bagit.BagItProfileLoad(filename)
 	assert.NotNil(t, err)
 }
+
+func TestGetTagDef(t *testing.T) {
+	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
+	profile, err := bagit.BagItProfileLoad(filename)
+	assert.Nil(t, err)
+	require.NotNil(t, profile)
+
+	tagDef := profile.GetTagDef("aptrust-info.txt", "Access")
+	require.NotNil(t, tagDef)
+	assert.Equal(t, "aptrust-info.txt", tagDef.TagFile)
+	assert.Equal(t, "Access", tagDef.TagName)
+
+	tagDef = profile.GetTagDef("aptrust-info.txt", "Tag-Does-Not-Exist")
+	assert.Nil(t, tagDef)
+}

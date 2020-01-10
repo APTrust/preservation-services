@@ -66,3 +66,13 @@ func (obj *IngestObject) Identifier() string {
 func (obj *IngestObject) FileIdentifier(filename string) string {
 	return fmt.Sprintf("%s/%s/%s", obj.Institution, obj.BagName(), filename)
 }
+
+func (obj *IngestObject) GetTags(tagFile, tagName string) []*bagit.Tag {
+	tags := make([]*bagit.Tag, 0)
+	for _, tag := range obj.Tags {
+		if tag.SourceFile == tagFile && tag.Label == tagName {
+			tags = append(tags, tag)
+		}
+	}
+	return tags
+}

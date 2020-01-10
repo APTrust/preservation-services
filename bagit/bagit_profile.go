@@ -27,7 +27,7 @@ type BagItProfile struct {
 	TagFilesAllowed      []string         `json:"tagFilesAllowed"`
 	TagManifestsAllowed  []string         `json:"tagManifestsAllowed"`
 	TagManifestsRequired []string         `json:"tagManifestsRequired"`
-	Tags                 []TagDefinition  `json:"tags"`
+	Tags                 []*TagDefinition `json:"tags"`
 }
 
 func BagItProfileLoad(filename string) (*BagItProfile, error) {
@@ -58,4 +58,13 @@ func (p *BagItProfile) ToJson() (string, error) {
 		return "", err
 	}
 	return string(bytes), nil
+}
+
+func (p *BagItProfile) GetTagDef(tagFile, tagName string) *TagDefinition {
+	for _, tagDef := range p.Tags {
+		if tagDef.TagFile == tagFile && tagDef.TagName == tagName {
+			return tagDef
+		}
+	}
+	return nil
 }

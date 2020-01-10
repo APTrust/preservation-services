@@ -1,5 +1,9 @@
 package bagit
 
+import (
+	"github.com/APTrust/preservation-services/util"
+)
+
 // TagDefinition describes a tag in a BagItProfile, whether it's
 // required, what values are allowed, etc.
 type TagDefinition struct {
@@ -11,4 +15,11 @@ type TagDefinition struct {
 	TagName      string   `json:"tagName"`
 	UserValue    string   `json:"userValue"`
 	Values       []string `json:"values"`
+}
+
+func (t *TagDefinition) IsLegalValue(val string) bool {
+	if t.Values == nil || len(t.Values) == 0 {
+		return true
+	}
+	return util.StringListContains(t.Values, val)
 }

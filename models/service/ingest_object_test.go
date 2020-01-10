@@ -1,9 +1,11 @@
 package service_test
 
 import (
+	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -51,4 +53,26 @@ func TestObjToJson(t *testing.T) {
 	data, err := obj.ToJson()
 	assert.Nil(t, err)
 	assert.Equal(t, testutil.IngestObjectJson, data)
+}
+
+func TestGetTags(t *testing.T) {
+	tags := make([]*bagit.Tag, 3)
+	tags[0] = bagit.NewTag("bag-info.txt", "label1", "value1")
+	tags[1] = bagit.NewTag("bag-info.txt", "label1", "value2")
+	tags[2] = bagit.NewTag("aptrust-info.txt", "Access", "Institution")
+
+	obj := testutil.GetIngestObject()
+	obj.Tags = append(obj.Tags, tags...)
+
+	label1Tags := obj.GetTags("bag-info.txt", "label1")
+	require.Equal(t, 2, len(label1Tags))
+	for _, tag := range label1Tags {
+		assert.Equal(t, "bag-info.txt", tag.SourceFile)
+		assert.Equal(t, "label1", tag.Label)
+	}
+	assert.Equal(t, "value1", label1Tags[0].Value)
+	assert.Equal(t, "value2", label1Tags[1].Value)
+
+	assert.Equal(t, 1, len(obj.GetTags("aptrust-info.txt", "Access")))
+	assert.Equal(t, 0, len(obj.GetTags("bag-info.txt", "Does-Not-Exist")))
 }
