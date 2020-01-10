@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"github.com/APTrust/preservation-services/bagit"
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
@@ -75,4 +76,23 @@ func TestGetTags(t *testing.T) {
 
 	assert.Equal(t, 1, len(obj.GetTags("aptrust-info.txt", "Access")))
 	assert.Equal(t, 0, len(obj.GetTags("bag-info.txt", "Does-Not-Exist")))
+}
+
+func TestBagItProfileFormat(t *testing.T) {
+	obj := testutil.GetIngestObject()
+
+	// If no BagIt-Profile-Identifier tag, should return default
+	assert.Equal(t, constants.BagItProfileDefault, obj.BagItProfileFormat())
+
+	// Set explicitly to APTrust profile
+	tag := bagit.NewTag(
+		"bag-info.txt",
+		"BagIt-Profile-Identifier",
+		"https://wiki.aptrust.org/APTrust_BagIt_Profile-2.2")
+	obj.Tags = append(obj.Tags, tag)
+	assert.Equal(t, constants.BagItProfileDefault, obj.BagItProfileFormat())
+
+	// Set explicitly to BTR profile
+	tag.Value = "https://raw.githubusercontent.com/dpscollaborative/btr_bagit_profile/master/btr-bagit-profile.json"
+	assert.Equal(t, constants.BagItProfileBTR, obj.BagItProfileFormat())
 }

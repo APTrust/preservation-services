@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/APTrust/preservation-services/bagit"
+	"github.com/APTrust/preservation-services/constants"
 	"strings"
 	"time"
 )
@@ -75,4 +76,17 @@ func (obj *IngestObject) GetTags(tagFile, tagName string) []*bagit.Tag {
 		}
 	}
 	return tags
+}
+
+func (obj *IngestObject) BagItProfileFormat() string {
+	profile := constants.BagItProfileDefault
+	profileIdentifier := ""
+	tags := obj.GetTags("bag-info.txt", "BagIt-Profile-Identifier")
+	if len(tags) > 0 {
+		profileIdentifier = tags[0].Value
+	}
+	if strings.Contains(profileIdentifier, "btr-bagit-profile") {
+		profile = constants.BagItProfileBTR
+	}
+	return profile
 }
