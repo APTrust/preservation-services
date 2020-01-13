@@ -13,13 +13,16 @@ type MetadataValidator struct {
 	Errors       []string
 	IngestObject *service.IngestObject
 	Profile      *bagit.BagItProfile
+	WorkItemId   int
 }
 
-func NewMetadataValidator(context *common.Context, profile *bagit.BagItProfile, ingestObject *service.IngestObject) *MetadataValidator {
+func NewMetadataValidator(context *common.Context, profile *bagit.BagItProfile, ingestObject *service.IngestObject, workItemId int) *MetadataValidator {
 	return &MetadataValidator{
-		Context: context,
-		Profile: profile,
-		Errors:  make([]string, 0),
+		Context:      context,
+		Errors:       make([]string, 0),
+		IngestObject: ingestObject,
+		Profile:      profile,
+		WorkItemId:   workItemId,
 	}
 }
 
@@ -29,11 +32,16 @@ func (v *MetadataValidator) IsValid() bool {
 
 func (v *MetadataValidator) BagItVersionOk() bool {
 	tag := v.IngestObject.GetTag("bagit.txt", "BagIt-Version")
-	if tag == nil {
+	if tag == nil || tag.Value == "" {
 		v.AddError("Missing required tag bag-info.txt/BagIt-Version.")
 		return false
 	}
-	return util.StringListContains(v.Profile.AcceptBagItVersion, tag.Value)
+	ok := util.StringListContains(v.Profile.AcceptBagItVersion, tag.Value)
+	if ok == false {
+		v.AddError("BagIt-Version %s is not permitted in BagIt profile %s.",
+			tag.Value, v.Profile.BagItProfileInfo.BagItProfileIdentifier)
+	}
+	return ok
 }
 
 // Technically, we should check this. But the MetadataGatherer that produced
@@ -91,7 +99,7 @@ func (v *MetadataValidator) TagManifestsRequiredOk() bool {
 		v.IngestObject.TagManifests)
 }
 
-func (v *MetadataValidator) MissingRequiredTags() bool {
+func (v *MetadataValidator) HasAllRequiredTags() bool {
 	ok := true
 	for _, tagDef := range v.Profile.Tags {
 		tag := v.IngestObject.GetTag(tagDef.TagFile, tagDef.TagName)
@@ -104,7 +112,7 @@ func (v *MetadataValidator) MissingRequiredTags() bool {
 	return ok
 }
 
-func (v *MetadataValidator) PresentTagsOk() bool {
+func (v *MetadataValidator) ExistingTagsOk() bool {
 	ok := true
 	for _, tag := range v.IngestObject.Tags {
 		if !v.TagOk(tag) {
@@ -130,6 +138,12 @@ func (v *MetadataValidator) TagOk(tag *bagit.Tag) bool {
 		}
 	}
 	return ok
+}
+
+func (v *MetadataValidator) IngestFileOk(f *service.IngestFile) bool {
+	// Make sure checksums match
+	// Make sure name is legal (i.e. no control chars or other trash)
+	return true
 }
 
 func (v *MetadataValidator) AddError(format string, a ...interface{}) {

@@ -2,13 +2,16 @@ package ingest_test
 
 import (
 	"fmt"
+	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/minio/minio-go/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"path"
 	"path/filepath"
 	"testing"
 )
@@ -106,4 +109,21 @@ func getIngestObject(pathToBagFile, md5Digest string) *service.IngestObject {
 		"example.edu",                 // institution
 		goodbagSize,                   // size
 	)
+}
+
+// Valid names are constants.BagItProfileBTR and constant.BagItProfileDefault
+func getProfile(name string) (*bagit.BagItProfile, error) {
+	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
+	return bagit.BagItProfileLoad(filename)
+}
+
+func getMetadataValidator(t *testing.T, profileName, pathToBag, bagMd5 string) *ingest.MetadataValidator {
+	context := common.NewContext()
+	profile, err := getProfile(profileName)
+	require.Nil(t, err)
+	require.NotNil(t, profile)
+	obj := getIngestObject(pathToBag, bagMd5)
+	validator := ingest.NewMetadataValidator(context, profile, obj, 9999)
+	require.NotNil(t, validator)
+	return validator
 }
