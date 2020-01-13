@@ -102,32 +102,7 @@ func (c *RedisClient) IngestFileDelete(workItemId int, fileIdentifier string) er
 // along with its associated IngestObject and IngestFile records. Call
 // this only when ingest is complete and no further workers will need to
 // access the working data.
-func (c *RedisClient) WorkItemDelete(workItemId int) error {
+func (c *RedisClient) WorkItemDelete(workItemId int) (int64, error) {
 	key := strconv.Itoa(workItemId)
-
-	// Rename the key, so no other processes access the object
-	// while we're deleting it.
-	tempKey := fmt.Sprintf("%s:deleted", key)
-	c.client.Rename(key, tempKey)
-
-	// Now delete the items in the hash in batches of 200.
-	// In production, most APTrust bags will generate fewer than
-	// 50 keys during ingest: one per file, plus ~5-10 required
-	// for internal housekeeping. But there are outliers that may
-	// contain as many as 350,000+ keys. Those are rare.
-	for {
-		cursor := uint64(0)
-		keys, cursor, err := c.client.HScan(tempKey, cursor, "*", 200).Result()
-		if err != nil {
-			return fmt.Errorf("Error scanning Redis hash keys for WorkItem %d: %v",
-				workItemId, err)
-		}
-		if len(keys) > 0 {
-			c.client.HDel(tempKey, keys...)
-		}
-		if cursor == 0 {
-			break // no more keys
-		}
-	}
-	return nil
+	return c.client.Del(key).Result()
 }

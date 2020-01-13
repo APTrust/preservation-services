@@ -119,8 +119,9 @@ func TestWorkItemDelete(t *testing.T) {
 
 	// Call delete to get rid of all records associated with this
 	// WorkItem.
-	err = client.WorkItemDelete(9999)
+	itemsDeleted, err := client.WorkItemDelete(9999)
 	assert.Nil(t, err)
+	assert.EqualValues(t, 1, itemsDeleted)
 
 	// Make sure the IngestObject record was actually deleted.
 	objFromRedis, err = client.IngestObjectGet(9999, "test.edu/bag1")
