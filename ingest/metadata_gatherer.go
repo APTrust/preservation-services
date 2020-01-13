@@ -99,6 +99,7 @@ func (m *MetadataGatherer) scan(scanner *TarredBagScanner) error {
 		// Make a note of tag files and fetch.txt file
 		// for validator.
 		m.noteSpecialFileType(ingestFile)
+		m.IngestObject.FileCount += 1
 
 		err = m.Context.RedisClient.IngestFileSave(m.WorkItemId, ingestFile)
 		if err != nil {

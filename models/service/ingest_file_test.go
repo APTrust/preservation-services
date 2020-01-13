@@ -22,7 +22,7 @@ func TestNewIngestFile(t *testing.T) {
 
 func TestFileFromJson(t *testing.T) {
 	expectedFile := testutil.GetIngestFile(true, true)
-	f, err := service.IngestFileFromJson(testutil.IngestFileJson)
+	f, err := service.IngestFileFromJson(IngestFileJson)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedFile.Checksums, f.Checksums)
 	assert.Equal(t, expectedFile.ObjectIdentifier, f.ObjectIdentifier)
@@ -33,7 +33,7 @@ func TestFileToJson(t *testing.T) {
 	f := testutil.GetIngestFile(true, true)
 	data, err := f.ToJson()
 	assert.Nil(t, err)
-	assert.Equal(t, testutil.IngestFileJson, data)
+	assert.Equal(t, IngestFileJson, data)
 }
 
 func TestIdentifier(t *testing.T) {
@@ -133,3 +133,5 @@ func TestSetStorageRecord(t *testing.T) {
 	assert.Equal(t, 2, len(f.StorageRecords))
 	assert.Equal(t, now, f.StorageRecords[0].StoredAt)
 }
+
+const IngestFileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:ingest","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:registry","source":"registry"}],"error_message":"no error","file_format":"text/javascript","id":999,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","size":5555,"storage_option":"Standard","storage_records":[],"uuid":"00000000-0000-0000-0000-000000000000"}`

@@ -13,6 +13,7 @@ type IngestObject struct {
 	DeletedFromReceivingAt time.Time    `json:"deleted_from_receiving_at,omitempty"`
 	ETag                   string       `json:"etag,omitempty"`
 	ErrorMessage           string       `json:"error_message,omitempty"`
+	FileCount              int          `json:"file_count"`
 	HasFetchTxt            bool         `json:"has_fetch_txt"`
 	Id                     int          `json:"id,omitempty"`
 	Institution            string       `json:"institution,omitempty"`

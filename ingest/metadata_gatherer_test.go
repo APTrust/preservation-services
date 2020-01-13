@@ -179,6 +179,7 @@ func testIngestObject(t *testing.T, context *common.Context, objIdentifier strin
 	assert.Equal(t, key, obj.S3Key)
 	assert.Equal(t, testbagSize, obj.Size)
 	assert.Equal(t, "receiving", obj.S3Bucket)
+	assert.Equal(t, 16, obj.FileCount)
 	require.Equal(t, 10, len(obj.Tags))
 	for _, tag := range obj.Tags {
 		assert.NotEmpty(t, tag.SourceFile)
