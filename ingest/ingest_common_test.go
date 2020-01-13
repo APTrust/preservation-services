@@ -102,13 +102,15 @@ func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string
 // Returns an IngestObject that describes the tarred bag waiting
 // in our receiving bucket.
 func getIngestObject(pathToBagFile, md5Digest string) *service.IngestObject {
-	return service.NewIngestObject(
+	obj := service.NewIngestObject(
 		constants.TestBucketReceiving, // bucket
 		filepath.Base(pathToBagFile),  // key
 		md5Digest,                     // eTag
 		"example.edu",                 // institution
 		goodbagSize,                   // size
 	)
+	obj.Serialization = "application/tar"
+	return obj
 }
 
 // Valid names are constants.BagItProfileBTR and constant.BagItProfileDefault

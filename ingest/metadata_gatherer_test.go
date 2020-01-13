@@ -99,12 +99,12 @@ func testIngestObject(t *testing.T, context *common.Context, objIdentifier strin
 
 	// Confirm metafile paths
 	require.Equal(t, 2, len(obj.Manifests))
-	assert.Equal(t, "manifest-md5.txt", obj.Manifests[0])
-	assert.Equal(t, "manifest-sha256.txt", obj.Manifests[1])
+	assert.Equal(t, "md5", obj.Manifests[0])
+	assert.Equal(t, "sha256", obj.Manifests[1])
 
 	require.Equal(t, 2, len(obj.TagManifests))
-	assert.Equal(t, "tagmanifest-md5.txt", obj.TagManifests[0])
-	assert.Equal(t, "tagmanifest-sha256.txt", obj.TagManifests[1])
+	assert.Equal(t, "md5", obj.TagManifests[0])
+	assert.Equal(t, "sha256", obj.TagManifests[1])
 
 	require.Equal(t, 3, len(obj.ParsableTagFiles))
 	assert.Equal(t, "aptrust-info.txt", obj.ParsableTagFiles[0])

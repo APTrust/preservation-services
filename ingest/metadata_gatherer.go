@@ -177,10 +177,14 @@ func (m *MetadataGatherer) parseTempFiles(tempFiles []string) error {
 func (m *MetadataGatherer) addMetafilePathToObject(filename string) {
 	obj := m.IngestObject
 	basename := filepath.Base(filename)
+	alg, err := util.AlgorithmFromManifestName(filepath.Base(filename))
+	if err != nil {
+		alg = "Unknown Algorithm"
+	}
 	if util.LooksLikeTagManifest(basename) {
-		obj.TagManifests = append(obj.TagManifests, basename)
+		obj.TagManifests = append(obj.TagManifests, alg)
 	} else if util.LooksLikeManifest(basename) {
-		obj.Manifests = append(obj.Manifests, basename)
+		obj.Manifests = append(obj.Manifests, alg)
 	} else {
 		obj.ParsableTagFiles = append(obj.ParsableTagFiles, basename)
 	}
@@ -193,7 +197,10 @@ func (m *MetadataGatherer) parseManifest(filename string) error {
 	}
 	defer file.Close()
 
-	alg, err := util.GetAlgFromManifestName(filepath.Base(filename))
+	alg, err := util.AlgorithmFromManifestName(filepath.Base(filename))
+	if err != nil {
+		return err
+	}
 	checksums, err := bagit.ParseManifest(file, alg)
 	if err != nil {
 		return err

@@ -64,7 +64,7 @@ func TestParseManifest(t *testing.T) {
 	require.Nil(t, err)
 	defer file.Close()
 
-	alg, err := util.GetAlgFromManifestName(manifest)
+	alg, err := util.AlgorithmFromManifestName(manifest)
 	require.Nil(t, err)
 	assert.Equal(t, constants.AlgSha256, alg)
 

@@ -6,6 +6,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
+	"strings"
 )
 
 type MetadataValidator struct {
@@ -49,14 +50,37 @@ func (v *MetadataValidator) BagItVersionOk() bool {
 // both APTrust and BTR specs. So the fact that we have metadata means we
 // read a tar file, and we can report the serialization was OK.
 func (v *MetadataValidator) SerializationOk() bool {
-	return true
+	formatsAllowed := v.Profile.AcceptSerialization
+	formatReceived := v.IngestObject.Serialization
+	if v.Profile.Serialization == "forbidden" && formatReceived != "" {
+		v.AddError("BagIt profile forbids serialization but bag is serialized in %s format", formatReceived)
+		return false
+	}
+	if v.Profile.Serialization == "required" && formatReceived == "" {
+		v.AddError("Bag is not serialized, but profile requires serialization in one of the following formats: %s", strings.Join(formatsAllowed, ", "))
+		return false
+	}
+	if v.Profile.Serialization != "required" && formatReceived == "" {
+		return true
+	}
+	ok := true
+	if !util.StringListContains(formatsAllowed, formatReceived) {
+		v.AddError("BagIt profile does not allow serialization format %s", formatReceived)
+		ok = false
+	}
+	return ok
 }
 
 func (v *MetadataValidator) FetchTxtOk() bool {
 	if v.Profile.AllowFetchTxt == true {
 		return true
 	}
-	return !v.IngestObject.HasFetchTxt
+	ok := true
+	if v.IngestObject.HasFetchTxt {
+		v.AddError("Bag has fetch.txt file which profile does not allow")
+		ok = false
+	}
+	return ok
 }
 
 func (v *MetadataValidator) ManifestsAllowedOk() bool {
@@ -154,7 +178,17 @@ func (v *MetadataValidator) AddError(format string, a ...interface{}) {
 	}
 }
 
+func (v *MetadataValidator) ClearErrors() {
+	v.Errors = make([]string, 0)
+}
+
 func (v *MetadataValidator) AnythingGoes(list []string) bool {
+	// Spec at https://bagit-profiles.github.io/bagit-profiles-specification/
+	// says if [Tag]ManifestsAllowed is empty, any [tag]manifests are allowed.
+	//
+	// There's actually more nuance than that, as any items in a required
+	// list must also be in an allowed list. We should validate that when
+	// validating the profile, not here.
 	return list == nil || len(list) == 0 || util.StringListContains(list, "*")
 }
 

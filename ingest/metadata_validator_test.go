@@ -1,6 +1,7 @@
 package ingest_test
 
 import (
+	//"fmt"
 	"github.com/APTrust/preservation-services/constants"
 	//"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/ingest"
@@ -64,7 +65,7 @@ func TestBagItVersionOk(t *testing.T) {
 
 	// Clear the errors, and make sure we get a desciptive error
 	// for empty BagIt-Version tag.
-	validator.Errors = make([]string, 0)
+	validator.ClearErrors()
 	tag := validator.IngestObject.GetTag("bagit.txt", "BagIt-Version")
 	tag.Value = ""
 	ok = validator.BagItVersionOk()
@@ -73,7 +74,7 @@ func TestBagItVersionOk(t *testing.T) {
 	assert.Equal(t, "Missing required tag bag-info.txt/BagIt-Version.", validator.Errors[0])
 
 	// Should get same error if tag is entirely missing
-	validator.Errors = make([]string, 0)
+	validator.ClearErrors()
 	tag = nil
 	ok = validator.BagItVersionOk()
 	assert.False(t, ok)
@@ -82,19 +83,112 @@ func TestBagItVersionOk(t *testing.T) {
 }
 
 func TestSerializationOk(t *testing.T) {
+	// Default obj has format "application/tar" and default
+	// profile says serialization is required in format
+	// "application/tar", so this should be OK.
+	validator := setupValidator(t)
+	assert.True(t, validator.SerializationOk())
 
+	// Serialization not OK if serialization is forbidden.
+	validator.Profile.Serialization = "forbidden"
+	assert.False(t, validator.SerializationOk())
+	require.Equal(t, 1, len(validator.Errors))
+	assert.Equal(t, "BagIt profile forbids serialization but bag is serialized in application/tar format", validator.Errors[0])
+	validator.ClearErrors()
+
+	// Not OK if profile does not accept tar format,
+	// regardless of Serialization value.
+	//
+	// 1. Required, but format not allowed.
+	validator.Profile.Serialization = "required"
+	validator.Profile.AcceptSerialization = []string{}
+	assert.False(t, validator.SerializationOk())
+	require.Equal(t, 1, len(validator.Errors))
+	assert.Equal(t, "BagIt profile does not allow serialization format application/tar", validator.Errors[0])
+	validator.ClearErrors()
+
+	// 2. Optional, but format not allowed
+	validator.Profile.Serialization = "optional"
+	assert.False(t, validator.SerializationOk())
+	require.Equal(t, 1, len(validator.Errors))
+	assert.Equal(t, "BagIt profile does not allow serialization format application/tar", validator.Errors[0])
+	validator.ClearErrors()
+
+	// 3. Forbidden, but bag is serialized.
+	validator.Profile.Serialization = "forbidden"
+	assert.False(t, validator.SerializationOk())
+	require.Equal(t, 1, len(validator.Errors))
+	assert.Equal(t, "BagIt profile forbids serialization but bag is serialized in application/tar format", validator.Errors[0])
+	validator.ClearErrors()
+
+	// OK if no serialization in the following two cases.
+	validator.IngestObject.Serialization = ""
+	validator.Profile.Serialization = "forbidden"
+	assert.True(t, validator.SerializationOk())
+	validator.Profile.Serialization = "optional"
+	assert.True(t, validator.SerializationOk())
+
+	// Not OK if required but unserialized.
+	validator.Profile.Serialization = "required"
+	validator.Profile.AcceptSerialization = []string{"application/tar", "application/gzip"}
+	assert.False(t, validator.SerializationOk())
+	require.Equal(t, 1, len(validator.Errors))
+	assert.Equal(t, "Bag is not serialized, but profile requires serialization in one of the following formats: application/tar, application/gzip", validator.Errors[0])
+	validator.ClearErrors()
 }
 
 func TestFetchTxtOk(t *testing.T) {
+	// In default case, profile says fetch.txt is not
+	// allowed, and IngestObject says it's not part
+	// of the bag.
+	validator := setupValidator(t)
+	assert.True(t, validator.FetchTxtOk())
 
+	// Not OK: profile says not allowed, but file is present.
+	validator.IngestObject.HasFetchTxt = true
+	assert.False(t, validator.FetchTxtOk())
+	require.Equal(t, 1, len(validator.Errors))
+	assert.Equal(t, "Bag has fetch.txt file which profile does not allow", validator.Errors[0])
+	validator.ClearErrors()
+
+	// OK: profile says it's allowed & file is present.
+	validator.Profile.AllowFetchTxt = true
+	assert.True(t, validator.FetchTxtOk())
+
+	// OK: profile says it's allowed, but file is not present.
+	validator.IngestObject.HasFetchTxt = false
+	assert.True(t, validator.FetchTxtOk())
 }
 
 func TestManifestsAllowedOk(t *testing.T) {
+	// Default APTrust profile says md5 and sha256 are allowed.
+	// IngestObject has md5 and sha256
+	validator := setupValidator(t)
+	assert.True(t, validator.ManifestsAllowedOk())
 
+	// If md5 is not allowed, validation should fail.
+	validator.Profile.ManifestsAllowed = []string{"sha256"}
+	assert.False(t, validator.ManifestsAllowedOk())
+	require.Equal(t, 1, len(validator.Errors))
+	require.Equal(t, "Bag contains illegal manifest 'md5'", validator.Errors[0])
+	validator.ClearErrors()
+
+	// Make sure validator reports all errors
+	validator.Profile.ManifestsAllowed = []string{"sha512"}
+	assert.False(t, validator.ManifestsAllowedOk())
+	require.Equal(t, 2, len(validator.Errors))
+	require.Equal(t, "Bag contains illegal manifest 'md5'", validator.Errors[0])
+	require.Equal(t, "Bag contains illegal manifest 'sha256'", validator.Errors[1])
+	validator.ClearErrors()
+
+	// If bag has only some of the allowed manifests, that's OK.
+	validator.Profile.ManifestsAllowed = []string{"sha256", "md5"}
+	assert.True(t, validator.ManifestsAllowedOk())
+	require.Equal(t, 0, len(validator.Errors))
 }
 
 func TestManifestsRequiredOk(t *testing.T) {
-
+	// START HERE
 }
 
 func TagFilesAllowedOk(t *testing.T) {
@@ -126,6 +220,10 @@ func TestIngestFileOk(t *testing.T) {
 }
 
 func TestAddError(t *testing.T) {
+
+}
+
+func TestClearErrors(t *testing.T) {
 
 }
 

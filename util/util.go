@@ -2,7 +2,7 @@ package util
 
 import (
 	"fmt"
-	"github.com/APTrust/preservation-services/constants"
+	"regexp"
 	"strings"
 )
 
@@ -30,23 +30,19 @@ func StringListContainsAll(masterList []string, listToCheck []string) bool {
 	return true
 }
 
-// GetAlgFromManifestName returns the algorithm used in a tag manifest.
-// For example, arg "manifest-sha256.txt" returns "sha256", while
-// "tagmanifest-sha512.txt" returns "sha512". This returns an error if
-// it can't find the algorithm in the manifest name.
-func GetAlgFromManifestName(manifestName string) (string, error) {
-	for _, alg := range constants.DigestAlgorithms {
-		if strings.Contains(manifestName, alg) {
-			return alg, nil
-		}
-	}
-	return "", fmt.Errorf("Can't parse algorithm from filename %s", manifestName)
-}
-
 func LooksLikeManifest(name string) bool {
 	return strings.HasPrefix(name, "manifest-") && strings.HasSuffix(name, ".txt")
 }
 
 func LooksLikeTagManifest(name string) bool {
 	return strings.HasPrefix(name, "tagmanifest-") && strings.HasSuffix(name, ".txt")
+}
+
+func AlgorithmFromManifestName(filename string) (string, error) {
+	re := regexp.MustCompile(`manifest-(?P<Alg>[^\.]+).txt$`)
+	match := re.FindStringSubmatch(filename)
+	if len(match) > 1 {
+		return match[1], nil
+	}
+	return "", fmt.Errorf("Cannot get algorithm from filename %s", filename)
 }

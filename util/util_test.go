@@ -23,18 +23,18 @@ func TestStringListContainsAll(t *testing.T) {
 	assert.False(t, util.StringListContainsAll(list1, list3))
 }
 
-func TestGetAlgFromManifestName(t *testing.T) {
+func TestAlgorithmFromManifestName(t *testing.T) {
 	names := map[string]string{
 		"manifest-md5.txt":       "md5",
 		"tagmanifest-sha256.txt": "sha256",
 		"manifest-sha512.txt":    "sha512",
 	}
 	for filename, algorithm := range names {
-		alg, err := util.GetAlgFromManifestName(filename)
+		alg, err := util.AlgorithmFromManifestName(filename)
 		assert.Nil(t, err)
 		assert.Equal(t, algorithm, alg)
 	}
-	_, err := util.GetAlgFromManifestName("bad-file-name.txt")
+	_, err := util.AlgorithmFromManifestName("bad-file-name.txt")
 	assert.NotNil(t, err)
 }
 

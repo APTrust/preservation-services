@@ -56,6 +56,7 @@ func GetIngestObject() *service.IngestObject {
 		ParsableTagFiles:       []string{"bag-info.txt", "aptrust-info.txt"},
 		S3Bucket:               "aptrust.receiving.test.edu",
 		S3Key:                  "some-bag.tar",
+		Serialization:          "application/tar",
 		Size:                   99999,
 		StorageOption:          "Standard",
 		TagFiles:               []string{"bag-info.txt", "aptrust-info.txt", "misc/custom-tag-file.txt"},

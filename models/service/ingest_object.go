@@ -21,6 +21,7 @@ type IngestObject struct {
 	ParsableTagFiles       []string     `json:"parsable_tag_files"`
 	S3Bucket               string       `json:"s3_bucket,omitempty"`
 	S3Key                  string       `json:"s3_key,omitempty"`
+	Serialization          string       `json:"serialization,omitempty"`
 	Size                   int64        `json:"size,omitempty"`
 	StorageOption          string       `json:"storage_option"`
 	TagFiles               []string     `json:"tag_files"`
