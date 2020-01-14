@@ -128,6 +128,7 @@ func (f *IngestFile) GetStorageRecord(url string) *StorageRecord {
 }
 
 // File identifiers cannot contain control characters.
+// TODO: Test
 func (f *IngestFile) IdentifierIsLegal() bool {
 	identifier := f.Identifier()
 	return !util.ContainsControlCharacter(identifier) &&
@@ -143,20 +144,54 @@ func (f *IngestFile) IdentifierIsLegal() bool {
 // custom-tag-file.txt MAY have an entry in each tag manifest (not MUST)
 //
 // https://tools.ietf.org/html/rfc8493#section-2.2.1
-func (f *IngestFile) ManifestChecksumRequired(manifestType string) bool {
+//
+// TODO: test
+func (f *IngestFile) ManifestChecksumRequired(manifestName string) (bool, error) {
+	var err error
 	required := true
 	fileType := f.FileType()
-	if manifestType == constants.FileTypeManifest {
+	if strings.HasPrefix(manifestName, "manifest-") {
 		required = (fileType == constants.FileTypePayload)
-	} else if manifestType == constants.FileTypeTagManifest {
+	} else if strings.HasPrefix(manifestName, "tagmanifest-") {
 		required = (fileType == constants.FileTypeManifest)
 	} else {
-		panic(fmt.Sprintf("Illegal manifest type: %s", manifestType))
+		err = fmt.Errorf("Unrecognized manifest type %s. Name should start with 'manifest-' or 'tagmanifest-'", manifestName)
 	}
-	return required
+	return required, err
 }
 
-func (f *IngestFile) ChecksumsMatch(algorithm string) (bool, error) {
-	// TODO: Implement this.
-	return true, nil
+// TODO: Break up & test
+func (f *IngestFile) ChecksumsMatch(manifestName string) (bool, error) {
+	ok := true
+	alg, err := util.AlgorithmFromManifestName(manifestName)
+	if err != nil {
+		return false, fmt.Errorf("Urecognized manifest name: %s", err.Error())
+	}
+	ingestChecksum := f.GetChecksum(constants.SourceIngest, alg)
+	manifestChecksum := f.GetChecksum(constants.SourceManifest, alg)
+
+	manifestChecksumRequired, err := f.ManifestChecksumRequired(manifestName)
+	if err != nil {
+		return false, err
+	}
+	if ingestChecksum == nil && manifestChecksum != nil {
+		err = fmt.Errorf("File %s in %s is missing from bag",
+			f.Identifier(), manifestChecksum)
+		ok = false
+	}
+	if manifestChecksum == nil && manifestChecksumRequired {
+		err = fmt.Errorf("File %s is not in manifest %s",
+			f.Identifier(), manifestChecksum)
+		ok = false
+	}
+	if ingestChecksum != nil && manifestChecksum != nil {
+		if ingestChecksum.Digest != manifestChecksum.Digest {
+			err = fmt.Errorf("File %s: ingest %s checksum %s "+
+				"doesn't match manifest checksum %s",
+				f.Identifier(), alg, ingestChecksum.Digest,
+				manifestChecksum.Digest)
+			ok = false
+		}
+	}
+	return ok, err
 }
