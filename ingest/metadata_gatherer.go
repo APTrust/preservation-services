@@ -74,6 +74,7 @@ func (m *MetadataGatherer) ScanBag() error {
 	if err != nil {
 		return err
 	}
+	m.setMissingDefaultTags()
 	return m.Context.RedisClient.IngestObjectSave(m.WorkItemId, m.IngestObject)
 }
 
@@ -258,6 +259,22 @@ func (m *MetadataGatherer) parseTagFile(filename string) error {
 	}
 	m.IngestObject.Tags = append(m.IngestObject.Tags, tags...)
 	return nil
+}
+
+// Applies only to APTrust. Many depositors use bagging workflows
+// implemented prior to 2019, when we started offering multiple storage
+// options. Those workflows do not add in the Storage-Option tag.
+// We have announced and documented that if Storage-Option is unspecified,
+// it defaults to "Standard". We have to force this tag into bags where
+// it's missing so that the validator will approve them.
+func (m *MetadataGatherer) setMissingDefaultTags() {
+	if m.IngestObject.BagItProfileFormat() == constants.BagItProfileDefault {
+		tag := m.IngestObject.GetTag("aptrust-info.txt", "Storage-Option")
+		if tag == nil {
+			tag = bagit.NewTag("aptrust-info.txt", "Storage-Option", "Standard")
+			m.IngestObject.Tags = append(m.IngestObject.Tags, tag)
+		}
+	}
 }
 
 // ------------ Logging ------------

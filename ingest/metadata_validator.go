@@ -127,7 +127,7 @@ func (v *MetadataValidator) HasAllRequiredTags() bool {
 	ok := true
 	for _, tagDef := range v.Profile.Tags {
 		tag := v.IngestObject.GetTag(tagDef.TagFile, tagDef.TagName)
-		if tag == nil {
+		if tagDef.Required && tag == nil {
 			v.AddError("Required tag %s in file %s is missing",
 				tagDef.TagName, tagDef.TagFile)
 			ok = false
@@ -199,11 +199,11 @@ func (v *MetadataValidator) ValidateAllowed(filetype string, allowedInProfile, p
 	return v.RecordIllegals(filetype, allowedInProfile, presentInBag)
 }
 
-func (v *MetadataValidator) ValidateRequired(filetype string, allowedInProfile, presentInBag []string) bool {
-	if v.AnythingGoes(allowedInProfile) {
+func (v *MetadataValidator) ValidateRequired(filetype string, requiredByProfile, presentInBag []string) bool {
+	if v.AnythingGoes(requiredByProfile) {
 		return true
 	}
-	return v.RecordIllegals(filetype, allowedInProfile, presentInBag)
+	return v.RecordMissing(filetype, requiredByProfile, presentInBag)
 }
 
 func (v *MetadataValidator) RecordIllegals(filetype string, allowedInProfile, presentInBag []string) bool {
@@ -211,6 +211,17 @@ func (v *MetadataValidator) RecordIllegals(filetype string, allowedInProfile, pr
 	for _, file := range presentInBag {
 		if !util.StringListContains(allowedInProfile, file) {
 			v.AddError("Bag contains illegal %s '%s'", filetype, file)
+			ok = false
+		}
+	}
+	return ok
+}
+
+func (v *MetadataValidator) RecordMissing(filetype string, requiredByProfile, presentInBag []string) bool {
+	ok := true
+	for _, file := range requiredByProfile {
+		if !util.StringListContains(presentInBag, file) {
+			v.AddError("Bag is missing required %s '%s'", filetype, file)
 			ok = false
 		}
 	}

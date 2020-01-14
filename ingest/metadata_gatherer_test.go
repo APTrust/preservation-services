@@ -85,7 +85,12 @@ func testIngestObject(t *testing.T, context *common.Context, objIdentifier strin
 	assert.Equal(t, goodbagSize, obj.Size)
 	assert.Equal(t, "receiving", obj.S3Bucket)
 	assert.Equal(t, 16, obj.FileCount)
-	require.Equal(t, 10, len(obj.Tags))
+
+	// Note that our test bag, created with older bagging software,
+	// is missing the Storage-Option tag. This is common among our
+	// depositors. The MetadataGatherer adds the tag if it's missing,
+	// with the documented default value of "Standard".
+	require.Equal(t, 11, len(obj.Tags))
 	for _, tag := range obj.Tags {
 		assert.NotEmpty(t, tag.SourceFile)
 		assert.NotEmpty(t, tag.Label)
@@ -96,6 +101,12 @@ func testIngestObject(t *testing.T, context *common.Context, objIdentifier strin
 	assert.Equal(t, "bag-info.txt", tag.SourceFile)
 	assert.Equal(t, "Bag-Count", tag.Label)
 	assert.Equal(t, "1 of 1", tag.Value)
+
+	// Check the Storage-Option tag
+	storageOptionTag := obj.Tags[10]
+	assert.Equal(t, "aptrust-info.txt", storageOptionTag.SourceFile)
+	assert.Equal(t, "Storage-Option", storageOptionTag.Label)
+	assert.Equal(t, "Standard", storageOptionTag.Value)
 
 	// Confirm metafile paths
 	require.Equal(t, 2, len(obj.Manifests))

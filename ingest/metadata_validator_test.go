@@ -1,7 +1,7 @@
 package ingest_test
 
 import (
-	//"fmt"
+	"fmt"
 	"github.com/APTrust/preservation-services/constants"
 	//"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/ingest"
@@ -188,23 +188,77 @@ func TestManifestsAllowedOk(t *testing.T) {
 }
 
 func TestManifestsRequiredOk(t *testing.T) {
-	// START HERE
+	// Default IngestObject has required md5 and sha256
+	validator := setupValidator(t)
+	assert.True(t, validator.ManifestsRequiredOk())
+
+	// Make the profile require one manifest that's not in the bag
+	validator.Profile.ManifestsRequired = []string{"sha512"}
+	assert.False(t, validator.ManifestsRequiredOk())
+	require.Equal(t, 1, len(validator.Errors))
+	assert.Equal(t, "Bag is missing required manifest 'sha512'", validator.Errors[0])
 }
 
-func TagFilesAllowedOk(t *testing.T) {
+func TestTagFilesAllowedOk(t *testing.T) {
+	// Default profile says any tag files are allowed
+	validator := setupValidator(t)
+	assert.True(t, validator.TagFilesAllowedOk())
 
+	// Now let's say only one tag file is allowed.
+	validator.Profile.TagFilesAllowed = []string{"mytagfile.txt"}
+	assert.False(t, validator.TagFilesAllowedOk())
+	require.Equal(t, 8, len(validator.Errors))
+	for i, filename := range goodbagTagFiles {
+		errMsg := fmt.Sprintf("Bag contains illegal tag file '%s'", filename)
+		assert.Equal(t, errMsg, validator.Errors[i])
+	}
 }
 
 func TestTagManifestsAllowedOk(t *testing.T) {
+	// Default APTrust profile says md5 and sha256 are allowed.
+	// IngestObject has md5 and sha256
+	validator := setupValidator(t)
+	assert.True(t, validator.TagManifestsAllowedOk())
 
+	// If md5 is not allowed, validation should fail.
+	validator.Profile.TagManifestsAllowed = []string{"sha256"}
+	assert.False(t, validator.TagManifestsAllowedOk())
+	require.Equal(t, 1, len(validator.Errors))
+	require.Equal(t, "Bag contains illegal tag manifest 'md5'", validator.Errors[0])
+	validator.ClearErrors()
+
+	// Make sure validator reports all errors
+	validator.Profile.TagManifestsAllowed = []string{"sha512"}
+	assert.False(t, validator.TagManifestsAllowedOk())
+	require.Equal(t, 2, len(validator.Errors))
+	require.Equal(t, "Bag contains illegal tag manifest 'md5'", validator.Errors[0])
+	require.Equal(t, "Bag contains illegal tag manifest 'sha256'", validator.Errors[1])
+	validator.ClearErrors()
+
+	// If bag has only some of the allowed manifests, that's OK.
+	validator.Profile.TagManifestsAllowed = []string{"sha256", "md5"}
+	assert.True(t, validator.TagManifestsAllowedOk())
+	require.Equal(t, 0, len(validator.Errors))
 }
 
-func TestTagManifestsAllowedRequiredOk(t *testing.T) {
+func TestTagManifestsRequiredOk(t *testing.T) {
+	// Default IngestObject has required md5 and sha256
+	validator := setupValidator(t)
+	assert.True(t, validator.TagManifestsRequiredOk())
 
+	// Make the profile require one manifest that's not in the bag
+	validator.Profile.TagManifestsRequired = []string{"sha512"}
+	assert.False(t, validator.TagManifestsRequiredOk())
+	require.Equal(t, 1, len(validator.Errors))
+	assert.Equal(t, "Bag is missing required tag manifest 'sha512'", validator.Errors[0])
 }
 
 func TestHasAllRequiredTags(t *testing.T) {
-
+	// Default IngestObject has all required tags
+	validator := setupValidator(t)
+	validator.HasAllRequiredTags()
+	fmt.Println(validator.Errors)
+	assert.True(t, validator.HasAllRequiredTags())
 }
 
 func TestExistingTagsOk(t *testing.T) {
