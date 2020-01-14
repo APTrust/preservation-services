@@ -106,3 +106,38 @@ func (c *RedisClient) WorkItemDelete(workItemId int) (int64, error) {
 	key := strconv.Itoa(workItemId)
 	return c.client.Del(key).Result()
 }
+
+// GetBatchOfFileKeys returns a batch of file keys from redis,
+// starting at offset and return up to limit results. The string
+// slice returned is a list of keys. The int64 value is the offset
+// for the next batch. If the int64 is zero, there are no more keys
+// to get. See redis_client_test.go for sample usage.
+//
+// SCAN can return more or less than the number of items requested.
+// See https://redis.io/commands/scan
+func (c *RedisClient) GetBatchOfFileKeys(workItemId int, offset uint64, limit int64) (map[string]*service.IngestFile, uint64, error) {
+	key := strconv.Itoa(workItemId)
+	keys, nextOffset, err := c.client.HScan(
+		key,
+		offset,
+		"file:*",
+		limit).Result()
+	if err != nil {
+		return nil, uint64(0), fmt.Errorf(
+			"Error scanning Redis hash keys for WorkItem %d: %v",
+			workItemId, err)
+	}
+	keysAndValues := make(map[string]*service.IngestFile, len(keys)/2)
+	for i, key := range keys {
+		if i%2 == 1 {
+			continue // this is a value, not a key
+		}
+		jsonData := keys[i+1]
+		ingestFile, err := service.IngestFileFromJson(jsonData)
+		if err != nil {
+			return nil, 0, err
+		}
+		keysAndValues[key] = ingestFile
+	}
+	return keysAndValues, nextOffset, nil
+}

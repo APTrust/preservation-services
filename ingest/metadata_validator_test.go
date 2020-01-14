@@ -2,6 +2,7 @@ package ingest_test
 
 import (
 	"fmt"
+	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	//"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/ingest"
@@ -24,14 +25,14 @@ func setupValidator(t *testing.T) *ingest.MetadataValidator {
 	setupS3(t, context, keyToGoodBag, pathToGoodBag)
 
 	// Get rid of old redis records related to this bag / work item
-	keysDeleted, err := context.RedisClient.WorkItemDelete(9999)
-	require.Nil(t, err)
-	require.EqualValues(t, 1, keysDeleted)
+	//keysDeleted, err := context.RedisClient.WorkItemDelete(9999)
+	//require.Nil(t, err)
+	//require.EqualValues(t, 1, keysDeleted)
 
 	// Scan the bag, so that Redis contains the records that the
 	// validator needs to read.
 	g := ingest.NewMetadataGatherer(context, 9999, validator.IngestObject)
-	err = g.ScanBag()
+	err := g.ScanBag()
 	require.Nil(t, err)
 
 	return validator
@@ -256,44 +257,44 @@ func TestTagManifestsRequiredOk(t *testing.T) {
 func TestHasAllRequiredTags(t *testing.T) {
 	// Default IngestObject has all required tags
 	validator := setupValidator(t)
-	validator.HasAllRequiredTags()
-	fmt.Println(validator.Errors)
 	assert.True(t, validator.HasAllRequiredTags())
+
+	// Add a new requirement & be sure we catch that it's missing.
+	tagDef := &bagit.TagDefinition{
+		TagFile:  "aptrust-info.txt",
+		TagName:  "New-Tag",
+		Required: true,
+	}
+	validator.Profile.Tags = append(validator.Profile.Tags, tagDef)
+	assert.False(t, validator.HasAllRequiredTags())
+	require.Equal(t, 1, len(validator.Errors))
+	require.Equal(t, "Required tag New-Tag in file aptrust-info.txt is missing", validator.Errors[0])
 }
 
 func TestExistingTagsOk(t *testing.T) {
+	// Default IngestObject has all required tags with valid values
+	validator := setupValidator(t)
+	assert.True(t, validator.ExistingTagsOk())
 
-}
+	// Empty required tag should cause an error
+	titleTag := validator.IngestObject.GetTag("aptrust-info.txt", "Title")
+	titleTag.Value = ""
 
-func TestTagOk(t *testing.T) {
+	// Tag with illegal value should also cause an error
+	accessTag := validator.IngestObject.GetTag("aptrust-info.txt", "Access")
+	accessTag.Value = "semi-private"
 
+	assert.False(t, validator.ExistingTagsOk())
+	require.Equal(t, 2, len(validator.Errors))
+	assert.Equal(t, "In file aptrust-info.txt, required tag Title has no value", validator.Errors[0])
+	assert.Equal(t, "In file aptrust-info.txt, tag Access has illegal value 'semi-private'", validator.Errors[1])
 }
 
 func TestIngestFileOk(t *testing.T) {
 
 }
 
-func TestAddError(t *testing.T) {
-
-}
-
-func TestClearErrors(t *testing.T) {
-
-}
-
 func TestAnythingGoes(t *testing.T) {
-
-}
-
-func TestValidateAllowed(t *testing.T) {
-
-}
-
-func TestValidateRequired(t *testing.T) {
-
-}
-
-func TestRecordIllegals(t *testing.T) {
 
 }
 

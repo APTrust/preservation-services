@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/util"
 	"strings"
 )
 
@@ -124,4 +125,38 @@ func (f *IngestFile) GetStorageRecord(url string) *StorageRecord {
 		}
 	}
 	return nil
+}
+
+// File identifiers cannot contain control characters.
+func (f *IngestFile) IdentifierIsLegal() bool {
+	identifier := f.Identifier()
+	return !util.ContainsControlCharacter(identifier) &&
+		!util.ContainsEscapedControl(identifier)
+}
+
+// Manifest checksums are required for payload files, but not for
+// tag files. Tag manifests also don't have recorded checksums anywhere.
+// Tag manifests must include checksums for payload manifests. So:
+//
+// data/somefile.txt MUST have an entry in the payload manifest
+// manifest-sha256.md MUST have an entry in each tag manifest
+// custom-tag-file.txt MAY have an entry in each tag manifest (not MUST)
+//
+// https://tools.ietf.org/html/rfc8493#section-2.2.1
+func (f *IngestFile) ManifestChecksumRequired(manifestType string) bool {
+	required := true
+	fileType := f.FileType()
+	if manifestType == constants.FileTypeManifest {
+		required = (fileType == constants.FileTypePayload)
+	} else if manifestType == constants.FileTypeTagManifest {
+		required = (fileType == constants.FileTypeManifest)
+	} else {
+		panic(fmt.Sprintf("Illegal manifest type: %s", manifestType))
+	}
+	return required
+}
+
+func (f *IngestFile) ChecksumsMatch(algorithm string) (bool, error) {
+	// TODO: Implement this.
+	return true, nil
 }

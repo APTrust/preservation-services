@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
+	//"time"
 )
 
 func getRedisClient() *network.RedisClient {
@@ -135,4 +136,40 @@ func TestWorkItemDelete(t *testing.T) {
 		assert.Nil(t, f)
 		assert.NotNil(t, err)
 	}
+}
+
+func TestGetBatchOfFileKeys(t *testing.T) {
+	client := getRedisClient()
+	require.NotNil(t, client)
+
+	testGetBatch(t, client, 10, 3)
+	testGetBatch(t, client, 100, 12)
+}
+
+func testGetBatch(t *testing.T, client *network.RedisClient, totalItems, batchSize int) {
+	for i := 0; i < totalItems; i++ {
+		f := service.NewIngestFile("test.edu/bag1",
+			fmt.Sprintf("file_%d.jpg", i))
+		err := client.IngestFileSave(5555, f)
+		assert.Nil(t, err)
+	}
+
+	defer client.WorkItemDelete(5555)
+
+	//time.Sleep(250 * time.Millisecond)
+
+	nextOffset := uint64(0)
+	count := 0
+	var fileMap map[string]*service.IngestFile
+	var err error
+	for {
+		fileMap, nextOffset, err = client.GetBatchOfFileKeys(
+			5555, nextOffset, int64(batchSize))
+		require.Nil(t, err)
+		count += len(fileMap)
+		if nextOffset == 0 {
+			break
+		}
+	}
+	assert.Equal(t, totalItems, count)
 }

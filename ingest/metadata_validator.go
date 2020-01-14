@@ -164,8 +164,41 @@ func (v *MetadataValidator) TagOk(tag *bagit.Tag) bool {
 	return ok
 }
 
+func (v *MetadataValidator) IngestFilesOk(f *service.IngestFile) bool {
+	ok := true
+	nextOffset := uint64(0)
+	batchSize := int64(100)
+	var fileMap map[string]*service.IngestFile
+	var err error
+	for {
+		fileMap, nextOffset, err = v.Context.RedisClient.GetBatchOfFileKeys(
+			v.WorkItemId, nextOffset, batchSize)
+		if err != nil {
+			v.AddError("Internal error during validation: "+
+				"could not get file info from cache: %s. "+
+				"This is a system error, not a problem with the bag.",
+				err.Error())
+			ok = false
+			break
+		}
+		for _, ingestFile := range fileMap {
+			if !v.IngestFileOk(ingestFile) {
+				ok = false
+			}
+		}
+		// When scanning hash keys, redis returns cursor value
+		// of zero after it has iterated the entire collection.
+		if nextOffset == 0 {
+			break
+		}
+	}
+	return ok
+}
+
 func (v *MetadataValidator) IngestFileOk(f *service.IngestFile) bool {
 	// Make sure checksums match
+	// If there's a manifest checksum but no ingest checksum,
+	// the file was in the manifest but not in the bag.
 	// Make sure name is legal (i.e. no control chars or other trash)
 	return true
 }

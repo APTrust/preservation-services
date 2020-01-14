@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 // StringListContains returns true if the list of strings contains item.
@@ -45,4 +46,29 @@ func AlgorithmFromManifestName(filename string) (string, error) {
 		return match[1], nil
 	}
 	return "", fmt.Errorf("Cannot get algorithm from filename %s", filename)
+}
+
+// ContainsControlCharacter returns true if string str contains a
+// Unicode control character. We use this to test file names, which
+// should not contain control characters.
+func ContainsControlCharacter(str string) bool {
+	runes := []rune(str)
+	for _, _rune := range runes {
+		if unicode.IsControl(_rune) {
+			return true
+		}
+	}
+	return false
+}
+
+// ContainsEscapedControl returns true if string str contains
+// something that looks like an escaped UTF-8 control character.
+// The Mac OS file system seems to silently escape UTF-8 control
+// characters. That causes problems when we try to copy a file
+// over to another file system that won't accept the control
+// character in a file name. The bag validator looks for file names
+// matching these patterns and rejects them.
+func ContainsEscapedControl(str string) bool {
+	reControl := regexp.MustCompile("\\\\[Uu]00[0189][0-9A-Fa-f]|\\\\[Uu]007[Ff]")
+	return reControl.MatchString(str)
 }
