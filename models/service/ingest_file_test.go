@@ -5,6 +5,8 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"strings"
 	"testing"
 	"time"
 )
@@ -132,6 +134,164 @@ func TestSetStorageRecord(t *testing.T) {
 	f.SetStorageRecord(rec1)
 	assert.Equal(t, 2, len(f.StorageRecords))
 	assert.Equal(t, now, f.StorageRecords[0].StoredAt)
+}
+
+func TestIdentifierIsLegal(t *testing.T) {
+	ingestFile := service.NewIngestFile(testutil.ObjIdentifier, "data/legal.txt")
+	ok, err := ingestFile.IdentifierIsLegal()
+	assert.True(t, ok)
+	assert.Nil(t, err)
+
+	badFile := service.NewIngestFile(testutil.ObjIdentifier, "data/illegal_\u007F.txt")
+	ok, err = badFile.IdentifierIsLegal()
+	assert.False(t, ok)
+	require.NotNil(t, err)
+	assert.Equal(t, "File name 'data/illegal_\u007F.txt' contains one or more illegal control characters", err.Error())
+}
+
+func TestManifestChecksumRequired(t *testing.T) {
+	f := service.NewIngestFile(testutil.ObjIdentifier, "data/legal.txt")
+
+	// Required because payload file MUST appear in payload manifest
+	ok, err := f.ManifestChecksumRequired("manifest-sha256.txt")
+	assert.True(t, ok)
+	assert.Nil(t, err)
+
+	// Not required because payload file must not be in tag manifest.
+	ok, err = f.ManifestChecksumRequired("tagmanifest-sha256.txt")
+	assert.False(t, ok)
+	assert.Nil(t, err)
+
+	// Required because manifest checksum MUST appear in tag manifest
+	f = service.NewIngestFile(testutil.ObjIdentifier, "manifest-md5.txt")
+	ok, err = f.ManifestChecksumRequired("tagmanifest-sha256.txt")
+	assert.True(t, ok)
+	assert.Nil(t, err)
+
+	// Not required. Payload manifest does not need to appear in
+	// payload manifest.
+	ok, err = f.ManifestChecksumRequired("manifest-sha256.txt")
+	assert.False(t, ok)
+	assert.Nil(t, err)
+
+	// Not required. Tag manifest checksum does not have to appear
+	// in any manifest.
+	f = service.NewIngestFile(testutil.ObjIdentifier, "tagmanifest-md5.txt")
+	ok, err = f.ManifestChecksumRequired("manifest-sha256.txt")
+	assert.False(t, ok)
+	assert.Nil(t, err)
+
+	ok, err = f.ManifestChecksumRequired("tagmanifest-sha256.txt")
+	assert.False(t, ok)
+	assert.Nil(t, err)
+
+	// Not required because tag file must not appear in payload manifest
+	f = service.NewIngestFile(testutil.ObjIdentifier, "tag-file.txt")
+	ok, err = f.ManifestChecksumRequired("manifest-sha256.txt")
+	assert.False(t, ok)
+	assert.Nil(t, err)
+
+	// Not required because tag file may appear in tag manifest but
+	// does not have to.
+	ok, err = f.ManifestChecksumRequired("manifest-sha256.txt")
+	assert.False(t, ok)
+	assert.Nil(t, err)
+
+	// Error, because the filename param is neither a manifest nor
+	// a tag manifest.
+	_, err = f.ManifestChecksumRequired("some-random-file.txt")
+	require.NotNil(t, err)
+	assert.True(t, strings.HasPrefix(err.Error(), "Unrecognized manifest type"))
+}
+
+func TestChecksumsMatch(t *testing.T) {
+	allChecksums := getChecksums()
+	f := service.NewIngestFile(testutil.ObjIdentifier, "data/image.jpg")
+	f.Checksums = allChecksums
+
+	manifests := []string{
+		"manifest-md5.txt",
+		"manifest-sha256.txt",
+	}
+
+	// These all match...
+	for _, manifest := range manifests {
+		ok, err := f.ChecksumsMatch(manifest)
+		assert.True(t, ok)
+		assert.Nil(t, err)
+	}
+
+	// Change the ingest digests, so they don't match
+	// what's in the manifests.
+	f.Checksums[1].Digest = "00000"
+	f.Checksums[3].Digest = "00000"
+
+	for _, manifest := range manifests {
+		ok, err := f.ChecksumsMatch(manifest)
+		assert.False(t, ok)
+		require.NotNil(t, err)
+		assert.True(t, strings.Contains(err.Error(),
+			"doesn't match manifest checksum"))
+	}
+
+	// Remove the manifest checksums entirely, but keep the
+	// checksums calculated by the ingest process.
+	// The error should say that the file is not in the manifest.
+	f.Checksums = []*service.IngestChecksum{
+		allChecksums[1],
+		allChecksums[3],
+	}
+
+	for _, manifest := range manifests {
+		ok, err := f.ChecksumsMatch(manifest)
+		assert.False(t, ok)
+		require.NotNil(t, err)
+		assert.True(t, strings.Contains(err.Error(), "is not in manifest"))
+	}
+
+	// Remove the checksums calculated by the ingest process.
+	// The error should say that the file is missing from the bag.
+	f.Checksums = []*service.IngestChecksum{
+		allChecksums[0],
+		allChecksums[2],
+	}
+
+	for _, manifest := range manifests {
+		ok, err := f.ChecksumsMatch(manifest)
+		assert.False(t, ok)
+		require.NotNil(t, err)
+		assert.True(t, strings.Contains(err.Error(), "is missing from bag"))
+	}
+}
+
+func getChecksums() []*service.IngestChecksum {
+	now := time.Now().UTC()
+	return []*service.IngestChecksum{
+		&service.IngestChecksum{
+			Algorithm: "md5",
+			DateTime:  now,
+			Digest:    "12345",
+			Source:    constants.SourceManifest,
+		},
+		&service.IngestChecksum{
+			Algorithm: "md5",
+			DateTime:  now,
+			Digest:    "12345",
+			Source:    constants.SourceIngest,
+		},
+		&service.IngestChecksum{
+			Algorithm: "sha256",
+			DateTime:  now,
+			Digest:    "12345",
+			Source:    constants.SourceManifest,
+		},
+		&service.IngestChecksum{
+			Algorithm: "sha256",
+			DateTime:  now,
+			Digest:    "12345",
+			Source:    constants.SourceIngest,
+		},
+	}
 }
 
 const IngestFileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:ingest","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:registry","source":"registry"}],"error_message":"no error","file_format":"text/javascript","id":999,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","size":5555,"storage_option":"Standard","storage_records":[],"uuid":"00000000-0000-0000-0000-000000000000"}`

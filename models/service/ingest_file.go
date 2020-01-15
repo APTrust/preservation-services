@@ -128,11 +128,16 @@ func (f *IngestFile) GetStorageRecord(url string) *StorageRecord {
 }
 
 // File identifiers cannot contain control characters.
-// TODO: Test
-func (f *IngestFile) IdentifierIsLegal() bool {
+func (f *IngestFile) IdentifierIsLegal() (bool, error) {
+	var err error
 	identifier := f.Identifier()
-	return !util.ContainsControlCharacter(identifier) &&
+	ok := !util.ContainsControlCharacter(identifier) &&
 		!util.ContainsEscapedControl(identifier)
+	if !ok {
+		err = fmt.Errorf("File name '%s' contains one or more "+
+			"illegal control characters", f.PathInBag)
+	}
+	return ok, err
 }
 
 // Manifest checksums are required for payload files, but not for
@@ -144,15 +149,16 @@ func (f *IngestFile) IdentifierIsLegal() bool {
 // custom-tag-file.txt MAY have an entry in each tag manifest (not MUST)
 //
 // https://tools.ietf.org/html/rfc8493#section-2.2.1
-//
-// TODO: test
 func (f *IngestFile) ManifestChecksumRequired(manifestName string) (bool, error) {
 	var err error
 	required := true
 	fileType := f.FileType()
 	if strings.HasPrefix(manifestName, "manifest-") {
+		// Payload files MUST be in manifest
 		required = (fileType == constants.FileTypePayload)
 	} else if strings.HasPrefix(manifestName, "tagmanifest-") {
+		// Manifests MUST be in tag manifests, but tag files MAY
+		// be excluded from tag manifests.
 		required = (fileType == constants.FileTypeManifest)
 	} else {
 		err = fmt.Errorf("Unrecognized manifest type %s. Name should start with 'manifest-' or 'tagmanifest-'", manifestName)
@@ -160,7 +166,6 @@ func (f *IngestFile) ManifestChecksumRequired(manifestName string) (bool, error)
 	return required, err
 }
 
-// TODO: Break up & test
 func (f *IngestFile) ChecksumsMatch(manifestName string) (bool, error) {
 	ok := true
 	alg, err := util.AlgorithmFromManifestName(manifestName)
