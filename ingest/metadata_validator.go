@@ -148,17 +148,17 @@ func (v *MetadataValidator) ExistingTagsOk() bool {
 
 func (v *MetadataValidator) TagOk(tag *bagit.Tag) bool {
 	ok := true
-	tagDef := v.Profile.GetTagDef(tag.SourceFile, tag.Label)
+	tagDef := v.Profile.GetTagDef(tag.TagFile, tag.TagName)
 	// If no tag def, the tag is allowed and has no restrictions.
 	// If there is a tag def, validate...
 	if tagDef != nil {
 		if tagDef.Required && tag.Value == "" {
 			v.AddError("In file %s, required tag %s has no value",
-				tag.SourceFile, tag.Label)
+				tag.TagFile, tag.TagName)
 			ok = false
 		} else if !tagDef.IsLegalValue(tag.Value) {
 			v.AddError("In file %s, tag %s has illegal value '%s'",
-				tag.SourceFile, tag.Label, tag.Value)
+				tag.TagFile, tag.TagName, tag.Value)
 		}
 	}
 	return ok

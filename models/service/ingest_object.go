@@ -79,7 +79,7 @@ func (obj *IngestObject) FileIdentifier(filename string) string {
 func (obj *IngestObject) GetTags(tagFile, tagName string) []*bagit.Tag {
 	tags := make([]*bagit.Tag, 0)
 	for _, tag := range obj.Tags {
-		if tag.SourceFile == tagFile && tag.Label == tagName {
+		if tag.TagFile == tagFile && tag.TagName == tagName {
 			tags = append(tags, tag)
 		}
 	}

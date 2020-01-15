@@ -92,20 +92,20 @@ func testIngestObject(t *testing.T, context *common.Context, objIdentifier strin
 	// with the documented default value of "Standard".
 	require.Equal(t, 11, len(obj.Tags))
 	for _, tag := range obj.Tags {
-		assert.NotEmpty(t, tag.SourceFile)
-		assert.NotEmpty(t, tag.Label)
+		assert.NotEmpty(t, tag.TagName)
+		assert.NotEmpty(t, tag.TagName)
 		assert.NotEmpty(t, tag.Value)
 	}
 	// Spot check one tag
 	tag := obj.Tags[4]
-	assert.Equal(t, "bag-info.txt", tag.SourceFile)
-	assert.Equal(t, "Bag-Count", tag.Label)
+	assert.Equal(t, "bag-info.txt", tag.TagFile)
+	assert.Equal(t, "Bag-Count", tag.TagName)
 	assert.Equal(t, "1 of 1", tag.Value)
 
 	// Check the Storage-Option tag
 	storageOptionTag := obj.Tags[10]
-	assert.Equal(t, "aptrust-info.txt", storageOptionTag.SourceFile)
-	assert.Equal(t, "Storage-Option", storageOptionTag.Label)
+	assert.Equal(t, "aptrust-info.txt", storageOptionTag.TagFile)
+	assert.Equal(t, "Storage-Option", storageOptionTag.TagName)
 	assert.Equal(t, "Standard", storageOptionTag.Value)
 
 	// Confirm metafile paths

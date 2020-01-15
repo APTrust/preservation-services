@@ -72,8 +72,8 @@ func TestGetTags(t *testing.T) {
 	label1Tags := obj.GetTags("bag-info.txt", "label1")
 	require.Equal(t, 2, len(label1Tags))
 	for _, tag := range label1Tags {
-		assert.Equal(t, "bag-info.txt", tag.SourceFile)
-		assert.Equal(t, "label1", tag.Label)
+		assert.Equal(t, "bag-info.txt", tag.TagFile)
+		assert.Equal(t, "label1", tag.TagName)
 	}
 	assert.Equal(t, "value1", label1Tags[0].Value)
 	assert.Equal(t, "value2", label1Tags[1].Value)
@@ -85,13 +85,13 @@ func TestGetTags(t *testing.T) {
 func TestGetTag(t *testing.T) {
 	obj := getObjectWithTags()
 	tag := obj.GetTag("bag-info.txt", "label1")
-	assert.Equal(t, "bag-info.txt", tag.SourceFile)
-	assert.Equal(t, "label1", tag.Label)
+	assert.Equal(t, "bag-info.txt", tag.TagFile)
+	assert.Equal(t, "label1", tag.TagName)
 	assert.Equal(t, "value1", tag.Value)
 
 	tag = obj.GetTag("aptrust-info.txt", "Access")
-	assert.Equal(t, "aptrust-info.txt", tag.SourceFile)
-	assert.Equal(t, "Access", tag.Label)
+	assert.Equal(t, "aptrust-info.txt", tag.TagFile)
+	assert.Equal(t, "Access", tag.TagName)
 	assert.Equal(t, "Institution", tag.Value)
 
 	assert.Nil(t, obj.GetTag("bag-info.txt", "Does-Not-Exist"))

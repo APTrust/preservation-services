@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-var tagLabels = []string{
+var tagNames = []string{
 	"Source-Organization",
 	"Bagging-Date",
 	"Bag-Count",
@@ -50,10 +50,10 @@ func TestParseTagFile(t *testing.T) {
 	defer file.Close()
 	tags, err := bagit.ParseTagFile(file, "bag-info.txt")
 	require.Nil(t, err)
-	assert.Equal(t, len(tagLabels), len(tags))
+	assert.Equal(t, len(tagNames), len(tags))
 	for i, tag := range tags {
-		assert.Equal(t, "bag-info.txt", tag.SourceFile)
-		assert.Equal(t, tagLabels[i], tag.Label)
+		assert.Equal(t, "bag-info.txt", tag.TagFile)
+		assert.Equal(t, tagNames[i], tag.TagName)
 		assert.Equal(t, tagValues[i], tag.Value)
 	}
 }

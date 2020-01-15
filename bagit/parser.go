@@ -38,7 +38,7 @@ func ParseTagFile(reader io.Reader, relFilePath string) ([]*Tag, error) {
 			data[1] = strings.TrimSpace(data[1])
 			data[1] = strings.Replace(data[1], ":", "", 1)
 			if data[1] != "" {
-				if tag != nil && tag.Label != "" {
+				if tag != nil && tag.TagName != "" {
 					tags = append(tags, tag)
 				}
 				tag = NewTag(relFilePath, data[1], strings.TrimSpace(data[2]))
@@ -55,7 +55,7 @@ func ParseTagFile(reader io.Reader, relFilePath string) ([]*Tag, error) {
 		}
 	}
 	// Add file's last tag to the list
-	if tag != nil && tag.Label != "" {
+	if tag != nil && tag.TagName != "" {
 		tags = append(tags, tag)
 	}
 	// Handle internal scanner errors
