@@ -236,9 +236,10 @@ func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum) error {
 		ingestFile, err = m.Context.RedisClient.IngestFileGet(m.WorkItemId,
 			m.IngestObject.FileIdentifier(checksum.Path))
 		if err == nil {
+			// We got the record.
 			break
 		} else {
-			// Clear the error and retry
+			// No record. Clear the error and retry.
 			err = nil
 			time.Sleep(150 * time.Millisecond)
 		}

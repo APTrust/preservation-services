@@ -149,8 +149,7 @@ func (f *IngestFile) IdentifierIsLegal() (bool, error) {
 // custom-tag-file.txt MAY have an entry in each tag manifest (not MUST)
 //
 // https://tools.ietf.org/html/rfc8493#section-2.2.1
-func (f *IngestFile) ManifestChecksumRequired(manifestName string) (bool, error) {
-	var err error
+func (f *IngestFile) ManifestChecksumRequired(manifestName string) bool {
 	required := true
 	fileType := f.FileType()
 	if strings.HasPrefix(manifestName, "manifest-") {
@@ -161,24 +160,38 @@ func (f *IngestFile) ManifestChecksumRequired(manifestName string) (bool, error)
 		// be excluded from tag manifests.
 		required = (fileType == constants.FileTypeManifest)
 	} else {
-		err = fmt.Errorf("Unrecognized manifest type %s. Name should start with 'manifest-' or 'tagmanifest-'", manifestName)
+		// Panic because this is entirely in the developer's control.
+		msg := fmt.Errorf("Unrecognized manifest type %s. "+
+			"Name should start with 'manifest-' or 'tagmanifest-'",
+			manifestName)
+		panic(msg)
 	}
-	return required, err
+	return required
 }
 
+// ChecksumsMatch returns true if this file's manifest checksum matches
+// the checksum calculated at ingest. If the checksums don't match, this
+// will return a specific error describing one of the following conditions:
+//
+// 1. Checksum was in manifest, but file was not in bag. This is a missing
+// file error, and the bag is invalid.
+//
+// 2. The file was in the bag but not in the manifest. This is an illegal
+// freeloader, and the bag is invalid.
+//
+// 3. The file was in the manifest and in the bag, but the checksums don't
+// match.
 func (f *IngestFile) ChecksumsMatch(manifestName string) (bool, error) {
 	ok := true
 	alg, err := util.AlgorithmFromManifestName(manifestName)
 	if err != nil {
-		return false, fmt.Errorf("Urecognized manifest name: %s", err.Error())
+		msg := fmt.Sprintf("Unrecognized manifest name: %s", err.Error())
+		panic(msg)
 	}
 	ingestChecksum := f.GetChecksum(constants.SourceIngest, alg)
 	manifestChecksum := f.GetChecksum(constants.SourceManifest, alg)
 
-	manifestChecksumRequired, err := f.ManifestChecksumRequired(manifestName)
-	if err != nil {
-		return false, err
-	}
+	manifestChecksumRequired := f.ManifestChecksumRequired(manifestName)
 	if ingestChecksum == nil && manifestChecksum != nil {
 		err = fmt.Errorf("File %s in %s is missing from bag",
 			f.Identifier(), manifestChecksum)

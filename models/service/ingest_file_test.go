@@ -153,55 +153,47 @@ func TestManifestChecksumRequired(t *testing.T) {
 	f := service.NewIngestFile(testutil.ObjIdentifier, "data/legal.txt")
 
 	// Required because payload file MUST appear in payload manifest
-	ok, err := f.ManifestChecksumRequired("manifest-sha256.txt")
+	ok := f.ManifestChecksumRequired("manifest-sha256.txt")
 	assert.True(t, ok)
-	assert.Nil(t, err)
 
 	// Not required because payload file must not be in tag manifest.
-	ok, err = f.ManifestChecksumRequired("tagmanifest-sha256.txt")
+	ok = f.ManifestChecksumRequired("tagmanifest-sha256.txt")
 	assert.False(t, ok)
-	assert.Nil(t, err)
 
 	// Required because manifest checksum MUST appear in tag manifest
 	f = service.NewIngestFile(testutil.ObjIdentifier, "manifest-md5.txt")
-	ok, err = f.ManifestChecksumRequired("tagmanifest-sha256.txt")
+	ok = f.ManifestChecksumRequired("tagmanifest-sha256.txt")
 	assert.True(t, ok)
-	assert.Nil(t, err)
 
 	// Not required. Payload manifest does not need to appear in
 	// payload manifest.
-	ok, err = f.ManifestChecksumRequired("manifest-sha256.txt")
+	ok = f.ManifestChecksumRequired("manifest-sha256.txt")
 	assert.False(t, ok)
-	assert.Nil(t, err)
 
 	// Not required. Tag manifest checksum does not have to appear
 	// in any manifest.
 	f = service.NewIngestFile(testutil.ObjIdentifier, "tagmanifest-md5.txt")
-	ok, err = f.ManifestChecksumRequired("manifest-sha256.txt")
+	ok = f.ManifestChecksumRequired("manifest-sha256.txt")
 	assert.False(t, ok)
-	assert.Nil(t, err)
 
-	ok, err = f.ManifestChecksumRequired("tagmanifest-sha256.txt")
+	ok = f.ManifestChecksumRequired("tagmanifest-sha256.txt")
 	assert.False(t, ok)
-	assert.Nil(t, err)
 
 	// Not required because tag file must not appear in payload manifest
 	f = service.NewIngestFile(testutil.ObjIdentifier, "tag-file.txt")
-	ok, err = f.ManifestChecksumRequired("manifest-sha256.txt")
+	ok = f.ManifestChecksumRequired("manifest-sha256.txt")
 	assert.False(t, ok)
-	assert.Nil(t, err)
 
 	// Not required because tag file may appear in tag manifest but
 	// does not have to.
-	ok, err = f.ManifestChecksumRequired("manifest-sha256.txt")
+	ok = f.ManifestChecksumRequired("manifest-sha256.txt")
 	assert.False(t, ok)
-	assert.Nil(t, err)
 
-	// Error, because the filename param is neither a manifest nor
+	// Panic, because the filename param is neither a manifest nor
 	// a tag manifest.
-	_, err = f.ManifestChecksumRequired("some-random-file.txt")
-	require.NotNil(t, err)
-	assert.True(t, strings.HasPrefix(err.Error(), "Unrecognized manifest type"))
+	assert.Panics(t, func() {
+		f.ManifestChecksumRequired("some-random-file.txt")
+	})
 }
 
 func TestChecksumsMatch(t *testing.T) {

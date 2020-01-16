@@ -3,6 +3,7 @@ package ingest
 import (
 	"fmt"
 	"github.com/APTrust/preservation-services/bagit"
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
@@ -28,6 +29,7 @@ func NewMetadataValidator(context *common.Context, profile *bagit.BagItProfile, 
 }
 
 func (v *MetadataValidator) IsValid() bool {
+	// TODO: Write this. Run all the checks below...
 	return true
 }
 
@@ -195,12 +197,47 @@ func (v *MetadataValidator) IngestFilesOk(f *service.IngestFile) bool {
 	return ok
 }
 
+// IngestFileOk returns true if the filename consists entirely of legal
+// characters and the checksum of the file matches what's in the manifest.
+// Note, however, that the BagIt spec says some tag files can be excluded
+// from the tag manifests. In those cases, we may validate only the filename.
 func (v *MetadataValidator) IngestFileOk(f *service.IngestFile) bool {
-	// Make sure checksums match
-	// If there's a manifest checksum but no ingest checksum,
-	// the file was in the manifest but not in the bag.
-	// Make sure name is legal (i.e. no control chars or other trash)
-	return true
+	ok := true
+	_, err := f.IdentifierIsLegal()
+	if err != nil {
+		v.AddError(err.Error())
+		ok = false
+	}
+	if !v.ValidateChecksums(f, constants.FileTypeManifest, v.IngestObject.Manifests) {
+		ok = false
+	}
+	if !v.ValidateChecksums(f, constants.FileTypeTagManifest, v.IngestObject.TagManifests) {
+		ok = false
+	}
+	return ok
+}
+
+func (v *MetadataValidator) ValidateChecksums(f *service.IngestFile, manifestType string, algorithms []string) bool {
+	ok := true
+	var err error
+	for _, alg := range v.IngestObject.Manifests {
+		manifestName := ""
+		switch manifestType {
+		case constants.FileTypeManifest:
+			manifestName = fmt.Sprintf("manifest-%s.txt", alg)
+		case constants.FileTypeTagManifest:
+			manifestName = fmt.Sprintf("tagmanifest-%s.txt", alg)
+		default:
+			// Panic, because this is entirely in the developer's control.
+			msg := fmt.Sprintf("Invalid manifest type: %s", manifestType)
+			panic(msg)
+		}
+		ok, err = f.ChecksumsMatch(manifestName)
+		if err != nil {
+			v.AddError(err.Error())
+		}
+	}
+	return ok
 }
 
 func (v *MetadataValidator) AddError(format string, a ...interface{}) {
