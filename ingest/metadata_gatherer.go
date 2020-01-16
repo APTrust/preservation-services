@@ -227,8 +227,23 @@ func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum) error {
 		Digest:    checksum.Digest,
 		Source:    constants.SourceManifest,
 	}
-	ingestFile, err := m.Context.RedisClient.IngestFileGet(m.WorkItemId,
-		m.IngestObject.FileIdentifier(checksum.Path))
+	// Retry this Redis call because with smaller bags (< 20 files), the record
+	// was likely posted to redis in the last few milliseconds, and Redis
+	// sporadically replies with nil in this case in testing.
+	var err error
+	var ingestFile *service.IngestFile
+	for i := 0; i < 3; i++ {
+		ingestFile, err = m.Context.RedisClient.IngestFileGet(m.WorkItemId,
+			m.IngestObject.FileIdentifier(checksum.Path))
+		if err == nil {
+			break
+		} else {
+			// Clear the error and retry
+			err = nil
+			time.Sleep(150 * time.Millisecond)
+		}
+	}
+	// If no record after three tries, that's a problem.
 	if err != nil {
 		return err
 	}
