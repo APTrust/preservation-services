@@ -165,7 +165,8 @@ func testChecksum(t *testing.T, checksum *service.IngestChecksum, alg string, in
 	if index < 2 {
 		assert.Equal(t, "ingest", checksum.Source)
 	} else {
-		assert.Equal(t, "manifest", checksum.Source)
+		assert.True(t, (checksum.Source == constants.SourceManifest ||
+			checksum.Source == constants.SourceTagManifest))
 	}
 }
 

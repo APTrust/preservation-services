@@ -198,7 +198,8 @@ func (m *MetadataGatherer) parseManifest(filename string) error {
 	}
 	defer file.Close()
 
-	alg, err := util.AlgorithmFromManifestName(filepath.Base(filename))
+	basename := filepath.Base(filename)
+	alg, err := util.AlgorithmFromManifestName(basename)
 	if err != nil {
 		return err
 	}
@@ -206,13 +207,16 @@ func (m *MetadataGatherer) parseManifest(filename string) error {
 	if err != nil {
 		return err
 	}
-
-	return m.updateChecksums(checksums)
+	sourceType := constants.SourceManifest
+	if util.LooksLikeTagManifest(basename) {
+		sourceType = constants.SourceTagManifest
+	}
+	return m.updateChecksums(checksums, sourceType)
 }
 
-func (m *MetadataGatherer) updateChecksums(checksums []*bagit.Checksum) error {
+func (m *MetadataGatherer) updateChecksums(checksums []*bagit.Checksum, sourceType string) error {
 	for _, checksum := range checksums {
-		err := m.addManifestChecksum(checksum)
+		err := m.addManifestChecksum(checksum, sourceType)
 		if err != nil {
 			return err
 		}
@@ -220,12 +224,12 @@ func (m *MetadataGatherer) updateChecksums(checksums []*bagit.Checksum) error {
 	return nil
 }
 
-func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum) error {
+func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum, sourceType string) error {
 	ingestChecksum := &service.IngestChecksum{
 		Algorithm: checksum.Algorithm,
 		DateTime:  time.Now().UTC(),
 		Digest:    checksum.Digest,
-		Source:    constants.SourceManifest,
+		Source:    sourceType,
 	}
 	// Retry this Redis call because with smaller bags (< 20 files), the record
 	// was likely posted to redis in the last few milliseconds, and Redis

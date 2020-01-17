@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
-	//"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/models/service"
 	//"github.com/APTrust/preservation-services/ingest"
 	//"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 func TestNewMetadataValidator(t *testing.T) {
@@ -274,6 +275,15 @@ func TestExistingTagsOk(t *testing.T) {
 	assert.Equal(t, "In file aptrust-info.txt, tag Access has illegal value 'semi-private'", validator.Errors[1])
 }
 
+func TestAnythingGoes(t *testing.T) {
+	validator := getMetadataValidator(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
+	assert.True(t, validator.AnythingGoes(nil))
+	assert.True(t, validator.AnythingGoes([]string{}))
+	assert.True(t, validator.AnythingGoes([]string{"*"}))
+	assert.False(t, validator.AnythingGoes([]string{"sha256"}))
+}
+
 // TODO: Test payload files and manifest files separately.
 //
 // 1. Payload file: with match, with mismatch, manifest missing,
@@ -281,29 +291,9 @@ func TestExistingTagsOk(t *testing.T) {
 // 2. Non-required tag file: with match, mismatch, missing digest, illegal name.
 // 3. Required tag file, manifest: match, mismatch, manifest missing,
 //    file missing, illegal name.
-func TestIngestFileOk_Payload(t *testing.T) {
+func TestIngestFileOk_PayloadFile(t *testing.T) {
 	validator := setupValidatorAndObject(t,
 		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
-
-	// // Make the profile require md5 and sha256 for both manifests
-	// // and tag manifests.
-	// validator.Profile.ManifestsRequired = []string{"md5", "sha256"}
-	// validator.Profile.TagManifestsRequired = []string{"md5", "sha256"}
-
-	// // Set up a file to validate.
-	// f := service.NewIngestFile(validator.IngestObject.Identifier(),
-	// 	"data/file.txt")
-
-	// // Give that file matching md5 and sha256 checksums from
-	// // manifests and tag manifests.
-	// f.Checksums = testutil.GetIngestChecksumSet()
-	// tagManifestChecksums := testutil.GetIngestChecksumSet()
-	// for _, cs := range tagManifestChecksums {
-	// 	if cs.Source == constants.SourceManifest {
-	// 		cs.Source = constants.SourceTagManifest
-	// 	}
-	// }
-	// f.Checksums = append(f.Checksums, tagManifestChecksums...)
 
 	identifier := fmt.Sprintf("%s/%s",
 		validator.IngestObject.Identifier(),
@@ -371,16 +361,125 @@ func TestIngestFileOk_Payload(t *testing.T) {
 	assert.False(t, validator.IngestFileOk(f))
 	require.Equal(t, 1, len(validator.Errors))
 	require.Equal(t, "File name 'data/illegal\x06.txt' contains one or more illegal control characters", validator.Errors[0])
-
 }
 
-func TestAnythingGoes(t *testing.T) {
-	validator := getMetadataValidator(t,
+// Manifests are required to appear in tagmanifests
+func TestIngestFileOk_RequiredTagFile(t *testing.T) {
+	validator := setupValidatorAndObject(t,
 		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
-	assert.True(t, validator.AnythingGoes(nil))
-	assert.True(t, validator.AnythingGoes([]string{}))
-	assert.True(t, validator.AnythingGoes([]string{"*"}))
-	assert.False(t, validator.AnythingGoes([]string{"sha256"}))
+
+	identifier := fmt.Sprintf("%s/%s",
+		validator.IngestObject.Identifier(),
+		"manifest-md5.txt")
+	f, err := validator.Context.RedisClient.IngestFileGet(
+		9999, identifier)
+	require.Nil(t, err)
+
+	// Force check of tag manifests.
+	assert.True(t, validator.IngestFileOk(f))
+
+	// Force checksum mismatch.
+	origDigest := f.Checksums[0].Digest
+	f.Checksums[0].Digest = "98765"
+	assert.False(t, validator.IngestFileOk(f))
+
+	// Make sure exact error was captured.
+	require.Equal(t, 1, len(validator.Errors))
+	assert.Equal(t, "File example.edu/example.edu.tagsample_good/manifest-md5.txt: ingest md5 checksum 98765 doesn't match manifest checksum a541b543dad466a93ab60e785671982b", validator.Errors[0])
+
+	// Fix the digest, so it doesn't interfere with the next test.
+	f.Checksums[0].Digest = origDigest
+
+	// If manifest checksum is missing, we should hear about it.
+	// Save a copy of the manifest checksum, then delete it from
+	// the ingest file object.
+	tagManifestChecksum := f.GetChecksum(
+		constants.SourceTagManifest, constants.AlgSha256)
+	f.Checksums = deleteChecksum(f.Checksums,
+		constants.SourceTagManifest, constants.AlgSha256)
+
+	// Clear old errors and re-validate
+	validator.Errors = []string{}
+	assert.False(t, validator.IngestFileOk(f))
+
+	// Make sure exact error was captured.
+	require.Equal(t, 1, len(validator.Errors))
+	require.Equal(t, "File example.edu/example.edu.tagsample_good/manifest-md5.txt is not in manifest tagmanifest-sha256.txt", validator.Errors[0])
+
+	// Put the manifest checksum back and delete the ingest checksum.
+	f.Checksums = append(f.Checksums, tagManifestChecksum)
+	f.Checksums = deleteChecksum(f.Checksums,
+		constants.SourceIngest, constants.AlgSha256)
+
+	// Clear old errors and re-validate
+	validator.Errors = []string{}
+	assert.False(t, validator.IngestFileOk(f))
+
+	// Make sure exact error was captured.
+	require.Equal(t, 1, len(validator.Errors))
+	require.Equal(t, "File example.edu/example.edu.tagsample_good/manifest-md5.txt in tagmanifest-sha256.txt is missing from bag", validator.Errors[0])
+}
+
+// Tag files are not required to appear in tagmanifests
+func TestIngestFileOk_NonRequiredTagFile(t *testing.T) {
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
+
+	identifier := fmt.Sprintf("%s/%s",
+		validator.IngestObject.Identifier(),
+		"custom_tags/untracked_tag_file.txt")
+	f, err := validator.Context.RedisClient.IngestFileGet(
+		9999, identifier)
+	require.Nil(t, err)
+
+	// Verify that there's no tag manifest checksum for this file.
+	tagManifestChecksum := f.GetChecksum(
+		constants.SourceTagManifest, constants.AlgSha256)
+	assert.Nil(t, tagManifestChecksum)
+
+	// Run the checksum validation...
+	assert.True(t, validator.IngestFileOk(f))
+
+	// ...and not that the missing tag manifest checksum should NOT
+	// produce an error, because the tag file doesn't have
+	// to appear in the tag manifest.
+	require.Equal(t, 0, len(validator.Errors))
+
+	// If we add a tagmanifest checksum that doesn't match what
+	// the metadata gatherer calculated on ingest, it is an error.
+	f.Checksums = append(f.Checksums,
+		&service.IngestChecksum{
+			Algorithm: constants.AlgSha256,
+			DateTime:  time.Now().UTC(),
+			Digest:    "1234",
+			Source:    constants.SourceTagManifest,
+		})
+
+	// Clear old errors and re-validate
+	validator.Errors = []string{}
+	assert.False(t, validator.IngestFileOk(f))
+
+	// Make sure exact error was captured.
+	// This is an error because if the manifest says it's there,
+	// it has to be there.
+	require.Equal(t, 1, len(validator.Errors))
+	require.Equal(t, "File example.edu/example.edu.tagsample_good/custom_tags/untracked_tag_file.txt: ingest sha256 checksum 1488c68d6d6d839e8f913bc50bf555878b83aa29e027e386bf9eec9462e9f54c doesn't match manifest checksum 1234", validator.Errors[0])
+
+	// This should also produce an error. If the tagmanifest
+	// says it's there, it should be there.
+	f.Checksums = deleteChecksum(f.Checksums,
+		constants.SourceIngest, constants.AlgSha256)
+
+	// Clear old errors and re-validate
+	validator.Errors = []string{}
+	assert.False(t, validator.IngestFileOk(f))
+
+	// Make sure exact error was captured.
+	// This is an error because if the manifest says it's there,
+	// it has to be there.
+	require.Equal(t, 1, len(validator.Errors))
+	require.Equal(t, "File example.edu/example.edu.tagsample_good/custom_tags/untracked_tag_file.txt in tagmanifest-sha256.txt is missing from bag", validator.Errors[0])
+
 }
 
 // TODO: Test IsValid for all valid and invalid APTrust bags
