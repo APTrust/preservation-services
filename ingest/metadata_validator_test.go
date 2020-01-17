@@ -4,39 +4,11 @@ import (
 	"fmt"
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
-	//"github.com/APTrust/preservation-services/models/common"
-	"github.com/APTrust/preservation-services/ingest"
-	//"github.com/APTrust/preservation-services/util/testutil"
+	//"github.com/APTrust/preservation-services/ingest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
-
-func setupValidator(t *testing.T) *ingest.MetadataValidator {
-	// Create a validator
-	validator := getMetadataValidator(t,
-		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
-
-	context := validator.Context
-
-	// Get rid of any stray S3 files from prior test runs
-	// and make sure the bag we want to work with is in the
-	// local S3 server.
-	setupS3(t, context, keyToGoodBag, pathToGoodBag)
-
-	// Get rid of old redis records related to this bag / work item
-	//keysDeleted, err := context.RedisClient.WorkItemDelete(9999)
-	//require.Nil(t, err)
-	//require.EqualValues(t, 1, keysDeleted)
-
-	// Scan the bag, so that Redis contains the records that the
-	// validator needs to read.
-	g := ingest.NewMetadataGatherer(context, 9999, validator.IngestObject)
-	err := g.ScanBag()
-	require.Nil(t, err)
-
-	return validator
-}
 
 func TestNewMetadataValidator(t *testing.T) {
 	validator := getMetadataValidator(t,
@@ -49,7 +21,8 @@ func TestNewMetadataValidator(t *testing.T) {
 }
 
 func TestBagItVersionOk(t *testing.T) {
-	validator := setupValidator(t)
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
 
 	// In this bag, the version is 0.97, which is permitted under
 	// the APTrust profile.
@@ -87,7 +60,8 @@ func TestSerializationOk(t *testing.T) {
 	// Default obj has format "application/tar" and default
 	// profile says serialization is required in format
 	// "application/tar", so this should be OK.
-	validator := setupValidator(t)
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
 	assert.True(t, validator.SerializationOk())
 
 	// Serialization not OK if serialization is forbidden.
@@ -142,7 +116,8 @@ func TestFetchTxtOk(t *testing.T) {
 	// In default case, profile says fetch.txt is not
 	// allowed, and IngestObject says it's not part
 	// of the bag.
-	validator := setupValidator(t)
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
 	assert.True(t, validator.FetchTxtOk())
 
 	// Not OK: profile says not allowed, but file is present.
@@ -164,7 +139,8 @@ func TestFetchTxtOk(t *testing.T) {
 func TestManifestsAllowedOk(t *testing.T) {
 	// Default APTrust profile says md5 and sha256 are allowed.
 	// IngestObject has md5 and sha256
-	validator := setupValidator(t)
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
 	assert.True(t, validator.ManifestsAllowedOk())
 
 	// If md5 is not allowed, validation should fail.
@@ -190,7 +166,8 @@ func TestManifestsAllowedOk(t *testing.T) {
 
 func TestManifestsRequiredOk(t *testing.T) {
 	// Default IngestObject has required md5 and sha256
-	validator := setupValidator(t)
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
 	assert.True(t, validator.ManifestsRequiredOk())
 
 	// Make the profile require one manifest that's not in the bag
@@ -202,7 +179,8 @@ func TestManifestsRequiredOk(t *testing.T) {
 
 func TestTagFilesAllowedOk(t *testing.T) {
 	// Default profile says any tag files are allowed
-	validator := setupValidator(t)
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
 	assert.True(t, validator.TagFilesAllowedOk())
 
 	// Now let's say only one tag file is allowed.
@@ -218,7 +196,8 @@ func TestTagFilesAllowedOk(t *testing.T) {
 func TestTagManifestsAllowedOk(t *testing.T) {
 	// Default APTrust profile says md5 and sha256 are allowed.
 	// IngestObject has md5 and sha256
-	validator := setupValidator(t)
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
 	assert.True(t, validator.TagManifestsAllowedOk())
 
 	// If md5 is not allowed, validation should fail.
@@ -244,7 +223,8 @@ func TestTagManifestsAllowedOk(t *testing.T) {
 
 func TestTagManifestsRequiredOk(t *testing.T) {
 	// Default IngestObject has required md5 and sha256
-	validator := setupValidator(t)
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
 	assert.True(t, validator.TagManifestsRequiredOk())
 
 	// Make the profile require one manifest that's not in the bag
@@ -256,7 +236,8 @@ func TestTagManifestsRequiredOk(t *testing.T) {
 
 func TestHasAllRequiredTags(t *testing.T) {
 	// Default IngestObject has all required tags
-	validator := setupValidator(t)
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
 	assert.True(t, validator.HasAllRequiredTags())
 
 	// Add a new requirement & be sure we catch that it's missing.
@@ -273,7 +254,8 @@ func TestHasAllRequiredTags(t *testing.T) {
 
 func TestExistingTagsOk(t *testing.T) {
 	// Default IngestObject has all required tags with valid values
-	validator := setupValidator(t)
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
 	assert.True(t, validator.ExistingTagsOk())
 
 	// Empty required tag should cause an error

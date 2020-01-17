@@ -129,3 +129,28 @@ func getMetadataValidator(t *testing.T, profileName, pathToBag, bagMd5 string) *
 	require.NotNil(t, validator)
 	return validator
 }
+
+func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string) *ingest.MetadataValidator {
+	// Create a validator
+	validator := getMetadataValidator(t, profileName, pathToBag, bagMd5)
+	context := validator.Context
+
+	// Get rid of any stray S3 files from prior test runs
+	// and make sure the bag we want to work with is in the
+	// local S3 server.
+	key := filepath.Base(pathToBag)
+	setupS3(t, context, key, pathToBag)
+
+	// Get rid of old redis records related to this bag / work item
+	keysDeleted, err := context.RedisClient.WorkItemDelete(9999)
+	require.Nil(t, err)
+	require.EqualValues(t, 1, keysDeleted)
+
+	// Scan the bag, so that Redis contains the records that the
+	// validator needs to read.
+	g := ingest.NewMetadataGatherer(context, 9999, validator.IngestObject)
+	err = g.ScanBag()
+	require.Nil(t, err)
+
+	return validator
+}
