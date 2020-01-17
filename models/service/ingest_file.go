@@ -200,12 +200,12 @@ func (f *IngestFile) ChecksumsMatch(manifestName string) (bool, error) {
 
 	if ingestChecksum == nil && manifestChecksum != nil {
 		err = fmt.Errorf("File %s in %s is missing from bag",
-			f.Identifier(), manifestChecksum)
+			f.Identifier(), manifestName)
 		ok = false
 	}
 	if manifestChecksum == nil && manifestChecksumRequired {
 		err = fmt.Errorf("File %s is not in manifest %s",
-			f.Identifier(), manifestChecksum)
+			f.Identifier(), manifestName)
 		ok = false
 	}
 	if ingestChecksum != nil && manifestChecksum != nil {

@@ -99,6 +99,18 @@ func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string
 	assert.True(t, (bytesWritten >= goodbagSize))
 }
 
+func deleteChecksum(list []*service.IngestChecksum, source, algorithm string) []*service.IngestChecksum {
+	checksums := make([]*service.IngestChecksum, 0)
+	for _, cs := range list {
+		if cs.Source == source && cs.Algorithm == algorithm {
+			continue
+		} else {
+			checksums = append(checksums, cs)
+		}
+	}
+	return checksums
+}
+
 // Returns an IngestObject that describes the tarred bag waiting
 // in our receiving bucket.
 func getIngestObject(pathToBagFile, md5Digest string) *service.IngestObject {
