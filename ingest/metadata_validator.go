@@ -219,7 +219,6 @@ func (v *MetadataValidator) IngestFileOk(f *service.IngestFile) bool {
 
 func (v *MetadataValidator) ValidateChecksums(f *service.IngestFile, manifestType string, algorithms []string) bool {
 	ok := true
-	var err error
 	for _, alg := range v.IngestObject.Manifests {
 		manifestName := ""
 		switch manifestType {
@@ -232,9 +231,10 @@ func (v *MetadataValidator) ValidateChecksums(f *service.IngestFile, manifestTyp
 			msg := fmt.Sprintf("Invalid manifest type: %s", manifestType)
 			panic(msg)
 		}
-		ok, err = f.ChecksumsMatch(manifestName)
+		_, err := f.ChecksumsMatch(manifestName)
 		if err != nil {
 			v.AddError(err.Error())
+			ok = false
 		}
 	}
 	return ok

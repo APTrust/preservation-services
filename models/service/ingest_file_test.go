@@ -197,7 +197,7 @@ func TestManifestChecksumRequired(t *testing.T) {
 }
 
 func TestChecksumsMatch(t *testing.T) {
-	allChecksums := getChecksums()
+	allChecksums := testutil.GetIngestChecksumSet()
 	f := service.NewIngestFile(testutil.ObjIdentifier, "data/image.jpg")
 	f.Checksums = allChecksums
 
@@ -253,36 +253,6 @@ func TestChecksumsMatch(t *testing.T) {
 		assert.False(t, ok)
 		require.NotNil(t, err)
 		assert.True(t, strings.Contains(err.Error(), "is missing from bag"))
-	}
-}
-
-func getChecksums() []*service.IngestChecksum {
-	now := time.Now().UTC()
-	return []*service.IngestChecksum{
-		&service.IngestChecksum{
-			Algorithm: "md5",
-			DateTime:  now,
-			Digest:    "12345",
-			Source:    constants.SourceManifest,
-		},
-		&service.IngestChecksum{
-			Algorithm: "md5",
-			DateTime:  now,
-			Digest:    "12345",
-			Source:    constants.SourceIngest,
-		},
-		&service.IngestChecksum{
-			Algorithm: "sha256",
-			DateTime:  now,
-			Digest:    "12345",
-			Source:    constants.SourceManifest,
-		},
-		&service.IngestChecksum{
-			Algorithm: "sha256",
-			DateTime:  now,
-			Digest:    "12345",
-			Source:    constants.SourceIngest,
-		},
 	}
 }
 

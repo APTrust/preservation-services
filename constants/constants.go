@@ -20,6 +20,7 @@ const (
 	SourceIngest        = "ingest"
 	SourceManifest      = "manifest"
 	SourceRegistry      = "registry"
+	SourceTagManifest   = "tag_manifest"
 )
 
 var DigestAlgorithms []string = []string{

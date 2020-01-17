@@ -189,9 +189,15 @@ func (f *IngestFile) ChecksumsMatch(manifestName string) (bool, error) {
 		panic(msg)
 	}
 	ingestChecksum := f.GetChecksum(constants.SourceIngest, alg)
-	manifestChecksum := f.GetChecksum(constants.SourceManifest, alg)
+	var manifestChecksum *IngestChecksum
+	if util.LooksLikeTagManifest(manifestName) {
+		manifestChecksum = f.GetChecksum(constants.SourceTagManifest, alg)
+	} else {
+		manifestChecksum = f.GetChecksum(constants.SourceManifest, alg)
+	}
 
 	manifestChecksumRequired := f.ManifestChecksumRequired(manifestName)
+
 	if ingestChecksum == nil && manifestChecksum != nil {
 		err = fmt.Errorf("File %s in %s is missing from bag",
 			f.Identifier(), manifestChecksum)

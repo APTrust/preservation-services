@@ -71,3 +71,38 @@ func GetStorageRecord(url string) *service.StorageRecord {
 		StoredAt: Timestamp,
 	}
 }
+
+// GetIngestChecksumSet returns two pairs of checksums.
+// The first pair contains an md5 from the bag manifest
+// and an md5 calculated by the ingest process. The second
+// pair is a sha256 from the manifest and one calculated by
+// the ingest process. In each pair, the digests match.
+func GetIngestChecksumSet() []*service.IngestChecksum {
+	now := time.Now().UTC()
+	return []*service.IngestChecksum{
+		&service.IngestChecksum{
+			Algorithm: "md5",
+			DateTime:  now,
+			Digest:    "12345",
+			Source:    constants.SourceManifest,
+		},
+		&service.IngestChecksum{
+			Algorithm: "md5",
+			DateTime:  now,
+			Digest:    "12345",
+			Source:    constants.SourceIngest,
+		},
+		&service.IngestChecksum{
+			Algorithm: "sha256",
+			DateTime:  now,
+			Digest:    "12345",
+			Source:    constants.SourceManifest,
+		},
+		&service.IngestChecksum{
+			Algorithm: "sha256",
+			DateTime:  now,
+			Digest:    "12345",
+			Source:    constants.SourceIngest,
+		},
+	}
+}

@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/models/service"
 	//"github.com/APTrust/preservation-services/ingest"
+	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -273,11 +275,52 @@ func TestExistingTagsOk(t *testing.T) {
 }
 
 func TestIngestFileOk(t *testing.T) {
-	// TODO: Write this.
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
+
+	// Make the profile require md5 and sha256 for both manifests
+	// and tag manifests.
+	validator.Profile.ManifestsRequired = []string{"md5", "sha256"}
+	validator.Profile.TagManifestsRequired = []string{"md5", "sha256"}
+
+	// Set up a file to validate.
+	f := service.NewIngestFile(validator.IngestObject.Identifier(),
+		"data/file.txt")
+
+	// Give that file matching md5 and sha256 checksums from
+	// manifests and tag manifests.
+	f.Checksums = testutil.GetIngestChecksumSet()
+	tagManifestChecksums := testutil.GetIngestChecksumSet()
+	for _, cs := range tagManifestChecksums {
+		if cs.Source == constants.SourceManifest {
+			cs.Source = constants.SourceTagManifest
+		}
+	}
+	f.Checksums = append(f.Checksums, tagManifestChecksums...)
+
+	// Force check of manifests.
+	assert.True(t, validator.IngestFileOk(f))
+
+	// Force checksum mismatch.
+	f.Checksums[0].Digest = "98765"
+	assert.False(t, validator.IngestFileOk(f))
+
+	// Make sure exact error was captured.
+	require.Equal(t, 1, len(validator.Errors))
+	assert.Equal(t, "File example.edu/example.edu.tagsample_good/data/file.txt: ingest md5 checksum 12345 doesn't match manifest checksum 98765", validator.Errors[0])
+
+	// Change file to tag file to force check of tag manifests
+	//f.PathInBag = "bag-info.txt"
+	//assert.True(t, validator.IngestFileOk(f))
 }
 
 func TestAnythingGoes(t *testing.T) {
-	// TODO: Write this.
+	validator := getMetadataValidator(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
+	assert.True(t, validator.AnythingGoes(nil))
+	assert.True(t, validator.AnythingGoes([]string{}))
+	assert.True(t, validator.AnythingGoes([]string{"*"}))
+	assert.False(t, validator.AnythingGoes([]string{"sha256"}))
 }
 
 // TODO: Test IsValid for all valid and invalid APTrust bags
