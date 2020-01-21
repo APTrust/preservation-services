@@ -29,22 +29,40 @@ func NewMetadataValidator(context *common.Context, profile *bagit.BagItProfile, 
 }
 
 func (v *MetadataValidator) IsValid() bool {
-	// TODO: Write this. Run all the checks below...
-	return true
-}
-
-func (v *MetadataValidator) BagItVersionOk() bool {
-	tag := v.IngestObject.GetTag("bagit.txt", "BagIt-Version")
-	if tag == nil || tag.Value == "" {
-		v.AddError("Missing required tag bag-info.txt/BagIt-Version.")
+	if !v.SerializationOk() {
 		return false
 	}
-	ok := util.StringListContains(v.Profile.AcceptBagItVersion, tag.Value)
-	if ok == false {
-		v.AddError("BagIt-Version %s is not permitted in BagIt profile %s.",
-			tag.Value, v.Profile.BagItProfileInfo.BagItProfileIdentifier)
+	if !v.BagItVersionOk() {
+		return false
 	}
-	return ok
+	if !v.FetchTxtOk() {
+		return false
+	}
+	if !v.ManifestsAllowedOk() {
+		return false
+	}
+	if !v.ManifestsRequiredOk() {
+		return false
+	}
+	if !v.TagFilesAllowedOk() {
+		return false
+	}
+	if !v.TagManifestsAllowedOk() {
+		return false
+	}
+	if !v.TagManifestsRequiredOk() {
+		return false
+	}
+	if !v.HasAllRequiredTags() {
+		return false
+	}
+	if !v.ExistingTagsOk() {
+		return false
+	}
+	if !v.IngestFilesOk() {
+		return false
+	}
+	return true
 }
 
 // Technically, we should check this. But the MetadataGatherer that produced
@@ -73,6 +91,23 @@ func (v *MetadataValidator) SerializationOk() bool {
 	return ok
 }
 
+func (v *MetadataValidator) BagItVersionOk() bool {
+	tag := v.IngestObject.GetTag("bagit.txt", "BagIt-Version")
+	if tag == nil || tag.Value == "" {
+		v.AddError("Missing required tag bagit.txt/BagIt-Version.")
+		return false
+	}
+	ok := util.StringListContains(v.Profile.AcceptBagItVersion, tag.Value)
+	if ok == false {
+		v.AddError("BagIt-Version %s is not permitted in BagIt profile %s.",
+			tag.Value, v.Profile.BagItProfileInfo.BagItProfileIdentifier)
+	}
+	return ok
+}
+
+// Ideally, we'd fully implement this so that it checks the contents
+// of fetch.txt, but since we don't ever plan on allowing fetch.txt
+// files, we're going to skip full validation.
 func (v *MetadataValidator) FetchTxtOk() bool {
 	if v.Profile.AllowFetchTxt == true {
 		return true
@@ -161,12 +196,13 @@ func (v *MetadataValidator) TagOk(tag *bagit.Tag) bool {
 		} else if !tagDef.IsLegalValue(tag.Value) {
 			v.AddError("In file %s, tag %s has illegal value '%s'",
 				tag.TagFile, tag.TagName, tag.Value)
+			ok = false
 		}
 	}
 	return ok
 }
 
-func (v *MetadataValidator) IngestFilesOk(f *service.IngestFile) bool {
+func (v *MetadataValidator) IngestFilesOk() bool {
 	ok := true
 	nextOffset := uint64(0)
 	batchSize := int64(100)
@@ -220,21 +256,29 @@ func (v *MetadataValidator) IngestFileOk(f *service.IngestFile) bool {
 func (v *MetadataValidator) ValidateChecksums(f *service.IngestFile, manifestType string, algorithms []string) bool {
 	ok := true
 	for _, alg := range v.IngestObject.Manifests {
+		manifestIsPresent := false
 		manifestName := ""
 		switch manifestType {
 		case constants.FileTypeManifest:
 			manifestName = fmt.Sprintf("manifest-%s.txt", alg)
+			manifestIsPresent = util.StringListContains(v.IngestObject.Manifests, alg)
 		case constants.FileTypeTagManifest:
 			manifestName = fmt.Sprintf("tagmanifest-%s.txt", alg)
+			manifestIsPresent = util.StringListContains(v.IngestObject.TagManifests, alg)
 		default:
 			// Panic, because this is entirely in the developer's control.
 			msg := fmt.Sprintf("Invalid manifest type: %s", manifestType)
 			panic(msg)
 		}
-		_, err := f.ChecksumsMatch(manifestName)
-		if err != nil {
-			v.AddError(err.Error())
-			ok = false
+		// manifestIsPresent mainly pertains to tag manifests, which are
+		// entirely optional. We don't want to try to validate a checksum
+		// against a manifest that isn't there.
+		if manifestIsPresent {
+			_, err := f.ChecksumsMatch(manifestName)
+			if err != nil {
+				v.AddError(err.Error())
+				ok = false
+			}
 		}
 	}
 	return ok

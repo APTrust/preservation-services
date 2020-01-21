@@ -5,8 +5,6 @@ import (
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/service"
-	//"github.com/APTrust/preservation-services/ingest"
-	//"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -48,7 +46,7 @@ func TestBagItVersionOk(t *testing.T) {
 	ok = validator.BagItVersionOk()
 	assert.False(t, ok)
 	require.Equal(t, 1, len(validator.Errors))
-	assert.Equal(t, "Missing required tag bag-info.txt/BagIt-Version.", validator.Errors[0])
+	assert.Equal(t, "Missing required tag bagit.txt/BagIt-Version.", validator.Errors[0])
 
 	// Should get same error if tag is entirely missing
 	validator.ClearErrors()
@@ -56,7 +54,7 @@ func TestBagItVersionOk(t *testing.T) {
 	ok = validator.BagItVersionOk()
 	assert.False(t, ok)
 	require.Equal(t, 1, len(validator.Errors))
-	assert.Equal(t, "Missing required tag bag-info.txt/BagIt-Version.", validator.Errors[0])
+	assert.Equal(t, "Missing required tag bagit.txt/BagIt-Version.", validator.Errors[0])
 }
 
 func TestSerializationOk(t *testing.T) {
@@ -481,7 +479,3 @@ func TestIngestFileOk_NonRequiredTagFile(t *testing.T) {
 	require.Equal(t, "File example.edu/example.edu.tagsample_good/custom_tags/untracked_tag_file.txt in tagmanifest-sha256.txt is missing from bag", validator.Errors[0])
 
 }
-
-// TODO: Test IsValid for all valid and invalid APTrust bags
-//       Test IsValid for all valid and invalid BTR bags
-//       Do this in a separate test file
