@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
+	"path"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -64,6 +66,12 @@ func (obj *IngestObject) ToJson() (string, error) {
 
 func (obj *IngestObject) BagName() string {
 	return bagit.CleanBagName(obj.S3Key)
+}
+
+func (obj *IngestObject) BaseNameOfS3Key() string {
+	ext := path.Ext(obj.S3Key)
+	re := regexp.MustCompile("\\" + ext + "$")
+	return re.ReplaceAllString(obj.S3Key, "")
 }
 
 func (obj *IngestObject) Identifier() string {

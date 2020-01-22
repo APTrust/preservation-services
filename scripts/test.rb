@@ -45,20 +45,21 @@ class TestRunner
     ]
   end
 
-  def run_unit_tests
+  def run_unit_tests(arg)
     puts "Deleting test cache from last run"
     `go clean -testcache`
     make_test_dirs
     @unit_test_services.each do |svc|
       start_service(svc)
     end
-    run_go_unit_tests
+    run_go_unit_tests(arg)
     # at_exit handler will stop all services
   end
 
-  def run_go_unit_tests
+  def run_go_unit_tests(arg)
     puts "Starting go unit tests"
-    pid = Process.spawn(env_hash, "go test ./...", chdir: project_root)
+    arg = "./..." if arg.nil?
+    pid = Process.spawn(env_hash, "go test #{arg}", chdir: project_root)
     Process.wait pid
   end
 
@@ -148,6 +149,9 @@ class TestRunner
 	puts "Usage: "
     puts "       test.rb units        # Run unit tests"
     puts "       test.rb integration  # Run integration tests \n"
+    puts "To run unit tests in a single directory:"
+    puts "       test.rb units ./ingest/..."
+    puts "       test.rb units ./util/..."
   end
 
 end
@@ -162,7 +166,7 @@ if __FILE__ == $0
 	exit(false)
   end
   if test_name == 'units'
-    t.run_unit_tests
+    t.run_unit_tests(ARGV[1])
   elsif test_name == 'integration'
     t.run_integration_tests
   end

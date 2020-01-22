@@ -43,6 +43,14 @@ func TestIngestObjectBagName(t *testing.T) {
 	assert.Equal(t, "photos", obj.BagName())
 }
 
+func TestBaseNameOfS3Key(t *testing.T) {
+	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", int64(500))
+	assert.Equal(t, "test-bag.b001.of200", obj.BaseNameOfS3Key())
+
+	obj.S3Key = "photos.tar"
+	assert.Equal(t, "photos", obj.BaseNameOfS3Key())
+}
+
 func TestIngestObjectIdentifier(t *testing.T) {
 	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", int64(500))
 	assert.Equal(t, "test.edu/test-bag", obj.Identifier())

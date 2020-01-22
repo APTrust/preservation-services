@@ -142,7 +142,7 @@ func getMetadataValidator(t *testing.T, profileName, pathToBag, bagMd5 string) *
 	return validator
 }
 
-func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string) *ingest.MetadataValidator {
+func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string, testForScanError bool) *ingest.MetadataValidator {
 	// Create a validator
 	validator := getMetadataValidator(t, profileName, pathToBag, bagMd5)
 	context := validator.Context
@@ -162,7 +162,16 @@ func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string
 	// validator needs to read.
 	g := ingest.NewMetadataGatherer(context, 9999, validator.IngestObject)
 	err = g.ScanBag()
-	require.Nil(t, err)
+
+	// Most tests do no produce a bag scanning error, but one does:
+	// bag_validation_test.go / TestBag_SampleWrongFolderName.
+	// In that case we want to ensure the error gets passed back through
+	// the validator. In all other cases, a scan error will prevent
+	// the rest of the tests from running, so we want to fail early in
+	// those cases.
+	if testForScanError {
+		require.Nil(t, err)
+	}
 
 	return validator
 }

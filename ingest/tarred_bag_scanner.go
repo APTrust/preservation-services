@@ -87,9 +87,27 @@ func (scanner *TarredBagScanner) processFileEntry(header *tar.Header) (*service.
 }
 
 // Creates an IngestFile object to describe a file in a tarball.
+// Older versions of the BagIt spec said a tarred bag should untar to a
+// single directory whose name matches the name of the tar file, minus
+// the .tar extension. BagIt 1.0 drops that requirement, but APTrust
+// uses filepaths as identifiers, and we've traditionally trimmed off
+// the leading folder name (which, under our old requirements, matched
+// the bag name). For now, we're going to assume that the tar file has
+// deserialized to a single top-level directory, and we're going to trim
+// that off to get what APTrust considers the canonical file path.
 func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.IngestFile, error) {
-	prefix := scanner.IngestObject.BagName() + "/"
+	prefix := scanner.IngestObject.BagName()
+	if strings.HasPrefix(header.Name, scanner.IngestObject.BaseNameOfS3Key()) {
+		// Check for multipart name, like example.edu.multipart.b01.of02.tar
+		prefix = scanner.IngestObject.BaseNameOfS3Key() + "/"
+	} else if strings.HasPrefix(header.Name, scanner.IngestObject.BagName()) {
+		// Test for non-multipart name, like example.edu.sample_good.tar
+		prefix = scanner.IngestObject.BagName() + "/"
+	}
+	// Strip off the expected prefix
 	pathInBag := strings.Replace(header.Name, prefix, "", 1)
+	// If nothing was trimmed off, bag untarred to some top-level directory
+	// name that doesn't match what we expect.
 	if pathInBag == header.Name {
 		return nil, fmt.Errorf("Illegal path, '%s'. Should start with '%s'.", header.Name, prefix)
 	}
