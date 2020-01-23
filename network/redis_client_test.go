@@ -173,3 +173,20 @@ func testGetBatch(t *testing.T, client *network.RedisClient, totalItems, batchSi
 	}
 	assert.Equal(t, totalItems, count)
 }
+
+func TestWorkResultSaveAndGet(t *testing.T) {
+	client := getRedisClient()
+	require.NotNil(t, client)
+	result := service.NewWorkResult(constants.OpIngestGatherMeta)
+	result.AddError("fatal error", true)
+	err := client.WorkResultSave(9999, result)
+	assert.Nil(t, err)
+
+	retrievedResult, err := client.WorkResultGet(9999, result.Operation)
+	assert.Nil(t, err)
+	assert.NotNil(t, retrievedResult)
+	assert.Equal(t, constants.OpIngestGatherMeta, retrievedResult.Operation)
+	assert.Equal(t, 1, len(retrievedResult.Errors))
+	assert.Equal(t, "fatal error", retrievedResult.Errors[0])
+	assert.True(t, retrievedResult.ErrorIsFatal)
+}

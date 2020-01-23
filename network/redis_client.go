@@ -141,3 +141,32 @@ func (c *RedisClient) GetBatchOfFileKeys(workItemId int, offset uint64, limit in
 	}
 	return keysAndValues, nextOffset, nil
 }
+
+func (c *RedisClient) WorkResultGet(workItemId int, operationName string) (*service.WorkResult, error) {
+	key := strconv.Itoa(workItemId)
+	field := fmt.Sprintf("workresult:%s", operationName)
+	data, err := c.client.HGet(key, field).Result()
+	if err != nil {
+		return nil, fmt.Errorf("WorkResultGet (%d, %s): %s",
+			workItemId, operationName, err.Error())
+	}
+	return service.WorkResultFromJson(data)
+}
+
+func (c *RedisClient) WorkResultSave(workItemId int, result *service.WorkResult) error {
+	key := strconv.Itoa(workItemId)
+	field := fmt.Sprintf("workresult:%s", result.Operation)
+	jsonData, err := result.ToJson()
+	if err != nil {
+		return err
+	}
+	_, err = c.client.HSet(key, field, jsonData).Result()
+	return err
+}
+
+func (c *RedisClient) WorkResultDelete(workItemId int, operationName string) error {
+	key := strconv.Itoa(workItemId)
+	field := fmt.Sprintf("workresult:%s", operationName)
+	_, err := c.client.HDel(key, field).Result()
+	return err
+}

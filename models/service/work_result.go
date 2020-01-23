@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"github.com/APTrust/preservation-services/constants"
 	"os"
 	"time"
@@ -60,4 +61,21 @@ func (result *WorkResult) Reset() {
 	result.Errors = make([]string, 0)
 	result.StartedAt = time.Time{}
 	result.FinishedAt = time.Time{}
+}
+
+func WorkResultFromJson(jsonData string) (*WorkResult, error) {
+	result := &WorkResult{}
+	err := json.Unmarshal([]byte(jsonData), result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (result *WorkResult) ToJson() (string, error) {
+	bytes, err := json.Marshal(result)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }

@@ -3,13 +3,11 @@ package service_test
 import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/service"
-	//"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
-	//"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require"
 	"os"
-	//"strings"
 	"testing"
-	//"time"
+	"time"
 )
 
 func TestNewWorkResult(t *testing.T) {
@@ -93,3 +91,34 @@ func TestWorkResultReset(t *testing.T) {
 	assert.Equal(t, constants.StatusPending, result.Status)
 	assert.Equal(t, 0, len(result.Errors))
 }
+
+func TestWorkResultToJson(t *testing.T) {
+	result := service.NewWorkResult(constants.OpIngestGatherMeta)
+	result.Host = "Bogus-Host-Name"
+	result.Pid = 1234
+	result.Start()
+	result.FinishWithError("fatal oops", true)
+	result.StartedAt = timestamp
+	result.FinishedAt = timestamp
+	jsonData, err := result.ToJson()
+	require.Nil(t, err)
+	assert.Equal(t, expectedJson, jsonData)
+}
+
+func TestWorkResultFromJson(t *testing.T) {
+	result, err := service.WorkResultFromJson(expectedJson)
+	require.Nil(t, err)
+	assert.Equal(t, constants.OpIngestGatherMeta, result.Operation)
+	assert.Equal(t, "Bogus-Host-Name", result.Host)
+	assert.Equal(t, 1234, result.Pid)
+	assert.Equal(t, timestamp, result.StartedAt)
+	assert.Equal(t, timestamp, result.FinishedAt)
+	assert.Equal(t, 1, len(result.Errors))
+	assert.Equal(t, "fatal oops", result.Errors[0])
+	assert.True(t, result.ErrorIsFatal)
+	assert.Equal(t, constants.StatusFailed, result.Status)
+}
+
+var timestamp, _ = time.Parse(time.RFC3339, "2020-01-23T21:48:18.07503Z")
+
+const expectedJson = `{"operation":"Ingest - Gather Metadata","host":"Bogus-Host-Name","pid":1234,"attempt_number":1,"started_at":"2020-01-23T21:48:18.07503Z","finished_at":"2020-01-23T21:48:18.07503Z","errors":["fatal oops"],"error_is_fatal":true,"status":"Failed"}`
