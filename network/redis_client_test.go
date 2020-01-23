@@ -190,3 +190,21 @@ func TestWorkResultSaveAndGet(t *testing.T) {
 	assert.Equal(t, "fatal error", retrievedResult.Errors[0])
 	assert.True(t, retrievedResult.ErrorIsFatal)
 }
+
+func TestWorkResultSaveAndDelete(t *testing.T) {
+	client := getRedisClient()
+	require.NotNil(t, client)
+	result := service.NewWorkResult(constants.OpIngestGatherMeta)
+	err := client.WorkResultSave(9999, result)
+	assert.Nil(t, err)
+
+	retrievedResult, err := client.WorkResultGet(9999, result.Operation)
+	assert.Nil(t, err)
+	assert.NotNil(t, retrievedResult)
+
+	err = client.WorkResultDelete(9999, constants.OpIngestGatherMeta)
+	require.Nil(t, err)
+
+	deletedResult, _ := client.WorkResultGet(9999, result.Operation)
+	assert.Nil(t, deletedResult)
+}
