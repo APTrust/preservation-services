@@ -58,9 +58,10 @@ class TestRunner
   end
 
   def run_go_unit_tests(arg)
-    puts "Starting go unit tests"
+    # Note: -p 1 flag helps prevent Redis overwrites on Linux/Travis
+    puts "Starting go unit tests with concurrency of 1"
     arg = "./..." if arg.nil?
-    pid = Process.spawn(env_hash, "go test #{arg}", chdir: project_root)
+    pid = Process.spawn(env_hash, "go test -p 1 #{arg}", chdir: project_root)
     Process.wait pid
     if $?.success?
       puts "\n\n    **** 😁 PASS 😁 **** \n\n".force_encoding('utf-8')
