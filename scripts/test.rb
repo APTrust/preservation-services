@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# coding: utf-8
 
 # Run unit and integration tests for preservation-services.
 
@@ -61,6 +62,12 @@ class TestRunner
     arg = "./..." if arg.nil?
     pid = Process.spawn(env_hash, "go test #{arg}", chdir: project_root)
     Process.wait pid
+    if $?.success?
+      puts "\n\n    **** 😁 PASS 😁 **** \n\n".force_encoding('utf-8')
+    else
+      puts "\n\n    **** 🤬 FAIL 🤬 **** \n\n".force_encoding('utf-8')
+      exit(pid)
+    end
   end
 
   def run_integration_tests
