@@ -7,6 +7,7 @@ REVISION:=$(shell git rev-parse --short=7 HEAD)
 BRANCH = $(subst /,_,$(shell git rev-parse --abbrev-ref HEAD))
 PUSHBRANCH = $(subst /,_,$(TRAVIS_BRANCH))
 TAG=$(name):$(REVISION)
+APT_SERVICES_CONFIG:='test'
 
 DOCKERAPPS := redis nsqlookup nsqd nsqadmin minio
 DOCKER_TAG_NAME=${REVISION}-${BRANCH}
@@ -27,6 +28,9 @@ help: ## This help.
 .DEFAULT_GOAL := help
 
 init: ## Start dependent services for integration tests and development
+	@for folder in [ "bin" "logs" "minio" "nsq" "redis" "restore" ]; do \
+		mkdir -p /tmp/$$folder; \
+	done
 	- @docker run --name redis -d -p 6379:6379 redis
 	- @docker run --name nsqlookup -d -p 4160:4160 nsqio/nsq:v1.2.0 nsqlookupd
 	- @docker run --name nsqd -d -p 4151:4151 nsqio/nsq:v1.2.0 nsqd --lookupd-tcp-address=127.0.0.1:4160
