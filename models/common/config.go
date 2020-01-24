@@ -9,6 +9,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // TODO: Config should be modifiable on the fly, without having
@@ -46,7 +47,7 @@ type Config struct {
 	RedisDefaultDB          int
 	RedisPassword           string
 	RedisRetries            int
-	RedisRetryMs            int
+	RedisRetryMs            time.Duration
 	RedisURL                string
 	RedisUser               string
 	RestoreDir              string
@@ -116,7 +117,7 @@ func newDefaultConfig() *Config {
 		RedisDefaultDB:          0,
 		RedisPassword:           "",
 		RedisRetries:            3,
-		RedisRetryMs:            150,
+		RedisRetryMs:            time.Duration(250),
 		RedisURL:                "localhost:6379",
 		RedisUser:               "",
 		RestoreDir:              path.Join(baseWorkingDir, "pres-serv", "restore"),

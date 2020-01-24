@@ -245,7 +245,7 @@ func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum, sourceT
 		} else {
 			// No record. Clear the error and retry.
 			err = nil
-			time.Sleep(150 * time.Millisecond)
+			time.Sleep(m.Context.Config.RedisRetryMs * time.Millisecond)
 		}
 	}
 	// If no record after three tries, that's a problem.
