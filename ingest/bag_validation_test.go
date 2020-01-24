@@ -171,7 +171,8 @@ func TestBag_SampleNoDataDir(t *testing.T) {
 		"File example.edu/example.edu.sample_no_data_dir/data/datastream-MARC in manifest-md5.txt is missing from bag",
 	}
 	for _, msg := range expected {
-		assert.True(t, util.StringListContains(validator.Errors, msg))
+		assert.True(t, util.StringListContains(validator.Errors, msg),
+			"Missing expected error: "+msg)
 	}
 }
 
