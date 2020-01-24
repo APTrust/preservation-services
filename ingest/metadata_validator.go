@@ -217,7 +217,8 @@ func (v *MetadataValidator) IngestFilesOk() bool {
 				"This is a system error, not a problem with the bag.",
 				err.Error())
 			ok = false
-			break
+			// Don't break on individual error;
+			// break on 30 errors. See below.
 		}
 		for _, ingestFile := range fileMap {
 			if !v.IngestFileOk(ingestFile) {
@@ -227,6 +228,17 @@ func (v *MetadataValidator) IngestFilesOk() bool {
 		// When scanning hash keys, redis returns cursor value
 		// of zero after it has iterated the entire collection.
 		if nextOffset == 0 {
+			break
+		}
+		// Break if we hit max errors. No sense scanning 100k
+		// files if the bag's not valid. We're getting
+		// file records from Redis, which returns an unpredictable
+		// number of records (Redis docs say batchSize is just
+		// a "suggestion"). Stop the loop at 30 errors, not at first
+		// set of errors because Redis' unpredictable batch sizes
+		// can cause unit tests to fail by returning only the first
+		// few errors instead of all of them.
+		if len(v.Errors) >= constants.MaxValidationErrors {
 			break
 		}
 	}
@@ -285,9 +297,9 @@ func (v *MetadataValidator) ValidateChecksums(f *service.IngestFile, manifestTyp
 }
 
 func (v *MetadataValidator) AddError(format string, a ...interface{}) {
-	if len(v.Errors) < 30 {
+	if len(v.Errors) < constants.MaxValidationErrors {
 		v.Errors = append(v.Errors, fmt.Sprintf(format, a...))
-	} else if len(v.Errors) == 30 {
+	} else if len(v.Errors) == constants.MaxValidationErrors {
 		v.Errors = append(v.Errors, "Too many errors")
 	}
 }

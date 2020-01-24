@@ -15,6 +15,7 @@ const (
 	FileTypePayload           = "payload_file"
 	FileTypeTag               = "tag_file"
 	FileTypeTagManifest       = "tag_manifest"
+	MaxValidationErrors       = 30
 	OpIngestCharacterize      = "Ingest - File Characterization"
 	OpIngestCheckForUpdate    = "Ingest - Check for Update"
 	OpIngestCleanup           = "Ingest - Cleanup"
