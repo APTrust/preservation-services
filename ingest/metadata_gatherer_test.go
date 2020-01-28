@@ -141,19 +141,22 @@ func testIngestFile(t *testing.T, ingestFile *service.IngestFile) {
 		// Untracked tag file does not appear in manifests.
 		// This is a legal case per the BagIt spec.
 		// TODO: Is there a reliable way to identify untracked tag files?
-		assert.Equal(t, 2, len(ingestFile.Checksums), ingestFile.Identifier())
+		assert.Equal(t, 3, len(ingestFile.Checksums), ingestFile.Identifier())
 	} else if filetype != constants.FileTypeTagManifest {
-		assert.Equal(t, 4, len(ingestFile.Checksums), ingestFile.Identifier())
+		assert.Equal(t, 5, len(ingestFile.Checksums), ingestFile.Identifier())
 	} else {
 		// Manifest files don't include manifest checksums
-		assert.Equal(t, 2, len(ingestFile.Checksums), ingestFile.Identifier())
+		assert.Equal(t, 3, len(ingestFile.Checksums), ingestFile.Identifier())
+	}
+	algs := []string{
+		"md5",    // from ingest scan
+		"sha256", // from ingest scan
+		"sha512", // from ingest scan
+		"md5",    // from manifest
+		"sha256", // from ingest scan
 	}
 	for i, checksum := range ingestFile.Checksums {
-		alg := "md5"
-		if i%2 == 1 {
-			alg = "sha256"
-		}
-		testChecksum(t, checksum, alg, i)
+		testChecksum(t, checksum, algs[i], i)
 	}
 }
 
@@ -162,7 +165,7 @@ func testChecksum(t *testing.T, checksum *service.IngestChecksum, alg string, in
 	assert.NotEmpty(t, checksum.DateTime)
 	assert.NotEqual(t, emptyTimeValue, checksum.DateTime)
 	assert.NotEmpty(t, checksum.Digest)
-	if index < 2 {
+	if index < 3 {
 		assert.Equal(t, "ingest", checksum.Source)
 	} else {
 		assert.True(t, (checksum.Source == constants.SourceManifest ||

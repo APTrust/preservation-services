@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"crypto/md5"
 	"crypto/sha256"
+	"crypto/sha512"
 	"fmt"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/service"
@@ -120,12 +121,18 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 
 // Calculates the file's checksums, and saves it to a temp file
 // if the file is a manifest, tag manifest, or parsable tag file.
+// Note that we currently calculate only md5, sha256, and sha512 digests.
+// Standard is now sha512, and we will phase out md5 and sha256 for ingest
+// over time. However, for fixity checking, we have millions of legacy
+// files with md5 and sha256.
 func (scanner *TarredBagScanner) processFile(ingestFile *service.IngestFile) error {
 	md5Hash := md5.New()
 	sha256Hash := sha256.New()
+	sha512Hash := sha512.New()
 	writers := []io.Writer{
 		md5Hash,
 		sha256Hash,
+		sha512Hash,
 	}
 	tempFilePath := scanner.getTempFilePath(ingestFile)
 	if tempFilePath != "" {
@@ -144,12 +151,12 @@ func (scanner *TarredBagScanner) processFile(ingestFile *service.IngestFile) err
 	if err != nil {
 		return err
 	}
-	scanner.addChecksums(ingestFile, md5Hash, sha256Hash)
+	scanner.addChecksums(ingestFile, md5Hash, sha256Hash, sha512Hash)
 	return nil
 }
 
 // Adds the checksums to the IngestFile object.
-func (scanner *TarredBagScanner) addChecksums(ingestFile *service.IngestFile, md5Hash, sha256Hash hash.Hash) {
+func (scanner *TarredBagScanner) addChecksums(ingestFile *service.IngestFile, md5Hash, sha256Hash, sha512Hash hash.Hash) {
 	now := time.Now()
 	md5Checksum := &service.IngestChecksum{
 		Algorithm: constants.AlgMd5,
@@ -163,8 +170,15 @@ func (scanner *TarredBagScanner) addChecksums(ingestFile *service.IngestFile, md
 		Digest:    fmt.Sprintf("%x", sha256Hash.Sum(nil)),
 		Source:    constants.SourceIngest,
 	}
+	sha512Checksum := &service.IngestChecksum{
+		Algorithm: constants.AlgSha512,
+		DateTime:  now,
+		Digest:    fmt.Sprintf("%x", sha512Hash.Sum(nil)),
+		Source:    constants.SourceIngest,
+	}
 	ingestFile.SetChecksum(md5Checksum)
 	ingestFile.SetChecksum(sha256Checksum)
+	ingestFile.SetChecksum(sha512Checksum)
 }
 
 // Returns a tempfile path for a manifest, tagmanifest, or parsable

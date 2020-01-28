@@ -127,7 +127,7 @@ func getIngestObject(pathToBagFile, md5Digest string) *service.IngestObject {
 
 // Valid names are constants.BagItProfileBTR and constant.BagItProfileDefault
 func getProfile(name string) (*bagit.BagItProfile, error) {
-	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
+	filename := path.Join(testutil.ProjectRoot(), "profiles", name)
 	return bagit.BagItProfileLoad(filename)
 }
 
