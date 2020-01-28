@@ -45,6 +45,11 @@
    - If so:
       - Overwrite UUIDs in Redis data with UUIDs of existing files
       - Check fixity of new files vs. existing & mark files that need re-save.
+   - We need to port the Pharos Client from Exchange and do the following:
+      - Loop through IngestFile objects in Redis.
+      - Look up each file in Pharos.
+      - If the file exists in Pharos (even if it's been deleted), overwrite
+        the IngestObject UUID and re-save to Redis.
 
 4. Unpack to staging bucket
    - Download through tar reader, saving each file individually to staging bucket.
@@ -64,18 +69,23 @@
    - Consider JHOVE, which works with URIs.
      See https://github.com/openpreserve/jhove
      http://jhove.openpreservation.org/getting-started/#running
-     __JHOVE may be the best of the lot for our purposes.__
    - Apache Tika also can examine URLs and supports JSON output
      See https://tika.apache.org/1.4/gettingstarted.html
      Tika also has a server mode, averting Java's huge startup costs,
      but server mode requires a PUT of the entire file contents.
    - DROID does not seem to work against URLs
-   - FITS does not see to work against URLs
+   - FITS does not seem to work against URLs
    - Maybe use DROID or FITS with s3fs.
      See https://github.com/s3fs-fuse/s3fs-fuse
      But this could also be a huge pain in the ass.
    - FIDO does not fetch URLs but can read from STDIN.
      See https://github.com/openpreserve/fido
+     __FIDO may be the best of the lot for our purposes, since it can
+     read from STDIN and matches against the PRONOM registry. We
+     may want to create a fork that can read from URLs instead of
+     relying only on files and STDIN.__ If we do decide to modify
+     FIDO to fetch URLs, the code would probably go into this block:
+     https://github.com/openpreserve/fido/blob/master/fido/fido.py#L848
 
 6. Store
    - Copy each file from staging bucket to preservation and/or glacier, using
