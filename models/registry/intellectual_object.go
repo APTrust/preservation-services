@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -24,4 +25,21 @@ type IntellectualObject struct {
 	StorageOption          string    `json:"storage_option"`
 	Title                  string    `json:"title,omitempty"`
 	UpdatedAt              time.Time `json:"updated_at,omitempty"`
+}
+
+func IntellectualObjectFromJson(jsonData string) (*IntellectualObject, error) {
+	obj := &IntellectualObject{}
+	err := json.Unmarshal([]byte(jsonData), obj)
+	if err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+func (obj *IntellectualObject) ToJson() (string, error) {
+	bytes, err := json.Marshal(obj)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }

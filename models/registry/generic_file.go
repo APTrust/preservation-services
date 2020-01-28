@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -19,4 +20,21 @@ type GenericFile struct {
 	StorageOption                string    `json:"storage_option"`
 	URI                          string    `json:"uri,omitempty"`
 	UpdatedAt                    time.Time `json:"updated_at,omitempty"`
+}
+
+func GenericFileFromJson(jsonData string) (*GenericFile, error) {
+	gf := &GenericFile{}
+	err := json.Unmarshal([]byte(jsonData), gf)
+	if err != nil {
+		return nil, err
+	}
+	return gf, nil
+}
+
+func (gf *GenericFile) ToJson() (string, error) {
+	bytes, err := json.Marshal(gf)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }
