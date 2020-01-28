@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var Timestamp, _ = time.Parse(time.RFC3339, "2020-01-02T15:04:05Z")
+var Bloomsday, _ = time.Parse(time.RFC3339, "1904-06-16T15:04:05Z")
 
 const (
 	Institution   = "test.edu"
@@ -47,7 +47,7 @@ func GetIngestFile(withChecksums, withStorageRecords bool) *service.IngestFile {
 
 func GetIngestObject() *service.IngestObject {
 	return &service.IngestObject{
-		DeletedFromReceivingAt: Timestamp,
+		DeletedFromReceivingAt: Bloomsday,
 		ETag:                   "12345678",
 		ErrorMessage:           "No error",
 		Id:                     555,
@@ -68,7 +68,7 @@ func GetIngestObject() *service.IngestObject {
 func GetStorageRecord(url string) *service.StorageRecord {
 	return &service.StorageRecord{
 		URL:      url,
-		StoredAt: Timestamp,
+		StoredAt: Bloomsday,
 	}
 }
 
