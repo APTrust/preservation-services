@@ -39,6 +39,15 @@ const (
 	StatusPending             = "Pending"
 	StatusStarted             = "Started"
 	StatusSuccess             = "Success"
+	StorageStandard           = "Standard"
+	StorageGlacierDeepOH      = "Glacier-Deep-OH"
+	StorageGlacierDeepOR      = "Glacier-Deep-OR"
+	StorageGlacierDeepVA      = "Glacier-Deep-VA"
+	StorageGlacierOH          = "Glacier-OH"
+	StorageGlacierOR          = "Glacier-OR"
+	StorageGlacierVA          = "Glacier-VA"
+	StorageWasabiVA           = "Wasabi-VA"
+	StorageWasabiOR           = "Wasabi-OR"
 )
 
 var DigestAlgorithms []string = []string{
