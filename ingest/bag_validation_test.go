@@ -177,22 +177,6 @@ func TestBag_SampleNoTitle(t *testing.T) {
 	assert.Equal(t, "In file aptrust-info.txt, required tag Title has no value", validator.Errors[0])
 }
 
-// ---------------------------------------------------------------
-// START HERE
-//
-// Scan error (bad folder name) is not propagating up into the
-// validator's errors list. It should.
-// ---------------------------------------------------------------
-// func TestBag_SampleWrongFolderName(t *testing.T) {
-// 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_wrong_folder_name.tar")
-// 	validator := setupValidatorAndObject(t,
-// 		constants.BagItProfileDefault, pathToBag, "", false)
-// 	assert.False(t, validator.IsValid())
-// 	fmt.Println(validator.Errors)
-// 	assert.Equal(t, 1, len(validator.Errors))
-// 	assert.Equal(t, "", validator.Errors[0])
-// }
-
 func TestBag_TagSampleBad(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.tagsample_bad.tar")
 	validator := setupValidatorAndObject(t,
