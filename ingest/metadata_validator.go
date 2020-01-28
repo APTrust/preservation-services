@@ -128,10 +128,19 @@ func (v *MetadataValidator) ManifestsAllowedOk() bool {
 }
 
 func (v *MetadataValidator) ManifestsRequiredOk() bool {
-	return v.ValidateRequired(
+	ok := v.ValidateRequired(
 		"manifest",
 		v.Profile.ManifestsRequired,
 		v.IngestObject.Manifests)
+	// BagIt-Profiles spec 1.3+ can specify multiple ManifestsAllowed
+	// with no ManifestsRequired, meaning the bagger is free to choose
+	// any algorithm from ManifestsAllowed. However, the bag MUST have
+	// at least one payload manifest to be valid.
+	if ok && len(v.IngestObject.Manifests) == 0 {
+		v.AddError("Bag must have at least one payload manifest")
+		ok = false
+	}
+	return ok
 }
 
 // TODO: We actually have to do pattern matching for this.

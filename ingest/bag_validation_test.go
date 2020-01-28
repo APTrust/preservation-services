@@ -6,6 +6,7 @@ import (
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -59,24 +60,6 @@ func TestBag_BadChecksums(t *testing.T) {
 	assert.Equal(t, 1, len(validator.Errors))
 }
 
-// func TestBag_BadFileNames(t *testing.T) {
-// 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_bad_file_names.tar")
-// 	validator := setupValidatorAndObject(t,
-// 		constants.BagItProfileDefault, pathToBag, "", true)
-// 	assert.False(t, validator.IsValid())
-// 	fmt.Println(validator.Errors)
-// 	assert.Equal(t, 0, len(validator.Errors))
-// }
-
-// func TestBag_DSStoreAndEmpty(t *testing.T) {
-// 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_ds_store_and_empty.tar")
-// 	validator := setupValidatorAndObject(t,
-// 		constants.BagItProfileDefault, pathToBag, "", true)
-// 	assert.False(t, validator.IsValid())
-// 	fmt.Println(validator.Errors)
-// 	assert.Equal(t, 0, len(validator.Errors))
-// }
-
 func TestBag_GlacierOH(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_glacier_oh.tar")
 	validator := setupValidatorAndObject(t,
@@ -109,14 +92,14 @@ func TestBag_SampleGood(t *testing.T) {
 	assert.Equal(t, 0, len(validator.Errors))
 }
 
-// func TestBag_SampleMissingDataFile(t *testing.T) {
-// 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_missing_data_file.tar")
-// 	validator := setupValidatorAndObject(t,
-// 		constants.BagItProfileDefault, pathToBag, "", true)
-// 	assert.False(t, validator.IsValid())
-// 	fmt.Println(validator.Errors)
-// 	assert.Equal(t, 0, len(validator.Errors))
-// }
+func TestBag_SampleMissingDataFile(t *testing.T) {
+	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_missing_data_file.tar")
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToBag, "", true)
+	assert.False(t, validator.IsValid())
+	require.Equal(t, 1, len(validator.Errors))
+	assert.Equal(t, "File example.edu/example.edu.sample_missing_data_file/data/datastream-DC in manifest-md5.txt is missing from bag", validator.Errors[0])
+}
 
 func TestBag_NoAPTrustInfo(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_no_aptrust_info.tar")
@@ -176,14 +159,14 @@ func TestBag_SampleNoDataDir(t *testing.T) {
 	}
 }
 
-// func TestBag_SampleNoMd5Manifest(t *testing.T) {
-// 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_no_md5_manifest.tar")
-// 	validator := setupValidatorAndObject(t,
-// 		constants.BagItProfileDefault, pathToBag, "", true)
-// 	assert.False(t, validator.IsValid())
-// 	fmt.Println(validator.Errors)
-// 	assert.Equal(t, 0, len(validator.Errors))
-// }
+func TestBag_SampleNoMd5Manifest(t *testing.T) {
+	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_no_md5_manifest.tar")
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToBag, "", true)
+	assert.False(t, validator.IsValid())
+	require.Equal(t, 1, len(validator.Errors))
+	assert.Equal(t, "Bag must have at least one payload manifest", validator.Errors[0])
+}
 
 func TestBag_SampleNoTitle(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_no_title.tar")

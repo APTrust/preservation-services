@@ -59,7 +59,7 @@ class TestRunner
 
   def run_go_unit_tests(arg)
     # Note: -p 1 flag helps prevent Redis overwrites on Linux/Travis
-    puts "Starting go unit tests with concurrency of 1"
+    puts "Starting go unit tests..."
     arg = "./..." if arg.nil?
     pid = Process.spawn(env_hash, "go test -p 1 #{arg}", chdir: project_root)
     Process.wait pid
