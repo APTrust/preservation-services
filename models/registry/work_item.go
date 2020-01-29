@@ -12,8 +12,8 @@ type WorkItem struct {
 	Bucket                string    `json:"bucket"`
 	CreatedAt             time.Time `json:"created_at"`
 	Date                  time.Time `json:"date"`
-	DeactivatedAt         time.Time `json:"deactivated_at,omitempty"`
 	ETag                  string    `json:"etag"`
+	GenericFileId         int       `json:"generic_file_id"`
 	GenericFileIdentifier string    `json:"generic_file_identifier"`
 	Id                    int       `json:"id"`
 	InstApprover          string    `json:"inst_appropver"`
