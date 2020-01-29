@@ -15,19 +15,23 @@ type Checksum struct {
 	UpdatedAt     time.Time `json:"updated_at,omitempty"`
 }
 
-func ChecksumFromJson(jsonData string) (*Checksum, error) {
+func ChecksumFromJson(jsonData []byte) (*Checksum, error) {
 	c := &Checksum{}
-	err := json.Unmarshal([]byte(jsonData), c)
+	err := json.Unmarshal(jsonData, c)
 	if err != nil {
 		return nil, err
 	}
 	return c, nil
 }
 
-func (c *Checksum) ToJson() (string, error) {
+func (c *Checksum) ToJson() ([]byte, error) {
 	bytes, err := json.Marshal(c)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(bytes), nil
+	return bytes, nil
+}
+
+func (c *Checksum) SerializeForPharos() ([]byte, error) {
+	return c.ToJson()
 }

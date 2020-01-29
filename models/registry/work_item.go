@@ -35,19 +35,19 @@ type WorkItem struct {
 	User                  string    `json:"user"`
 }
 
-func WorkItemFromJson(jsonData string) (*WorkItem, error) {
+func WorkItemFromJson(jsonData []byte) (*WorkItem, error) {
 	item := &WorkItem{}
-	err := json.Unmarshal([]byte(jsonData), item)
+	err := json.Unmarshal(jsonData, item)
 	if err != nil {
 		return nil, err
 	}
 	return item, nil
 }
 
-func (item *WorkItem) ToJson() (string, error) {
+func (item *WorkItem) ToJson() ([]byte, error) {
 	bytes, err := json.Marshal(item)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(bytes), nil
+	return bytes, nil
 }

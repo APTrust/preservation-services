@@ -22,7 +22,7 @@ var cs = &registry.Checksum{
 var csJson = `{"algorithm":"sha256","created_at":"1904-06-16T15:04:05Z","datetime":"1904-06-16T15:04:05Z","digest":"12345678","generic_file_id":999,"id":5432,"updated_at":"1904-06-16T15:04:05Z"}`
 
 func TestChecksumFromJson(t *testing.T) {
-	checksum, err := registry.ChecksumFromJson(csJson)
+	checksum, err := registry.ChecksumFromJson([]byte(csJson))
 	require.Nil(t, err)
 	assert.Equal(t, cs, checksum)
 }
@@ -30,5 +30,5 @@ func TestChecksumFromJson(t *testing.T) {
 func TestChecksumToJson(t *testing.T) {
 	actualJson, err := cs.ToJson()
 	require.Nil(t, err)
-	assert.Equal(t, csJson, actualJson)
+	assert.Equal(t, csJson, string(actualJson))
 }

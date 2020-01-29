@@ -22,19 +22,19 @@ type GenericFile struct {
 	UpdatedAt                    time.Time `json:"updated_at,omitempty"`
 }
 
-func GenericFileFromJson(jsonData string) (*GenericFile, error) {
+func GenericFileFromJson(jsonData []byte) (*GenericFile, error) {
 	gf := &GenericFile{}
-	err := json.Unmarshal([]byte(jsonData), gf)
+	err := json.Unmarshal(jsonData, gf)
 	if err != nil {
 		return nil, err
 	}
 	return gf, nil
 }
 
-func (gf *GenericFile) ToJson() (string, error) {
+func (gf *GenericFile) ToJson() ([]byte, error) {
 	bytes, err := json.Marshal(gf)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(bytes), nil
+	return bytes, nil
 }

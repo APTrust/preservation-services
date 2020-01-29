@@ -20,19 +20,19 @@ type Institution struct {
 	UpdatedAt           time.Time `json:"updated_at"`
 }
 
-func InstitutionFromJson(jsonData string) (*Institution, error) {
+func InstitutionFromJson(jsonData []byte) (*Institution, error) {
 	inst := &Institution{}
-	err := json.Unmarshal([]byte(jsonData), inst)
+	err := json.Unmarshal(jsonData, inst)
 	if err != nil {
 		return nil, err
 	}
 	return inst, nil
 }
 
-func (inst *Institution) ToJson() (string, error) {
+func (inst *Institution) ToJson() ([]byte, error) {
 	bytes, err := json.Marshal(inst)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(bytes), nil
+	return bytes, nil
 }

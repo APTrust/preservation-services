@@ -29,7 +29,7 @@ var genericFile = &registry.GenericFile{
 var gfJson = `{"created_at":"1904-06-16T15:04:05Z","file_created":"1904-06-16T15:04:05Z","file_format":"text/html","file_modified":"1904-06-16T15:04:05Z","id":5432,"identifier":"test.edu.bag/data/index.html","intellectual_object_id":1000,"intellectual_object_identifier":"test.edu.bag","last_fixity_check":"1904-06-16T15:04:05Z","size":8900,"state":"A","storage_option":"Standard","uri":"https://s3.example.com/preservation/5432","updated_at":"1904-06-16T15:04:05Z"}`
 
 func TestGenericFileFromJson(t *testing.T) {
-	gf, err := registry.GenericFileFromJson(gfJson)
+	gf, err := registry.GenericFileFromJson([]byte(gfJson))
 	require.Nil(t, err)
 	assert.Equal(t, genericFile, gf)
 }
@@ -37,5 +37,5 @@ func TestGenericFileFromJson(t *testing.T) {
 func TestGenericFileToJson(t *testing.T) {
 	actualJson, err := genericFile.ToJson()
 	require.Nil(t, err)
-	assert.Equal(t, gfJson, actualJson)
+	assert.Equal(t, gfJson, string(actualJson))
 }

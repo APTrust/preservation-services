@@ -27,19 +27,19 @@ type IntellectualObject struct {
 	UpdatedAt              time.Time `json:"updated_at,omitempty"`
 }
 
-func IntellectualObjectFromJson(jsonData string) (*IntellectualObject, error) {
+func IntellectualObjectFromJson(jsonData []byte) (*IntellectualObject, error) {
 	obj := &IntellectualObject{}
-	err := json.Unmarshal([]byte(jsonData), obj)
+	err := json.Unmarshal(jsonData, obj)
 	if err != nil {
 		return nil, err
 	}
 	return obj, nil
 }
 
-func (obj *IntellectualObject) ToJson() (string, error) {
+func (obj *IntellectualObject) ToJson() ([]byte, error) {
 	bytes, err := json.Marshal(obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(bytes), nil
+	return bytes, nil
 }

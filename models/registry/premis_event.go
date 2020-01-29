@@ -24,19 +24,19 @@ type PremisEvent struct {
 	UpdatedAt                    time.Time `json:"datetime"`
 }
 
-func PremisEventFromJson(jsonData string) (*PremisEvent, error) {
+func PremisEventFromJson(jsonData []byte) (*PremisEvent, error) {
 	event := &PremisEvent{}
-	err := json.Unmarshal([]byte(jsonData), event)
+	err := json.Unmarshal(jsonData, event)
 	if err != nil {
 		return nil, err
 	}
 	return event, nil
 }
 
-func (event *PremisEvent) ToJson() (string, error) {
+func (event *PremisEvent) ToJson() ([]byte, error) {
 	bytes, err := json.Marshal(event)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(bytes), nil
+	return bytes, nil
 }
