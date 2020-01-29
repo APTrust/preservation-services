@@ -36,3 +36,7 @@ func (inst *Institution) ToJson() ([]byte, error) {
 	}
 	return bytes, nil
 }
+
+func (inst *Institution) SerializeForPharos() ([]byte, error) {
+	return inst.ToJson()
+}

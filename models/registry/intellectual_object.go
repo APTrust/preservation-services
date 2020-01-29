@@ -43,3 +43,35 @@ func (obj *IntellectualObject) ToJson() ([]byte, error) {
 	}
 	return bytes, nil
 }
+
+func (obj *IntellectualObject) SerializeForPharos() ([]byte, error) {
+	return json.Marshal(&struct {
+		Access                 string `json:"access"`
+		AltIdentifier          string `json:"alt_identifier"`
+		BagGroupIdentifier     string `json:"bag_group_identifier"`
+		BagItProfileIdentifier string `json:"bagit_profile_identifier"`
+		BagName                string `json:"bag_name"`
+		Description            string `json:"description"`
+		ETag                   string `json:"etag"`
+		Identifier             string `json:"identifier"`
+		InstitutionId          int    `json:"institution_id"`
+		SourceOrganization     string `json:"source_organization"`
+		State                  string `json:"state"`
+		StorageOption          string `json:"storage_option"`
+		Title                  string `json:"title"`
+	}{
+		Access:                 obj.Access,
+		AltIdentifier:          obj.AltIdentifier,
+		BagGroupIdentifier:     obj.BagGroupIdentifier,
+		BagItProfileIdentifier: obj.BagItProfileIdentifier,
+		BagName:                obj.BagName,
+		Description:            obj.Description,
+		ETag:                   obj.ETag,
+		Identifier:             obj.Identifier,
+		InstitutionId:          obj.InstitutionId,
+		SourceOrganization:     obj.SourceOrganization,
+		State:                  obj.State,
+		StorageOption:          obj.StorageOption,
+		Title:                  obj.Title,
+	})
+}

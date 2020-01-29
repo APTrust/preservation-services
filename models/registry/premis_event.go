@@ -7,12 +7,13 @@ import (
 
 type PremisEvent struct {
 	Agent                        string    `json:"agent"`
-	CreatedAt                    time.Time `json:"created_at"`
+	CreatedAt                    time.Time `json:"created_at,omitempty"`
 	DateTime                     time.Time `json:"date_time"`
 	Detail                       string    `json:"detail"`
 	EventType                    string    `json:"event_type"`
-	GenericFileId                int       `json:"generic_file_id"`
-	GenericFileIdentifier        string    `json:"generic_file_identifier"`
+	GenericFileId                int       `json:"generic_file_id,omitempty"`
+	GenericFileIdentifier        string    `json:"generic_file_identifier,omitempty"`
+	Id                           int       `json:"id,omitempty"`
 	Identifier                   string    `json:"identifier"`
 	InstitutionId                int       `json:"institution_id"`
 	IntellectualObjectId         int       `json:"intellectual_object_id"`
@@ -21,7 +22,7 @@ type PremisEvent struct {
 	OutcomeDetail                string    `json:"outcome_detail"`
 	OutcomeInformation           string    `json:"outcome_information"`
 	Outcome                      string    `json:"outcome"`
-	UpdatedAt                    time.Time `json:"datetime"`
+	UpdatedAt                    time.Time `json:"datetime,omitempty"`
 }
 
 func PremisEventFromJson(jsonData []byte) (*PremisEvent, error) {
@@ -39,4 +40,8 @@ func (event *PremisEvent) ToJson() ([]byte, error) {
 		return nil, err
 	}
 	return bytes, nil
+}
+
+func (event *PremisEvent) SerializeForPharos() ([]byte, error) {
+	return event.ToJson()
 }
