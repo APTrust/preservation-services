@@ -40,6 +40,8 @@ var item = &registry.WorkItem{
 
 var itemJson = `{"aptrust_approver":"nobody@aptrust.org","action":"Ingest","bag_date":"1904-06-16T15:04:05Z","bucket":"receiving-bucket","created_at":"1904-06-16T15:04:05Z","date":"1904-06-16T15:04:05Z","etag":"54321","generic_file_identifier":"test.edu/bag/data/file.txt","id":908,"inst_appropver":"admin@test.edu","institution_id":333,"name":"test.edu.bag.tar","needs_admin_review":false,"node":"apt-prod-services-01","note":"This is just to say...","object_identifier":"test.edu/bag","outcome":"Ingest in progress","pid":3100,"queued_at":"1904-06-16T15:04:05Z","retry":true,"size":2858933,"stage":"Receive","stage_started_at":"1904-06-16T15:04:05Z","status":"Started","updated_at":"1904-06-16T15:04:05Z","user":"user@example.com"}`
 
+var itemJsonForPharos = `{"aptrust_approver":"nobody@aptrust.org","action":"Ingest","bag_date":"1904-06-16T15:04:05Z","bucket":"receiving-bucket","date":"1904-06-16T15:04:05Z","etag":"54321","generic_file_identifier":"test.edu/bag/data/file.txt","inst_appropver":"admin@test.edu","institution_id":333,"name":"test.edu.bag.tar","needs_admin_review":false,"node":"apt-prod-services-01","note":"This is just to say...","object_identifier":"test.edu/bag","outcome":"Ingest in progress","pid":3100,"queued_at":"1904-06-16T15:04:05Z","retry":true,"size":2858933,"stage":"Receive","stage_started_at":"1904-06-16T15:04:05Z","status":"Started","user":"user@example.com"}`
+
 func TestWorkItemFromJson(t *testing.T) {
 	workItem, err := registry.WorkItemFromJson([]byte(itemJson))
 	require.Nil(t, err)
@@ -50,4 +52,10 @@ func TestWorkItemToJson(t *testing.T) {
 	actualJson, err := item.ToJson()
 	require.Nil(t, err)
 	assert.Equal(t, itemJson, string(actualJson))
+}
+
+func TestWorkItemSerializeForPharos(t *testing.T) {
+	actualJson, err := item.SerializeForPharos()
+	require.Nil(t, err)
+	assert.Equal(t, itemJsonForPharos, string(actualJson))
 }
