@@ -1,0 +1,42 @@
+package registry
+
+import (
+	"encoding/json"
+	"time"
+)
+
+type PremisEvent struct {
+	Agent                        string    `json:"agent"`
+	CreatedAt                    time.Time `json:"created_at"`
+	DateTime                     time.Time `json:"date_time"`
+	Detail                       string    `json:"detail"`
+	EventType                    string    `json:"event_type"`
+	GenericFileId                int       `json:"generic_file_id"`
+	GenericFileIdentifier        string    `json:"generic_file_identifier"`
+	Identifier                   string    `json:"identifier"`
+	InstitutionId                int       `json:"institution_id"`
+	IntellectualObjectId         int       `json:"intellectual_object_id"`
+	IntellectualObjectIdentifier string    `json:"intellectual_object_identifier"`
+	Object                       string    `json:"object"`
+	OutcomeDetail                string    `json:"outcome_detail"`
+	OutcomeInformation           string    `json:"outcome_information"`
+	Outcome                      string    `json:"outcome"`
+	UpdatedAt                    time.Time `json:"datetime"`
+}
+
+func PremisEventFromJson(jsonData string) (*PremisEvent, error) {
+	event := &PremisEvent{}
+	err := json.Unmarshal([]byte(jsonData), event)
+	if err != nil {
+		return nil, err
+	}
+	return event, nil
+}
+
+func (event *PremisEvent) ToJson() (string, error) {
+	bytes, err := json.Marshal(event)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
