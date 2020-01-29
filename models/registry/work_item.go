@@ -51,32 +51,45 @@ func (item *WorkItem) ToJson() ([]byte, error) {
 	return bytes, nil
 }
 
+// See TODO below. This is logged in Trello as
+// https://trello.com/c/ZBBxFWid
 func (item *WorkItem) SerializeForPharos() ([]byte, error) {
-	return json.Marshal(&struct {
-		APTrustApprover       string    `json:"aptrust_approver"`
-		Action                string    `json:"action"`
-		BagDate               time.Time `json:"bag_date"`
-		Bucket                string    `json:"bucket"`
-		Date                  time.Time `json:"date"`
-		ETag                  string    `json:"etag"`
-		GenericFileIdentifier string    `json:"generic_file_identifier"`
-		InstApprover          string    `json:"inst_appropver"`
-		InstitutionId         int       `json:"institution_id"`
-		Name                  string    `json:"name"`
-		NeedsAdminReview      bool      `json:"needs_admin_review"`
-		Node                  string    `json:"node"`
-		Note                  string    `json:"note"`
-		ObjectIdentifier      string    `json:"object_identifier"`
-		Outcome               string    `json:"outcome"`
-		Pid                   int       `json:"pid"`
-		QueuedAt              time.Time `json:"queued_at"`
-		Retry                 bool      `json:"retry"`
-		Size                  int64     `json:"size"`
-		Stage                 string    `json:"stage"`
-		StageStartedAt        time.Time `json:"stage_started_at"`
-		Status                string    `json:"status"`
-		User                  string    `json:"user"`
-	}{
+	return json.Marshal(NewWorkItemForPharos(item))
+}
+
+// TODO: This needs to be fixed in Pharos.
+// While other controllers want JSON in the format
+// { "item_name": <object> }, the WorkItems controller
+// takes a flat struct like the one below for POST and PUT.
+// The format should be consistent across controllers.
+type WorkItemForPharos struct {
+	APTrustApprover       string    `json:"aptrust_approver"`
+	Action                string    `json:"action"`
+	BagDate               time.Time `json:"bag_date"`
+	Bucket                string    `json:"bucket"`
+	Date                  time.Time `json:"date"`
+	ETag                  string    `json:"etag"`
+	GenericFileIdentifier string    `json:"generic_file_identifier"`
+	InstApprover          string    `json:"inst_appropver"`
+	InstitutionId         int       `json:"institution_id"`
+	Name                  string    `json:"name"`
+	NeedsAdminReview      bool      `json:"needs_admin_review"`
+	Node                  string    `json:"node"`
+	Note                  string    `json:"note"`
+	ObjectIdentifier      string    `json:"object_identifier"`
+	Outcome               string    `json:"outcome"`
+	Pid                   int       `json:"pid"`
+	QueuedAt              time.Time `json:"queued_at"`
+	Retry                 bool      `json:"retry"`
+	Size                  int64     `json:"size"`
+	Stage                 string    `json:"stage"`
+	StageStartedAt        time.Time `json:"stage_started_at"`
+	Status                string    `json:"status"`
+	User                  string    `json:"user"`
+}
+
+func NewWorkItemForPharos(item *WorkItem) *WorkItemForPharos {
+	return &WorkItemForPharos{
 		APTrustApprover:       item.APTrustApprover,
 		Action:                item.Action,
 		BagDate:               item.BagDate,
@@ -100,5 +113,5 @@ func (item *WorkItem) SerializeForPharos() ([]byte, error) {
 		StageStartedAt:        item.StageStartedAt,
 		Status:                item.Status,
 		User:                  item.User,
-	})
+	}
 }

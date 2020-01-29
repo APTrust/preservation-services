@@ -37,6 +37,9 @@ func (inst *Institution) ToJson() ([]byte, error) {
 	return bytes, nil
 }
 
+// JSON format for Pharos post/put is {"institution": <object>}
 func (inst *Institution) SerializeForPharos() ([]byte, error) {
-	return inst.ToJson()
+	dataStruct := make(map[string]*Institution)
+	dataStruct["institution"] = inst
+	return json.Marshal(dataStruct)
 }

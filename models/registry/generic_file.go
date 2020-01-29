@@ -39,20 +39,30 @@ func (gf *GenericFile) ToJson() ([]byte, error) {
 	return bytes, nil
 }
 
+// JSON format for Pharos post/put is {"generic_file": <object>}
+// Also note that we don't serialize fields that Pharos doesn't accept.
 func (gf *GenericFile) SerializeForPharos() ([]byte, error) {
-	return json.Marshal(&struct {
-		FileFormat           string `json:"file_format,omitempty"`
-		Identifier           string `json:"identifier,omitempty"`
-		IntellectualObjectId int    `json:"intellectual_object_id"`
-		Size                 int64  `json:"size,omitempty"`
-		StorageOption        string `json:"storage_option"`
-		URI                  string `json:"uri,omitempty"`
-	}{
+	dataStruct := make(map[string]*GenericFileForPharos)
+	dataStruct["generic_file"] = NewGenericFileForPharos(gf)
+	return json.Marshal(dataStruct)
+}
+
+type GenericFileForPharos struct {
+	FileFormat           string `json:"file_format,omitempty"`
+	Identifier           string `json:"identifier,omitempty"`
+	IntellectualObjectId int    `json:"intellectual_object_id"`
+	Size                 int64  `json:"size,omitempty"`
+	StorageOption        string `json:"storage_option"`
+	URI                  string `json:"uri,omitempty"`
+}
+
+func NewGenericFileForPharos(gf *GenericFile) *GenericFileForPharos {
+	return &GenericFileForPharos{
 		FileFormat:           gf.FileFormat,
 		Identifier:           gf.Identifier,
 		IntellectualObjectId: gf.IntellectualObjectId,
 		Size:                 gf.Size,
 		StorageOption:        gf.StorageOption,
 		URI:                  gf.URI,
-	})
+	}
 }

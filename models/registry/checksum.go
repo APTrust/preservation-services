@@ -33,5 +33,7 @@ func (c *Checksum) ToJson() ([]byte, error) {
 }
 
 func (c *Checksum) SerializeForPharos() ([]byte, error) {
-	return c.ToJson()
+	dataStruct := make(map[string]*Checksum)
+	dataStruct["checksum"] = c
+	return json.Marshal(dataStruct)
 }

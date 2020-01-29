@@ -42,6 +42,9 @@ func (event *PremisEvent) ToJson() ([]byte, error) {
 	return bytes, nil
 }
 
+// JSON format for Pharos post/put is {"premis_event": <object>}
 func (event *PremisEvent) SerializeForPharos() ([]byte, error) {
-	return event.ToJson()
+	dataStruct := make(map[string]*PremisEvent)
+	dataStruct["premis_event"] = event
+	return json.Marshal(dataStruct)
 }

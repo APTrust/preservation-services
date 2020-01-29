@@ -44,22 +44,32 @@ func (obj *IntellectualObject) ToJson() ([]byte, error) {
 	return bytes, nil
 }
 
+// JSON format for Pharos post/put is {"intellectual_object": <object>}
+// Also note that we don't serialize fields that Pharos doesn't accept.
 func (obj *IntellectualObject) SerializeForPharos() ([]byte, error) {
-	return json.Marshal(&struct {
-		Access                 string `json:"access"`
-		AltIdentifier          string `json:"alt_identifier"`
-		BagGroupIdentifier     string `json:"bag_group_identifier"`
-		BagItProfileIdentifier string `json:"bagit_profile_identifier"`
-		BagName                string `json:"bag_name"`
-		Description            string `json:"description"`
-		ETag                   string `json:"etag"`
-		Identifier             string `json:"identifier"`
-		InstitutionId          int    `json:"institution_id"`
-		SourceOrganization     string `json:"source_organization"`
-		State                  string `json:"state"`
-		StorageOption          string `json:"storage_option"`
-		Title                  string `json:"title"`
-	}{
+	dataStruct := make(map[string]*IntellectualObjectForPharos)
+	dataStruct["intellectual_object"] = NewIntellectualObjectForPharos(obj)
+	return json.Marshal(dataStruct)
+}
+
+type IntellectualObjectForPharos struct {
+	Access                 string `json:"access"`
+	AltIdentifier          string `json:"alt_identifier"`
+	BagGroupIdentifier     string `json:"bag_group_identifier"`
+	BagItProfileIdentifier string `json:"bagit_profile_identifier"`
+	BagName                string `json:"bag_name"`
+	Description            string `json:"description"`
+	ETag                   string `json:"etag"`
+	Identifier             string `json:"identifier"`
+	InstitutionId          int    `json:"institution_id"`
+	SourceOrganization     string `json:"source_organization"`
+	State                  string `json:"state"`
+	StorageOption          string `json:"storage_option"`
+	Title                  string `json:"title"`
+}
+
+func NewIntellectualObjectForPharos(obj *IntellectualObject) *IntellectualObjectForPharos {
+	return &IntellectualObjectForPharos{
 		Access:                 obj.Access,
 		AltIdentifier:          obj.AltIdentifier,
 		BagGroupIdentifier:     obj.BagGroupIdentifier,
@@ -73,5 +83,5 @@ func (obj *IntellectualObject) SerializeForPharos() ([]byte, error) {
 		State:                  obj.State,
 		StorageOption:          obj.StorageOption,
 		Title:                  obj.Title,
-	})
+	}
 }

@@ -28,7 +28,9 @@ var genericFile = &registry.GenericFile{
 
 var gfJson = `{"created_at":"1904-06-16T15:04:05Z","file_created":"1904-06-16T15:04:05Z","file_format":"text/html","file_modified":"1904-06-16T15:04:05Z","id":5432,"identifier":"test.edu.bag/data/index.html","intellectual_object_id":1000,"intellectual_object_identifier":"test.edu.bag","last_fixity_check":"1904-06-16T15:04:05Z","size":8900,"state":"A","storage_option":"Standard","uri":"https://s3.example.com/preservation/5432","updated_at":"1904-06-16T15:04:05Z"}`
 
-var gfJsonForPharos = `{"file_format":"text/html","identifier":"test.edu.bag/data/index.html","intellectual_object_id":1000,"size":8900,"storage_option":"Standard","uri":"https://s3.example.com/preservation/5432"}`
+// JSON format for Pharos post/put is {"generic_file": <object>}
+// Also note that we don't serialize fields that Pharos doesn't accept.
+var gfJsonForPharos = `{"generic_file":{"file_format":"text/html","identifier":"test.edu.bag/data/index.html","intellectual_object_id":1000,"size":8900,"storage_option":"Standard","uri":"https://s3.example.com/preservation/5432"}}`
 
 func TestGenericFileFromJson(t *testing.T) {
 	gf, err := registry.GenericFileFromJson([]byte(gfJson))
