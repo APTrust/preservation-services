@@ -5,6 +5,10 @@ import (
 	"runtime"
 )
 
+type DetailedError interface {
+	Detail() string
+}
+
 // Error is a custom error type that includes some additional fields
 // to help us debug. See the Detail method.
 type Error struct {

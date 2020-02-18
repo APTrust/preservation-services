@@ -13,6 +13,7 @@ import (
 
 var msg = "Something went wrong"
 var innerError = fmt.Errorf("This is the inner error")
+var testURL = "https://example.com"
 
 func TestNewError(t *testing.T) {
 	err := common.NewError(
@@ -62,7 +63,6 @@ func TestErrorDetail(t *testing.T) {
 }
 
 func TestNewHttpError(t *testing.T) {
-	testURL := "https://example.com"
 	err := common.NewHttpError(
 		msg,
 		innerError,
@@ -85,4 +85,26 @@ func TestNewHttpError(t *testing.T) {
 	assert.True(t, strings.Contains(detail, strconv.Itoa(err.StatusCode)))
 	assert.True(t, strings.Contains(detail, "Underlying error"))
 	assert.True(t, strings.Contains(detail, innerError.Error()))
+}
+
+func TestDetailedError(t *testing.T) {
+	err := common.NewError(
+		msg,
+		nil,
+		false,
+	)
+	assert.Equal(t, err.Detail(), testfunc(err))
+
+	httpError := common.NewHttpError(
+		msg,
+		innerError,
+		http.MethodGet,
+		testURL,
+		http.StatusTeapot,
+	)
+	assert.Equal(t, httpError.Detail(), testfunc(httpError))
+}
+
+func testfunc(err common.DetailedError) string {
+	return err.Detail()
 }
