@@ -105,27 +105,14 @@ func (client *PharosClient) InstitutionList(params url.Values) *PharosResponse {
 
 // IntellectualObjectGet returns the object with the specified identifier,
 // if it exists. Param identifier is an IntellectualObject identifier
-// in the format "institution.edu/object_name". If param
-// includeFiles is true, Pharos will return an IntellectualObject
-// with all of its GenericFiles and their checksums. If param
-// includeEvents is true, Pharos will return the object with
-// its PREMIS events. If both boolean flags are true, Pharos
-// will return the object will all files, checksums and events,
-// resulting in a huge blob of JSON (many megabytes).
-func (client *PharosClient) IntellectualObjectGet(identifier string, includeFiles, includeEvents bool) *PharosResponse {
+// in the format "institution.edu/object_name".
+func (client *PharosClient) IntellectualObjectGet(identifier string) *PharosResponse {
 	// Set up the response object
 	resp := NewPharosResponse(PharosIntellectualObject)
 	resp.objects = make([]*registry.IntellectualObject, 1)
 
 	// Build the url and the request object
 	relativeUrl := fmt.Sprintf("/api/%s/objects/%s", client.apiVersion, escapeFileIdentifier(identifier))
-	if includeFiles && includeEvents {
-		relativeUrl += "?include_all_relations=true"
-	} else if includeFiles {
-		relativeUrl += "?include_files=true"
-	} else if includeEvents {
-		relativeUrl += "?include_events=true"
-	}
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -302,19 +289,13 @@ func (client *PharosClient) IntellectualObjectFinishDelete(identifier string) *P
 // GenericFileGet returns the GenericFile having the specified identifier.
 // The identifier should be in the format
 // "institution.edu/object_name/path/to/file.ext"
-// If param includeRelations is true, this call will return the GenericFile
-// along with its checksums and premis events. Otherwise, you get just
-// the GenericFile.
-func (client *PharosClient) GenericFileGet(identifier string, includeRelations bool) *PharosResponse {
+func (client *PharosClient) GenericFileGet(identifier string) *PharosResponse {
 	// Set up the response object
 	resp := NewPharosResponse(PharosGenericFile)
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/files/%s", client.apiVersion, escapeFileIdentifier(identifier)) // url.QueryEscape(identifier))
-	if includeRelations {
-		relativeUrl += "?include_relations=true"
-	}
+	relativeUrl := fmt.Sprintf("/api/%s/files/%s", client.apiVersion, escapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request

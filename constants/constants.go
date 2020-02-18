@@ -85,8 +85,8 @@ const (
 	StorageWasabiVA           = "Wasabi-VA"
 )
 
-var DigestAlgorithms []string = []string{
-	AlgMd5,
-	AlgSha256,
+var PreferredAlgsInOrder []string = []string{
 	AlgSha512,
+	AlgSha256,
+	AlgMd5,
 }

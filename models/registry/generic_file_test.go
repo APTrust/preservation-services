@@ -49,3 +49,7 @@ func TestGenericFileSerializeForPharos(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, gfJsonForPharos, string(actualJson))
 }
+
+func TestGenericUUID(t *testing.T) {
+	assert.Equal(t, "5432", genericFile.UUID())
+}

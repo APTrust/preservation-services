@@ -13,13 +13,13 @@ type IngestFile struct {
 	ErrorMessage     string            `json:"error_message,omitempty"`
 	FileFormat       string            `json:"file_format,omitempty"`
 	Id               int64             `json:"id,omitempty"`
-	NeedsSave        bool              `json:"needs_save,omitempty"`
-	ObjectIdentifier string            `json:"object_identifier,omitempty"`
-	PathInBag        string            `json:"path_in_bag,omitempty"`
-	Size             int64             `json:"size,omitempty"`
+	NeedsSave        bool              `json:"needs_save"`
+	ObjectIdentifier string            `json:"object_identifier"`
+	PathInBag        string            `json:"path_in_bag"`
+	Size             int64             `json:"size"`
 	StorageOption    string            `json:"storage_option"`
 	StorageRecords   []*StorageRecord  `json:"storage_records"`
-	UUID             string            `json:"uuid,omitempty"`
+	UUID             string            `json:"uuid"`
 }
 
 func NewIngestFile(objIdentifier, pathInBag string) *IngestFile {

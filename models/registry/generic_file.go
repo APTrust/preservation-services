@@ -2,6 +2,7 @@ package registry
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 )
 
@@ -45,6 +46,13 @@ func (gf *GenericFile) SerializeForPharos() ([]byte, error) {
 	dataStruct := make(map[string]*GenericFileForPharos)
 	dataStruct["generic_file"] = NewGenericFileForPharos(gf)
 	return json.Marshal(dataStruct)
+}
+
+// UUID returns this file's UUID. This is the identifier we use in
+// preservation storage.
+func (gf *GenericFile) UUID() string {
+	parts := strings.Split(gf.URI, "/")
+	return parts[len(parts)-1]
 }
 
 type GenericFileForPharos struct {
