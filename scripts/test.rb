@@ -9,6 +9,7 @@ class TestRunner
 
   def initialize
     @pids = {}
+    @pharos_started = false
     bin = self.bin_dir
     @unit_test_services = [
       {
@@ -37,11 +38,6 @@ class TestRunner
         name: "nsqdadmin",
         cmd: "#{bin}/nsqadmin --lookupd-http-address=127.0.0.1:4161",
         msg: "Started nsqadmin at 127.0.0.1:4171"
-      },
-      {
-        name: "pharos",
-        cmd: "",
-        msg: "To be implemented..."
       }
     ]
   end
@@ -71,10 +67,12 @@ class TestRunner
     end
   end
 
-  def run_integration_tests
-    puts "You're ahead of your time, my friend. Integration tests "
-    puts "have not even been written yet. Try the unit tests."
-    print_help
+  def run_integration_tests()
+    self.run_unit_tests(nil)
+    @integration_test_services.each do |svc|
+      start_service(svc)
+    end
+    sleep(5)
   end
 
   def start_service(svc)
@@ -145,12 +143,32 @@ class TestRunner
     File.join(project_root, "bin", os)
   end
 
+  def pharos_start
+    pharos_root = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
+
+    build_pid = docker_pid = Process.spawn("make build", chdir: pharos_root)
+    Process.wait build_pid
+
+    docker_start_pid = Process.spawn("make integration", chdir: pharos_root)
+	Process.wait docker_start_pid
+
+    @pharos_started = true
+  end
+
+  def pharos_stop
+    pharos_root = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
+    docker_stop_pid = Process.spawn("make integration_clean", chdir: pharos_root)
+	Process.wait docker_stop_pid
+    @pharos_started = false
+  end
+
   def stop_all_services
     puts "Stopping all services"
     services = @unit_test_services.concat(@integration_test_services)
     services.each do |svc|
       stop_service(svc)
     end
+    self.pharos_stop if @pharos_started
   end
 
   def print_help
