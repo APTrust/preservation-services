@@ -12,7 +12,7 @@ class TestRunner
     @pharos_started = false
     @services_stopped = false
     bin = self.bin_dir
-    @unit_test_services = [
+    @unit_services = [
       {
         name: "redis",
         cmd: "#{bin}/redis-server",
@@ -24,7 +24,7 @@ class TestRunner
         msg: "Minio is running on 127.0.0.1:9899. User/Pwd: minioadmin/minioadmin"
       }
     ]
-    @integration_test_services = [
+    @integration_services = [
       {
         name: "nsqlookupd",
         cmd: "#{bin}/nsqlookupd",
@@ -41,13 +41,18 @@ class TestRunner
         msg: "Started nsqadmin at 127.0.0.1:4171"
       }
     ]
+    @all_services = @unit_services + @integration_services
+  end
+
+  def clean_test_cache
+    puts "Deleting test cache from last run"
+    `go clean -testcache`
   end
 
   def run_unit_tests(arg)
-    puts "Deleting test cache from last run"
-    `go clean -testcache`
+    clean_test_cache
     make_test_dirs
-    @unit_test_services.each do |svc|
+    @unit_services.each do |svc|
       start_service(svc)
     end
     run_go_unit_tests(arg)
@@ -66,8 +71,9 @@ class TestRunner
   end
 
   def run_integration_tests(arg)
-    self.run_unit_tests(arg)
-    @integration_test_services.each do |svc|
+    clean_test_cache
+    make_test_dirs
+    @all_services.each do |svc|
       start_service(svc)
     end
     self.pharos_start
@@ -174,7 +180,7 @@ class TestRunner
   def stop_all_services
     return if @services_stopped
     puts "Stopping all services"
-    services = @unit_test_services.concat(@integration_test_services)
+    services = @all_services
     services.each do |svc|
       stop_service(svc)
     end
@@ -192,12 +198,15 @@ class TestRunner
   end
 
   def print_help
+    puts "\n"
+    puts "APTrust Preservation Services tests\n\n"
 	puts "Usage: "
-    puts "       test.rb units        # Run unit tests"
-    puts "       test.rb integration  # Run integration tests \n"
+    puts "       test.rb units            # Run unit tests"
+    puts "       test.rb integration      # Run integration tests\n\n"
     puts "To run unit tests in a single directory:"
     puts "       test.rb units ./ingest/..."
-    puts "       test.rb units ./util/..."
+    puts "       test.rb integration ./network/...\n\n"
+    puts "Note that running integration tests also runs unit tests.\n\n"
   end
 
 end
