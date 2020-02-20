@@ -14,6 +14,9 @@ import (
 	//"time"
 )
 
+// Pharos test fixtures are defined in the Pharos project.
+// We may want to move these constants to a place where
+// other test modules can access them.
 const InstIdentifier = "test.edu"
 
 var Institutions = []string{

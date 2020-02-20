@@ -37,3 +37,10 @@ Note that integration tests require the following:
 The unit tests start two lightweight services, redis and minio, Mac and Linux versions of which are included in this source repo.
 
 The integration tests start all of the services that unit tests start, plus nsqd, nsqlookupd, nsqdadmin (all provided in this repo) and a Docker instance of Pharos.
+
+Note: Integration test files end with `_int_test.go` and include the following build tag on the first line:
+
+```
+// +build integration
+
+```
