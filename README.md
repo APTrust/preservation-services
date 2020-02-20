@@ -26,4 +26,14 @@ export GO111MODULE=on
 
 To run unit tests: `ruby scripts/test.rb units`
 
-To run integration tests: `ruby scripts/test.rb integration` (Coming soon)
+To run integration tests: `ruby scripts/test.rb integration`
+
+Note that integration tests require the following:
+
+1. Docker
+2. A local installation of the [Pharos source](https://github.com/APTrust/pharos)
+3. An environment variable called `PHAROS_ROOT` set to the absolute path of your Pharos source code installation.
+
+The unit tests start two lightweight services, redis and minio, Mac and Linux versions of which are included in this source repo.
+
+The integration tests start all of the services that unit tests start, plus nsqd, nsqlookupd, nsqdadmin (all provided in this repo) and a Docker instance of Pharos.
