@@ -10,6 +10,7 @@ class TestRunner
   def initialize
     @pids = {}
     @pharos_started = false
+    @services_stopped = false
     bin = self.bin_dir
     @unit_test_services = [
       {
@@ -61,12 +62,7 @@ class TestRunner
     puts cmd
     pid = Process.spawn(env_hash, cmd, chdir: project_root)
     Process.wait pid
-    if $?.success?
-      puts "\n\n    **** 😁 PASS 😁 **** \n\n".force_encoding('utf-8')
-    else
-      puts "\n\n    **** 🤬 FAIL 🤬 **** \n\n".force_encoding('utf-8')
-      exit(pid)
-    end
+    self.print_results
   end
 
   def run_integration_tests(arg)
@@ -83,12 +79,7 @@ class TestRunner
     puts cmd
     pid = Process.spawn(env_hash, cmd, chdir: project_root)
     Process.wait pid
-    if $?.success?
-      puts "\n\n    **** 😁 PASS 😁 **** \n\n".force_encoding('utf-8')
-    else
-      puts "\n\n    **** 🤬 FAIL 🤬 **** \n\n".force_encoding('utf-8')
-      exit(pid)
-    end
+    self.print_results
   end
 
   def start_service(svc)
@@ -116,7 +107,9 @@ class TestRunner
 	begin
 	  Process.kill('TERM', pid)
 	rescue
-	  puts "No need to stop #{svc[:name]}: not running."
+	  puts "Hmm... Couldn't kill #{svc[:name]}."
+      puts "Check system processes to see if a version "
+      puts "of that process is lingering from a previous test run."
 	end
   end
 
@@ -179,12 +172,23 @@ class TestRunner
   end
 
   def stop_all_services
+    return if @services_stopped
     puts "Stopping all services"
     services = @unit_test_services.concat(@integration_test_services)
     services.each do |svc|
       stop_service(svc)
     end
     self.pharos_stop if @pharos_started
+    @services_stopped = true
+  end
+
+  def print_results
+    if $?.success?
+      puts "\n\n    **** 😁 PASS 😁 **** \n\n".force_encoding('utf-8')
+    else
+      puts "\n\n    **** 🤬 FAIL 🤬 **** \n\n".force_encoding('utf-8')
+      exit(false)
+    end
   end
 
   def print_help
@@ -207,10 +211,11 @@ if __FILE__ == $0
     t.print_help
 	exit(false)
   end
+  at_exit { t.stop_all_services }
   if test_name == 'units'
     t.run_unit_tests(ARGV[1])
   elsif test_name == 'integration'
     t.run_integration_tests(ARGV[1])
   end
-  at_exit { t.stop_all_services }
+  t.stop_all_services
 end
