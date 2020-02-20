@@ -3,6 +3,7 @@ package network_test
 import (
 	"fmt"
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/network"
 	"github.com/stretchr/testify/assert"
@@ -12,10 +13,11 @@ import (
 )
 
 func getRedisClient() *network.RedisClient {
+	config := common.NewConfig()
 	return network.NewRedisClient(
-		constants.TestRedisServerURL,
-		constants.TestRedisPwd,
-		constants.TestRedisDB,
+		config.RedisURL,
+		config.RedisPassword,
+		config.RedisDefaultDB,
 	)
 }
 

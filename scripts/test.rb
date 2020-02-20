@@ -124,6 +124,11 @@ class TestRunner
 	ENV.each{ |k,v| env[k] = v }
 	#env['RBENV_VERSION'] = `cat #{@pharos_root}/.ruby-version`.chomp
 	env['RAILS_ENV'] = 'integration'
+    env['APT_CONFIG_DIR'] = File.expand_path(
+      File.join(
+        File.dirname(__FILE__),
+        ".."
+      ))
     env['APT_SERVICES_CONFIG'] = 'test'
 	env
   end

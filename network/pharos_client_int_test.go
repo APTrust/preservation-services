@@ -32,7 +32,7 @@ func getPharosClient(t *testing.T) *network.PharosClient {
 	client, err := network.NewPharosClient(
 		config.PharosURL,
 		config.PharosAPIVersion,
-		config.PharosUser,
+		config.PharosAPIUser,
 		config.PharosAPIKey,
 	)
 	require.Nil(t, err)

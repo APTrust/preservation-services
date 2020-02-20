@@ -52,6 +52,7 @@ const (
 	OutcomeFailure            = "Failure"
 	OutcomeSuccess            = "Success"
 	S3ClientAWS               = "AWS"
+	S3ClientLocal             = "Local"
 	S3ClientWasabi            = "Wasabi"
 	SourceIngest              = "ingest"
 	SourceManifest            = "manifest"

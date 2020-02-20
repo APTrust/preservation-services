@@ -2,37 +2,18 @@ package common
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/op/go-logging"
-	"os"
-	"path"
-	"runtime"
-	"strings"
-	"time"
+	"github.com/spf13/viper"
 )
-
-// TODO: Config should be modifiable on the fly, without having
-// to restart app. Some config settings should probably be loaded
-// in from Pharos. We should be able to update config settings in
-// Pharos and have them applied on the fly.
-
-// TODO: https://trello.com/c/ItIoo7WG/540-dynamic-configuration-for-preserveration-services
-
-// Log Levels:
-//
-// CRITICAL
-// ERROR
-// WARNING
-// NOTICE
-// INFO
-// DEBUG
 
 type Config struct {
 	BaseWorkingDir          string
 	ConfigName              string
-	GathererUploadRetries   int
-	GathererUploadRetryMs   int
 	IngestTempDir           string
 	LogDir                  string
 	LogLevel                logging.Level
@@ -41,9 +22,9 @@ type Config struct {
 	NsqLookupd              string
 	NsqURL                  string
 	PharosAPIKey            string
+	PharosAPIUser           string
 	PharosAPIVersion        string
 	PharosURL               string
-	PharosUser              string
 	RedisDefaultDB          int
 	RedisPassword           string
 	RedisRetries            int
@@ -53,141 +34,119 @@ type Config struct {
 	RestoreDir              string
 	S3Credentials           map[string]S3Credentials
 	StagingBucket           string
+	StagingUploadRetries    int
+	StagingUploadRetryMs    time.Duration
 	VolumeServiceURL        string
 }
 
-var ValidConfigs = []string{
-	"demo",
-	"dev",
-	"integration",
-	"production",
-	"staging",
-	"test",
+var logLevels = map[string]logging.Level{
+	"CRITICAL": logging.CRITICAL,
+	"ERROR":    logging.ERROR,
+	"WARNING":  logging.WARNING,
+	"NOTICE":   logging.NOTICE,
+	"INFO":     logging.INFO,
+	"DEBUG":    logging.DEBUG,
 }
 
 // Returns a new config based on ENV var APT_SERVICES_CONFIG
 func NewConfig() *Config {
-	environment := os.Getenv("APT_SERVICES_CONFIG")
-	if runtime.GOOS == "darwin" && (environment != "dev" && environment != "test") {
-		panic("On Mac dev box, APT_SERVICES_CONFIG must be 'dev' or 'test'")
-	}
-	if !util.StringListContains(ValidConfigs, environment) {
-		msg := fmt.Sprintf("No such environment: %s. Try APT_SERVICES_CONFIG=%s",
-			environment, strings.Join(ValidConfigs, " | "))
-		panic(msg)
-	}
-	config := newConfig(environment)
-	config.ConfigName = environment
-	return config
-}
-
-func newConfig(environment string) *Config {
-	config := newDefaultConfig()
-	config.addS3Credentials(environment)
-	config.customizeDirs(environment)
-	config.customizeBuckets(environment)
-	// Customize here...
+	config := loadConfig()
+	config.expandPaths()
+	config.sanityCheck()
 	config.makeDirs()
 	return config
 }
 
-func newDefaultConfig() *Config {
-	baseWorkingDir, err := util.ExpandTilde(path.Join("~", "tmp"))
-	// Config is necessary for the app to run, so we should just
-	// die now if we can't determine basic info.
+func loadConfig() *Config {
+	configDir, envName := getEnvVars()
+	v := viper.New()
+	v.AddConfigPath(configDir)
+	v.SetConfigName(".env." + envName)
+	v.SetConfigType("env")
+	err := v.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+	return &Config{
+		BaseWorkingDir:          v.GetString("BASE_WORKING_DIR"),
+		ConfigName:              envName,
+		IngestTempDir:           v.GetString("INGEST_TEMP_DIR"),
+		LogDir:                  v.GetString("LOG_DIR"),
+		LogLevel:                logLevels[v.GetString("LOG_LEVEL")],
+		MaxDaysSinceFixityCheck: v.GetInt("MAX_DAYS_SINCE_LAST_FIXITY"),
+		MaxFileSize:             v.GetInt64("MAX_FILE_SIZE"),
+		NsqLookupd:              v.GetString("NSQ_LOOKUPD"),
+		NsqURL:                  v.GetString("NSQ_URL"),
+		PharosAPIKey:            v.GetString("PHAROS_API_KEY"),
+		PharosAPIUser:           v.GetString("PHAROS_API_USER"),
+		PharosAPIVersion:        v.GetString("PHAROS_API_VERSION"),
+		PharosURL:               v.GetString("PHAROS_URL"),
+		RedisDefaultDB:          v.GetInt("REDIS_DEFAULT_DB"),
+		RedisPassword:           v.GetString("REDIS_PASSWORD"),
+		RedisRetries:            v.GetInt("PHAROS_RETRIES"),
+		RedisRetryMs:            v.GetDuration("REDIS_RETRY_MS"),
+		RedisURL:                v.GetString("REDIS_URL"),
+		RedisUser:               v.GetString("REDIS_USER"),
+		RestoreDir:              v.GetString("RESTORE_DIR"),
+		S3Credentials: map[string]S3Credentials{
+			constants.S3ClientAWS: S3Credentials{
+				Host:      v.GetString("S3_AWS_HOST"),
+				KeyId:     v.GetString("S3_AWS_KEY"),
+				SecretKey: v.GetString("S3_AWS_SECRET"),
+			},
+			constants.S3ClientLocal: S3Credentials{
+				Host:      v.GetString("S3_LOCAL_HOST"),
+				KeyId:     v.GetString("S3_LOCAL_KEY"),
+				SecretKey: v.GetString("S3_LOCAL_SECRET"),
+			},
+			constants.S3ClientWasabi: S3Credentials{
+				Host:      v.GetString("S3_WASABI_HOST"),
+				KeyId:     v.GetString("S3_WASABI_KEY"),
+				SecretKey: v.GetString("S3_WASABI_SECRET"),
+			},
+		},
+		StagingBucket:        v.GetString("STAGING_BUCKET"),
+		StagingUploadRetries: v.GetInt("STAGING_UPLOAD_RETRIES"),
+		StagingUploadRetryMs: v.GetDuration("STAGING_UPLOAD_RETRY_MS"),
+		VolumeServiceURL:     v.GetString("VOLUME_SERVICE_URL"),
+	}
+}
+
+func getEnvVars() (string, string) {
+	configDir := getRequiredEnvVar("APT_CONFIG_DIR")
+	envName := getRequiredEnvVar("APT_SERVICES_CONFIG")
+	return configDir, envName
+}
+
+func getRequiredEnvVar(varName string) string {
+	value := os.Getenv(varName)
+	if value == "" {
+		panic(fmt.Sprintf("Required env var %s not set", varName))
+	}
+	return value
+}
+
+// Expand ~ to home dir in path settings.
+func (c *Config) expandPaths() {
+	c.BaseWorkingDir = expandPath(c.BaseWorkingDir)
+	c.IngestTempDir = expandPath(c.IngestTempDir)
+	c.LogDir = expandPath(c.LogDir)
+	c.RestoreDir = expandPath(c.RestoreDir)
+}
+
+func expandPath(dirName string) string {
+	dir, err := util.ExpandTilde(dirName)
 	if err != nil {
 		panic(err)
 	}
-	return &Config{
-		BaseWorkingDir:          baseWorkingDir,
-		ConfigName:              "default",
-		GathererUploadRetries:   3,
-		GathererUploadRetryMs:   150,
-		IngestTempDir:           path.Join(baseWorkingDir, "pres-serv", "ingest"),
-		LogDir:                  path.Join(baseWorkingDir, "logs"),
-		LogLevel:                logging.DEBUG,
-		MaxDaysSinceFixityCheck: 90,
-		MaxFileSize:             int64(5497558138880),
-		NsqLookupd:              "localhost:4161",
-		NsqURL:                  "http://localhost:4151",
-		PharosAPIKey:            os.Getenv("PHAROS_API_KEY"),
-		PharosAPIVersion:        "v2",
-		PharosURL:               "http://localhost:9292",
-		PharosUser:              os.Getenv("PHAROS_API_USER"),
-		RedisDefaultDB:          0,
-		RedisPassword:           "",
-		RedisRetries:            3,
-		RedisRetryMs:            time.Duration(250),
-		RedisURL:                "localhost:6379",
-		RedisUser:               "",
-		RestoreDir:              path.Join(baseWorkingDir, "pres-serv", "restore"),
-		StagingBucket:           "",
-		VolumeServiceURL:        "http://localhost:8898",
-	}
+	return dir
 }
 
-func (c *Config) customizeDirs(environment string) {
-	switch environment {
-	case "dev", "integration", "test":
-		return // leave defaults as-is
-	case "staging", "demo", "prod":
-		c.BaseWorkingDir = "/mnt/lvm/apt/"
-		c.IngestTempDir = "/mnt/lvm/apt/ingest"
-		c.LogDir = "/mnt/lvm/apt/logs"
-		c.RestoreDir = "/mnt/lvm/apt/restore"
-	default:
-		panic(fmt.Sprintf("No such config: %s", environment))
-	}
-}
+func (c *Config) sanityCheck() {
+	// If this is dev or test env, don't let config point
+	// to any external services. This prevents a dev/test
+	// installation from touching data in demo and prod systems.
 
-func (c *Config) customizeBuckets(environment string) {
-	switch environment {
-	case "dev", "test":
-		c.StagingBucket = constants.TestBucketStaging
-	case "integration":
-		c.StagingBucket = "aptrust.integration.staging"
-	case "demo":
-		c.StagingBucket = "aptrust.demo.staging"
-	case "prod":
-		c.StagingBucket = "aptrust.prod.staging"
-	case "staging":
-		c.StagingBucket = "aptrust.staging.staging"
-	default:
-		panic(fmt.Sprintf("No such config: %s", environment))
-	}
-}
-
-func (c *Config) addS3Credentials(environment string) {
-	switch environment {
-	case "dev", "test":
-		c.S3Credentials = map[string]S3Credentials{
-			constants.S3ClientAWS: S3Credentials{
-				Host:      constants.TestMinioServerURL,
-				KeyId:     constants.TestMinioUser,
-				SecretKey: constants.TestMinioPwd,
-			},
-			constants.S3ClientWasabi: S3Credentials{
-				Host:      constants.TestMinioServerURL,
-				KeyId:     constants.TestMinioUser,
-				SecretKey: constants.TestMinioPwd,
-			},
-		}
-	case "staging", "demo", "prod":
-		c.S3Credentials = map[string]S3Credentials{
-			constants.S3ClientAWS: S3Credentials{
-				Host:      "--TBD--",
-				KeyId:     os.Getenv("AWS_ACCESS_KEY_ID"),
-				SecretKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
-			},
-			constants.S3ClientWasabi: S3Credentials{
-				Host:      "--TBD--",
-				KeyId:     os.Getenv("WASABI_ACCESS_KEY_ID"),
-				SecretKey: os.Getenv("WASABI_SECRET_ACCESS_KEY"),
-			},
-		}
-	default:
-		panic(fmt.Sprintf("No such config: %s", environment))
-	}
 }
 
 func (c *Config) makeDirs() error {
