@@ -3,3 +3,8 @@
 
 # Redis db files
 *.rdb
+
+# This file is left over after integration tests.
+# It can be useful for post-mortem debugging, but it
+# doesn't belong in the repo.
+nsqd.dat

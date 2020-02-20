@@ -55,9 +55,11 @@ class TestRunner
 
   def run_go_unit_tests(arg)
     # Note: -p 1 flag helps prevent Redis overwrites on Linux/Travis
-    puts "Starting go unit tests..."
+    puts "Starting unit tests..."
     arg = "./..." if arg.nil?
-    pid = Process.spawn(env_hash, "go test -p 1 #{arg}", chdir: project_root)
+    cmd = "go test -p 1 #{arg}"
+    puts cmd
+    pid = Process.spawn(env_hash, cmd, chdir: project_root)
     Process.wait pid
     if $?.success?
       puts "\n\n    **** 😁 PASS 😁 **** \n\n".force_encoding('utf-8')
@@ -67,12 +69,26 @@ class TestRunner
     end
   end
 
-  def run_integration_tests()
-    self.run_unit_tests(nil)
+  def run_integration_tests(arg)
+    self.run_unit_tests(arg)
     @integration_test_services.each do |svc|
       start_service(svc)
     end
+    self.pharos_start
     sleep(5)
+
+    puts "Starting integration tests..."
+    arg = "./..." if arg.nil?
+    cmd = "go test -p 1 -tags=integration #{arg}"
+    puts cmd
+    pid = Process.spawn(env_hash, cmd, chdir: project_root)
+    Process.wait pid
+    if $?.success?
+      puts "\n\n    **** 😁 PASS 😁 **** \n\n".force_encoding('utf-8')
+    else
+      puts "\n\n    **** 🤬 FAIL 🤬 **** \n\n".force_encoding('utf-8')
+      exit(pid)
+    end
   end
 
   def start_service(svc)
@@ -194,7 +210,7 @@ if __FILE__ == $0
   if test_name == 'units'
     t.run_unit_tests(ARGV[1])
   elsif test_name == 'integration'
-    t.run_integration_tests
+    t.run_integration_tests(ARGV[1])
   end
   at_exit { t.stop_all_services }
 end
