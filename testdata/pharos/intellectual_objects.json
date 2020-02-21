@@ -1,0 +1,80 @@
+{
+   "institution1.edu/photos": {
+      "title": "First Object for Institution One",
+      "description": "A bag of photos",
+      "identifier": "institution1.edu/photos",
+      "alt_identifier": "photos_from_the_1960s",
+      "access": "institution",
+      "bag_name": "photos.tar",
+      "institution": "inst1",
+      "state": "A",
+      "etag": "etagforinst1photos",
+      "source_organization": "Institution One",
+      "bagit_profile_identifier": "https://example.com/profile.json"
+   },
+   "institution1.edu/pdfs": {
+      "title": "Second Object for Institution One",
+      "description": "A bag of PDFs",
+      "identifier": "institution1.edu/pdfs",
+      "alt_identifier": "pdf_docs_with_lots_of_words",
+      "access": "restricted",
+      "bag_name": "pdfs.tar",
+      "institution": "inst1",
+      "state": "A",
+      "etag": "etagforinst1pdfs",
+      "source_organization": "Institution One",
+      "bagit_profile_identifier": "https://example.com/profile.json"
+   },
+   "institution1.edu/glass_shards": {
+      "title": "Third Object for Institution One",
+      "description": "A bag of broken glass",
+      "identifier": "institution1.edu/glass_shards",
+      "alt_identifier": "glass_do_not_eat",
+      "access": "consortia",
+      "bag_name": "glass.tar",
+      "institution": "inst1",
+      "state": "A",
+      "etag": "etagforinst1glass",
+      "source_organization": "Institution One",
+      "bagit_profile_identifier": "https://example.com/profile.json"
+   },
+   "institution2.edu/chocolate": {
+      "title": "First Object for Institution Two",
+      "description": "A bag of chocolate",
+      "identifier": "institution2.edu/chocolate",
+      "alt_identifier": "mmm_chocolate",
+      "access": "institution",
+      "bag_name": "chocolate.tar",
+      "institution": "inst2",
+      "state": "A",
+      "etag": "etagforinst2chocolate",
+      "source_organization": "Institution Two",
+      "bagit_profile_identifier": "https://example.com/profile.json"
+   },
+   "institution2.edu/coal": {
+      "title": "Second Object for Institution Two",
+      "description": "A bag of coal",
+      "identifier": "institution2.edu/coal",
+      "alt_identifier": "its_black_and_it_burns",
+      "access": "restricted",
+      "bag_name": "coal.tar",
+      "institution": "inst2",
+      "state": "A",
+      "etag": "etagforinst2coal",
+      "source_organization": "Institution Two",
+      "bagit_profile_identifier": "https://example.com/profile.json"
+   },
+   "institution2.edu/toads": {
+      "title": "Third Object for Institution Two",
+      "description": "A bag of angry toads",
+      "identifier": "institution2.edu/toads",
+      "alt_identifier": "not_frogs_toads",
+      "access": "consortia",
+      "bag_name": "toads.tar",
+      "institution": "inst2",
+      "state": "A",
+      "etag": "etagforinst2toads",
+      "source_organization": "Institution Two",
+      "bagit_profile_identifier": "https://example.com/profile.json"
+   }
+}

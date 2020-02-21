@@ -3,10 +3,13 @@
 package network_test
 
 import (
+	"encoding/json"
 	//"fmt"
 	// "github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
+	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/network"
+	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/url"
@@ -14,16 +17,13 @@ import (
 	//"time"
 )
 
-// Pharos test fixtures are defined in the Pharos project.
-// We may want to move these constants to a place where
-// other test modules can access them.
-const InstIdentifier = "test.edu"
-
-var Institutions = []string{
-	"aptrust.org",
-	"institution1.edu",
-	"institution2.edu",
-	"test.edu",
+func LoadInstitutionFixtures(t *testing.T) map[string]*registry.Institution {
+	data, err := testutil.ReadPharosFixture("institutions.json")
+	require.Nil(t, err)
+	institutions := make(map[string]*registry.Institution)
+	err = json.Unmarshal(data, &institutions)
+	require.Nil(t, err)
+	return institutions
 }
 
 func getPharosClient(t *testing.T) *network.PharosClient {
@@ -41,16 +41,20 @@ func getPharosClient(t *testing.T) *network.PharosClient {
 }
 
 func TestPharosInstitutionGet(t *testing.T) {
+	instFixtures := LoadInstitutionFixtures(t)
 	client := getPharosClient(t)
-	resp := client.InstitutionGet(InstIdentifier)
-	assert.NotNil(t, resp)
-	require.Nil(t, resp.Error)
-	institution := resp.Institution()
-	assert.NotNil(t, institution)
-	assert.Equal(t, InstIdentifier, institution.Identifier)
+	for _, inst := range instFixtures {
+		resp := client.InstitutionGet(inst.Identifier)
+		assert.NotNil(t, resp)
+		require.Nil(t, resp.Error)
+		institution := resp.Institution()
+		assert.NotNil(t, institution)
+		assert.Equal(t, inst.Identifier, institution.Identifier)
+	}
 }
 
 func TestPharosInstitutionList(t *testing.T) {
+	instFixtures := LoadInstitutionFixtures(t)
 	client := getPharosClient(t)
 	v := url.Values{}
 	v.Add("order", "name")
@@ -59,8 +63,9 @@ func TestPharosInstitutionList(t *testing.T) {
 	assert.NotNil(t, resp)
 	assert.Nil(t, resp.Error)
 	institutions := resp.Institutions()
-	assert.Equal(t, 4, len(institutions))
-	for i, inst := range institutions {
-		assert.Equal(t, Institutions[i], inst.Identifier)
+	assert.Equal(t, len(instFixtures), len(institutions))
+	// Make sure we got the expected items in our list of 4
+	for _, inst := range institutions {
+		assert.NotNil(t, instFixtures[inst.Identifier])
 	}
 }
