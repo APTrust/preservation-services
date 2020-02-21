@@ -1,6 +1,7 @@
 package common_test
 
 import (
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/op/go-logging"
@@ -44,6 +45,14 @@ func TestNewConfig(t *testing.T) {
 
 	require.Equal(t, 3, len(config.S3Credentials))
 
+	// In test env, these are all set to the local minio instance,
+	// so we don't save/delete/overwrite in any external services.
+	for _, name := range constants.S3Providers {
+		provider := config.S3Credentials[name]
+		assert.Equal(t, "127.0.0.1:9899", provider.Host)
+		assert.Equal(t, "minioadmin", provider.KeyId)
+		assert.Equal(t, "minioadmin", provider.SecretKey)
+	}
 }
 
 // TODO: Test that different configs get the right settings.
