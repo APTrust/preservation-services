@@ -91,3 +91,9 @@ var PreferredAlgsInOrder []string = []string{
 	AlgSha256,
 	AlgMd5,
 }
+
+var S3Providers = []string{
+	S3ClientAWS,
+	S3ClientLocal,
+	S3ClientWasabi,
+}

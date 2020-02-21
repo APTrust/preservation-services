@@ -55,6 +55,7 @@ func (m *MetadataGatherer) ScanBag() error {
 	if err != nil {
 		return err
 	}
+
 	defer tarredBag.Close()
 	scanner := NewTarredBagScanner(
 		tarredBag,
@@ -66,15 +67,19 @@ func (m *MetadataGatherer) ScanBag() error {
 	if err != nil {
 		return err
 	}
+
 	err = m.CopyTempFilesToS3(scanner.TempFiles)
 	if err != nil {
 		return err
 	}
+
 	err = m.parseTempFiles(scanner.TempFiles)
 	if err != nil {
 		return err
 	}
+
 	m.setMissingDefaultTags()
+
 	return m.Context.RedisClient.IngestObjectSave(m.WorkItemId, m.IngestObject)
 }
 
@@ -245,7 +250,7 @@ func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum, sourceT
 		} else {
 			// No record. Clear the error and retry.
 			err = nil
-			time.Sleep(m.Context.Config.RedisRetryMs * time.Millisecond)
+			time.Sleep(m.Context.Config.RedisRetryMs)
 		}
 	}
 	// If no record after three tries, that's a problem.

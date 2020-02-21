@@ -44,7 +44,7 @@ func TestPharosInstitutionGet(t *testing.T) {
 	client := getPharosClient(t)
 	resp := client.InstitutionGet(InstIdentifier)
 	assert.NotNil(t, resp)
-	assert.Nil(t, resp.Error)
+	require.Nil(t, resp.Error)
 	institution := resp.Institution()
 	assert.NotNil(t, institution)
 	assert.Equal(t, InstIdentifier, institution.Identifier)
