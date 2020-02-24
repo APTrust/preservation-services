@@ -166,8 +166,8 @@ class TestRunner
   def pharos_start
     pharos_root = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
 
-    build_pid = docker_pid = Process.spawn("make build", chdir: pharos_root)
-    Process.wait build_pid
+    #build_pid = docker_pid = Process.spawn("make build", chdir: pharos_root)
+    #Process.wait build_pid
 
     docker_start_pid = Process.spawn("make integration", chdir: pharos_root)
 	Process.wait docker_start_pid

@@ -4,7 +4,7 @@ package network_test
 
 import (
 	"encoding/json"
-	//"fmt"
+	"fmt"
 	// "github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
@@ -92,6 +92,12 @@ func getPharosClient(t *testing.T) *network.PharosClient {
 	return client
 }
 
+func TestEscapeFileIdentifier(t *testing.T) {
+	assert.Equal(t,
+		"test.edu%2Fobj%2Ffile%20name%3F.txt",
+		network.EscapeFileIdentifier("test.edu/obj/file name?.txt"))
+}
+
 func TestPharosInstitutionGet(t *testing.T) {
 	LoadPharosFixtures(t)
 	client := getPharosClient(t)
@@ -99,6 +105,9 @@ func TestPharosInstitutionGet(t *testing.T) {
 		resp := client.InstitutionGet(inst.Identifier)
 		assert.NotNil(t, resp)
 		require.Nil(t, resp.Error)
+		assert.Equal(t,
+			fmt.Sprintf("/api/v2/institutions/%s/", inst.Identifier),
+			resp.Request.URL.Opaque)
 		institution := resp.Institution()
 		assert.NotNil(t, institution)
 		assert.Equal(t, inst.Identifier, institution.Identifier)
@@ -114,10 +123,29 @@ func TestPharosInstitutionList(t *testing.T) {
 	resp := client.InstitutionList(v)
 	assert.NotNil(t, resp)
 	assert.Nil(t, resp.Error)
+	assert.Equal(t,
+		fmt.Sprintf("/api/v2/institutions/?%s", v.Encode()),
+		resp.Request.URL.Opaque)
 	institutions := resp.Institutions()
 	assert.Equal(t, len(InstFixtures), len(institutions))
 	// Make sure we got the expected items in our list of 4
 	for _, inst := range institutions {
 		assert.NotNil(t, InstFixtures[inst.Identifier])
+	}
+}
+
+func TestPharosIntellectualObjectGet(t *testing.T) {
+	LoadPharosFixtures(t)
+	client := getPharosClient(t)
+	for _, obj := range ObjectFixtures {
+		resp := client.IntellectualObjectGet(obj.Identifier)
+		assert.NotNil(t, resp)
+		require.Nil(t, resp.Error)
+		assert.Equal(t,
+			fmt.Sprintf("/api/v2/objects/%s", network.EscapeFileIdentifier(obj.Identifier)),
+			resp.Request.URL.Opaque)
+		intelObj := resp.IntellectualObject()
+		assert.NotNil(t, intelObj)
+		assert.Equal(t, obj.Identifier, intelObj.Identifier)
 	}
 }

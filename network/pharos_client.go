@@ -112,7 +112,7 @@ func (client *PharosClient) IntellectualObjectGet(identifier string) *PharosResp
 	resp.objects = make([]*registry.IntellectualObject, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/objects/%s", client.apiVersion, escapeFileIdentifier(identifier))
+	relativeUrl := fmt.Sprintf("/api/%s/objects/%s", client.apiVersion, EscapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -181,7 +181,7 @@ func (client *PharosClient) IntellectualObjectSave(obj *registry.IntellectualObj
 	httpMethod := "POST"
 	if obj.Id > 0 {
 		// PUT URL looks like /api/v2/objects/college.edu%2Fobject_name
-		relativeUrl = fmt.Sprintf("/api/%s/objects/%s", client.apiVersion, escapeFileIdentifier(obj.Identifier))
+		relativeUrl = fmt.Sprintf("/api/%s/objects/%s", client.apiVersion, EscapeFileIdentifier(obj.Identifier))
 		httpMethod = "PUT"
 	}
 	absoluteUrl := client.BuildUrl(relativeUrl)
@@ -216,7 +216,7 @@ func (client *PharosClient) IntellectualObjectRequestRestore(identifier string) 
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/objects/%s/restore", client.apiVersion, escapeFileIdentifier(identifier))
+	relativeUrl := fmt.Sprintf("/api/%s/objects/%s/restore", client.apiVersion, EscapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request.
@@ -245,7 +245,7 @@ func (client *PharosClient) IntellectualObjectRequestDelete(identifier string) *
 	resp.objects = make([]*registry.IntellectualObject, 0)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/objects/%s/delete", client.apiVersion, escapeFileIdentifier(identifier))
+	relativeUrl := fmt.Sprintf("/api/%s/objects/%s/delete", client.apiVersion, EscapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request.
@@ -270,7 +270,7 @@ func (client *PharosClient) IntellectualObjectFinishDelete(identifier string) *P
 
 	// Build the url and the request object
 	relativeUrl := fmt.Sprintf("/api/%s/objects/%s/finish_delete", client.apiVersion,
-		escapeFileIdentifier(identifier))
+		EscapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -295,7 +295,7 @@ func (client *PharosClient) GenericFileGet(identifier string) *PharosResponse {
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/files/%s", client.apiVersion, escapeFileIdentifier(identifier))
+	relativeUrl := fmt.Sprintf("/api/%s/files/%s", client.apiVersion, EscapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -360,7 +360,7 @@ func (client *PharosClient) GenericFileSave(obj *registry.GenericFile) *PharosRe
 	httpMethod := "POST"
 	if obj.Id > 0 {
 		// PUT URL looks like /api/v2/files/college.edu%2Fobject_name%2Ffile.xml
-		relativeUrl = fmt.Sprintf("%s%s", relativeUrl, escapeFileIdentifier(obj.Identifier))
+		relativeUrl = fmt.Sprintf("%s%s", relativeUrl, EscapeFileIdentifier(obj.Identifier))
 		httpMethod = "PUT"
 	}
 	absoluteUrl := client.BuildUrl(relativeUrl)
@@ -481,7 +481,7 @@ func (client *PharosClient) GenericFileFinishDelete(identifier string) *PharosRe
 
 	// Build the url and the request object
 	relativeUrl := fmt.Sprintf("/api/%s/files/finish_delete/%s", client.apiVersion,
-		escapeFileIdentifier(identifier))
+		EscapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -917,7 +917,7 @@ func (client *PharosClient) DoRequest(resp *PharosResponse, method, absoluteUrl 
 	}
 }
 
-func escapeFileIdentifier(identifier string) string {
+func EscapeFileIdentifier(identifier string) string {
 	encoded := url.QueryEscape(identifier)
 	return strings.Replace(encoded, "+", "%20", -1)
 }
