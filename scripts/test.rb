@@ -4,10 +4,12 @@
 # Run unit and integration tests for preservation-services.
 
 require 'fileutils'
+require 'optparse'
 
 class TestRunner
 
-  def initialize
+  def initialize(options)
+    @options = options
     @pids = {}
     @pharos_started = false
     @services_stopped = false
@@ -166,8 +168,13 @@ class TestRunner
   def pharos_start
     pharos_root = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
 
-    #build_pid = docker_pid = Process.spawn("make build", chdir: pharos_root)
-    #Process.wait build_pid
+    if @options[:rebuild]
+      puts "Rebuilding Pharos docker container (because you said so)"
+      build_pid = docker_pid = Process.spawn("make build", chdir: pharos_root)
+      Process.wait build_pid
+    else
+      puts "Using existing Pharos container (use --rebuild if you want a new one)"
+    end
 
     docker_start_pid = Process.spawn("make integration", chdir: pharos_root)
 	Process.wait docker_start_pid
@@ -206,12 +213,17 @@ class TestRunner
     puts "\n"
     puts "APTrust Preservation Services tests\n\n"
 	puts "Usage: "
-    puts "       test.rb units            # Run unit tests"
-    puts "       test.rb integration      # Run integration tests\n\n"
+    puts "  test.rb units                   # Run unit tests"
+    puts "  test.rb integration             # Run integration tests"
+    puts "  test.rb integration --rebuild   # Rebuild Docker & run integration"
+    puts "\n"
     puts "To run unit tests in a single directory:"
-    puts "       test.rb units ./ingest/..."
-    puts "       test.rb integration ./network/...\n\n"
-    puts "Note that running integration tests also runs unit tests.\n\n"
+    puts "  test.rb units ./ingest/..."
+    puts "  test.rb integration ./network/..."
+    puts "  test.rb integration ./network/... --rebuild \n\n"
+    puts "Note that running integration tests also runs unit tests."
+    puts "Go files are always rebuilt for testing, but the Pharos"
+    puts "Docker container is only rebuilt when you speficy --rebuild.\n\n"
   end
 
 end
@@ -219,7 +231,14 @@ end
 # TODO: Add command line args to specify whether to run unit tests
 # or integration tests. For now, we're only running unit tests.
 if __FILE__ == $0
-  t = TestRunner.new
+  options = {}
+  OptionParser.new do |opts|
+    opts.on("-r", "--rebuild", "Rebuild Pharos docker container") do |r|
+      options[:rebuild] = r
+    end
+  end.parse!
+
+  t = TestRunner.new(options)
   test_name = ARGV[0]
   if !['units', 'integration'].include?(test_name)
     t.print_help
