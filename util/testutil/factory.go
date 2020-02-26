@@ -29,6 +29,7 @@ func GetIngestFile(withChecksums, withStorageRecords bool) *service.IngestFile {
 	f := service.NewIngestFile(ObjIdentifier, "data/image.jpg")
 	f.ErrorMessage = "no error"
 	f.FileFormat = "text/javascript"
+	f.FileModified = Bloomsday
 	f.Id = 999
 	f.InstitutionId = 9855
 	f.ObjectIdentifier = "test.edu/some-bag"

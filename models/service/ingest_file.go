@@ -6,12 +6,14 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/util"
 	"strings"
+	"time"
 )
 
 type IngestFile struct {
 	Checksums        []*IngestChecksum `json:"checksums"`
 	ErrorMessage     string            `json:"error_message,omitempty"`
 	FileFormat       string            `json:"file_format,omitempty"`
+	FileModified     time.Time         `json:"file_modified,omitempty"`
 	Id               int64             `json:"id,omitempty"`
 	InstitutionId    int               `json:"institution_id,omitempty"`
 	NeedsSave        bool              `json:"needs_save"`
