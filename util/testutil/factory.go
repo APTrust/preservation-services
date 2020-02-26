@@ -32,6 +32,7 @@ func GetIngestFile(withChecksums, withStorageRecords bool) *service.IngestFile {
 	f.FileModified = Bloomsday
 	f.Id = 999
 	f.InstitutionId = 9855
+	f.IntellectualObjectId = 4432
 	f.ObjectIdentifier = "test.edu/some-bag"
 	f.PathInBag = "data/text/file.txt"
 	f.Size = 5555
@@ -42,7 +43,18 @@ func GetIngestFile(withChecksums, withStorageRecords bool) *service.IngestFile {
 		f.SetChecksum(GetIngestChecksum(constants.AlgMd5, constants.SourceRegistry))
 	}
 	if withStorageRecords {
-
+		f.StorageRecords = append(
+			f.StorageRecords,
+			&service.StorageRecord{
+				URL:      "https://example.com/storage/record/1",
+				StoredAt: Bloomsday,
+			})
+		f.StorageRecords = append(
+			f.StorageRecords,
+			&service.StorageRecord{
+				URL:      "https://example.com/storage/record/2",
+				StoredAt: Bloomsday,
+			})
 	}
 	return f
 }

@@ -8,7 +8,6 @@ import (
 
 type GenericFile struct {
 	CreatedAt                    time.Time `json:"created_at,omitempty"`
-	FileCreated                  time.Time `json:"file_created,omitempty"`
 	FileFormat                   string    `json:"file_format,omitempty"`
 	FileModified                 time.Time `json:"file_modified,omitempty"`
 	Id                           int       `json:"id,omitempty"`

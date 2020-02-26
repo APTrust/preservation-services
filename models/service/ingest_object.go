@@ -45,6 +45,7 @@ func NewIngestObject(s3Bucket, s3Key, eTag, institution string, institutionId in
 		S3Bucket:         s3Bucket,
 		S3Key:            s3Key,
 		Size:             size,
+		StorageOption:    constants.StorageStandard,
 		TagFiles:         make([]string, 0),
 		TagManifests:     make([]string, 0),
 		Tags:             make([]*bagit.Tag, 0),

@@ -4,25 +4,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
 	"strings"
 	"time"
 )
 
 type IngestFile struct {
-	Checksums        []*IngestChecksum `json:"checksums"`
-	ErrorMessage     string            `json:"error_message,omitempty"`
-	FileFormat       string            `json:"file_format,omitempty"`
-	FileModified     time.Time         `json:"file_modified,omitempty"`
-	Id               int64             `json:"id,omitempty"`
-	InstitutionId    int               `json:"institution_id,omitempty"`
-	NeedsSave        bool              `json:"needs_save"`
-	ObjectIdentifier string            `json:"object_identifier"`
-	PathInBag        string            `json:"path_in_bag"`
-	Size             int64             `json:"size"`
-	StorageOption    string            `json:"storage_option"`
-	StorageRecords   []*StorageRecord  `json:"storage_records"`
-	UUID             string            `json:"uuid"`
+	Checksums            []*IngestChecksum `json:"checksums"`
+	ErrorMessage         string            `json:"error_message,omitempty"`
+	FileFormat           string            `json:"file_format,omitempty"`
+	FileModified         time.Time         `json:"file_modified,omitempty"`
+	Id                   int               `json:"id,omitempty"`
+	InstitutionId        int               `json:"institution_id,omitempty"`
+	IntellectualObjectId int               `json:"intellectual_object_id,omitempty"`
+	NeedsSave            bool              `json:"needs_save"`
+	ObjectIdentifier     string            `json:"object_identifier"`
+	PathInBag            string            `json:"path_in_bag"`
+	Size                 int64             `json:"size"`
+	StorageOption        string            `json:"storage_option"`
+	StorageRecords       []*StorageRecord  `json:"storage_records"`
+	UUID                 string            `json:"uuid"`
 }
 
 func NewIngestFile(objIdentifier, pathInBag string) *IngestFile {
@@ -221,4 +223,39 @@ func (f *IngestFile) ChecksumsMatch(manifestName string) (bool, error) {
 		}
 	}
 	return ok, err
+}
+
+// URI returns the URL of this file's first storage record.
+// TODO: Fix this, because it doesn't map to Pharos' db structure.
+// Pharos allows one URI per generic file, but it should allow
+// multiple, as this does. Allowing multiple will better support
+// the standard storage option, which includes two URLs (S3 VA
+// and Glacier OR). The change will also allow us to offer mixed
+// storage options, such as Glacier-OH + Wasabi-CA
+//
+// This needs to be fixed in Pharos.
+// See https://trello.com/c/4Hx4KQDR
+func (f *IngestFile) URI() string {
+	uri := ""
+	recs := f.StorageRecords
+	if recs != nil && len(recs) > 0 && recs[0] != nil {
+		uri = recs[0].URL
+	}
+	return uri
+}
+
+func (f *IngestFile) ToGenericFile() *registry.GenericFile {
+	return &registry.GenericFile{
+		FileFormat:                   f.FileFormat,
+		FileModified:                 f.FileModified,
+		Id:                           f.Id,
+		Identifier:                   f.Identifier(),
+		InstitutionId:                f.InstitutionId,
+		IntellectualObjectId:         f.IntellectualObjectId,
+		IntellectualObjectIdentifier: f.ObjectIdentifier,
+		Size:                         f.Size,
+		State:                        constants.StateActive,
+		StorageOption:                f.StorageOption,
+		URI:                          f.URI(),
+	}
 }

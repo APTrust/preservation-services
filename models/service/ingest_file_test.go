@@ -256,4 +256,26 @@ func TestChecksumsMatch(t *testing.T) {
 	}
 }
 
-const IngestFileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:ingest","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:registry","source":"registry"}],"error_message":"no error","file_format":"text/javascript","file_modified":"1904-06-16T15:04:05Z","id":999,"institution_id":9855,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","size":5555,"storage_option":"Standard","storage_records":[],"uuid":"00000000-0000-0000-0000-000000000000"}`
+func TestURI(t *testing.T) {
+	f := testutil.GetIngestFile(true, true)
+	assert.Equal(t, "https://example.com/storage/record/1", f.URI())
+}
+
+func TestToGenericFile(t *testing.T) {
+	f := testutil.GetIngestFile(true, true)
+	gf := f.ToGenericFile()
+
+	assert.Equal(t, "text/javascript", gf.FileFormat)
+	assert.Equal(t, testutil.Bloomsday, gf.FileModified)
+	assert.Equal(t, f.Id, gf.Id)
+	assert.Equal(t, "test.edu/some-bag/data/text/file.txt", gf.Identifier)
+	assert.Equal(t, 9855, gf.InstitutionId)
+	assert.Equal(t, 4432, gf.IntellectualObjectId)
+	assert.Equal(t, "test.edu/some-bag", gf.IntellectualObjectIdentifier)
+	assert.Equal(t, int64(5555), gf.Size)
+	assert.Equal(t, constants.StateActive, gf.State)
+	assert.Equal(t, constants.StorageStandard, gf.StorageOption)
+	assert.Equal(t, "https://example.com/storage/record/1", gf.URI)
+}
+
+const IngestFileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:ingest","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:registry","source":"registry"}],"error_message":"no error","file_format":"text/javascript","file_modified":"1904-06-16T15:04:05Z","id":999,"institution_id":9855,"intellectual_object_id":4432,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","size":5555,"storage_option":"Standard","storage_records":[{"url":"https://example.com/storage/record/1","stored_at":"1904-06-16T15:04:05Z"},{"url":"https://example.com/storage/record/2","stored_at":"1904-06-16T15:04:05Z"}],"uuid":"00000000-0000-0000-0000-000000000000"}`

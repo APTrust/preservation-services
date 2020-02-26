@@ -106,10 +106,12 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 		return nil, fmt.Errorf("Illegal path, '%s'. Should start with '%s'.", header.Name, prefix)
 	}
 	ingestFile := service.NewIngestFile(scanner.IngestObject.Identifier(), pathInBag)
-	ingestFile.Size = header.Size
-	ingestFile.UUID = uuid.NewV4().String()
-	ingestFile.InstitutionId = scanner.IngestObject.InstitutionId
 	ingestFile.FileModified = header.ModTime
+	ingestFile.InstitutionId = scanner.IngestObject.InstitutionId
+	ingestFile.IntellectualObjectId = scanner.IngestObject.Id
+	ingestFile.Size = header.Size
+	ingestFile.StorageOption = scanner.IngestObject.StorageOption
+	ingestFile.UUID = uuid.NewV4().String()
 
 	return ingestFile, nil
 }
