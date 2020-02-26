@@ -97,14 +97,7 @@ func (scanner *TarredBagScanner) processFileEntry(header *tar.Header) (*service.
 // deserialized to a single top-level directory, and we're going to trim
 // that off to get what APTrust considers the canonical file path.
 func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.IngestFile, error) {
-	prefix := scanner.IngestObject.BagName()
-	if strings.HasPrefix(header.Name, scanner.IngestObject.BaseNameOfS3Key()) {
-		// Check for multipart name, like example.edu.multipart.b01.of02.tar
-		prefix = scanner.IngestObject.BaseNameOfS3Key() + "/"
-	} else if strings.HasPrefix(header.Name, scanner.IngestObject.BagName()) {
-		// Test for non-multipart name, like example.edu.sample_good.tar
-		prefix = scanner.IngestObject.BagName() + "/"
-	}
+	prefix := strings.Split(header.Name, "/")[0] + "/"
 	// Strip off the expected prefix
 	pathInBag := strings.Replace(header.Name, prefix, "", 1)
 	// If nothing was trimmed off, bag untarred to some top-level directory
@@ -116,6 +109,7 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 	ingestFile.Size = header.Size
 	ingestFile.UUID = uuid.NewV4().String()
 	ingestFile.InstitutionId = scanner.IngestObject.InstitutionId
+	ingestFile.FileModified = header.ModTime
 
 	return ingestFile, nil
 }
