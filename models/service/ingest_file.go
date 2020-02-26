@@ -13,6 +13,7 @@ type IngestFile struct {
 	ErrorMessage     string            `json:"error_message,omitempty"`
 	FileFormat       string            `json:"file_format,omitempty"`
 	Id               int64             `json:"id,omitempty"`
+	InstitutionId    int               `json:"institution_id,omitempty"`
 	NeedsSave        bool              `json:"needs_save"`
 	ObjectIdentifier string            `json:"object_identifier"`
 	PathInBag        string            `json:"path_in_bag"`

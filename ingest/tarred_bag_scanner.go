@@ -115,6 +115,7 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 	ingestFile := service.NewIngestFile(scanner.IngestObject.Identifier(), pathInBag)
 	ingestFile.Size = header.Size
 	ingestFile.UUID = uuid.NewV4().String()
+	ingestFile.InstitutionId = scanner.IngestObject.InstitutionId
 
 	return ingestFile, nil
 }

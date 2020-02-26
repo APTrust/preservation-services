@@ -30,6 +30,7 @@ func GetIngestFile(withChecksums, withStorageRecords bool) *service.IngestFile {
 	f.ErrorMessage = "no error"
 	f.FileFormat = "text/javascript"
 	f.Id = 999
+	f.InstitutionId = 9855
 	f.ObjectIdentifier = "test.edu/some-bag"
 	f.PathInBag = "data/text/file.txt"
 	f.Size = 5555
@@ -52,6 +53,7 @@ func GetIngestObject() *service.IngestObject {
 		ErrorMessage:           "No error",
 		Id:                     555,
 		Institution:            "test.edu",
+		InstitutionId:          9855,
 		Manifests:              []string{"manifest-md5.txt", "manifest-sha256.txt"},
 		ParsableTagFiles:       []string{"bag-info.txt", "aptrust-info.txt"},
 		S3Bucket:               "aptrust.receiving.test.edu",

@@ -256,4 +256,4 @@ func TestChecksumsMatch(t *testing.T) {
 	}
 }
 
-const IngestFileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:ingest","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:registry","source":"registry"}],"error_message":"no error","file_format":"text/javascript","id":999,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","size":5555,"storage_option":"Standard","storage_records":[],"uuid":"00000000-0000-0000-0000-000000000000"}`
+const IngestFileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:ingest","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:registry","source":"registry"}],"error_message":"no error","file_format":"text/javascript","id":999,"institution_id":9855,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","size":5555,"storage_option":"Standard","storage_records":[],"uuid":"00000000-0000-0000-0000-000000000000"}`
