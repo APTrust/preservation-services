@@ -22,7 +22,7 @@ func getObjectWithTags() *service.IngestObject {
 }
 
 func TestNewIngestObject(t *testing.T) {
-	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", int64(500))
+	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", 9855, int64(500))
 	assert.Equal(t, "123456", obj.ETag)
 	assert.Equal(t, "test.edu/test-bag", obj.Identifier())
 	assert.Equal(t, "test.edu", obj.Institution)
@@ -36,7 +36,7 @@ func TestNewIngestObject(t *testing.T) {
 }
 
 func TestIngestObjectBagName(t *testing.T) {
-	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", int64(500))
+	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", 9855, int64(500))
 	assert.Equal(t, "test-bag", obj.BagName())
 
 	obj.S3Key = "photos.tar"
@@ -44,7 +44,7 @@ func TestIngestObjectBagName(t *testing.T) {
 }
 
 func TestBaseNameOfS3Key(t *testing.T) {
-	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", int64(500))
+	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", 9855, int64(500))
 	assert.Equal(t, "test-bag.b001.of200", obj.BaseNameOfS3Key())
 
 	obj.S3Key = "photos.tar"
@@ -52,7 +52,7 @@ func TestBaseNameOfS3Key(t *testing.T) {
 }
 
 func TestIngestObjectIdentifier(t *testing.T) {
-	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", int64(500))
+	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", 9855, int64(500))
 	assert.Equal(t, "test.edu/test-bag", obj.Identifier())
 
 	obj.Institution = "example.edu"

@@ -24,7 +24,7 @@ func getTarFileReader(t *testing.T, filename string) io.ReadCloser {
 
 // Call defer scanner.CloseReader()
 func getScanner(t *testing.T, bagname string) *ingest.TarredBagScanner {
-	obj := service.NewIngestObject("bucket", "example.edu.tagsample_good.tar", "1234", "example.edu", int64(300))
+	obj := service.NewIngestObject("bucket", "example.edu.tagsample_good.tar", "1234", "example.edu", 9855, int64(300))
 	reader := getTarFileReader(t, bagname)
 	return ingest.NewTarredBagScanner(reader, obj, testutil.TempDir)
 }

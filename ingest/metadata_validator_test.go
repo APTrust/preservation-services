@@ -15,7 +15,7 @@ func TestNewMetadataValidator(t *testing.T) {
 	validator := getMetadataValidator(t,
 		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5)
 	assert.Equal(t, "test", validator.Context.Config.ConfigName)
-	assert.Equal(t, "https://wiki.aptrust.org/APTrust_BagIt_Profile-2.2",
+	assert.Equal(t, constants.DefaultProfileIdentifier,
 		validator.Profile.BagItProfileInfo.BagItProfileIdentifier)
 	assert.Equal(t, goodbagMd5, validator.IngestObject.ETag)
 	assert.Equal(t, keyToGoodBag, validator.IngestObject.S3Key)
@@ -36,7 +36,7 @@ func TestBagItVersionOk(t *testing.T) {
 	ok = validator.BagItVersionOk()
 	assert.False(t, ok)
 	require.Equal(t, 1, len(validator.Errors))
-	assert.Equal(t, "BagIt-Version 0.97 is not permitted in BagIt profile https://wiki.aptrust.org/APTrust_BagIt_Profile-2.2.", validator.Errors[0])
+	assert.Equal(t, fmt.Sprintf("BagIt-Version 0.97 is not permitted in BagIt profile %s.", constants.DefaultProfileIdentifier), validator.Errors[0])
 
 	// Clear the errors, and make sure we get a desciptive error
 	// for empty BagIt-Version tag.

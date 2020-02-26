@@ -19,6 +19,7 @@ type IngestObject struct {
 	HasFetchTxt            bool         `json:"has_fetch_txt"`
 	Id                     int          `json:"id,omitempty"`
 	Institution            string       `json:"institution,omitempty"`
+	InstitutionId          int          `json:"institution_id,omitempty"`
 	Manifests              []string     `json:"manifests"`
 	ParsableTagFiles       []string     `json:"parsable_tag_files"`
 	S3Bucket               string       `json:"s3_bucket,omitempty"`
@@ -31,11 +32,12 @@ type IngestObject struct {
 	Tags                   []*bagit.Tag `json:"tags"`
 }
 
-func NewIngestObject(s3Bucket, s3Key, eTag, institution string, size int64) *IngestObject {
+func NewIngestObject(s3Bucket, s3Key, eTag, institution string, institutionId int, size int64) *IngestObject {
 	return &IngestObject{
 		ETag:             strings.Replace(eTag, "\"", "", -1),
 		HasFetchTxt:      false,
 		Institution:      institution,
+		InstitutionId:    institutionId,
 		Manifests:        make([]string, 0),
 		ParsableTagFiles: make([]string, 0),
 		S3Bucket:         s3Bucket,
@@ -105,6 +107,17 @@ func (obj *IngestObject) GetTag(tagFile, tagName string) *bagit.Tag {
 	return tag
 }
 
+// GetTagValue returns the first tag value in tagName in tagFile,
+// or defaultValue if no matching tag is found.
+func (obj *IngestObject) GetTagValue(tagFile, tagName, defaultValue string) string {
+	value := defaultValue
+	tag := obj.GetTag(tagFile, tagName)
+	if tag != nil {
+		value = tag.Value
+	}
+	return value
+}
+
 func (obj *IngestObject) BagItProfileFormat() string {
 	profile := constants.BagItProfileDefault
 	profileIdentifier := ""
@@ -116,4 +129,24 @@ func (obj *IngestObject) BagItProfileFormat() string {
 		profile = constants.BagItProfileBTR
 	}
 	return profile
+}
+
+func (obj *IngestObject) Access() string {
+	return obj.GetTagValue("aptrust-info.txt", "Access", constants.DefaultAccess)
+}
+
+func (obj *IngestObject) AltIdentifier() string {
+	return obj.GetTagValue("bag-info.txt", "Internal-Sender-Identifier", "")
+}
+
+func (obj *IngestObject) BagGroupIdentifier() string {
+	return obj.GetTagValue("bag-info.txt", "Bag-Group-Identifier", "")
+}
+
+func (obj *IngestObject) BagItProfileIdentifier() string {
+	return obj.GetTagValue("bag-info.txt", "BagIt-Profile-Identifier", constants.DefaultProfileIdentifier)
+}
+
+func (obj *IngestObject) SourceOrganization() string {
+	return obj.GetTagValue("bag-info.txt", "Source-Organization", "")
 }

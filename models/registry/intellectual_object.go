@@ -14,8 +14,6 @@ type IntellectualObject struct {
 	CreatedAt              time.Time `json:"created_at,omitempty"`
 	Description            string    `json:"description,omitempty"`
 	ETag                   string    `json:"etag,omitempty"`
-	FileCount              int       `json:"file_count,omitempty"`
-	FileSize               int64     `json:"file_size,omitempty"`
 	Id                     int       `json:"id,omitempty"`
 	Identifier             string    `json:"identifier,omitempty"`
 	Institution            string    `json:"institution,omitempty"`

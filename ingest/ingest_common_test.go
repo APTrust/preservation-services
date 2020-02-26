@@ -119,6 +119,7 @@ func getIngestObject(pathToBagFile, md5Digest string) *service.IngestObject {
 		filepath.Base(pathToBagFile),  // key
 		md5Digest,                     // eTag
 		"example.edu",                 // institution
+		9855,                          // institution id
 		goodbagSize,                   // size
 	)
 	obj.Serialization = "application/tar"

@@ -149,3 +149,31 @@ func TestPharosIntellectualObjectGet(t *testing.T) {
 		assert.Equal(t, obj.Identifier, intelObj.Identifier)
 	}
 }
+
+func TestPharosIntellectualObjectList(t *testing.T) {
+	LoadPharosFixtures(t)
+	client := getPharosClient(t)
+	v := url.Values{}
+	v.Add("order", "identifier")
+	v.Add("per_page", "20")
+	resp := client.IntellectualObjectList(v)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	assert.Equal(t,
+		fmt.Sprintf("/api/v2/objects/?%s", v.Encode()),
+		resp.Request.URL.Opaque)
+	objects := resp.IntellectualObjects()
+	assert.Equal(t, len(ObjectFixtures), len(objects))
+	// Make sure we got the expected items in our list of 4
+	for _, obj := range objects {
+		assert.NotNil(t, ObjectFixtures[obj.Identifier])
+	}
+}
+
+// func TestPharosIntellectualObjectGet(t *testing.T) {
+// 	LoadPharosFixtures(t)
+// 	ingestObject := testutil.GetIngestObject()
+// 	obj.Id = 0
+// 	client := getPharosClient(t)
+
+// }

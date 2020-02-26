@@ -36,7 +36,7 @@ func TestRedisPing(t *testing.T) {
 func TestIngestObjectSaveAndGet(t *testing.T) {
 	client := getRedisClient()
 	require.NotNil(t, client)
-	obj := service.NewIngestObject("bucket", "key", "etag", "test.edu", int64(555))
+	obj := service.NewIngestObject("bucket", "key", "etag", "test.edu", 9855, int64(555))
 	err := client.IngestObjectSave(9999, obj)
 	assert.Nil(t, err)
 
@@ -51,7 +51,7 @@ func TestIngestObjectSaveAndGet(t *testing.T) {
 func TestIngestObjectDelete(t *testing.T) {
 	client := getRedisClient()
 	require.NotNil(t, client)
-	obj := service.NewIngestObject("bucket", "key", "etag", "test.edu", int64(555))
+	obj := service.NewIngestObject("bucket", "key", "etag", "test.edu", 9855, int64(555))
 	err := client.IngestObjectSave(9999, obj)
 	assert.Nil(t, err)
 
@@ -90,7 +90,7 @@ func TestWorkItemDelete(t *testing.T) {
 
 	// Save an object...
 	obj := service.NewIngestObject("bucket", "bag1.tar",
-		"etag", "test.edu", int64(555))
+		"etag", "test.edu", 9855, int64(555))
 	err := client.IngestObjectSave(9999, obj)
 	assert.Nil(t, err)
 
