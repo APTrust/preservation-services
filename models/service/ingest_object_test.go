@@ -10,6 +10,13 @@ import (
 	"testing"
 )
 
+var etag = "12345678"
+var objIdentifier = "test.edu/test-bag"
+var institution = "test.edu"
+var institutionId = 9855
+var bucket = "bucket"
+var s3Key = "test-bag.b001.of200.tar"
+
 var internalSenderIdentifier = "Wile E. Coyote"
 var bagGroupIdentifier = "Road Runner"
 var sourceOrganization = "Acme Corp."
@@ -41,21 +48,21 @@ func getObjectWithTags() *service.IngestObject {
 }
 
 func TestNewIngestObject(t *testing.T) {
-	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", 9855, int64(500))
-	assert.Equal(t, "123456", obj.ETag)
-	assert.Equal(t, "test.edu/test-bag", obj.Identifier())
-	assert.Equal(t, "test.edu", obj.Institution)
+	obj := service.NewIngestObject(bucket, s3Key, etag, institution, institutionId, int64(500))
+	assert.Equal(t, etag, obj.ETag)
+	assert.Equal(t, objIdentifier, obj.Identifier())
+	assert.Equal(t, institution, obj.Institution)
 	assert.NotNil(t, obj.Manifests)
 	assert.NotNil(t, obj.ParsableTagFiles)
-	assert.Equal(t, "bucket", obj.S3Bucket)
-	assert.Equal(t, "test-bag.b001.of200.tar", obj.S3Key)
+	assert.Equal(t, bucket, obj.S3Bucket)
+	assert.Equal(t, s3Key, obj.S3Key)
 	assert.EqualValues(t, 500, obj.Size)
 	assert.NotNil(t, obj.TagManifests)
 	assert.NotNil(t, obj.Tags)
 }
 
 func TestIngestObjectBagName(t *testing.T) {
-	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", 9855, int64(500))
+	obj := service.NewIngestObject(bucket, s3Key, etag, institution, institutionId, int64(500))
 	assert.Equal(t, "test-bag", obj.BagName())
 
 	obj.S3Key = "photos.tar"
@@ -63,7 +70,7 @@ func TestIngestObjectBagName(t *testing.T) {
 }
 
 func TestBaseNameOfS3Key(t *testing.T) {
-	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", 9855, int64(500))
+	obj := service.NewIngestObject(bucket, s3Key, etag, institution, institutionId, int64(500))
 	assert.Equal(t, "test-bag.b001.of200", obj.BaseNameOfS3Key())
 
 	obj.S3Key = "photos.tar"
@@ -71,8 +78,8 @@ func TestBaseNameOfS3Key(t *testing.T) {
 }
 
 func TestIngestObjectIdentifier(t *testing.T) {
-	obj := service.NewIngestObject("bucket", "test-bag.b001.of200.tar", "\"123456\"", "test.edu", 9855, int64(500))
-	assert.Equal(t, "test.edu/test-bag", obj.Identifier())
+	obj := service.NewIngestObject(bucket, s3Key, etag, institution, institutionId, int64(500))
+	assert.Equal(t, objIdentifier, obj.Identifier())
 
 	obj.Institution = "example.edu"
 	obj.S3Key = "photos.tar"
@@ -224,6 +231,37 @@ func TestBestAvailableDescription(t *testing.T) {
 	// Else empty
 	extDescTag.Value = ""
 	assert.Equal(t, "", obj.BestAvailableDescription())
+}
+
+func TestToIntellectualObject(t *testing.T) {
+	obj := getObjectWithTags()
+	intelObj := obj.ToIntellectualObject()
+	assert.Equal(t, "Consortia", intelObj.Access)
+	assert.Equal(t, internalSenderIdentifier, intelObj.AltIdentifier)
+	assert.Equal(t, bagGroupIdentifier, intelObj.BagGroupIdentifier)
+	assert.Equal(t, "some-bag", intelObj.BagName)
+	assert.Equal(t, description, intelObj.Description)
+	assert.Equal(t, etag, intelObj.ETag)
+	assert.Equal(t, obj.Id, intelObj.Id)
+	assert.Equal(t, "test.edu/some-bag", intelObj.Identifier)
+	assert.Equal(t, institution, intelObj.Institution)
+	assert.Equal(t, institutionId, intelObj.InstitutionId)
+	assert.Equal(t, sourceOrganization, intelObj.SourceOrganization)
+	assert.Equal(t, constants.StateActive, intelObj.State)
+	assert.Equal(t, constants.StorageStandard, intelObj.StorageOption)
+	assert.Equal(t, title, intelObj.Title)
+
+	// Make sure we use BestAvailableDescription
+
+	aptDescTag := obj.GetTag("aptrust-info.txt", "Description")
+	aptDescTag.Value = ""
+	intelObj = obj.ToIntellectualObject()
+	assert.Equal(t, internalDescription, intelObj.Description)
+
+	intDescTag := obj.GetTag("bag-info.txt", "Internal-Sender-Description")
+	intDescTag.Value = ""
+	intelObj = obj.ToIntellectualObject()
+	assert.Equal(t, externalDescription, intelObj.Description)
 }
 
 const IngestObjectJson = `{"deleted_from_receiving_at":"1904-06-16T15:04:05Z","etag":"12345678","error_message":"No error","file_count":0,"has_fetch_txt":false,"id":555,"institution":"test.edu","institution_id":9855,"manifests":["manifest-md5.txt","manifest-sha256.txt"],"parsable_tag_files":["bag-info.txt","aptrust-info.txt"],"s3_bucket":"aptrust.receiving.test.edu","s3_key":"some-bag.tar","serialization":"application/tar","size":99999,"storage_option":"Standard","tag_files":["bag-info.txt","aptrust-info.txt","misc/custom-tag-file.txt"],"tag_manifests":["tagmanifest-md5.txt","tagmanifest-sha256.txt"],"tags":[]}`
