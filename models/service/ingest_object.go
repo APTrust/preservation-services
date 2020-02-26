@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/util"
 	"path"
 	"regexp"
 	"strings"
@@ -112,7 +113,7 @@ func (obj *IngestObject) GetTag(tagFile, tagName string) *bagit.Tag {
 func (obj *IngestObject) GetTagValue(tagFile, tagName, defaultValue string) string {
 	value := defaultValue
 	tag := obj.GetTag(tagFile, tagName)
-	if tag != nil {
+	if tag != nil && tag.Value != "" {
 		value = tag.Value
 	}
 	return value
@@ -131,8 +132,14 @@ func (obj *IngestObject) BagItProfileFormat() string {
 	return profile
 }
 
+// Access returns the value of the aptrust-info.txt/Access tag, or
+// constants.DefaultAccess if that tag isn't present. (Bags submitted
+// in BTR BagIt format will not have an Access tag.) Note the return
+// value will match one of the constants.Access* values, and should
+// begin with an upper case letter.
 func (obj *IngestObject) Access() string {
-	return obj.GetTagValue("aptrust-info.txt", "Access", constants.DefaultAccess)
+	access := obj.GetTagValue("aptrust-info.txt", "Access", constants.DefaultAccess)
+	return util.UCFirst(access)
 }
 
 func (obj *IngestObject) AltIdentifier() string {

@@ -29,11 +29,11 @@ var obj = &registry.IntellectualObject{
 	UpdatedAt:              testutil.Bloomsday,
 }
 
-var objJson = `{"access":"consortia","alt_identifier":"alt-1234","bag_group_identifier":"group-1","bagit_profile_identifier":"https://example.com/profile.json","bag_name":"BagOfTricks","created_at":"1904-06-16T15:04:05Z","description":"Bag of tricks","etag":"987654","id":28,"identifier":"test.edu/BagOfTricks","institution":"test.edu","institution_id":301,"source_organization":"Test University","state":"A","storage_option":"Wasabi-OR","title":"Thirteen Ways of Looking at a Blackbird","updated_at":"1904-06-16T15:04:05Z"}`
+var objJson = `{"access":"Consortia","alt_identifier":"alt-1234","bag_group_identifier":"group-1","bagit_profile_identifier":"https://example.com/profile.json","bag_name":"BagOfTricks","created_at":"1904-06-16T15:04:05Z","description":"Bag of tricks","etag":"987654","id":28,"identifier":"test.edu/BagOfTricks","institution":"test.edu","institution_id":301,"source_organization":"Test University","state":"A","storage_option":"Wasabi-OR","title":"Thirteen Ways of Looking at a Blackbird","updated_at":"1904-06-16T15:04:05Z"}`
 
 // JSON format for Pharos post/put is {"intellectual_object": <object>}
 // Also note that we don't serialize fields that Pharos doesn't accept.
-var objJsonForPharos = `{"intellectual_object":{"access":"consortia","alt_identifier":"alt-1234","bag_group_identifier":"group-1","bagit_profile_identifier":"https://example.com/profile.json","bag_name":"BagOfTricks","description":"Bag of tricks","etag":"987654","identifier":"test.edu/BagOfTricks","institution_id":301,"source_organization":"Test University","state":"A","storage_option":"Wasabi-OR","title":"Thirteen Ways of Looking at a Blackbird"}}`
+var objJsonForPharos = `{"intellectual_object":{"access":"Consortia","alt_identifier":"alt-1234","bag_group_identifier":"group-1","bagit_profile_identifier":"https://example.com/profile.json","bag_name":"BagOfTricks","description":"Bag of tricks","etag":"987654","identifier":"test.edu/BagOfTricks","institution_id":301,"source_organization":"Test University","state":"A","storage_option":"Wasabi-OR","title":"Thirteen Ways of Looking at a Blackbird"}}`
 
 func TestIntellectualObjectFromJson(t *testing.T) {
 	intelObj, err := registry.IntellectualObjectFromJson([]byte(objJson))

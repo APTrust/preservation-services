@@ -1,9 +1,9 @@
 package constants
 
 const (
-	AccessConsortia           = "consortia"
-	AccessInstitution         = "institution"
-	AccessRestricted          = "restricted"
+	AccessConsortia           = "Consortia"
+	AccessInstitution         = "Institution"
+	AccessRestricted          = "Restricted"
 	ActionDelete              = "Delete"
 	ActionFixityCheck         = "Fixity Check"
 	ActionGlacierRestore      = "Glacier Restore"
@@ -14,7 +14,7 @@ const (
 	AlgSha512                 = "sha512"
 	BagItProfileBTR           = "btr-v1.0.json"
 	BagItProfileDefault       = "aptrust-v2.2.json"
-	DefaultAccess             = "institution"
+	DefaultAccess             = AccessInstitution
 	DefaultProfileIdentifier  = "https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json"
 	EmptyUUID                 = "00000000-0000-0000-0000-000000000000"
 	EventAccessAssignment     = "access assignment"

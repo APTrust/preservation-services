@@ -72,3 +72,9 @@ func ContainsEscapedControl(str string) bool {
 	reControl := regexp.MustCompile("\\\\[Uu]00[0189][0-9A-Fa-f]|\\\\[Uu]007[Ff]")
 	return reControl.MatchString(str)
 }
+
+// UCFirst returns string str with the first letter capitalized
+// and all others lower case.
+func UCFirst(str string) string {
+	return strings.Title(strings.ToLower(str))
+}

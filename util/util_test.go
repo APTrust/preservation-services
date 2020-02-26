@@ -201,3 +201,9 @@ func TestContainsEscapedControl(t *testing.T) {
 
 	assert.False(t, util.ContainsEscapedControl("./this/is/a/valid/file/name.txt"))
 }
+
+func TestUCFirst(t *testing.T) {
+	assert.Equal(t, "Institution", util.UCFirst("institution"))
+	assert.Equal(t, "Institution", util.UCFirst("INSTITUTION"))
+	assert.Equal(t, "Institution", util.UCFirst("inStiTuTioN"))
+}
