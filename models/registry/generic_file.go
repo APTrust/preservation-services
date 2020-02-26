@@ -13,6 +13,7 @@ type GenericFile struct {
 	FileModified                 time.Time `json:"file_modified,omitempty"`
 	Id                           int       `json:"id,omitempty"`
 	Identifier                   string    `json:"identifier,omitempty"`
+	InstitutionId                int       `json:institution_id,omitempty`
 	IntellectualObjectId         int       `json:"intellectual_object_id,omitempty"`
 	IntellectualObjectIdentifier string    `json:"intellectual_object_identifier,omitempty"`
 	LastFixityCheck              time.Time `json:"last_fixity_check,omitempty"`
@@ -58,6 +59,7 @@ func (gf *GenericFile) UUID() string {
 type GenericFileForPharos struct {
 	FileFormat           string `json:"file_format,omitempty"`
 	Identifier           string `json:"identifier,omitempty"`
+	InstitutionId        int    `json:"institution_id"`
 	IntellectualObjectId int    `json:"intellectual_object_id"`
 	Size                 int64  `json:"size,omitempty"`
 	StorageOption        string `json:"storage_option"`
@@ -68,6 +70,7 @@ func NewGenericFileForPharos(gf *GenericFile) *GenericFileForPharos {
 	return &GenericFileForPharos{
 		FileFormat:           gf.FileFormat,
 		Identifier:           gf.Identifier,
+		InstitutionId:        gf.InstitutionId,
 		IntellectualObjectId: gf.IntellectualObjectId,
 		Size:                 gf.Size,
 		StorageOption:        gf.StorageOption,
