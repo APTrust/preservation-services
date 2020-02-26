@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
 	"path"
 	"regexp"
@@ -154,6 +155,60 @@ func (obj *IngestObject) BagItProfileIdentifier() string {
 	return obj.GetTagValue("bag-info.txt", "BagIt-Profile-Identifier", constants.DefaultProfileIdentifier)
 }
 
+func (obj *IngestObject) Description() string {
+	return obj.GetTagValue("aptrust-info.txt", "Description", "")
+}
+
+func (obj *IngestObject) ExternalDescription() string {
+	return obj.GetTagValue("bag-info.txt", "External-Description", "")
+}
+
+func (obj *IngestObject) ExternalIdentifier() string {
+	return obj.GetTagValue("bag-info.txt", "External-Identifier", "")
+}
+
+func (obj *IngestObject) InternalSenderDescription() string {
+	return obj.GetTagValue("bag-info.txt", "Internal-Sender-Description", "")
+}
+
 func (obj *IngestObject) SourceOrganization() string {
 	return obj.GetTagValue("bag-info.txt", "Source-Organization", "")
+}
+
+func (obj *IngestObject) Title() string {
+	return obj.GetTagValue("aptrust-info.txt", "Title", "")
+}
+
+// Returns the best available description, which is the first non-empty one
+// of aptrust-info.txt/Description, bag-info.txt/Internal-Sender-Description,
+// and bag-info.txt/External-Description in that order.
+func (obj *IngestObject) BestAvailableDescription() string {
+	desc := obj.Description()
+	if desc == "" {
+		desc = obj.InternalSenderDescription()
+	}
+	if desc == "" {
+		desc = obj.ExternalDescription()
+	}
+	return desc
+}
+
+func (obj *IngestObject) ToIntellectualObject() *registry.IntellectualObject {
+	return &registry.IntellectualObject{
+		Access:                 obj.Access(),
+		AltIdentifier:          obj.AltIdentifier(),
+		BagGroupIdentifier:     obj.BagGroupIdentifier(),
+		BagItProfileIdentifier: obj.BagItProfileIdentifier(),
+		BagName:                obj.BagName(),
+		Description:            obj.BestAvailableDescription(),
+		ETag:                   obj.ETag,
+		Id:                     obj.Id,
+		Identifier:             obj.Identifier(),
+		Institution:            obj.Institution,
+		InstitutionId:          obj.InstitutionId,
+		SourceOrganization:     obj.SourceOrganization(),
+		State:                  constants.StateActive,
+		StorageOption:          obj.StorageOption,
+		Title:                  obj.Title(),
+	}
 }

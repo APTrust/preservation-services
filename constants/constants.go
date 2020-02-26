@@ -72,6 +72,8 @@ const (
 	StageStore                = "Store"
 	StageUnpack               = "Unpack"
 	StageValidate             = "Validate"
+	StateActive               = "A"
+	StateDeleted              = "D"
 	StatusCancelled           = "Cancelled"
 	StatusFailed              = "Failed"
 	StatusPending             = "Pending"

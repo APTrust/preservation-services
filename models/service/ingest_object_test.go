@@ -13,17 +13,27 @@ import (
 var internalSenderIdentifier = "Wile E. Coyote"
 var bagGroupIdentifier = "Road Runner"
 var sourceOrganization = "Acme Corp."
+var title = "Title of Object"
+var description = "Description of Object"
+var internalDescription = "Description of Object (Internal Sender Description)"
+var externalDescription = "Description of Object (External Description)"
+var externalIdentifier = "ext-identifier"
 
 func getObjectWithTags() *service.IngestObject {
-	tags := make([]*bagit.Tag, 8)
+	tags := make([]*bagit.Tag, 13)
 	tags[0] = bagit.NewTag("bag-info.txt", "label1", "value1")
 	tags[1] = bagit.NewTag("bag-info.txt", "label1", "value2")
 	tags[2] = bagit.NewTag("bag-info.txt", "label3", "value3")
 	tags[3] = bagit.NewTag("bag-info.txt", "BagIt-Profile-Identifier", constants.DefaultProfileIdentifier)
 	tags[4] = bagit.NewTag("bag-info.txt", "Internal-Sender-Identifier", internalSenderIdentifier)
-	tags[5] = bagit.NewTag("bag-info.txt", "Bag-Group-Identifier", bagGroupIdentifier)
-	tags[6] = bagit.NewTag("bag-info.txt", "Source-Organization", sourceOrganization)
-	tags[7] = bagit.NewTag("aptrust-info.txt", "Access", constants.AccessConsortia)
+	tags[5] = bagit.NewTag("bag-info.txt", "Internal-Sender-Description", internalDescription)
+	tags[6] = bagit.NewTag("bag-info.txt", "External-Description", externalDescription)
+	tags[7] = bagit.NewTag("bag-info.txt", "External-Identifier", externalIdentifier)
+	tags[8] = bagit.NewTag("bag-info.txt", "Bag-Group-Identifier", bagGroupIdentifier)
+	tags[9] = bagit.NewTag("bag-info.txt", "Source-Organization", sourceOrganization)
+	tags[10] = bagit.NewTag("aptrust-info.txt", "Access", constants.AccessConsortia)
+	tags[11] = bagit.NewTag("aptrust-info.txt", "Title", title)
+	tags[12] = bagit.NewTag("aptrust-info.txt", "Description", description)
 
 	obj := testutil.GetIngestObject()
 	obj.Tags = append(obj.Tags, tags...)
@@ -169,9 +179,51 @@ func TestBagItProfileIdentifier(t *testing.T) {
 	assert.Equal(t, constants.DefaultProfileIdentifier, obj.BagItProfileIdentifier())
 }
 
+func TestDescription(t *testing.T) {
+	obj := getObjectWithTags()
+	assert.Equal(t, description, obj.Description())
+}
+
+func TestExternalDescription(t *testing.T) {
+	obj := getObjectWithTags()
+	assert.Equal(t, externalDescription, obj.ExternalDescription())
+}
+
+func TestExternalIdentifier(t *testing.T) {
+	obj := getObjectWithTags()
+	assert.Equal(t, externalIdentifier, obj.ExternalIdentifier())
+}
+
+func TestInternalSenderDescription(t *testing.T) {
+	obj := getObjectWithTags()
+	assert.Equal(t, internalDescription, obj.InternalSenderDescription())
+}
+
 func TestSourceOrganization(t *testing.T) {
 	obj := getObjectWithTags()
 	assert.Equal(t, sourceOrganization, obj.SourceOrganization())
+}
+
+func TestBestAvailableDescription(t *testing.T) {
+	obj := getObjectWithTags()
+	aptDescTag := obj.GetTag("aptrust-info.txt", "Description")
+	intDescTag := obj.GetTag("bag-info.txt", "Internal-Sender-Description")
+	extDescTag := obj.GetTag("bag-info.txt", "External-Description")
+
+	// If all descriptions are available, it should choose APTrust desc.
+	assert.Equal(t, description, obj.BestAvailableDescription())
+
+	// If no APTrust desc, choose internal sender desc
+	aptDescTag.Value = ""
+	assert.Equal(t, internalDescription, obj.BestAvailableDescription())
+
+	// If no internal desc, choose external desc
+	intDescTag.Value = ""
+	assert.Equal(t, externalDescription, obj.BestAvailableDescription())
+
+	// Else empty
+	extDescTag.Value = ""
+	assert.Equal(t, "", obj.BestAvailableDescription())
 }
 
 const IngestObjectJson = `{"deleted_from_receiving_at":"1904-06-16T15:04:05Z","etag":"12345678","error_message":"No error","file_count":0,"has_fetch_txt":false,"id":555,"institution":"test.edu","institution_id":9855,"manifests":["manifest-md5.txt","manifest-sha256.txt"],"parsable_tag_files":["bag-info.txt","aptrust-info.txt"],"s3_bucket":"aptrust.receiving.test.edu","s3_key":"some-bag.tar","serialization":"application/tar","size":99999,"storage_option":"Standard","tag_files":["bag-info.txt","aptrust-info.txt","misc/custom-tag-file.txt"],"tag_manifests":["tagmanifest-md5.txt","tagmanifest-sha256.txt"],"tags":[]}`
