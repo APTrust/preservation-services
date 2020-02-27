@@ -236,7 +236,7 @@ func TestBestAvailableDescription(t *testing.T) {
 func TestToIntellectualObject(t *testing.T) {
 	obj := getObjectWithTags()
 	intelObj := obj.ToIntellectualObject()
-	assert.Equal(t, "Consortia", intelObj.Access)
+	assert.Equal(t, "consortia", intelObj.Access)
 	assert.Equal(t, internalSenderIdentifier, intelObj.AltIdentifier)
 	assert.Equal(t, bagGroupIdentifier, intelObj.BagGroupIdentifier)
 	assert.Equal(t, "some-bag", intelObj.BagName)

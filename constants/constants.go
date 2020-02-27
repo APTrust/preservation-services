@@ -1,9 +1,9 @@
 package constants
 
 const (
-	AccessConsortia           = "Consortia"
-	AccessInstitution         = "Institution"
-	AccessRestricted          = "Restricted"
+	AccessConsortia           = "consortia"
+	AccessInstitution         = "institution"
+	AccessRestricted          = "restricted"
 	ActionDelete              = "Delete"
 	ActionFixityCheck         = "Fixity Check"
 	ActionGlacierRestore      = "Glacier Restore"

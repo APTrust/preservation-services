@@ -6,7 +6,6 @@ import (
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
-	"github.com/APTrust/preservation-services/util"
 	"path"
 	"regexp"
 	"strings"
@@ -141,7 +140,7 @@ func (obj *IngestObject) BagItProfileFormat() string {
 // begin with an upper case letter.
 func (obj *IngestObject) Access() string {
 	access := obj.GetTagValue("aptrust-info.txt", "Access", constants.DefaultAccess)
-	return util.UCFirst(access)
+	return strings.ToLower(access) // util.UCFirst(access)
 }
 
 func (obj *IngestObject) AltIdentifier() string {
