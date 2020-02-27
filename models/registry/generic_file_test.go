@@ -26,7 +26,7 @@ var genericFile = &registry.GenericFile{
 	UpdatedAt:                    testutil.Bloomsday,
 }
 
-var gfJson = `{"created_at":"1904-06-16T15:04:05Z","file_format":"text/html","file_modified":"1904-06-16T15:04:05Z","id":5432,"identifier":"test.edu.bag/data/index.html","InstitutionId":9355,"intellectual_object_id":1000,"intellectual_object_identifier":"test.edu.bag","last_fixity_check":"1904-06-16T15:04:05Z","size":8900,"state":"A","storage_option":"Standard","uri":"https://s3.example.com/preservation/5432","updated_at":"1904-06-16T15:04:05Z"}`
+var gfJson = `{"created_at":"1904-06-16T15:04:05Z","file_format":"text/html","file_modified":"1904-06-16T15:04:05Z","id":5432,"identifier":"test.edu.bag/data/index.html","institution_id":9355,"intellectual_object_id":1000,"intellectual_object_identifier":"test.edu.bag","last_fixity_check":"1904-06-16T15:04:05Z","size":8900,"state":"A","storage_option":"Standard","uri":"https://s3.example.com/preservation/5432","updated_at":"1904-06-16T15:04:05Z"}`
 
 // JSON format for Pharos post/put is {"generic_file": <object>}
 // Also note that we don't serialize fields that Pharos doesn't accept.
