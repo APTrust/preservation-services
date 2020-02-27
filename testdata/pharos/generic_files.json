@@ -6,7 +6,7 @@
         "identifier": "institution1.edu/photos/picture1",
         "intellectual_object_identifier": "institution1.edu/photos",
         "state": "A",
-        "institution": "inst1"
+        "institution": "institution1.edu"
     },
     "institution1.edu/photos/picture2": {
         "file_format": "image/jpeg",
@@ -15,7 +15,7 @@
         "identifier": "institution1.edu/photos/picture2",
         "intellectual_object_identifier": "institution1.edu/photos",
         "state": "A",
-        "institution": "inst1"
+        "institution": "institution1.edu"
     },
     "institution1.edu/photos/picture3": {
         "file_format": "image/jpeg",
@@ -24,7 +24,7 @@
         "identifier": "institution1.edu/photos/picture3",
         "intellectual_object_identifier": "institution1.edu/photos",
         "state": "A",
-        "institution": "inst1"
+        "institution": "institution1.edu"
     },
     "institution1.edu/pdfs/doc1": {
         "file_format": "application/pdf",
@@ -33,7 +33,7 @@
         "identifier": "institution1.edu/pdfs/doc1",
         "intellectual_object_identifier": "institution1.edu/pdfs",
         "state": "A",
-        "institution": "inst1"
+        "institution": "institution1.edu"
     },
     "institution1.edu/pdfs/doc2": {
         "file_format": "application/pdf",
@@ -42,7 +42,7 @@
         "identifier": "institution1.edu/pdfs/doc2",
         "intellectual_object_identifier": "institution1.edu/pdfs",
         "state": "A",
-        "institution": "inst1"
+        "institution": "institution1.edu"
     },
     "institution1.edu/pdfs/doc3": {
         "file_format": "application/pdf",
@@ -51,7 +51,7 @@
         "identifier": "institution1.edu/pdfs/doc3",
         "intellectual_object_identifier": "institution1.edu/pdfs",
         "state": "A",
-        "institution": "inst1"
+        "institution": "institution1.edu"
     },
     "institution1.edu/glass/shard1": {
         "file_format": "application/binary",
@@ -60,7 +60,7 @@
         "identifier": "institution1.edu/glass/shard1",
         "intellectual_object_identifier": "institution1.edu/glass",
         "state": "A",
-        "institution": "inst1"
+        "institution": "institution1.edu"
     },
     "institution1.edu/glass/shard2": {
         "file_format": "video/mp4",
@@ -69,7 +69,7 @@
         "identifier": "institution1.edu/glass/shard2",
         "intellectual_object_identifier": "institution1.edu/glass",
         "state": "A",
-        "institution": "inst1"
+        "institution": "institution1.edu"
     },
     "institution1.edu/glass/shard3": {
         "file_format": "audio/mp3",
@@ -78,7 +78,7 @@
         "identifier": "institution1.edu/glass/shard3",
         "intellectual_object_identifier": "institution1.edu/glass",
         "state": "A",
-        "institution": "inst1"
+        "institution": "institution1.edu"
     },
     "institution2.edu/photos/picture1": {
         "file_format": "image/jpeg",
@@ -87,7 +87,7 @@
         "identifier": "institution2.edu/photos/picture1",
         "intellectual_object_identifier": "institution2.edu/photos",
         "state": "A",
-        "institution": "inst2"
+        "institution": "institution2.edu"
     },
     "institution2.edu/photos/picture2": {
         "file_format": "image/jpeg",
@@ -96,7 +96,7 @@
         "identifier": "institution2.edu/photos/picture2",
         "intellectual_object_identifier": "institution2.edu/photos",
         "state": "A",
-        "institution": "inst2"
+        "institution": "institution2.edu"
     },
     "institution2.edu/photos/picture3": {
         "file_format": "image/jpeg",
@@ -105,7 +105,7 @@
         "identifier": "institution2.edu/photos/picture3",
         "intellectual_object_identifier": "institution2.edu/photos",
         "state": "A",
-        "institution": "inst2"
+        "institution": "institution2.edu"
     },
     "institution2.edu/pdfs/doc1": {
         "file_format": "application/pdf",
@@ -114,7 +114,7 @@
         "identifier": "institution2.edu/pdfs/doc1",
         "intellectual_object_identifier": "institution2.edu/pdfs",
         "state": "A",
-        "institution": "inst2"
+        "institution": "institution2.edu"
     },
     "institution2.edu/pdfs/doc2": {
         "file_format": "application/pdf",
@@ -123,7 +123,7 @@
         "identifier": "institution2.edu/pdfs/doc2",
         "intellectual_object_identifier": "institution2.edu/pdfs",
         "state": "A",
-        "institution": "inst2"
+        "institution": "institution2.edu"
     },
     "institution2.edu/pdfs/doc3": {
         "file_format": "application/pdf",
@@ -132,7 +132,7 @@
         "identifier": "institution2.edu/pdfs/doc3",
         "intellectual_object_identifier": "institution2.edu/pdfs",
         "state": "A",
-        "institution": "inst2"
+        "institution": "institution2.edu"
     },
     "institution2.edu/glass/shard1": {
         "file_format": "application/binary",
@@ -141,7 +141,7 @@
         "identifier": "institution2.edu/glass/shard1",
         "intellectual_object_identifier": "institution2.edu/glass",
         "state": "A",
-        "institution": "inst2"
+        "institution": "institution2.edu"
     },
     "institution2.edu/glass/shard2": {
         "file_format": "video/mp4",
@@ -150,7 +150,7 @@
         "identifier": "institution2.edu/glass/shard2",
         "intellectual_object_identifier": "institution2.edu/glass",
         "state": "A",
-        "institution": "inst2"
+        "institution": "institution2.edu"
     },
     "institution2.edu/glass": {
         "file_format": "audio/mp3",
@@ -159,6 +159,6 @@
         "identifier": "institution2.edu/glass/Prakash_ 39 Harv. J.L. & Pub. Pol’y 341 .pdf",
         "intellectual_object_identifier": "institution2.edu/glass",
         "state": "A",
-        "institution": "inst2"
+        "institution": "institution2.edu"
     }
 }

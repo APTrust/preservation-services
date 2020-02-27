@@ -15,7 +15,7 @@
       "intellectual_object_identifier": "institution2.edu/coal",
       "generic_file_identifier": "institution2.edu/pdfs/doc1",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "6e9e665a-4f7e-41f4-9594-d511f9fc1edf": {
       "identifier": "6e9e665a-4f7e-41f4-9594-d511f9fc1edf",
@@ -33,7 +33,7 @@
       "intellectual_object_identifier": "institution1.edu/photos",
       "generic_file_identifier": "institution1.edu/photos/picture3",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "65417f8d-1b3a-4669-88c6-3222e69f71f2": {
       "identifier": "65417f8d-1b3a-4669-88c6-3222e69f71f2",
@@ -51,7 +51,7 @@
       "intellectual_object_identifier": "institution1.edu/pdfs",
       "generic_file_identifier": "institution1.edu/pdfs/doc3",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "94057d0d-3707-4c9e-96f4-8128e35532a2": {
       "identifier": "94057d0d-3707-4c9e-96f4-8128e35532a2",
@@ -69,7 +69,7 @@
       "intellectual_object_identifier": "institution2.edu/chocolate",
       "generic_file_identifier": "institution2.edu/photos/picture1",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "e4894350-ba38-4132-ba6e-f495c5171659": {
       "identifier": "e4894350-ba38-4132-ba6e-f495c5171659",
@@ -87,7 +87,7 @@
       "intellectual_object_identifier": "institution1.edu/glass_shards",
       "generic_file_identifier": "institution1.edu/glass/shard2",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "a39421b2-b535-4616-899d-f0a84a9cede2": {
       "identifier": "a39421b2-b535-4616-899d-f0a84a9cede2",
@@ -105,7 +105,7 @@
       "intellectual_object_identifier": "institution1.edu/toads",
       "generic_file_identifier": "institution2.edu/glass/shard4_deleted",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "35bb8181-6170-44e4-9e65-e118acfb348e": {
       "identifier": "35bb8181-6170-44e4-9e65-e118acfb348e",
@@ -123,7 +123,7 @@
       "intellectual_object_identifier": "institution1.edu/glass_shards",
       "generic_file_identifier": "institution1.edu/glass/shard1",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "f76a2609-2989-4940-9dfe-ef4e3c33a27e": {
       "identifier": "f76a2609-2989-4940-9dfe-ef4e3c33a27e",
@@ -141,7 +141,7 @@
       "intellectual_object_identifier": "institution2.edu/coal",
       "generic_file_identifier": "institution2.edu/pdfs/doc2",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "f920af16-341a-47c5-99a0-e98b8d2f98a9": {
       "identifier": "f920af16-341a-47c5-99a0-e98b8d2f98a9",
@@ -159,7 +159,7 @@
       "intellectual_object_identifier": "institution2.edu/chocolate",
       "generic_file_identifier": "institution2.edu/photos/picture2",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "15cc5b59-e32c-45bd-95a9-fbb3557e95ea": {
       "identifier": "15cc5b59-e32c-45bd-95a9-fbb3557e95ea",
@@ -177,7 +177,7 @@
       "intellectual_object_identifier": "institution1.edu/toads",
       "generic_file_identifier": "institution2.edu/glass/shard2",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "d1dd9047-d25c-4ba3-adc4-e17914eda1e9": {
       "identifier": "d1dd9047-d25c-4ba3-adc4-e17914eda1e9",
@@ -195,7 +195,7 @@
       "intellectual_object_identifier": "institution2.edu/chocolate",
       "generic_file_identifier": "institution2.edu/photos/picture3",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "56220d8b-978f-4a66-bc2e-2af4cdda7b3c": {
       "identifier": "56220d8b-978f-4a66-bc2e-2af4cdda7b3c",
@@ -213,7 +213,7 @@
       "intellectual_object_identifier": "institution1.edu/pdfs",
       "generic_file_identifier": "institution1.edu/pdfs/doc1",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "aafcc00a-93aa-434a-b1fe-7290fb1ffa2c": {
       "identifier": "aafcc00a-93aa-434a-b1fe-7290fb1ffa2c",
@@ -231,7 +231,7 @@
       "intellectual_object_identifier": "institution1.edu/photos",
       "generic_file_identifier": "institution1.edu/photos/picture1",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "529ddb2e-62fd-422e-863a-e3f3c9af2622": {
       "identifier": "529ddb2e-62fd-422e-863a-e3f3c9af2622",
@@ -249,7 +249,7 @@
       "intellectual_object_identifier": "institution2.edu/coal",
       "generic_file_identifier": "institution2.edu/pdfs/doc3",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "be86ea36-4642-4cf7-a29a-80a860ebea82": {
       "identifier": "be86ea36-4642-4cf7-a29a-80a860ebea82",
@@ -267,7 +267,7 @@
       "intellectual_object_identifier": "institution1.edu/pdfs",
       "generic_file_identifier": "institution1.edu/pdfs/doc2",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "21380d8b-2411-46dc-9124-012d601e959b": {
       "identifier": "21380d8b-2411-46dc-9124-012d601e959b",
@@ -285,7 +285,7 @@
       "intellectual_object_identifier": "institution1.edu/photos",
       "generic_file_identifier": "institution1.edu/photos/picture2",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "cb8d4236-99b0-437f-b662-e6324c2f85eb": {
       "identifier": "cb8d4236-99b0-437f-b662-e6324c2f85eb",
@@ -303,7 +303,7 @@
       "intellectual_object_identifier": "institution1.edu/glass_shards",
       "generic_file_identifier": "institution1.edu/glass/shard4_deleted",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "ef916505-cd35-4e3c-a2b8-0711ddc8a199": {
       "identifier": "ef916505-cd35-4e3c-a2b8-0711ddc8a199",
@@ -321,7 +321,7 @@
       "intellectual_object_identifier": "institution1.edu/toads",
       "generic_file_identifier": "institution2.edu/glass/shard1",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "08692a43-9581-454b-bd32-512bd7529967": {
       "identifier": "08692a43-9581-454b-bd32-512bd7529967",
@@ -339,7 +339,7 @@
       "intellectual_object_identifier": "institution2.edu/coal",
       "generic_file_identifier": "institution2.edu/pdfs/doc1",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "3bd67ede-0fca-430a-9bb3-652c0a95b471": {
       "identifier": "3bd67ede-0fca-430a-9bb3-652c0a95b471",
@@ -357,7 +357,7 @@
       "intellectual_object_identifier": "institution1.edu/photos",
       "generic_file_identifier": "institution1.edu/photos/picture3",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "64b26bea-040c-4dc8-a361-642c91d4d5b9": {
       "identifier": "64b26bea-040c-4dc8-a361-642c91d4d5b9",
@@ -375,7 +375,7 @@
       "intellectual_object_identifier": "institution1.edu/pdfs",
       "generic_file_identifier": "institution1.edu/pdfs/doc3",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "feee056d-ffc9-4931-8eef-8eb8dc9aa149": {
       "identifier": "feee056d-ffc9-4931-8eef-8eb8dc9aa149",
@@ -393,7 +393,7 @@
       "intellectual_object_identifier": "institution2.edu/chocolate",
       "generic_file_identifier": "institution2.edu/photos/picture1",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "616abcd6-484e-4a7f-b494-19844044f73d": {
       "identifier": "616abcd6-484e-4a7f-b494-19844044f73d",
@@ -411,7 +411,7 @@
       "intellectual_object_identifier": "institution1.edu/glass_shards",
       "generic_file_identifier": "institution1.edu/glass/shard2",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "37031b0f-dbdd-4c3e-a1c5-9475261025bd": {
       "identifier": "37031b0f-dbdd-4c3e-a1c5-9475261025bd",
@@ -429,7 +429,7 @@
       "intellectual_object_identifier": "institution1.edu/toads",
       "generic_file_identifier": "institution2.edu/glass/shard4_deleted",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "c9ee7bd4-6450-40f1-b604-548cebacfc2d": {
       "identifier": "c9ee7bd4-6450-40f1-b604-548cebacfc2d",
@@ -447,7 +447,7 @@
       "intellectual_object_identifier": "institution1.edu/glass_shards",
       "generic_file_identifier": "institution1.edu/glass/shard1",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "ccd738f7-c6d2-4ade-a00e-4acc064e9be9": {
       "identifier": "ccd738f7-c6d2-4ade-a00e-4acc064e9be9",
@@ -465,7 +465,7 @@
       "intellectual_object_identifier": "institution2.edu/coal",
       "generic_file_identifier": "institution2.edu/pdfs/doc2",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "5d7e3e60-32c0-46a5-a18e-88476ded5bbb": {
       "identifier": "5d7e3e60-32c0-46a5-a18e-88476ded5bbb",
@@ -483,7 +483,7 @@
       "intellectual_object_identifier": "institution2.edu/chocolate",
       "generic_file_identifier": "institution2.edu/photos/picture2",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "43d1009f-4319-45ba-aa04-11ec97ce55a9": {
       "identifier": "43d1009f-4319-45ba-aa04-11ec97ce55a9",
@@ -501,7 +501,7 @@
       "intellectual_object_identifier": "institution1.edu/toads",
       "generic_file_identifier": "institution2.edu/glass/shard2",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "549a9b7f-3a61-42b3-8af4-13d01ef13f41": {
       "identifier": "549a9b7f-3a61-42b3-8af4-13d01ef13f41",
@@ -519,7 +519,7 @@
       "intellectual_object_identifier": "institution2.edu/chocolate",
       "generic_file_identifier": "institution2.edu/photos/picture3",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "63c64609-3359-4598-9c83-d61fea7f4874": {
       "identifier": "63c64609-3359-4598-9c83-d61fea7f4874",
@@ -537,7 +537,7 @@
       "intellectual_object_identifier": "institution1.edu/pdfs",
       "generic_file_identifier": "institution1.edu/pdfs/doc1",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "e2b0e887-d54d-4fd2-b4bc-71ea9311afd5": {
       "identifier": "e2b0e887-d54d-4fd2-b4bc-71ea9311afd5",
@@ -555,7 +555,7 @@
       "intellectual_object_identifier": "institution1.edu/photos",
       "generic_file_identifier": "institution1.edu/photos/picture1",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "21776e71-d010-4f93-aed6-e989de8a9119": {
       "identifier": "21776e71-d010-4f93-aed6-e989de8a9119",
@@ -573,7 +573,7 @@
       "intellectual_object_identifier": "institution2.edu/coal",
       "generic_file_identifier": "institution2.edu/pdfs/doc3",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "daed489c-038e-4f85-8c48-77f69e61dce7": {
       "identifier": "daed489c-038e-4f85-8c48-77f69e61dce7",
@@ -591,7 +591,7 @@
       "intellectual_object_identifier": "institution1.edu/pdfs",
       "generic_file_identifier": "institution1.edu/pdfs/doc2",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "8336060f-958c-443b-b7e6-458b209ad122": {
       "identifier": "8336060f-958c-443b-b7e6-458b209ad122",
@@ -609,7 +609,7 @@
       "intellectual_object_identifier": "institution1.edu/photos",
       "generic_file_identifier": "institution1.edu/photos/picture2",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "274e230a-dc6b-48a1-a96c-709e5728632b": {
       "identifier": "274e230a-dc6b-48a1-a96c-709e5728632b",
@@ -627,7 +627,7 @@
       "intellectual_object_identifier": "institution1.edu/glass_shards",
       "generic_file_identifier": "institution1.edu/glass/shard4_deleted",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "e8dce66a-f4a8-47a0-916e-f9847c76b59b": {
       "identifier": "e8dce66a-f4a8-47a0-916e-f9847c76b59b",
@@ -645,7 +645,7 @@
       "intellectual_object_identifier": "institution1.edu/toads",
       "generic_file_identifier": "institution2.edu/glass/shard1",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "929e3293-15e8-43cf-aa7c-92d3e6b5f497": {
       "identifier": "929e3293-15e8-43cf-aa7c-92d3e6b5f497",
@@ -661,7 +661,7 @@
       "updated_at": "2016-08-26T18:53:32.180Z",
       "intellectual_object_identifier": "institution1.edu/photos",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "ac6a2b51-a2f4-4380-a3ca-8fa1d45ed6a6": {
       "identifier": "ac6a2b51-a2f4-4380-a3ca-8fa1d45ed6a6",
@@ -677,7 +677,7 @@
       "updated_at": "2016-08-26T18:53:32.180Z",
       "intellectual_object_identifier": "institution1.edu/pdfs",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "20dd5b2c-64bf-4561-8ce7-e62614845cfe": {
       "identifier": "20dd5b2c-64bf-4561-8ce7-e62614845cfe",
@@ -693,7 +693,7 @@
       "updated_at": "2016-08-26T18:53:32.180Z",
       "intellectual_object_identifier": "institution1.edu/glass_shards",
       "outcome": "Success",
-      "institution": "inst1"
+      "institution": "institution1.edu"
    },
    "ef64ad2e-d193-4c26-9e85-816be063cfcb": {
       "identifier": "ef64ad2e-d193-4c26-9e85-816be063cfcb",
@@ -709,7 +709,7 @@
       "updated_at": "2016-08-26T18:53:32.180Z",
       "intellectual_object_identifier": "institution2.edu/chocolate",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "57e7150d-3292-412f-a82b-da5dbd6a3d0a": {
       "identifier": "57e7150d-3292-412f-a82b-da5dbd6a3d0a",
@@ -725,7 +725,7 @@
       "updated_at": "2016-08-26T18:53:32.180Z",
       "intellectual_object_identifier": "institution2.edu/coal",
       "outcome": "Success",
-      "institution": "inst2"
+      "institution": "institution2.edu"
    },
    "d7e16041-8887-4739-af04-9d35e5cab4dc": {
       "identifier": "d7e16041-8887-4739-af04-9d35e5cab4dc",
@@ -741,6 +741,6 @@
       "updated_at": "2016-08-26T18:53:32.180Z",
       "intellectual_object_identifier": "institution2.edu/toads",
       "outcome": "Success",
-      "institution": "inst3"
+      "institution": "institution3.edu"
    }
 }
