@@ -170,10 +170,31 @@ func TestPharosIntellectualObjectList(t *testing.T) {
 	}
 }
 
-// func TestPharosIntellectualObjectGet(t *testing.T) {
-// 	LoadPharosFixtures(t)
-// 	ingestObject := testutil.GetIngestObject()
-// 	obj.Id = 0
-// 	client := getPharosClient(t)
+func TestPharosIntellectualObjectSave_Update(t *testing.T) {
+	LoadPharosFixtures(t)
+	client := getPharosClient(t)
 
-// }
+	v := url.Values{}
+	v.Add("order", "identifier")
+	v.Add("per_page", "20")
+	resp := client.IntellectualObjectList(v)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	objects := resp.IntellectualObjects()
+
+	for i, existingObj := range objects {
+		newDesc := fmt.Sprintf("New description %d", i)
+		existingObj.Description = newDesc
+		resp := client.IntellectualObjectSave(existingObj)
+		assert.NotNil(t, resp)
+		assert.Nil(t, resp.Error)
+		assert.Equal(t,
+			fmt.Sprintf("/api/v2/objects/%s", network.EscapeFileIdentifier(existingObj.Identifier)),
+			resp.Request.URL.Opaque)
+		obj := resp.IntellectualObject()
+		assert.NotNil(t, obj)
+		assert.Equal(t, existingObj.Identifier, obj.Identifier)
+		assert.Equal(t, newDesc, obj.Description)
+		assert.NotEqual(t, existingObj.UpdatedAt, obj.UpdatedAt)
+	}
+}
