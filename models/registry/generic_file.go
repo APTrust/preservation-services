@@ -12,7 +12,7 @@ type GenericFile struct {
 	FileModified                 time.Time `json:"file_modified,omitempty"`
 	Id                           int       `json:"id,omitempty"`
 	Identifier                   string    `json:"identifier,omitempty"`
-	InstitutionId                int       `json:institution_id,omitempty`
+	InstitutionId                int       `json:"institution_id,omitempty"`
 	IntellectualObjectId         int       `json:"intellectual_object_id,omitempty"`
 	IntellectualObjectIdentifier string    `json:"intellectual_object_identifier,omitempty"`
 	LastFixityCheck              time.Time `json:"last_fixity_check,omitempty"`
