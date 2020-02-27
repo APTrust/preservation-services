@@ -92,6 +92,16 @@ func getPharosClient(t *testing.T) *network.PharosClient {
 	return client
 }
 
+func GetInstitution(t *testing.T, identifier string) *registry.Institution {
+	client := getPharosClient(t)
+	resp := client.InstitutionGet(identifier)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	institution := resp.Institution()
+	require.NotNil(t, institution)
+	return institution
+}
+
 func TestEscapeFileIdentifier(t *testing.T) {
 	assert.Equal(t,
 		"test.edu%2Fobj%2Ffile%20name%3F.txt",
@@ -197,4 +207,30 @@ func TestPharosIntellectualObjectSave_Update(t *testing.T) {
 		assert.Equal(t, newDesc, obj.Description)
 		assert.NotEqual(t, existingObj.UpdatedAt, obj.UpdatedAt)
 	}
+}
+
+func TestPharosIntellectualObjectSave_Create(t *testing.T) {
+	intelObj := testutil.GetIntellectualObject()
+
+	// Make sure we're using an institution id that was
+	// loaded with the test fixtures
+	testInst := GetInstitution(t, "test.edu")
+	intelObj.InstitutionId = testInst.Id
+
+	// Id of zero means it's never been saved.
+	require.Equal(t, 0, intelObj.Id)
+
+	client := getPharosClient(t)
+	resp := client.IntellectualObjectSave(intelObj)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	assert.Equal(t,
+		"/api/v2/objects/test.edu",
+		resp.Request.URL.Opaque)
+	obj := resp.IntellectualObject()
+	require.NotNil(t, obj)
+	assert.Equal(t, intelObj.Identifier, obj.Identifier)
+	assert.NotEqual(t, 0, obj.Id)
+	assert.NotEqual(t, intelObj.UpdatedAt, obj.UpdatedAt)
+
 }

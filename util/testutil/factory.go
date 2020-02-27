@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"time"
 )
@@ -119,5 +120,25 @@ func GetIngestChecksumSet() []*service.IngestChecksum {
 			Digest:    "12345",
 			Source:    constants.SourceIngest,
 		},
+	}
+}
+
+func GetIntellectualObject() *registry.IntellectualObject {
+	return &registry.IntellectualObject{
+		Access:                 constants.AccessInstitution,
+		AltIdentifier:          "AltIdentifier001",
+		BagGroupIdentifier:     "BagGroup001",
+		BagItProfileIdentifier: constants.DefaultProfileIdentifier,
+		BagName:                "TestBag001",
+		Description:            "Test bag from factory",
+		ETag:                   "86753098675309",
+		Id:                     0,
+		Identifier:             "test.edu/TestBag001",
+		Institution:            "test.edu",
+		InstitutionId:          0,
+		SourceOrganization:     "Test Univerisity Library",
+		State:                  constants.StateActive,
+		StorageOption:          constants.StorageStandard,
+		Title:                  "Test Bag from Factory",
 	}
 }
