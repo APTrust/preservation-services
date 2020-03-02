@@ -369,3 +369,33 @@ func TestPharosGenericFileSave_Create(t *testing.T) {
 	assert.NotEqual(t, 0, gfSaved.Id)
 	assert.NotEqual(t, gf.UpdatedAt, gfSaved.UpdatedAt)
 }
+
+func TestPharosGenericFileSave_Update(t *testing.T) {
+	LoadPharosFixtures(t)
+	client := getPharosClient(t)
+
+	v := url.Values{}
+	v.Add("order", "identifier")
+	v.Add("per_page", "20")
+	v.Add("institution_identifier", "aptrust.org")
+	resp := client.GenericFileList(v)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	files := resp.GenericFiles()
+
+	for _, gf := range files {
+		newSize := gf.Size + 2
+		gf.Size = newSize
+		resp := client.GenericFileSave(gf)
+		assert.NotNil(t, resp)
+		assert.Nil(t, resp.Error)
+		assert.Equal(t,
+			fmt.Sprintf("/api/v2/files/%s", network.EscapeFileIdentifier(gf.Identifier)),
+			resp.Request.URL.Opaque)
+		gfSaved := resp.GenericFile()
+		require.NotNil(t, gfSaved)
+		assert.Equal(t, gf.Identifier, gfSaved.Identifier)
+		assert.Equal(t, newSize, gfSaved.Size)
+		assert.NotEqual(t, gf.UpdatedAt, gfSaved.UpdatedAt)
+	}
+}

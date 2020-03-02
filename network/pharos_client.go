@@ -383,8 +383,8 @@ func (client *PharosClient) GenericFileSave(obj *registry.GenericFile) *PharosRe
 	relativeUrl := fmt.Sprintf("/api/%s/files/%s", client.apiVersion, EscapeFileIdentifier(obj.IntellectualObjectIdentifier))
 	httpMethod := "POST"
 	if obj.Id > 0 {
-		// // PUT URL looks like /api/v2/files/college.edu%2Fobject_name%2Ffile.xml
-		// relativeUrl = fmt.Sprintf("%s%s", relativeUrl, EscapeFileIdentifier(obj.Identifier))
+		// PUT URL looks like /api/v2/files/college.edu%2Fobject_name%2Ffile.xml
+		relativeUrl = fmt.Sprintf("/api/%s/files/%s", client.apiVersion, EscapeFileIdentifier(obj.Identifier))
 		httpMethod = "PUT"
 	}
 	absoluteUrl := client.BuildUrl(relativeUrl)
