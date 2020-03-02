@@ -25,10 +25,10 @@
       "source_organization": "Institution One",
       "bagit_profile_identifier": "https://example.com/profile.json"
    },
-   "institution1.edu/glass_shards": {
+   "institution1.edu/glass": {
       "title": "Third Object for Institution One",
       "description": "A bag of broken glass",
-      "identifier": "institution1.edu/glass_shards",
+      "identifier": "institution1.edu/glass",
       "alt_identifier": "glass_do_not_eat",
       "access": "consortia",
       "bag_name": "glass.tar",

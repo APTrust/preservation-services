@@ -80,84 +80,84 @@
         "state": "A",
         "institution": "institution1.edu"
     },
-    "institution2.edu/photos/picture1": {
+    "institution2.edu/chocolate/picture1": {
         "file_format": "image/jpeg",
         "uri": "https://s3.amazonaws.com/aptrust.test.preservation/3ba064ae-6a12-49e9-b9f8-cd63fbb173ce",
         "size": 4494933,
-        "identifier": "institution2.edu/photos/picture1",
-        "intellectual_object_identifier": "institution2.edu/photos",
+        "identifier": "institution2.edu/chocolate/picture1",
+        "intellectual_object_identifier": "institution2.edu/chocolate",
         "state": "A",
         "institution": "institution2.edu"
     },
-    "institution2.edu/photos/picture2": {
+    "institution2.edu/chocolate/picture2": {
         "file_format": "image/jpeg",
         "uri": "https://s3.amazonaws.com/aptrust.test.preservation/856e3b62-f3ce-4122-a560-685b7204a5d3",
         "size": 3894894,
-        "identifier": "institution2.edu/photos/picture2",
-        "intellectual_object_identifier": "institution2.edu/photos",
+        "identifier": "institution2.edu/chocolate/picture2",
+        "intellectual_object_identifier": "institution2.edu/chocolate",
         "state": "A",
         "institution": "institution2.edu"
     },
-    "institution2.edu/photos/picture3": {
+    "institution2.edu/chocolate/picture3": {
         "file_format": "image/jpeg",
         "uri": "https://s3.amazonaws.com/aptrust.test.preservation/1877b440-bdf7-454a-b586-1920eb17335c",
         "size": 848944,
-        "identifier": "institution2.edu/photos/picture3",
-        "intellectual_object_identifier": "institution2.edu/photos",
+        "identifier": "institution2.edu/chocolate/picture3",
+        "intellectual_object_identifier": "institution2.edu/chocolate",
         "state": "A",
         "institution": "institution2.edu"
     },
-    "institution2.edu/pdfs/doc1": {
+    "institution2.edu/coal/doc1": {
         "file_format": "application/pdf",
         "uri": "https://s3.amazonaws.com/aptrust.test.preservation/88ea1bf7-56bd-4bd0-a316-f6db12d7e34d",
         "size": 88747474,
-        "identifier": "institution2.edu/pdfs/doc1",
-        "intellectual_object_identifier": "institution2.edu/pdfs",
+        "identifier": "institution2.edu/coal/doc1",
+        "intellectual_object_identifier": "institution2.edu/coal",
         "state": "A",
         "institution": "institution2.edu"
     },
-    "institution2.edu/pdfs/doc2": {
+    "institution2.edu/coal/doc2": {
         "file_format": "application/pdf",
         "uri": "https://s3.amazonaws.com/aptrust.test.preservation/058d8e9b-a23a-4125-b6fe-ff3c35ff48e4",
         "size": 22939893,
-        "identifier": "institution2.edu/pdfs/doc2",
-        "intellectual_object_identifier": "institution2.edu/pdfs",
+        "identifier": "institution2.edu/coal/doc2",
+        "intellectual_object_identifier": "institution2.edu/coal",
         "state": "A",
         "institution": "institution2.edu"
     },
-    "institution2.edu/pdfs/doc3": {
+    "institution2.edu/coal/doc3": {
         "file_format": "application/pdf",
         "uri": "https://s3.amazonaws.com/aptrust.test.preservation/016aa20b-a072-4207-8aa4-5d875bdaf166",
         "size": 384994,
-        "identifier": "institution2.edu/pdfs/doc3",
-        "intellectual_object_identifier": "institution2.edu/pdfs",
+        "identifier": "institution2.edu/coal/doc3",
+        "intellectual_object_identifier": "institution2.edu/coal",
         "state": "A",
         "institution": "institution2.edu"
     },
-    "institution2.edu/glass/shard1": {
+    "institution2.edu/toads/toad1": {
         "file_format": "application/binary",
         "uri": "https://s3.amazonaws.com/aptrust.test.preservation/7c8daeb2-8a37-411e-91b7-f828c0e6f407",
         "size": 7388987,
-        "identifier": "institution2.edu/glass/shard1",
-        "intellectual_object_identifier": "institution2.edu/glass",
+        "identifier": "institution2.edu/toads/toad1",
+        "intellectual_object_identifier": "institution2.edu/toads",
         "state": "A",
         "institution": "institution2.edu"
     },
-    "institution2.edu/glass/shard2": {
+    "institution2.edu/toads/toad2": {
         "file_format": "video/mp4",
         "uri": "https://s3.amazonaws.com/aptrust.test.preservation/735c7f8b-1795-451d-9adc-2904c3096721",
         "size": 9000378,
-        "identifier": "institution2.edu/glass/shard2",
-        "intellectual_object_identifier": "institution2.edu/glass",
+        "identifier": "institution2.edu/toads/toad2",
+        "intellectual_object_identifier": "institution2.edu/toads",
         "state": "A",
         "institution": "institution2.edu"
     },
-    "institution2.edu/glass": {
+    "institution2.edu/toads/Prakash_ 39 Harv. J.L. & Pub. Pol’y 341 .pdf": {
         "file_format": "audio/mp3",
         "uri": "https://s3.amazonaws.com/aptrust.test.preservation/507ba10f-eb98-409c-b95a-a03dbb323e97",
         "size": 214199,
-        "identifier": "institution2.edu/glass/Prakash_ 39 Harv. J.L. & Pub. Pol’y 341 .pdf",
-        "intellectual_object_identifier": "institution2.edu/glass",
+        "identifier": "institution2.edu/toads/Prakash_ 39 Harv. J.L. & Pub. Pol’y 341 .pdf",
+        "intellectual_object_identifier": "institution2.edu/toads",
         "state": "A",
         "institution": "institution2.edu"
     }
