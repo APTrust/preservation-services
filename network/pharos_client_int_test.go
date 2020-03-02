@@ -17,6 +17,13 @@ import (
 	//"time"
 )
 
+// Pharos rules say we can't restore an item that's being deleted
+// or delete an item that's being restored. To avoid errors in our
+// integration tests, make sure we test different object for restore
+// and delete. These ids come from the integration test fixtures.
+const ObjIdToDelete = "institution2.edu/coal"
+const ObjIdToRestore = "institution2.edu/toads"
+
 var InstFixtures map[string]*registry.Institution
 var FileFixtures map[string]*registry.GenericFile
 var ObjectFixtures map[string]*registry.IntellectualObject
@@ -237,16 +244,25 @@ func TestPharosIntellectualObjectSave_Update(t *testing.T) {
 func TestIntellectualObjectRequestRestore(t *testing.T) {
 	LoadPharosFixtures(t)
 	client := getPharosClient(t)
-	var obj *registry.IntellectualObject
-	for _, val := range ObjectFixtures {
-		obj = val
-		break
-	}
-	resp := client.IntellectualObjectRequestRestore(obj.Identifier)
+	resp := client.IntellectualObjectRequestRestore(ObjIdToRestore)
 	assert.NotNil(t, resp)
 	require.Nil(t, resp.Error)
 	workItem := resp.WorkItem()
 	assert.NotNil(t, workItem)
-	assert.Equal(t, obj.Identifier, workItem.ObjectIdentifier)
+	assert.Equal(t, ObjIdToRestore, workItem.ObjectIdentifier)
 	assert.Equal(t, constants.ActionRestore, workItem.Action)
+}
+
+func TestIntellectualObjectRequestDelete(t *testing.T) {
+	LoadPharosFixtures(t)
+	client := getPharosClient(t)
+	// This call returns no data, so just ensure URL is correct
+	// and there's no error.
+	resp := client.IntellectualObjectRequestDelete(ObjIdToDelete)
+	assert.NotNil(t, resp)
+
+	assert.Equal(t,
+		fmt.Sprintf("/api/v2/objects/%s/delete", network.EscapeFileIdentifier(ObjIdToDelete)),
+		resp.Request.URL.Opaque)
+	require.Nil(t, resp.Error)
 }

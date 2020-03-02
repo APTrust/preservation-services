@@ -229,6 +229,7 @@ func (client *PharosClient) IntellectualObjectRequestRestore(identifier string) 
 
 	// TODO: Pharos should return consistent stuct formats,
 	// so we don't have to handle special cases inline like this.
+	// This is logged as a Pharos issue in https://trello.com/c/uE1CFNji
 	responseData := struct {
 		Status     string `json:"status"`
 		Message    string `json:"message"`
