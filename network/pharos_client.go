@@ -332,13 +332,14 @@ func (client *PharosClient) GenericFileGet(identifier string) *PharosResponse {
 
 // GenericFileList returns a list of Generic Files. Params include:
 //
+// * institution_identifier - The identifier of the institution to which
+//   the files belong.
 // * intellectual_object_identifier - The identifier of the object to which
 //   the files belong.
 // * not_checked_since [datetime] - Returns a list of files that have not
 //   had a fixity check since the specified datetime [yyyy-mm-dd]
 // * include_relations=true - Include the file's PremisEvents and Checksums
 //   in the response.
-// * with_ingest_state=true - Include ingest state data in the response.
 // * storage_option - "Standard", "Glacier-OH", "Glacier-OR", "Glacier-VA",
 //                    "Glacier-Deep-OH", "Glacier-Deep-OR", "Glacier-Deep-VA"
 func (client *PharosClient) GenericFileList(params url.Values) *PharosResponse {
@@ -346,8 +347,14 @@ func (client *PharosClient) GenericFileList(params url.Values) *PharosResponse {
 	resp := NewPharosResponse(PharosGenericFile)
 	resp.files = make([]*registry.GenericFile, 0)
 
+	institutionIdentifier := params.Get("institution_identifier")
+	params.Del("institution_identifier")
+
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/files/?%s", client.apiVersion, encodeParams(params))
+	relativeUrl := fmt.Sprintf("/api/%s/files/%s?%s",
+		client.apiVersion,
+		institutionIdentifier,
+		encodeParams(params))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -373,11 +380,11 @@ func (client *PharosClient) GenericFileSave(obj *registry.GenericFile) *PharosRe
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// URL and method
-	relativeUrl := fmt.Sprintf("/api/%s/files/", client.apiVersion)
+	relativeUrl := fmt.Sprintf("/api/%s/files/%s", client.apiVersion, EscapeFileIdentifier(obj.IntellectualObjectIdentifier))
 	httpMethod := "POST"
 	if obj.Id > 0 {
-		// PUT URL looks like /api/v2/files/college.edu%2Fobject_name%2Ffile.xml
-		relativeUrl = fmt.Sprintf("%s%s", relativeUrl, EscapeFileIdentifier(obj.Identifier))
+		// // PUT URL looks like /api/v2/files/college.edu%2Fobject_name%2Ffile.xml
+		// relativeUrl = fmt.Sprintf("%s%s", relativeUrl, EscapeFileIdentifier(obj.Identifier))
 		httpMethod = "PUT"
 	}
 	absoluteUrl := client.BuildUrl(relativeUrl)
@@ -403,6 +410,12 @@ func (client *PharosClient) GenericFileSave(obj *registry.GenericFile) *PharosRe
 	return resp
 }
 
+// ***********************************************************************
+// This will probably be deprecated in preservation-services. Although it
+// has excellent performance benefits, it adds a lot of complexity to the
+// failure recovery code in cases where Pharos records some files in a
+// batch but not others.
+// ***********************************************************************
 // GenericFileSaveBatch saves a batch of Generic File records to Pharos.
 // This performs a POST to create a new records, so all of the GenericFiles
 // passed in param objList should have Ids of zero. Each record

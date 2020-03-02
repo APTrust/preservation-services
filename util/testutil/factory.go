@@ -142,3 +142,19 @@ func GetIntellectualObject() *registry.IntellectualObject {
 		Title:                  "Test Bag from Factory",
 	}
 }
+
+func GetGenericFileForObj(obj *registry.IntellectualObject) *registry.GenericFile {
+	return &registry.GenericFile{
+		FileFormat:                   "text/plain",
+		FileModified:                 Bloomsday,
+		Id:                           0,
+		Identifier:                   fmt.Sprintf("%s/object/data/file.txt", obj.Identifier),
+		InstitutionId:                obj.InstitutionId,
+		IntellectualObjectId:         obj.Id,
+		IntellectualObjectIdentifier: obj.Identifier,
+		Size:                         484896,
+		State:                        constants.StateActive,
+		StorageOption:                constants.StorageStandard,
+		URI:                          "https://example.com/00000000",
+	}
+}

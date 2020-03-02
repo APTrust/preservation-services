@@ -266,3 +266,106 @@ func TestIntellectualObjectRequestDelete(t *testing.T) {
 		resp.Request.URL.Opaque)
 	require.Nil(t, resp.Error)
 }
+
+// ---------------------------------------------------------------------
+// This one is untestable in the integration test environment,
+// because it requires confirmation tokens and approvals.
+// We'll come back to this test later. Note that the we don't
+// currently expose the deletion API anyway, so no one is actually
+// hitting this endpoint in demo or production.
+// ---------------------------------------------------------------------
+
+// func TestIntellectualObjectFinishDelete(t *testing.T) {
+// 	LoadPharosFixtures(t)
+// 	client := getPharosClient(t)
+// 	// This call returns no data, so just ensure URL is correct
+// 	// and there's no error.
+// 	resp := client.IntellectualObjectFinishDelete(ObjIdToDelete)
+// 	assert.NotNil(t, resp)
+
+// 	assert.Equal(t,
+// 		fmt.Sprintf("/api/v2/objects/%s/finish_delete", network.EscapeFileIdentifier(ObjIdToDelete)),
+// 		resp.Request.URL.Opaque)
+// 	require.Nil(t, resp.Error)
+// }
+
+func TestGenericFileGet(t *testing.T) {
+	LoadPharosFixtures(t)
+	client := getPharosClient(t)
+	for _, gf := range FileFixtures {
+		fmt.Println(gf.Identifier)
+		resp := client.GenericFileGet(gf.Identifier)
+		assert.NotNil(t, resp)
+		require.Nil(t, resp.Error)
+		assert.Equal(t,
+			fmt.Sprintf("/api/v2/files/%s", network.EscapeFileIdentifier(gf.Identifier)),
+			resp.Request.URL.Opaque)
+		genericFile := resp.GenericFile()
+		assert.NotNil(t, genericFile)
+
+		assert.Equal(t, gf.Identifier, genericFile.Identifier)
+		assert.Equal(t, gf.Size, genericFile.Size)
+		assert.Equal(t, gf.FileFormat, genericFile.FileFormat)
+		assert.Equal(t,
+			gf.IntellectualObjectIdentifier,
+			genericFile.IntellectualObjectIdentifier)
+		assert.Equal(t, gf.State, genericFile.State)
+		assert.Equal(t, constants.StorageStandard, genericFile.StorageOption)
+	}
+}
+
+func TestGenericFileList(t *testing.T) {
+	LoadPharosFixtures(t)
+	client := getPharosClient(t)
+	v := url.Values{}
+	v.Add("order", "identifier")
+	v.Add("per_page", "50")
+	v.Add("institution_identifier", "aptrust.org")
+	resp := client.GenericFileList(v)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	assert.Equal(t,
+		fmt.Sprintf("/api/v2/files/aptrust.org?%s", v.Encode()),
+		resp.Request.URL.Opaque)
+	files := resp.GenericFiles()
+
+	// Pharos may have a few more files than our fixtures know
+	// about, but it should return one record for each of
+	// our fixtures.
+	assert.True(t, len(files) > len(FileFixtures))
+	for _, gf := range FileFixtures {
+		gotFileFromPharos := false
+		for _, retrievedFile := range files {
+			if retrievedFile.Identifier == gf.Identifier {
+				gotFileFromPharos = true
+				break
+			}
+		}
+		assert.True(t, gotFileFromPharos, gf.Identifier)
+	}
+}
+
+func TestPharosGenericFileSave_Create(t *testing.T) {
+	client := getPharosClient(t)
+
+	v := url.Values{}
+	v.Add("order", "identifier")
+	v.Add("per_page", "1")
+	resp := client.IntellectualObjectList(v)
+	require.Nil(t, resp.Error)
+	require.True(t, len(resp.IntellectualObjects()) > 0)
+	obj := resp.IntellectualObject()
+
+	gf := testutil.GetGenericFileForObj(obj)
+	resp = client.GenericFileSave(gf)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	assert.Equal(t,
+		"/api/v2/files/institution2.edu%2Ftoads",
+		resp.Request.URL.Opaque)
+	gfSaved := resp.GenericFile()
+	require.NotNil(t, gfSaved)
+	assert.Equal(t, gf.Identifier, gfSaved.Identifier)
+	assert.NotEqual(t, 0, gfSaved.Id)
+	assert.NotEqual(t, gf.UpdatedAt, gfSaved.UpdatedAt)
+}
