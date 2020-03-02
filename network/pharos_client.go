@@ -209,7 +209,9 @@ func (client *PharosClient) IntellectualObjectSave(obj *registry.IntellectualObj
 
 // IntellectualObjectRequestRestore creates a restore request in Pharos for
 // the object with the specified identifier. This is used in integration
-// testing to create restore requests.
+// testing to create restore requests. Note that this call should issue
+// to requests to Pharos. The first creates the restore request, and the
+// second returns the WorkItem for the restore request.
 func (client *PharosClient) IntellectualObjectRequestRestore(identifier string) *PharosResponse {
 	// Set up the response object
 	resp := NewPharosResponse(PharosWorkItem)
@@ -225,11 +227,25 @@ func (client *PharosClient) IntellectualObjectRequestRestore(identifier string) 
 		return resp
 	}
 
-	// Note that we're getting a WorkItem back.
-	workItem := &registry.WorkItem{}
-	resp.Error = json.Unmarshal(resp.data, workItem)
-	if resp.Error == nil {
-		resp.workItems[0] = workItem
+	// TODO: Pharos should return consistent stuct formats,
+	// so we don't have to handle special cases inline like this.
+	responseData := struct {
+		Status     string `json:"status"`
+		Message    string `json:"message"`
+		WorkItemId int    `json:"work_item_id"`
+	}{
+		Status:     "",
+		Message:    "",
+		WorkItemId: 0,
+	}
+
+	resp.Error = json.Unmarshal(resp.data, &responseData)
+	if resp.Error == nil && responseData.WorkItemId != 0 {
+		return client.WorkItemGet(responseData.WorkItemId)
+	}
+	if responseData.Message != "" {
+		resp.Error = fmt.Errorf("Pharos returned status %s: %s",
+			responseData.Status, responseData.Message)
 	}
 	return resp
 }

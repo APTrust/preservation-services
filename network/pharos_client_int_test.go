@@ -5,7 +5,7 @@ package network_test
 import (
 	"encoding/json"
 	"fmt"
-	// "github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/network"
@@ -180,6 +180,31 @@ func TestPharosIntellectualObjectList(t *testing.T) {
 	}
 }
 
+func TestPharosIntellectualObjectSave_Create(t *testing.T) {
+	intelObj := testutil.GetIntellectualObject()
+
+	// Make sure we're using an institution id that was
+	// loaded with the test fixtures
+	testInst := GetInstitution(t, "test.edu")
+	intelObj.InstitutionId = testInst.Id
+
+	// Id of zero means it's never been saved.
+	require.Equal(t, 0, intelObj.Id)
+
+	client := getPharosClient(t)
+	resp := client.IntellectualObjectSave(intelObj)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	assert.Equal(t,
+		"/api/v2/objects/test.edu",
+		resp.Request.URL.Opaque)
+	obj := resp.IntellectualObject()
+	require.NotNil(t, obj)
+	assert.Equal(t, intelObj.Identifier, obj.Identifier)
+	assert.NotEqual(t, 0, obj.Id)
+	assert.NotEqual(t, intelObj.UpdatedAt, obj.UpdatedAt)
+}
+
 func TestPharosIntellectualObjectSave_Update(t *testing.T) {
 	LoadPharosFixtures(t)
 	client := getPharosClient(t)
@@ -209,28 +234,19 @@ func TestPharosIntellectualObjectSave_Update(t *testing.T) {
 	}
 }
 
-func TestPharosIntellectualObjectSave_Create(t *testing.T) {
-	intelObj := testutil.GetIntellectualObject()
-
-	// Make sure we're using an institution id that was
-	// loaded with the test fixtures
-	testInst := GetInstitution(t, "test.edu")
-	intelObj.InstitutionId = testInst.Id
-
-	// Id of zero means it's never been saved.
-	require.Equal(t, 0, intelObj.Id)
-
+func TestIntellectualObjectRequestRestore(t *testing.T) {
+	LoadPharosFixtures(t)
 	client := getPharosClient(t)
-	resp := client.IntellectualObjectSave(intelObj)
+	var obj *registry.IntellectualObject
+	for _, val := range ObjectFixtures {
+		obj = val
+		break
+	}
+	resp := client.IntellectualObjectRequestRestore(obj.Identifier)
 	assert.NotNil(t, resp)
-	assert.Nil(t, resp.Error)
-	assert.Equal(t,
-		"/api/v2/objects/test.edu",
-		resp.Request.URL.Opaque)
-	obj := resp.IntellectualObject()
-	require.NotNil(t, obj)
-	assert.Equal(t, intelObj.Identifier, obj.Identifier)
-	assert.NotEqual(t, 0, obj.Id)
-	assert.NotEqual(t, intelObj.UpdatedAt, obj.UpdatedAt)
-
+	require.Nil(t, resp.Error)
+	workItem := resp.WorkItem()
+	assert.NotNil(t, workItem)
+	assert.Equal(t, obj.Identifier, workItem.ObjectIdentifier)
+	assert.Equal(t, constants.ActionRestore, workItem.Action)
 }
