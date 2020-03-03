@@ -23,6 +23,7 @@ import (
 // and delete. These ids come from the integration test fixtures.
 const ObjIdToDelete = "institution2.edu/coal"
 const ObjIdToRestore = "institution2.edu/toads"
+const FileIdToRestore = "institution2.edu/coal/doc3"
 
 var InstFixtures map[string]*registry.Institution
 var FileFixtures map[string]*registry.GenericFile
@@ -398,4 +399,15 @@ func TestPharosGenericFileSave_Update(t *testing.T) {
 		assert.Equal(t, newSize, gfSaved.Size)
 		assert.NotEqual(t, gf.UpdatedAt, gfSaved.UpdatedAt)
 	}
+}
+
+func TestPharosGenericRequestRestore(t *testing.T) {
+	LoadPharosFixtures(t)
+	client := getPharosClient(t)
+	resp := client.GenericFileRequestRestore(FileIdToRestore)
+	require.Nil(t, resp.Error)
+	workItem := resp.WorkItem()
+	require.NotNil(t, workItem)
+	assert.Equal(t, FileIdToRestore, workItem.GenericFileIdentifier)
+	assert.Equal(t, constants.ActionRestore, workItem.Action)
 }

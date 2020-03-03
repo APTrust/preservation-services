@@ -227,26 +227,14 @@ func (client *PharosClient) IntellectualObjectRequestRestore(identifier string) 
 		return resp
 	}
 
-	// TODO: Pharos should return consistent stuct formats,
-	// so we don't have to handle special cases inline like this.
-	// This is logged as a Pharos issue in https://trello.com/c/uE1CFNji
-	responseData := struct {
-		Status     string `json:"status"`
-		Message    string `json:"message"`
-		WorkItemId int    `json:"work_item_id"`
-	}{
-		Status:     "",
-		Message:    "",
-		WorkItemId: 0,
+	acknowledgment := Acknowledgment{}
+	resp.Error = json.Unmarshal(resp.data, &acknowledgment)
+	if resp.Error == nil && acknowledgment.WorkItemId != 0 {
+		return client.WorkItemGet(acknowledgment.WorkItemId)
 	}
-
-	resp.Error = json.Unmarshal(resp.data, &responseData)
-	if resp.Error == nil && responseData.WorkItemId != 0 {
-		return client.WorkItemGet(responseData.WorkItemId)
-	}
-	if responseData.Message != "" {
+	if acknowledgment.Message != "" {
 		resp.Error = fmt.Errorf("Pharos returned status %s: %s",
-			responseData.Status, responseData.Message)
+			acknowledgment.Status, acknowledgment.Message)
 	}
 	return resp
 }
@@ -475,7 +463,11 @@ func (client *PharosClient) GenericFileSaveBatch(objList []*registry.GenericFile
 
 // GenericFileRequestRestore creates a restore request in Pharos for
 // the file with the specified identifier. This is used in integration
-// testing to create restore requests.
+// testing to create restore requests. This call generally issues two
+// requests: one asking Pharos to create a WorkItem, and a second to
+// return the WorkItem. Ideally, Pharos should redirecto so we don't have
+// to make two calls.
+// This is logged as a Pharos issue in https://trello.com/c/uE1CFNji
 func (client *PharosClient) GenericFileRequestRestore(identifier string) *PharosResponse {
 	// Set up the response object
 	resp := NewPharosResponse(PharosWorkItem)
@@ -491,11 +483,14 @@ func (client *PharosClient) GenericFileRequestRestore(identifier string) *Pharos
 		return resp
 	}
 
-	// Note that we're getting a WorkItem back.
-	workItem := &registry.WorkItem{}
-	resp.Error = json.Unmarshal(resp.data, workItem)
-	if resp.Error == nil {
-		resp.workItems[0] = workItem
+	acknowledgment := Acknowledgment{}
+	resp.Error = json.Unmarshal(resp.data, &acknowledgment)
+	if resp.Error == nil && acknowledgment.WorkItemId != 0 {
+		return client.WorkItemGet(acknowledgment.WorkItemId)
+	}
+	if acknowledgment.Message != "" {
+		resp.Error = fmt.Errorf("Pharos returned status %s: %s",
+			acknowledgment.Status, acknowledgment.Message)
 	}
 	return resp
 }
@@ -958,4 +953,15 @@ func encodeParams(params url.Values) string {
 	} else {
 		return params.Encode()
 	}
+}
+
+// Acknowledgement is an ad-hoc JSON struct that Pharos returns to
+// tell us if it did or did not create a WorkItem for our request.
+// TODO: Pharos should return consistent stuct formats,
+// so we don't have to handle special cases inline like this.
+// This is logged as a Pharos issue in https://trello.com/c/uE1CFNji
+type Acknowledgment struct {
+	Status     string `json:"status"`
+	Message    string `json:"message"`
+	WorkItemId int    `json:"work_item_id"`
 }
