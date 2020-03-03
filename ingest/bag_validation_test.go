@@ -164,7 +164,7 @@ func TestBag_SampleNoMd5Manifest(t *testing.T) {
 		constants.BagItProfileDefault, pathToBag, "", true)
 	assert.False(t, validator.IsValid())
 	require.Equal(t, 1, len(validator.Errors))
-	assert.Equal(t, "Bag must have at least one payload manifest", validator.Errors[0])
+	assert.Equal(t, "Bag is missing required manifest 'md5'", validator.Errors[0])
 }
 
 func TestBag_SampleNoTitle(t *testing.T) {
