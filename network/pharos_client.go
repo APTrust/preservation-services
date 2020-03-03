@@ -526,30 +526,36 @@ func (client *PharosClient) GenericFileFinishDelete(identifier string) *PharosRe
 	return resp
 }
 
+// ---------------------------------------------------------------------
+//
+// Leaving this commented out for now, since it's not even implemented
+// in Pharos. If we do implement it, we can uncomment this.
+//
+// ---------------------------------------------------------------------
 // ChecksumGet returns the checksum with the specified id
-func (client *PharosClient) ChecksumGet(id int) *PharosResponse {
-	// Set up the response object
-	resp := NewPharosResponse(PharosChecksum)
-	resp.checksums = make([]*registry.Checksum, 1)
+// func (client *PharosClient) ChecksumGet(id int) *PharosResponse {
+// 	// Set up the response object
+// 	resp := NewPharosResponse(PharosChecksum)
+// 	resp.checksums = make([]*registry.Checksum, 1)
 
-	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/checksums/%d/", client.apiVersion, id)
-	absoluteUrl := client.BuildUrl(relativeUrl)
+// 	// Build the url and the request object
+// 	relativeUrl := fmt.Sprintf("/api/%s/checksums/%d/", client.apiVersion, id)
+// 	absoluteUrl := client.BuildUrl(relativeUrl)
 
-	// Run the request
-	client.DoRequest(resp, "GET", absoluteUrl, nil)
-	if resp.Error != nil {
-		return resp
-	}
+// 	// Run the request
+// 	client.DoRequest(resp, "GET", absoluteUrl, nil)
+// 	if resp.Error != nil {
+// 		return resp
+// 	}
 
-	// Parse the JSON from the response body
-	checksum := &registry.Checksum{}
-	resp.Error = json.Unmarshal(resp.data, checksum)
-	if resp.Error == nil {
-		resp.checksums[0] = checksum
-	}
-	return resp
-}
+// 	// Parse the JSON from the response body
+// 	checksum := &registry.Checksum{}
+// 	resp.Error = json.Unmarshal(resp.data, checksum)
+// 	if resp.Error == nil {
+// 		resp.checksums[0] = checksum
+// 	}
+// 	return resp
+// }
 
 // ChecksumList returns a list of checksums. Params include:
 //

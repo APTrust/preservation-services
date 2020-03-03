@@ -473,7 +473,72 @@ func TestPharosGenericFileRequestRestore(t *testing.T) {
 // 	require.Nil(t, resp.Error)
 // }
 
-// func TestPharosChecksumGet(t *testing.T) {
-// 	client := getPharosClient(t)
+// It's easier to group these tests because we don't have any checksum
+// fixtures.
+func TestPharosChecksumSaveAndList(t *testing.T) {
+	LoadPharosFixtures(t)
+	client := getPharosClient(t)
+	resp := client.GenericFileGet(FileIdToRestore)
+	require.Nil(t, resp.Error)
+	gf := resp.GenericFile()
+	require.NotNil(t, gf)
+	md5Checksum := testutil.GetChecksum(gf, constants.AlgMd5)
 
-// }
+	// Save it
+	resp = client.ChecksumSave(md5Checksum, gf.Identifier)
+	require.Nil(t, resp.Error)
+	savedChecksum := resp.Checksum()
+	require.NotNil(t, savedChecksum)
+	require.NotEqual(t, 0, savedChecksum.Id)
+
+	// ---------------------------------------------------------
+	//
+	// ChecksumGet is not implemented in Pharos. Hmm...
+	//
+	// ---------------------------------------------------------
+	// // Make sure we can get it back.
+	// resp = client.ChecksumGet(savedChecksum.Id)
+	// require.Nil(t, resp.Error)
+	// retrievedChecksum := resp.Checksum()
+	// require.NotNil(t, retrievedChecksum)
+	// require.Equal(t, savedChecksum.Id, retrievedChecksum.Id)
+
+	// Add one more
+	sha256Checksum := testutil.GetChecksum(gf, constants.AlgSha256)
+	resp = client.ChecksumSave(sha256Checksum, gf.Identifier)
+	require.Nil(t, resp.Error)
+
+	// Make sure list returns the right checksums
+	v := url.Values{}
+	v.Add("generic_file_identifier", gf.Identifier)
+	v.Add("per_page", "20")
+	resp = client.ChecksumList(v)
+	require.Nil(t, resp.Error)
+	checksums := resp.Checksums()
+	assert.Equal(t, 2, len(checksums))
+	for _, cs := range checksums {
+		assert.Equal(t, gf.Id, cs.GenericFileId)
+		assert.NotEqual(t, 0, cs.Id)
+	}
+
+	v.Add("algorithm", constants.AlgMd5)
+	resp = client.ChecksumList(v)
+	require.Nil(t, resp.Error)
+	checksums = resp.Checksums()
+	assert.Equal(t, 1, len(checksums))
+	for _, cs := range checksums {
+		assert.Equal(t, gf.Id, cs.GenericFileId)
+		assert.Equal(t, constants.AlgMd5, cs.Algorithm)
+	}
+
+	v.Del("algorithm")
+	v.Add("algorithm", constants.AlgSha256)
+	resp = client.ChecksumList(v)
+	require.Nil(t, resp.Error)
+	checksums = resp.Checksums()
+	assert.Equal(t, 1, len(checksums))
+	for _, cs := range checksums {
+		assert.Equal(t, gf.Id, cs.GenericFileId)
+		assert.Equal(t, constants.AlgSha256, cs.Algorithm)
+	}
+}
