@@ -144,19 +144,19 @@ func GetIntellectualObject() *registry.IntellectualObject {
 	}
 }
 
-func GetGenericFileForObj(obj *registry.IntellectualObject, withChecksums, withEvents bool) *registry.GenericFile {
+func GetGenericFileForObj(obj *registry.IntellectualObject, suffix int, withChecksums, withEvents bool) *registry.GenericFile {
 	gf := &registry.GenericFile{
 		FileFormat:                   "text/plain",
 		FileModified:                 Bloomsday,
 		Id:                           0,
-		Identifier:                   fmt.Sprintf("%s/object/data/file.txt", obj.Identifier),
+		Identifier:                   fmt.Sprintf("%s/object/data/file_%d.txt", obj.Identifier, suffix),
 		InstitutionId:                obj.InstitutionId,
 		IntellectualObjectId:         obj.Id,
 		IntellectualObjectIdentifier: obj.Identifier,
 		Size:                         484896,
 		State:                        constants.StateActive,
 		StorageOption:                constants.StorageStandard,
-		URI:                          "https://example.com/00000000",
+		URI:                          fmt.Sprintf("https://example.com/00000000%d", suffix),
 	}
 	if withChecksums {
 		gf.Checksums = []*registry.Checksum{

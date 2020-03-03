@@ -356,7 +356,7 @@ func TestPharosGenericFileSave_Create(t *testing.T) {
 	require.True(t, len(resp.IntellectualObjects()) > 0)
 	obj := resp.IntellectualObject()
 
-	gf := testutil.GetGenericFileForObj(obj, false, false)
+	gf := testutil.GetGenericFileForObj(obj, 1, false, false)
 	resp = client.GenericFileSave(gf)
 	assert.NotNil(t, resp)
 	assert.Nil(t, resp.Error)
@@ -417,10 +417,7 @@ func TestPharosGenericFileSaveBatch(t *testing.T) {
 
 	files := make([]*registry.GenericFile, 10)
 	for i := 0; i < 10; i++ {
-		gf := testutil.GetGenericFileForObj(savedObj, true, true)
-		gf.Identifier = fmt.Sprintf("%s/object/data/file_%d.txt", savedObj.Identifier, i)
-		gf.URI = fmt.Sprintf("https://example.com/00000000_%d", i)
-		files[i] = gf
+		files[i] = testutil.GetGenericFileForObj(savedObj, i, true, true)
 	}
 
 	resp = client.GenericFileSaveBatch(files)
@@ -428,6 +425,31 @@ func TestPharosGenericFileSaveBatch(t *testing.T) {
 
 	savedFiles := resp.GenericFiles()
 	assert.Equal(t, len(files), len(savedFiles))
+
+	// Make sure Pharos actually saved everything
+	for i := 0; i < 10; i++ {
+		// GenericFiles
+		identifier := fmt.Sprintf("%s/object/data/file_%d.txt", savedObj.Identifier, i)
+		resp := client.GenericFileGet(identifier)
+		assert.Nil(t, resp.Error)
+		assert.NotNil(t, resp.GenericFile(), identifier)
+
+		// Checksums
+		v := url.Values{}
+		v.Add("generic_file_identifier", identifier)
+		v.Add("per_page", "20")
+		resp = client.ChecksumList(v)
+		assert.Nil(t, resp.Error)
+		assert.Equal(t, 2, len(resp.Checksums()))
+
+		// PremisEvents
+		v = url.Values{}
+		v.Add("file_identifier", identifier)
+		v.Add("per_page", "20")
+		resp = client.PremisEventList(v)
+		assert.Nil(t, resp.Error)
+		assert.Equal(t, 5, len(resp.PremisEvents()))
+	}
 }
 
 func TestPharosGenericFileRequestRestore(t *testing.T) {
@@ -449,4 +471,9 @@ func TestPharosGenericFileRequestRestore(t *testing.T) {
 // 	client := getPharosClient(t)
 // 	resp := client.GenericFileFinishDelete(FileIdToRestore)
 // 	require.Nil(t, resp.Error)
+// }
+
+// func TestPharosChecksumGet(t *testing.T) {
+// 	client := getPharosClient(t)
+
 // }
