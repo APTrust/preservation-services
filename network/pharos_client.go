@@ -399,10 +399,14 @@ func (client *PharosClient) GenericFileSave(obj *registry.GenericFile) *PharosRe
 }
 
 // ***********************************************************************
-// This will probably be deprecated in preservation-services. Although it
+// This may be deprecated in preservation-services. Although it
 // has excellent performance benefits, it adds a lot of complexity to the
 // failure recovery code in cases where Pharos records some files in a
 // batch but not others.
+//
+// On the other hand, a singl batch calls for 200 files translates to 1200
+// individual calls, so it may be worth keeping. We'll know more when we
+// can test.
 // ***********************************************************************
 // GenericFileSaveBatch saves a batch of Generic File records to Pharos.
 // This performs a POST to create a new records, so all of the GenericFiles
@@ -437,8 +441,8 @@ func (client *PharosClient) GenericFileSaveBatch(objList []*registry.GenericFile
 	httpMethod := "POST"
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
-	// Prepare the JSON data
-	// TODO: Define a PharosGenericFile object, and serialize a list of those.
+	// Transform into a set of objects that serialize in a way Pharos
+	// will accept.
 	batch := make([]*registry.GenericFileForPharos, len(objList))
 	for i, gf := range objList {
 		batch[i] = registry.NewGenericFileForPharos(gf)

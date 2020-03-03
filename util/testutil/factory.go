@@ -6,6 +6,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/satori/go.uuid"
 	"time"
 )
 
@@ -143,8 +144,8 @@ func GetIntellectualObject() *registry.IntellectualObject {
 	}
 }
 
-func GetGenericFileForObj(obj *registry.IntellectualObject) *registry.GenericFile {
-	return &registry.GenericFile{
+func GetGenericFileForObj(obj *registry.IntellectualObject, withChecksums, withEvents bool) *registry.GenericFile {
+	gf := &registry.GenericFile{
 		FileFormat:                   "text/plain",
 		FileModified:                 Bloomsday,
 		Id:                           0,
@@ -156,5 +157,49 @@ func GetGenericFileForObj(obj *registry.IntellectualObject) *registry.GenericFil
 		State:                        constants.StateActive,
 		StorageOption:                constants.StorageStandard,
 		URI:                          "https://example.com/00000000",
+	}
+	if withChecksums {
+		gf.Checksums = []*registry.Checksum{
+			GetChecksum(gf, constants.AlgMd5),
+			GetChecksum(gf, constants.AlgSha256),
+		}
+	}
+	if withEvents {
+		gf.PremisEvents = []*registry.PremisEvent{
+			GetPremisEvent(gf, constants.EventAccessAssignment),
+			GetPremisEvent(gf, constants.EventDigestCalculation),
+			GetPremisEvent(gf, constants.EventIdentifierAssignment),
+			GetPremisEvent(gf, constants.EventIngestion),
+			GetPremisEvent(gf, constants.EventReplication),
+		}
+	}
+	return gf
+}
+
+func GetChecksum(gf *registry.GenericFile, alg string) *registry.Checksum {
+	return &registry.Checksum{
+		Algorithm:     alg,
+		DateTime:      Bloomsday,
+		Digest:        "0000000099999999",
+		GenericFileId: gf.Id,
+	}
+}
+
+func GetPremisEvent(gf *registry.GenericFile, eventType string) *registry.PremisEvent {
+	return &registry.PremisEvent{
+		Agent:                        "Maxwell Smart",
+		DateTime:                     Bloomsday,
+		Detail:                       "Fake event detail",
+		EventType:                    eventType,
+		GenericFileId:                gf.Id,
+		GenericFileIdentifier:        gf.Identifier,
+		Identifier:                   uuid.NewV4().String(),
+		InstitutionId:                gf.InstitutionId,
+		IntellectualObjectId:         gf.IntellectualObjectId,
+		IntellectualObjectIdentifier: gf.IntellectualObjectIdentifier,
+		Object:                       "Fake event object",
+		OutcomeDetail:                constants.OutcomeSuccess,
+		OutcomeInformation:           "Fake outcome information",
+		Outcome:                      "Fake outcome",
 	}
 }

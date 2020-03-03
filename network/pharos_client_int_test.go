@@ -294,7 +294,6 @@ func TestGenericFileGet(t *testing.T) {
 	LoadPharosFixtures(t)
 	client := getPharosClient(t)
 	for _, gf := range FileFixtures {
-		fmt.Println(gf.Identifier)
 		resp := client.GenericFileGet(gf.Identifier)
 		assert.NotNil(t, resp)
 		require.Nil(t, resp.Error)
@@ -357,7 +356,7 @@ func TestPharosGenericFileSave_Create(t *testing.T) {
 	require.True(t, len(resp.IntellectualObjects()) > 0)
 	obj := resp.IntellectualObject()
 
-	gf := testutil.GetGenericFileForObj(obj)
+	gf := testutil.GetGenericFileForObj(obj, false, false)
 	resp = client.GenericFileSave(gf)
 	assert.NotNil(t, resp)
 	assert.Nil(t, resp.Error)
@@ -401,7 +400,37 @@ func TestPharosGenericFileSave_Update(t *testing.T) {
 	}
 }
 
-func TestPharosGenericRequestRestore(t *testing.T) {
+func TestPharosGenericFileSaveBatch(t *testing.T) {
+	LoadPharosFixtures(t)
+	intelObj := testutil.GetIntellectualObject()
+
+	testInst := GetInstitution(t, "test.edu")
+	intelObj.Identifier = "test.edu/TestBag002"
+	intelObj.InstitutionId = testInst.Id
+	client := getPharosClient(t)
+
+	resp := client.IntellectualObjectSave(intelObj)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	savedObj := resp.IntellectualObject()
+	require.NotNil(t, savedObj)
+
+	files := make([]*registry.GenericFile, 10)
+	for i := 0; i < 10; i++ {
+		gf := testutil.GetGenericFileForObj(savedObj, true, true)
+		gf.Identifier = fmt.Sprintf("%s/object/data/file_%d.txt", savedObj.Identifier, i)
+		gf.URI = fmt.Sprintf("https://example.com/00000000_%d", i)
+		files[i] = gf
+	}
+
+	resp = client.GenericFileSaveBatch(files)
+	require.Nil(t, resp.Error)
+
+	savedFiles := resp.GenericFiles()
+	assert.Equal(t, len(files), len(savedFiles))
+}
+
+func TestPharosGenericFileRequestRestore(t *testing.T) {
 	LoadPharosFixtures(t)
 	client := getPharosClient(t)
 	resp := client.GenericFileRequestRestore(FileIdToRestore)
@@ -411,3 +440,13 @@ func TestPharosGenericRequestRestore(t *testing.T) {
 	assert.Equal(t, FileIdToRestore, workItem.GenericFileIdentifier)
 	assert.Equal(t, constants.ActionRestore, workItem.Action)
 }
+
+// Come back to this one. Requires creation of deletion PREMIS
+// event first.
+//
+// func TestPharosGenericFileFinishDelete(t *testing.T) {
+// 	LoadPharosFixtures(t)
+// 	client := getPharosClient(t)
+// 	resp := client.GenericFileFinishDelete(FileIdToRestore)
+// 	require.Nil(t, resp.Error)
+// }

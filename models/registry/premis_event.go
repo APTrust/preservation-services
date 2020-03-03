@@ -22,7 +22,7 @@ type PremisEvent struct {
 	OutcomeDetail                string    `json:"outcome_detail"`
 	OutcomeInformation           string    `json:"outcome_information"`
 	Outcome                      string    `json:"outcome"`
-	UpdatedAt                    time.Time `json:"datetime,omitempty"`
+	UpdatedAt                    time.Time `json:"updated_at,omitempty"`
 }
 
 func PremisEventFromJson(jsonData []byte) (*PremisEvent, error) {

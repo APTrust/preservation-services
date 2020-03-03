@@ -7,20 +7,22 @@ import (
 )
 
 type GenericFile struct {
-	CreatedAt                    time.Time `json:"created_at,omitempty"`
-	FileFormat                   string    `json:"file_format,omitempty"`
-	FileModified                 time.Time `json:"file_modified,omitempty"`
-	Id                           int       `json:"id,omitempty"`
-	Identifier                   string    `json:"identifier,omitempty"`
-	InstitutionId                int       `json:"institution_id,omitempty"`
-	IntellectualObjectId         int       `json:"intellectual_object_id,omitempty"`
-	IntellectualObjectIdentifier string    `json:"intellectual_object_identifier,omitempty"`
-	LastFixityCheck              time.Time `json:"last_fixity_check,omitempty"`
-	Size                         int64     `json:"size,omitempty"`
-	State                        string    `json:"state,omitempty"`
-	StorageOption                string    `json:"storage_option"`
-	URI                          string    `json:"uri,omitempty"`
-	UpdatedAt                    time.Time `json:"updated_at,omitempty"`
+	Checksums                    []*Checksum    `json:"checksums,omitempty"`
+	CreatedAt                    time.Time      `json:"created_at,omitempty"`
+	FileFormat                   string         `json:"file_format,omitempty"`
+	FileModified                 time.Time      `json:"file_modified,omitempty"`
+	Id                           int            `json:"id,omitempty"`
+	Identifier                   string         `json:"identifier,omitempty"`
+	InstitutionId                int            `json:"institution_id,omitempty"`
+	IntellectualObjectId         int            `json:"intellectual_object_id,omitempty"`
+	IntellectualObjectIdentifier string         `json:"intellectual_object_identifier,omitempty"`
+	LastFixityCheck              time.Time      `json:"last_fixity_check,omitempty"`
+	PremisEvents                 []*PremisEvent `json:"premis_events,omitempty"`
+	Size                         int64          `json:"size,omitempty"`
+	State                        string         `json:"state,omitempty"`
+	StorageOption                string         `json:"storage_option"`
+	URI                          string         `json:"uri,omitempty"`
+	UpdatedAt                    time.Time      `json:"updated_at,omitempty"`
 }
 
 func GenericFileFromJson(jsonData []byte) (*GenericFile, error) {
@@ -56,21 +58,27 @@ func (gf *GenericFile) UUID() string {
 }
 
 type GenericFileForPharos struct {
-	FileFormat           string `json:"file_format,omitempty"`
-	Identifier           string `json:"identifier,omitempty"`
-	InstitutionId        int    `json:"institution_id"`
-	IntellectualObjectId int    `json:"intellectual_object_id"`
-	Size                 int64  `json:"size,omitempty"`
-	StorageOption        string `json:"storage_option"`
-	URI                  string `json:"uri,omitempty"`
+	Checksums            []*Checksum    `json:"checksums_attributes,omitempty"`
+	FileFormat           string         `json:"file_format,omitempty"`
+	Id                   int            `json:"id,omitempty"`
+	Identifier           string         `json:"identifier,omitempty"`
+	InstitutionId        int            `json:"institution_id"`
+	IntellectualObjectId int            `json:"intellectual_object_id"`
+	PremisEvents         []*PremisEvent `json:"premis_events_attributes,omitempty"`
+	Size                 int64          `json:"size,omitempty"`
+	StorageOption        string         `json:"storage_option"`
+	URI                  string         `json:"uri,omitempty"`
 }
 
 func NewGenericFileForPharos(gf *GenericFile) *GenericFileForPharos {
 	return &GenericFileForPharos{
+		Checksums:            gf.Checksums,
 		FileFormat:           gf.FileFormat,
+		Id:                   gf.Id,
 		Identifier:           gf.Identifier,
 		InstitutionId:        gf.InstitutionId,
 		IntellectualObjectId: gf.IntellectualObjectId,
+		PremisEvents:         gf.PremisEvents,
 		Size:                 gf.Size,
 		StorageOption:        gf.StorageOption,
 		URI:                  gf.URI,
