@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/url"
+	"strings"
 	"testing"
 	//"time"
 )
@@ -118,6 +119,18 @@ func GetObject(t *testing.T, identifier string) *registry.IntellectualObject {
 	obj := resp.IntellectualObject()
 	require.NotNil(t, obj)
 	return obj
+}
+
+func GetWorkItem(t *testing.T, etag string) *registry.WorkItem {
+	client := getPharosClient(t)
+	v := url.Values{}
+	v.Add("etag", etag)
+	resp := client.WorkItemList(v)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	item := resp.WorkItem()
+	require.NotNil(t, item)
+	return item
 }
 
 func TestEscapeFileIdentifier(t *testing.T) {
@@ -608,7 +621,6 @@ func TestPharosPremisEventsList(t *testing.T) {
 
 func TestPharosPremisEventSave(t *testing.T) {
 	LoadPharosFixtures(t)
-
 	// obj & file identifiers come from fixture data
 	inst := GetInstitution(t, "institution1.edu")
 	obj := GetObject(t, "institution1.edu/glass")
@@ -635,4 +647,89 @@ func TestPharosPremisEventSave(t *testing.T) {
 	assert.Equal(t, event.Identifier, savedEvent.Identifier)
 	assert.Equal(t, event.EventType, savedEvent.EventType)
 	assert.NotEqual(t, 0, savedEvent.Id)
+}
+
+func TestWorkItemGet(t *testing.T) {
+	LoadPharosFixtures(t)
+	// ETag comes from fixture data
+	etag := "01010101010101010101"
+	item := GetWorkItem(t, etag)
+
+	client := getPharosClient(t)
+	resp := client.WorkItemGet(item.Id)
+	require.Nil(t, resp.Error)
+	retrievedItem := resp.WorkItem()
+	require.NotNil(t, retrievedItem)
+	assert.Equal(t, item.Id, retrievedItem.Id)
+	assert.Equal(t, item.ETag, retrievedItem.ETag)
+	assert.Equal(t, item.Action, retrievedItem.Action)
+}
+
+func TestWorkItemList(t *testing.T) {
+	LoadPharosFixtures(t)
+	// Value from fixtures
+	etag := "02020202020202020202"
+
+	client := getPharosClient(t)
+	v := url.Values{}
+	v.Add("per_page", "50")
+	v.Add("etag", etag)
+	resp := client.WorkItemList(v)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	items := resp.WorkItems()
+	assert.Equal(t, 1, len(items))
+
+	v.Del("etag")
+	v.Add("stage", constants.StageReceive)
+	resp = client.WorkItemList(v)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	items = resp.WorkItems()
+	assert.Equal(t, 20, len(items))
+
+	v.Set("stage", constants.StageCleanup)
+	resp = client.WorkItemList(v)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	items = resp.WorkItems()
+	assert.Equal(t, 6, len(items))
+}
+
+func TestWorkItemSaveAndFinish(t *testing.T) {
+	LoadPharosFixtures(t)
+	inst := GetInstitution(t, "institution2.edu")
+	item := &registry.WorkItem{
+		Name:          "fake_bag_15.tar",
+		ETag:          "15151515151515151515",
+		Bucket:        "aptrust.receiving.institution2.edu",
+		User:          "system@aptrust.org",
+		Note:          "This is a cancelled test item",
+		Action:        constants.ActionRestore,
+		Stage:         constants.StageRequested,
+		Status:        constants.StatusCancelled,
+		Outcome:       "This is a test item",
+		BagDate:       testutil.Bloomsday,
+		Date:          testutil.Bloomsday,
+		Retry:         false,
+		Pid:           0,
+		InstitutionId: inst.Id,
+	}
+	client := getPharosClient(t)
+	resp := client.WorkItemSave(item)
+	require.Nil(t, resp.Error)
+	savedItem := resp.WorkItem()
+	require.NotNil(t, savedItem)
+	assert.NotEqual(t, 0, savedItem.Id)
+	assert.Equal(t, item.ETag, savedItem.ETag)
+	assert.Equal(t, item.Action, savedItem.Action)
+
+	// As long as we have a restoration work item,
+	// test this method as well.
+	resp = client.FinishRestorationSpotTest(savedItem.Id)
+	require.Nil(t, resp.Error)
+	finishedItem := resp.WorkItem()
+	require.NotNil(t, finishedItem)
+	assert.Equal(t, savedItem.Id, finishedItem.Id)
+	assert.True(t, strings.Contains(finishedItem.Note, "Email sent to admins"))
 }

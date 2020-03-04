@@ -719,6 +719,31 @@ func (client *PharosClient) PremisEventSave(obj *registry.PremisEvent) *PharosRe
 	return resp
 }
 
+// WorkItemGet returns the WorkItem with the specified ID.
+func (client *PharosClient) WorkItemGet(id int) *PharosResponse {
+	// Set up the response object
+	resp := NewPharosResponse(PharosWorkItem)
+	resp.workItems = make([]*registry.WorkItem, 1)
+
+	// Build the url and the request object
+	relativeUrl := fmt.Sprintf("/api/%s/items/%d/", client.apiVersion, id)
+	absoluteUrl := client.BuildUrl(relativeUrl)
+
+	// Run the request
+	client.DoRequest(resp, "GET", absoluteUrl, nil)
+	if resp.Error != nil {
+		return resp
+	}
+
+	// Parse the JSON from the response body
+	workItem := &registry.WorkItem{}
+	resp.Error = json.Unmarshal(resp.data, workItem)
+	if resp.Error == nil {
+		resp.workItems[0] = workItem
+	}
+	return resp
+}
+
 // WorkItemList lists the work items meeting the specified filters, or
 // all work items if no filter params are set. Params include:
 //
@@ -788,31 +813,6 @@ func (client *PharosClient) WorkItemSave(obj *registry.WorkItem) *PharosResponse
 
 	// Run the request
 	client.DoRequest(resp, httpMethod, absoluteUrl, bytes.NewBuffer(postData))
-	if resp.Error != nil {
-		return resp
-	}
-
-	// Parse the JSON from the response body
-	workItem := &registry.WorkItem{}
-	resp.Error = json.Unmarshal(resp.data, workItem)
-	if resp.Error == nil {
-		resp.workItems[0] = workItem
-	}
-	return resp
-}
-
-// WorkItemGet returns the WorkItem with the specified ID.
-func (client *PharosClient) WorkItemGet(id int) *PharosResponse {
-	// Set up the response object
-	resp := NewPharosResponse(PharosWorkItem)
-	resp.workItems = make([]*registry.WorkItem, 1)
-
-	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/items/%d/", client.apiVersion, id)
-	absoluteUrl := client.BuildUrl(relativeUrl)
-
-	// Run the request
-	client.DoRequest(resp, "GET", absoluteUrl, nil)
 	if resp.Error != nil {
 		return resp
 	}
