@@ -16,19 +16,19 @@ import (
 // PharosClient supports basic calls to the Pharos Admin REST API.
 // This client does not support the Member API.
 type PharosClient struct {
-	hostUrl    string
-	apiVersion string
-	apiUser    string
-	apiKey     string
+	HostUrl    string
+	APIVersion string
+	APIUser    string
+	APIKey     string
 	httpClient *http.Client
 	transport  *http.Transport
 }
 
-// NewPharosClient creates a new pharos client. Param hostUrl should
+// NewPharosClient creates a new pharos client. Param HostUrl should
 // come from the config.json file.
-func NewPharosClient(hostUrl, apiVersion, apiUser, apiKey string) (*PharosClient, error) {
+func NewPharosClient(HostUrl, APIVersion, APIUser, APIKey string) (*PharosClient, error) {
 	testsAreRunning := flag.Lookup("test.v") != nil
-	if !testsAreRunning && (apiUser == "" || apiKey == "") {
+	if !testsAreRunning && (APIUser == "" || APIKey == "") {
 		panic("Env vars PHAROS_API_USER and PHAROS_API_KEY cannot be empty.")
 	}
 	// see security warning on nil PublicSuffixList here:
@@ -48,10 +48,10 @@ func NewPharosClient(hostUrl, apiVersion, apiUser, apiKey string) (*PharosClient
 	}
 	httpClient := &http.Client{Jar: cookieJar, Transport: transport}
 	return &PharosClient{
-		hostUrl:    hostUrl,
-		apiVersion: apiVersion,
-		apiUser:    apiUser,
-		apiKey:     apiKey,
+		HostUrl:    HostUrl,
+		APIVersion: APIVersion,
+		APIUser:    APIUser,
+		APIKey:     APIKey,
 		httpClient: httpClient,
 		transport:  transport}, nil
 }
@@ -63,7 +63,7 @@ func (client *PharosClient) InstitutionGet(identifier string) *PharosResponse {
 	resp.institutions = make([]*registry.Institution, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/institutions/%s/", client.apiVersion, url.QueryEscape(identifier))
+	relativeUrl := fmt.Sprintf("/api/%s/institutions/%s/", client.APIVersion, url.QueryEscape(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -88,7 +88,7 @@ func (client *PharosClient) InstitutionList(params url.Values) *PharosResponse {
 	resp.institutions = make([]*registry.Institution, 0)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/institutions/?%s", client.apiVersion, encodeParams(params))
+	relativeUrl := fmt.Sprintf("/api/%s/institutions/?%s", client.APIVersion, encodeParams(params))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -112,7 +112,7 @@ func (client *PharosClient) IntellectualObjectGet(identifier string) *PharosResp
 	resp.objects = make([]*registry.IntellectualObject, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/objects/%s", client.apiVersion, EscapeFileIdentifier(identifier))
+	relativeUrl := fmt.Sprintf("/api/%s/objects/%s", client.APIVersion, EscapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -149,7 +149,7 @@ func (client *PharosClient) IntellectualObjectList(params url.Values) *PharosRes
 	params.Del("institution")
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/objects/%s?%s", client.apiVersion, institution, encodeParams(params))
+	relativeUrl := fmt.Sprintf("/api/%s/objects/%s?%s", client.APIVersion, institution, encodeParams(params))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -177,11 +177,11 @@ func (client *PharosClient) IntellectualObjectSave(obj *registry.IntellectualObj
 	// URL and method
 	// Note that POST URL takes an institution identifier, while
 	// the PUT URL takes an object identifier.
-	relativeUrl := fmt.Sprintf("/api/%s/objects/%s", client.apiVersion, obj.Institution)
+	relativeUrl := fmt.Sprintf("/api/%s/objects/%s", client.APIVersion, obj.Institution)
 	httpMethod := "POST"
 	if obj.Id > 0 {
 		// PUT URL looks like /api/v2/objects/college.edu%2Fobject_name
-		relativeUrl = fmt.Sprintf("/api/%s/objects/%s", client.apiVersion, EscapeFileIdentifier(obj.Identifier))
+		relativeUrl = fmt.Sprintf("/api/%s/objects/%s", client.APIVersion, EscapeFileIdentifier(obj.Identifier))
 		httpMethod = "PUT"
 	}
 	absoluteUrl := client.BuildUrl(relativeUrl)
@@ -218,7 +218,7 @@ func (client *PharosClient) IntellectualObjectRequestRestore(identifier string) 
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/objects/%s/restore", client.apiVersion, EscapeFileIdentifier(identifier))
+	relativeUrl := fmt.Sprintf("/api/%s/objects/%s/restore", client.APIVersion, EscapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request.
@@ -250,7 +250,7 @@ func (client *PharosClient) IntellectualObjectRequestDelete(identifier string) *
 	resp.objects = make([]*registry.IntellectualObject, 0)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/objects/%s/delete", client.apiVersion, EscapeFileIdentifier(identifier))
+	relativeUrl := fmt.Sprintf("/api/%s/objects/%s/delete", client.APIVersion, EscapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request.
@@ -274,7 +274,7 @@ func (client *PharosClient) IntellectualObjectFinishDelete(identifier string) *P
 	resp.objects = make([]*registry.IntellectualObject, 0)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/objects/%s/finish_delete", client.apiVersion,
+	relativeUrl := fmt.Sprintf("/api/%s/objects/%s/finish_delete", client.APIVersion,
 		EscapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
@@ -300,7 +300,7 @@ func (client *PharosClient) GenericFileGet(identifier string) *PharosResponse {
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/files/%s", client.apiVersion, EscapeFileIdentifier(identifier))
+	relativeUrl := fmt.Sprintf("/api/%s/files/%s", client.APIVersion, EscapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -340,7 +340,7 @@ func (client *PharosClient) GenericFileList(params url.Values) *PharosResponse {
 
 	// Build the url and the request object
 	relativeUrl := fmt.Sprintf("/api/%s/files/%s?%s",
-		client.apiVersion,
+		client.APIVersion,
 		institutionIdentifier,
 		encodeParams(params))
 	absoluteUrl := client.BuildUrl(relativeUrl)
@@ -368,11 +368,11 @@ func (client *PharosClient) GenericFileSave(obj *registry.GenericFile) *PharosRe
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// URL and method
-	relativeUrl := fmt.Sprintf("/api/%s/files/%s", client.apiVersion, EscapeFileIdentifier(obj.IntellectualObjectIdentifier))
+	relativeUrl := fmt.Sprintf("/api/%s/files/%s", client.APIVersion, EscapeFileIdentifier(obj.IntellectualObjectIdentifier))
 	httpMethod := "POST"
 	if obj.Id > 0 {
 		// PUT URL looks like /api/v2/files/college.edu%2Fobject_name%2Ffile.xml
-		relativeUrl = fmt.Sprintf("/api/%s/files/%s", client.apiVersion, EscapeFileIdentifier(obj.Identifier))
+		relativeUrl = fmt.Sprintf("/api/%s/files/%s", client.APIVersion, EscapeFileIdentifier(obj.Identifier))
 		httpMethod = "PUT"
 	}
 	absoluteUrl := client.BuildUrl(relativeUrl)
@@ -437,7 +437,7 @@ func (client *PharosClient) GenericFileSaveBatch(objList []*registry.GenericFile
 
 	// URL and method
 	relativeUrl := fmt.Sprintf("/api/%s/files/%d/create_batch",
-		client.apiVersion, objList[0].IntellectualObjectId)
+		client.APIVersion, objList[0].IntellectualObjectId)
 	httpMethod := "POST"
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
@@ -478,7 +478,7 @@ func (client *PharosClient) GenericFileRequestRestore(identifier string) *Pharos
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/files/restore/%s", client.apiVersion, url.QueryEscape(identifier))
+	relativeUrl := fmt.Sprintf("/api/%s/files/restore/%s", client.APIVersion, url.QueryEscape(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request.
@@ -509,7 +509,7 @@ func (client *PharosClient) GenericFileFinishDelete(identifier string) *PharosRe
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/files/finish_delete/%s", client.apiVersion,
+	relativeUrl := fmt.Sprintf("/api/%s/files/finish_delete/%s", client.APIVersion,
 		EscapeFileIdentifier(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
@@ -539,7 +539,7 @@ func (client *PharosClient) GenericFileFinishDelete(identifier string) *PharosRe
 // 	resp.checksums = make([]*registry.Checksum, 1)
 
 // 	// Build the url and the request object
-// 	relativeUrl := fmt.Sprintf("/api/%s/checksums/%d/", client.apiVersion, id)
+// 	relativeUrl := fmt.Sprintf("/api/%s/checksums/%d/", client.APIVersion, id)
 // 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 // 	// Run the request
@@ -568,7 +568,7 @@ func (client *PharosClient) ChecksumList(params url.Values) *PharosResponse {
 	resp.checksums = make([]*registry.Checksum, 0)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/checksums/?%s", client.apiVersion, encodeParams(params))
+	relativeUrl := fmt.Sprintf("/api/%s/checksums/?%s", client.APIVersion, encodeParams(params))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -594,7 +594,7 @@ func (client *PharosClient) ChecksumSave(obj *registry.Checksum, gfIdentifier st
 	resp.checksums = make([]*registry.Checksum, 1)
 
 	// URL and method
-	relativeUrl := fmt.Sprintf("/api/%s/checksums/%s", client.apiVersion,
+	relativeUrl := fmt.Sprintf("/api/%s/checksums/%s", client.APIVersion,
 		url.QueryEscape(gfIdentifier))
 	httpMethod := "POST"
 	absoluteUrl := client.BuildUrl(relativeUrl)
@@ -629,7 +629,7 @@ func (client *PharosClient) PremisEventGet(identifier string) *PharosResponse {
 	resp.events = make([]*registry.PremisEvent, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/events/%s/", client.apiVersion, url.QueryEscape(identifier))
+	relativeUrl := fmt.Sprintf("/api/%s/events/%s/", client.APIVersion, url.QueryEscape(identifier))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -664,7 +664,7 @@ func (client *PharosClient) PremisEventList(params url.Values) *PharosResponse {
 	resp.events = make([]*registry.PremisEvent, 0)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/events/?%s", client.apiVersion, encodeParams(params))
+	relativeUrl := fmt.Sprintf("/api/%s/events/?%s", client.APIVersion, encodeParams(params))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -689,7 +689,7 @@ func (client *PharosClient) PremisEventSave(obj *registry.PremisEvent) *PharosRe
 	resp.events = make([]*registry.PremisEvent, 1)
 
 	// URL and method
-	relativeUrl := fmt.Sprintf("/api/%s/events/", client.apiVersion)
+	relativeUrl := fmt.Sprintf("/api/%s/events/", client.APIVersion)
 	httpMethod := "POST"
 	if obj.Id > 0 {
 		// PUT is not even implemented in Pharos, and never will be
@@ -726,7 +726,7 @@ func (client *PharosClient) WorkItemGet(id int) *PharosResponse {
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/items/%d/", client.apiVersion, id)
+	relativeUrl := fmt.Sprintf("/api/%s/items/%d/", client.APIVersion, id)
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -771,7 +771,7 @@ func (client *PharosClient) WorkItemList(params url.Values) *PharosResponse {
 	resp.workItems = make([]*registry.WorkItem, 0)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/items/?%s", client.apiVersion, encodeParams(params))
+	relativeUrl := fmt.Sprintf("/api/%s/items/?%s", client.APIVersion, encodeParams(params))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -796,7 +796,7 @@ func (client *PharosClient) WorkItemSave(obj *registry.WorkItem) *PharosResponse
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// URL and method
-	relativeUrl := fmt.Sprintf("/api/%s/items/", client.apiVersion)
+	relativeUrl := fmt.Sprintf("/api/%s/items/", client.APIVersion)
 	httpMethod := "POST"
 	if obj.Id > 0 {
 		// URL should look like /api/v2/items/46956/
@@ -835,7 +835,7 @@ func (client *PharosClient) FinishRestorationSpotTest(workItemId int) *PharosRes
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/notifications/spot_test_restoration/%d/", client.apiVersion, workItemId)
+	relativeUrl := fmt.Sprintf("/api/%s/notifications/spot_test_restoration/%d/", client.APIVersion, workItemId)
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
 	// Run the request
@@ -857,12 +857,12 @@ func (client *PharosClient) FinishRestorationSpotTest(workItemId int) *PharosRes
 // Utility Methods
 // -------------------------------------------------------------------------
 
-// BuildUrl combines the host and protocol in client.hostUrl with
-// relativeUrl to create an absolute URL. For example, if client.hostUrl
+// BuildUrl combines the host and protocol in client.HostUrl with
+// relativeUrl to create an absolute URL. For example, if client.HostUrl
 // is "http://localhost:3456", then client.BuildUrl("/path/to/action.json")
 // would return "http://localhost:3456/path/to/action.json".
 func (client *PharosClient) BuildUrl(relativeUrl string) string {
-	return client.hostUrl + relativeUrl
+	return client.HostUrl + relativeUrl
 }
 
 // NewJsonRequest returns a new request with headers indicating
@@ -887,8 +887,8 @@ func (client *PharosClient) NewJsonRequest(method, absoluteUrl string, requestDa
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-	req.Header.Add("X-Pharos-API-User", client.apiUser)
-	req.Header.Add("X-Pharos-API-Key", client.apiKey)
+	req.Header.Add("X-Pharos-API-User", client.APIUser)
+	req.Header.Add("X-Pharos-API-Key", client.APIKey)
 	req.Header.Add("Connection", "Keep-Alive")
 
 	// Unfix the URL that golang net/url "fixes" for us.
@@ -900,7 +900,7 @@ func (client *PharosClient) NewJsonRequest(method, absoluteUrl string, requestDa
 	if err != nil {
 		return nil, err
 	}
-	opaqueUrl := strings.Replace(absoluteUrl, client.hostUrl, "", 1)
+	opaqueUrl := strings.Replace(absoluteUrl, client.HostUrl, "", 1)
 
 	// This fixes an issue with GenericFile names that include spaces.
 	opaqueUrl = strings.Replace(opaqueUrl, " ", "%20", -1)

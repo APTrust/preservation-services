@@ -3,6 +3,7 @@
 package network_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/APTrust/preservation-services/constants"
@@ -15,7 +16,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	//"time"
 )
 
 // Pharos rules say we can't restore an item that's being deleted
@@ -134,6 +134,10 @@ func GetWorkItem(t *testing.T, etag string) *registry.WorkItem {
 }
 
 func TestEscapeFileIdentifier(t *testing.T) {
+	identifier := "institution2.edu/toads/Prakash_ 39 Harv. J.L. & Pub. Pol’y 341 .pdf"
+	expected := "institution2.edu%2Ftoads%2FPrakash_%2039%20Harv.%20J.L.%20%26%20Pub.%20Pol%E2%80%99y%20341%20.pdf"
+	assert.Equal(t, expected, network.EscapeFileIdentifier(identifier))
+
 	assert.Equal(t,
 		"test.edu%2Fobj%2Ffile%20name%3F.txt",
 		network.EscapeFileIdentifier("test.edu/obj/file name?.txt"))
@@ -732,4 +736,29 @@ func TestWorkItemSaveAndFinish(t *testing.T) {
 	require.NotNil(t, finishedItem)
 	assert.Equal(t, savedItem.Id, finishedItem.Id)
 	assert.True(t, strings.Contains(finishedItem.Note, "Email sent to admins"))
+}
+
+func TestBuildURL(t *testing.T) {
+	relativeUrl := "/api/v2/blah/dir%2Ffile.pdf?param=value"
+	expected := "http://localhost:9292/api/v2/blah/dir%2Ffile.pdf?param=value"
+	client := getPharosClient(t)
+	assert.Equal(t, expected, client.BuildUrl(relativeUrl))
+}
+
+func TestNewJsonRequest(t *testing.T) {
+	client := getPharosClient(t)
+	postData := []byte(`{"key":"value"}`)
+	req, err := client.NewJsonRequest("GET", "https://example.com", bytes.NewBuffer(postData))
+	require.Nil(t, err)
+	require.NotNil(t, req)
+
+	assert.Equal(t, "application/json", req.Header.Get("Content-Type"))
+	assert.Equal(t, "application/json", req.Header.Get("Accept"))
+	assert.Equal(t, client.APIUser, req.Header.Get("X-Pharos-API-User"))
+	assert.Equal(t, client.APIKey, req.Header.Get("X-Pharos-API-Key"))
+	assert.Equal(t, "Keep-Alive", req.Header.Get("Connection"))
+
+	assert.Equal(t, "https", req.URL.Scheme)
+	assert.Equal(t, "example.com", req.URL.Host)
+	assert.Equal(t, "https://example.com", req.URL.Opaque)
 }
