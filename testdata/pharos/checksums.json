@@ -1,14 +1,12 @@
 {
   "cs1": {
-    "id": 1,
-    "generic_file_id": 1,
+    "generic_file_identifier": "institution1.edu/photos/picture1",
     "algorithm": "md5",
     "datetime": "2020-03-04T20:07:42.000Z",
     "digest": 12345678
   },
   "cs2": {
-    "id": 2,
-    "generic_file_id": 1,
+    "generic_file_identifier": "institution1.edu/photos/picture1",
     "algorithm": "sha256",
     "datetime": "2020-03-04T20:07:42.000Z",
     "digest": 9876543210
