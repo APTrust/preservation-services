@@ -5,7 +5,6 @@ package network_test
 import (
 	"github.com/APTrust/preservation-services/network"
 	"github.com/stretchr/testify/assert"
-	"net/url"
 	"testing"
 )
 
@@ -122,23 +121,25 @@ func TestGenericFile(t *testing.T) {
 
 func TestGenericFiles(t *testing.T) {
 	client := GetPharosClient(t)
-	v := url.Values{}
-	v.Add("institution_identifier", "institution2.edu")
-	resp := client.GenericFileList(v)
+	resp := client.GenericFileList(nil)
 	assert.NotEmpty(t, resp.GenericFiles())
 }
 
 // ---------------------------------------------------------------------
 //
-// Leaving this commented out for now, since it's not even implemented
-// in Pharos. If we do implement it, we can uncomment this.
+// Part of this is broken in Pharos. The checksums table stores the
+// datetime field as a string.
 //
 // ---------------------------------------------------------------------
 // func TestChecksum(t *testing.T) {
+// 	checksums := GetChecksums(t)
 // 	client := GetPharosClient(t)
-// 	resp := client.ChecksumGet(999)
-// 	assert.Nil(t, resp.Error)
-// 	assert.NotNil(t, resp.Checksum())
+
+// 	for _, checksum := range checksums {
+// 		resp := client.ChecksumGet(checksum.Id)
+// 		assert.Nil(t, resp.Error)
+// 		assert.NotNil(t, resp.Checksum())
+// 	}
 // }
 
 func TestChecksums(t *testing.T) {

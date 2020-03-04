@@ -337,13 +337,13 @@ func (client *PharosClient) GenericFileList(params url.Values) *PharosResponse {
 	resp := NewPharosResponse(PharosGenericFile)
 	resp.files = make([]*registry.GenericFile, 0)
 
-	institutionIdentifier := params.Get("institution_identifier")
-	params.Del("institution_identifier")
+	//institutionIdentifier := params.Get("institution_identifier")
+	//params.Del("institution_identifier")
 
 	// Build the url and the request object
-	relativeUrl := fmt.Sprintf("/api/%s/files/%s?%s",
+	relativeUrl := fmt.Sprintf("/api/%s/files/?%s",
 		client.APIVersion,
-		institutionIdentifier,
+		//institutionIdentifier,
 		encodeParams(params))
 	absoluteUrl := client.BuildUrl(relativeUrl)
 
@@ -535,29 +535,29 @@ func (client *PharosClient) GenericFileFinishDelete(identifier string) *PharosRe
 //
 // ---------------------------------------------------------------------
 // ChecksumGet returns the checksum with the specified id
-// func (client *PharosClient) ChecksumGet(id int) *PharosResponse {
-// 	// Set up the response object
-// 	resp := NewPharosResponse(PharosChecksum)
-// 	resp.checksums = make([]*registry.Checksum, 1)
+func (client *PharosClient) ChecksumGet(id int) *PharosResponse {
+	// Set up the response object
+	resp := NewPharosResponse(PharosChecksum)
+	resp.checksums = make([]*registry.Checksum, 1)
 
-// 	// Build the url and the request object
-// 	relativeUrl := fmt.Sprintf("/api/%s/checksums/%d/", client.APIVersion, id)
-// 	absoluteUrl := client.BuildUrl(relativeUrl)
+	// Build the url and the request object
+	relativeUrl := fmt.Sprintf("/api/%s/checksums/%d/", client.APIVersion, id)
+	absoluteUrl := client.BuildUrl(relativeUrl)
 
-// 	// Run the request
-// 	client.DoRequest(resp, "GET", absoluteUrl, nil)
-// 	if resp.Error != nil {
-// 		return resp
-// 	}
+	// Run the request
+	client.DoRequest(resp, "GET", absoluteUrl, nil)
+	if resp.Error != nil {
+		return resp
+	}
 
-// 	// Parse the JSON from the response body
-// 	checksum := &registry.Checksum{}
-// 	resp.Error = json.Unmarshal(resp.data, checksum)
-// 	if resp.Error == nil {
-// 		resp.checksums[0] = checksum
-// 	}
-// 	return resp
-// }
+	// Parse the JSON from the response body
+	checksum := &registry.Checksum{}
+	resp.Error = json.Unmarshal(resp.data, checksum)
+	if resp.Error == nil {
+		resp.checksums[0] = checksum
+	}
+	return resp
+}
 
 // ChecksumList returns a list of checksums. Params include:
 //

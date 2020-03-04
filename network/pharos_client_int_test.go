@@ -25,6 +25,7 @@ import (
 const ObjIdToDelete = "institution2.edu/coal"
 const ObjIdToRestore = "institution2.edu/toads"
 const FileIdToRestore = "institution2.edu/coal/doc3"
+const FileIdWithChecksums = "institution1.edu/photos/picture1"
 
 var InstFixtures map[string]*registry.Institution
 var FileFixtures map[string]*registry.GenericFile
@@ -131,6 +132,19 @@ func GetWorkItem(t *testing.T, etag string) *registry.WorkItem {
 	item := resp.WorkItem()
 	require.NotNil(t, item)
 	return item
+}
+
+// Returns the only two checksums in the fixture data
+func GetChecksums(t *testing.T) []*registry.Checksum {
+	client := GetPharosClient(t)
+	v := url.Values{}
+	v.Add("generic_file_identifier", FileIdWithChecksums)
+	resp := client.ChecksumList(v)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	checksums := resp.Checksums()
+	require.Equal(t, 2, len(checksums))
+	return checksums
 }
 
 func TestEscapeFileIdentifier(t *testing.T) {
@@ -352,7 +366,7 @@ func TestGenericFileList(t *testing.T) {
 	assert.NotNil(t, resp)
 	assert.Nil(t, resp.Error)
 	assert.Equal(t,
-		fmt.Sprintf("/api/v2/files/aptrust.org?%s", v.Encode()),
+		fmt.Sprintf("/api/v2/files/?%s", v.Encode()),
 		resp.Request.URL.Opaque)
 	files := resp.GenericFiles()
 
@@ -523,12 +537,12 @@ func TestPharosChecksumSaveAndList(t *testing.T) {
 	// ChecksumGet is not implemented in Pharos. Hmm...
 	//
 	// ---------------------------------------------------------
-	// // Make sure we can get it back.
-	// resp = client.ChecksumGet(savedChecksum.Id)
-	// require.Nil(t, resp.Error)
-	// retrievedChecksum := resp.Checksum()
-	// require.NotNil(t, retrievedChecksum)
-	// require.Equal(t, savedChecksum.Id, retrievedChecksum.Id)
+	// Make sure we can get it back.
+	resp = client.ChecksumGet(savedChecksum.Id)
+	require.Nil(t, resp.Error)
+	retrievedChecksum := resp.Checksum()
+	require.NotNil(t, retrievedChecksum)
+	require.Equal(t, savedChecksum.Id, retrievedChecksum.Id)
 
 	// Add one more
 	sha256Checksum := testutil.GetChecksum(gf, constants.AlgSha256)
