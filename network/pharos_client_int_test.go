@@ -110,6 +110,16 @@ func GetInstitution(t *testing.T, identifier string) *registry.Institution {
 	return institution
 }
 
+func GetObject(t *testing.T, identifier string) *registry.IntellectualObject {
+	client := getPharosClient(t)
+	resp := client.IntellectualObjectGet(identifier)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	obj := resp.IntellectualObject()
+	require.NotNil(t, obj)
+	return obj
+}
+
 func TestEscapeFileIdentifier(t *testing.T) {
 	assert.Equal(t,
 		"test.edu%2Fobj%2Ffile%20name%3F.txt",
@@ -541,4 +551,88 @@ func TestPharosChecksumSaveAndList(t *testing.T) {
 		assert.Equal(t, gf.Id, cs.GenericFileId)
 		assert.Equal(t, constants.AlgSha256, cs.Algorithm)
 	}
+}
+
+func TestPharosPremisEventGet(t *testing.T) {
+	// From testdata/pharos/fixtures.
+	fixtureEventId := "be86ea36-4642-4cf7-a29a-80a860ebea82"
+	LoadPharosFixtures(t)
+	client := getPharosClient(t)
+	resp := client.PremisEventGet(fixtureEventId)
+	require.Nil(t, resp.Error)
+	event := resp.PremisEvent()
+	require.NotNil(t, event)
+}
+
+func TestPharosPremisEventsList(t *testing.T) {
+	// From testdata/pharos/fixtures.
+	fixtureObjIdentifier := "institution1.edu/pdfs"
+	fixtureFileIdentifier := "institution1.edu/pdfs/doc2"
+
+	LoadPharosFixtures(t)
+	client := getPharosClient(t)
+
+	v := url.Values{}
+	v.Add("file_identifier", fixtureFileIdentifier)
+	v.Add("per_page", "20")
+
+	// By file identifier
+	resp := client.PremisEventList(v)
+	require.Nil(t, resp.Error)
+	events := resp.PremisEvents()
+	require.Equal(t, 2, len(events))
+
+	// By file identifier & event type
+	v.Add("event_type", constants.EventDigestCalculation)
+	resp = client.PremisEventList(v)
+	require.Nil(t, resp.Error)
+	events = resp.PremisEvents()
+	require.Equal(t, 1, len(events))
+
+	// By object identifier
+	v = url.Values{}
+	v.Add("object_identifier", fixtureObjIdentifier)
+	v.Add("per_page", "20")
+	resp = client.PremisEventList(v)
+	require.Nil(t, resp.Error)
+	events = resp.PremisEvents()
+	require.Equal(t, 7, len(events))
+
+	// By object identifier & event type
+	v.Add("event_type", constants.EventIngestion)
+	resp = client.PremisEventList(v)
+	require.Nil(t, resp.Error)
+	events = resp.PremisEvents()
+	require.Equal(t, 4, len(events))
+}
+
+func TestPharosPremisEventSave(t *testing.T) {
+	LoadPharosFixtures(t)
+
+	// obj & file identifiers come from fixture data
+	inst := GetInstitution(t, "institution1.edu")
+	obj := GetObject(t, "institution1.edu/glass")
+	event := &registry.PremisEvent{
+		Identifier:                   "91ad5b2c-64bf-4561-8ce7-e62614843786",
+		EventType:                    constants.EventIngestion,
+		DateTime:                     testutil.Bloomsday,
+		OutcomeDetail:                "Object ingested successfully",
+		Detail:                       "We got the object into the repository",
+		OutcomeInformation:           "Object was ingested",
+		Object:                       "Exchange ingest code",
+		Agent:                        "https://github.com/APTrust/exchange",
+		IntellectualObjectId:         obj.Id,
+		IntellectualObjectIdentifier: obj.Identifier,
+		Outcome:                      "Success",
+		InstitutionId:                inst.Id,
+	}
+
+	client := getPharosClient(t)
+	resp := client.PremisEventSave(event)
+	require.Nil(t, resp.Error)
+	savedEvent := resp.PremisEvent()
+	require.NotNil(t, savedEvent)
+	assert.Equal(t, event.Identifier, savedEvent.Identifier)
+	assert.Equal(t, event.EventType, savedEvent.EventType)
+	assert.NotEqual(t, 0, savedEvent.Id)
 }
