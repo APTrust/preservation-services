@@ -87,7 +87,7 @@ func LoadWorkItemFixtures(t *testing.T) map[string]*registry.WorkItem {
 	return items
 }
 
-func getPharosClient(t *testing.T) *network.PharosClient {
+func GetPharosClient(t *testing.T) *network.PharosClient {
 	config := common.NewConfig()
 	assert.Equal(t, "test", config.ConfigName)
 	client, err := network.NewPharosClient(
@@ -102,7 +102,7 @@ func getPharosClient(t *testing.T) *network.PharosClient {
 }
 
 func GetInstitution(t *testing.T, identifier string) *registry.Institution {
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	resp := client.InstitutionGet(identifier)
 	assert.NotNil(t, resp)
 	require.Nil(t, resp.Error)
@@ -112,7 +112,7 @@ func GetInstitution(t *testing.T, identifier string) *registry.Institution {
 }
 
 func GetObject(t *testing.T, identifier string) *registry.IntellectualObject {
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	resp := client.IntellectualObjectGet(identifier)
 	assert.NotNil(t, resp)
 	require.Nil(t, resp.Error)
@@ -122,7 +122,7 @@ func GetObject(t *testing.T, identifier string) *registry.IntellectualObject {
 }
 
 func GetWorkItem(t *testing.T, etag string) *registry.WorkItem {
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	v := url.Values{}
 	v.Add("etag", etag)
 	resp := client.WorkItemList(v)
@@ -145,7 +145,7 @@ func TestEscapeFileIdentifier(t *testing.T) {
 
 func TestPharosInstitutionGet(t *testing.T) {
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	for _, inst := range InstFixtures {
 		resp := client.InstitutionGet(inst.Identifier)
 		assert.NotNil(t, resp)
@@ -161,7 +161,7 @@ func TestPharosInstitutionGet(t *testing.T) {
 
 func TestPharosInstitutionList(t *testing.T) {
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	v := url.Values{}
 	v.Add("order", "name")
 	v.Add("per_page", "20")
@@ -181,7 +181,7 @@ func TestPharosInstitutionList(t *testing.T) {
 
 func TestPharosIntellectualObjectGet(t *testing.T) {
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	for _, obj := range ObjectFixtures {
 		resp := client.IntellectualObjectGet(obj.Identifier)
 		assert.NotNil(t, resp)
@@ -197,7 +197,7 @@ func TestPharosIntellectualObjectGet(t *testing.T) {
 
 func TestPharosIntellectualObjectList(t *testing.T) {
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	v := url.Values{}
 	v.Add("order", "identifier")
 	v.Add("per_page", "20")
@@ -226,7 +226,7 @@ func TestPharosIntellectualObjectSave_Create(t *testing.T) {
 	// Id of zero means it's never been saved.
 	require.Equal(t, 0, intelObj.Id)
 
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	resp := client.IntellectualObjectSave(intelObj)
 	assert.NotNil(t, resp)
 	assert.Nil(t, resp.Error)
@@ -242,7 +242,7 @@ func TestPharosIntellectualObjectSave_Create(t *testing.T) {
 
 func TestPharosIntellectualObjectSave_Update(t *testing.T) {
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 
 	v := url.Values{}
 	v.Add("order", "identifier")
@@ -271,7 +271,7 @@ func TestPharosIntellectualObjectSave_Update(t *testing.T) {
 
 func TestIntellectualObjectRequestRestore(t *testing.T) {
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	resp := client.IntellectualObjectRequestRestore(ObjIdToRestore)
 	assert.NotNil(t, resp)
 	require.Nil(t, resp.Error)
@@ -283,7 +283,7 @@ func TestIntellectualObjectRequestRestore(t *testing.T) {
 
 func TestIntellectualObjectRequestDelete(t *testing.T) {
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	// This call returns no data, so just ensure URL is correct
 	// and there's no error.
 	resp := client.IntellectualObjectRequestDelete(ObjIdToDelete)
@@ -305,7 +305,7 @@ func TestIntellectualObjectRequestDelete(t *testing.T) {
 
 // func TestIntellectualObjectFinishDelete(t *testing.T) {
 // 	LoadPharosFixtures(t)
-// 	client := getPharosClient(t)
+// 	client := GetPharosClient(t)
 // 	// This call returns no data, so just ensure URL is correct
 // 	// and there's no error.
 // 	resp := client.IntellectualObjectFinishDelete(ObjIdToDelete)
@@ -319,7 +319,7 @@ func TestIntellectualObjectRequestDelete(t *testing.T) {
 
 func TestGenericFileGet(t *testing.T) {
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	for _, gf := range FileFixtures {
 		resp := client.GenericFileGet(gf.Identifier)
 		assert.NotNil(t, resp)
@@ -343,7 +343,7 @@ func TestGenericFileGet(t *testing.T) {
 
 func TestGenericFileList(t *testing.T) {
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	v := url.Values{}
 	v.Add("order", "identifier")
 	v.Add("per_page", "50")
@@ -373,7 +373,7 @@ func TestGenericFileList(t *testing.T) {
 }
 
 func TestPharosGenericFileSave_Create(t *testing.T) {
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 
 	v := url.Values{}
 	v.Add("order", "identifier")
@@ -399,7 +399,7 @@ func TestPharosGenericFileSave_Create(t *testing.T) {
 
 func TestPharosGenericFileSave_Update(t *testing.T) {
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 
 	v := url.Values{}
 	v.Add("order", "identifier")
@@ -434,7 +434,7 @@ func TestPharosGenericFileSaveBatch(t *testing.T) {
 	testInst := GetInstitution(t, "test.edu")
 	intelObj.Identifier = "test.edu/TestBag002"
 	intelObj.InstitutionId = testInst.Id
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 
 	resp := client.IntellectualObjectSave(intelObj)
 	assert.NotNil(t, resp)
@@ -481,7 +481,7 @@ func TestPharosGenericFileSaveBatch(t *testing.T) {
 
 func TestPharosGenericFileRequestRestore(t *testing.T) {
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	resp := client.GenericFileRequestRestore(FileIdToRestore)
 	require.Nil(t, resp.Error)
 	workItem := resp.WorkItem()
@@ -495,7 +495,7 @@ func TestPharosGenericFileRequestRestore(t *testing.T) {
 //
 // func TestPharosGenericFileFinishDelete(t *testing.T) {
 // 	LoadPharosFixtures(t)
-// 	client := getPharosClient(t)
+// 	client := GetPharosClient(t)
 // 	resp := client.GenericFileFinishDelete(FileIdToRestore)
 // 	require.Nil(t, resp.Error)
 // }
@@ -504,7 +504,7 @@ func TestPharosGenericFileRequestRestore(t *testing.T) {
 // fixtures.
 func TestPharosChecksumSaveAndList(t *testing.T) {
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	resp := client.GenericFileGet(FileIdToRestore)
 	require.Nil(t, resp.Error)
 	gf := resp.GenericFile()
@@ -574,7 +574,7 @@ func TestPharosPremisEventGet(t *testing.T) {
 	// From testdata/pharos/fixtures.
 	fixtureEventId := "be86ea36-4642-4cf7-a29a-80a860ebea82"
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	resp := client.PremisEventGet(fixtureEventId)
 	require.Nil(t, resp.Error)
 	event := resp.PremisEvent()
@@ -587,7 +587,7 @@ func TestPharosPremisEventsList(t *testing.T) {
 	fixtureFileIdentifier := "institution1.edu/pdfs/doc2"
 
 	LoadPharosFixtures(t)
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 
 	v := url.Values{}
 	v.Add("file_identifier", fixtureFileIdentifier)
@@ -643,7 +643,7 @@ func TestPharosPremisEventSave(t *testing.T) {
 		InstitutionId:                inst.Id,
 	}
 
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	resp := client.PremisEventSave(event)
 	require.Nil(t, resp.Error)
 	savedEvent := resp.PremisEvent()
@@ -659,7 +659,7 @@ func TestWorkItemGet(t *testing.T) {
 	etag := "01010101010101010101"
 	item := GetWorkItem(t, etag)
 
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	resp := client.WorkItemGet(item.Id)
 	require.Nil(t, resp.Error)
 	retrievedItem := resp.WorkItem()
@@ -674,7 +674,7 @@ func TestWorkItemList(t *testing.T) {
 	// Value from fixtures
 	etag := "02020202020202020202"
 
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	v := url.Values{}
 	v.Add("per_page", "50")
 	v.Add("etag", etag)
@@ -719,7 +719,7 @@ func TestWorkItemSaveAndFinish(t *testing.T) {
 		Pid:           0,
 		InstitutionId: inst.Id,
 	}
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	resp := client.WorkItemSave(item)
 	require.Nil(t, resp.Error)
 	savedItem := resp.WorkItem()
@@ -741,12 +741,12 @@ func TestWorkItemSaveAndFinish(t *testing.T) {
 func TestBuildURL(t *testing.T) {
 	relativeUrl := "/api/v2/blah/dir%2Ffile.pdf?param=value"
 	expected := "http://localhost:9292/api/v2/blah/dir%2Ffile.pdf?param=value"
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	assert.Equal(t, expected, client.BuildUrl(relativeUrl))
 }
 
 func TestNewJsonRequest(t *testing.T) {
-	client := getPharosClient(t)
+	client := GetPharosClient(t)
 	postData := []byte(`{"key":"value"}`)
 	req, err := client.NewJsonRequest("GET", "https://example.com", bytes.NewBuffer(postData))
 	require.Nil(t, err)

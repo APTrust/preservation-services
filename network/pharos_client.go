@@ -330,6 +330,8 @@ func (client *PharosClient) GenericFileGet(identifier string) *PharosResponse {
 //   in the response.
 // * storage_option - "Standard", "Glacier-OH", "Glacier-OR", "Glacier-VA",
 //                    "Glacier-Deep-OH", "Glacier-Deep-OR", "Glacier-Deep-VA"
+//
+// Because of an implementation quirk in Pharos,
 func (client *PharosClient) GenericFileList(params url.Values) *PharosResponse {
 	// Set up the response object
 	resp := NewPharosResponse(PharosGenericFile)
