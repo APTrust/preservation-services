@@ -125,6 +125,12 @@ func (resp *PharosResponse) readResponse() {
 	}
 }
 
+// ObjectNotFound returns true if Pharos replied with 404/Not Found.
+// This is a common expected case, and we want to handle it specially.
+func (resp *PharosResponse) ObjectNotFound() bool {
+	return resp.Response.StatusCode == http.StatusNotFound
+}
+
 // Returns the type of object(s) contained in this response.
 func (resp *PharosResponse) ObjectType() PharosObjectType {
 	return resp.objectType

@@ -46,8 +46,8 @@ type ReingestManager struct {
 }
 
 // NewReingestManager creates a new ReingestManager.
-func NewReingestManager(context *common.Context, workItemId int, ingestObject *service.IngestObject) *MetadataGatherer {
-	return &MetadataGatherer{
+func NewReingestManager(context *common.Context, workItemId int, ingestObject *service.IngestObject) *ReingestManager {
+	return &ReingestManager{
 		Context:      context,
 		IngestObject: ingestObject,
 		WorkItemId:   workItemId,
@@ -76,7 +76,9 @@ func (r *ReingestManager) ProcessObject() (bool, error) {
 // previously ingested. Returns an error if it can't get info from Pharos.
 func (r *ReingestManager) ObjectWasPreviouslyIngested() (bool, error) {
 	resp := r.Context.PharosClient.IntellectualObjectGet(r.IngestObject.Identifier())
-	if resp.Error != nil {
+	if resp.ObjectNotFound() {
+		return false, nil
+	} else if resp.Error != nil {
 		return false, resp.Error
 	}
 	obj := resp.IntellectualObject()

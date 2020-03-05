@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"github.com/APTrust/preservation-services/network"
 	"github.com/APTrust/preservation-services/util/logger"
 	"github.com/minio/minio-go/v6"
@@ -27,7 +28,7 @@ func NewContext() *Context {
 		Config:       config,
 		Logger:       getLogger(config),
 		NSQClient:    getNsqClient(config),
-		PharosClient: nil, // doesn't exist yet
+		PharosClient: getPharosClient(config),
 		RedisClient:  getRedisClient(config),
 		S3Clients:    getS3Clients(config),
 	}
@@ -47,6 +48,19 @@ func getRedisClient(config *Config) *network.RedisClient {
 		config.RedisURL,
 		config.RedisPassword,
 		config.RedisDefaultDB)
+}
+
+func getPharosClient(config *Config) *network.PharosClient {
+	client, err := network.NewPharosClient(
+		config.PharosURL,
+		config.PharosAPIVersion,
+		config.PharosAPIUser,
+		config.PharosAPIKey)
+	if err != nil {
+		msg := fmt.Sprintf("Could not initialize Pharos client: %v", err)
+		panic(msg)
+	}
+	return client
 }
 
 func getS3Clients(config *Config) map[string]*minio.Client {

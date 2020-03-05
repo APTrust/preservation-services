@@ -5,6 +5,7 @@ package network_test
 import (
 	"github.com/APTrust/preservation-services/network"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"testing"
 )
 
@@ -40,6 +41,17 @@ func TestRawResponseData(t *testing.T) {
 		assert.NotEmpty(t, bytes)
 		assert.Nil(t, err)
 	}
+}
+
+func TestObjectNotFound(t *testing.T) {
+	resp := network.NewPharosResponse(network.PharosIntellectualObject)
+	resp.Response = &http.Response{
+		StatusCode: 200,
+	}
+	assert.False(t, resp.ObjectNotFound())
+
+	resp.Response.StatusCode = 404
+	assert.True(t, resp.ObjectNotFound())
 }
 
 func TestObjectType(t *testing.T) {
