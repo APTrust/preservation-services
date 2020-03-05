@@ -532,11 +532,6 @@ func TestPharosChecksumSaveAndList(t *testing.T) {
 	require.NotNil(t, savedChecksum)
 	require.NotEqual(t, 0, savedChecksum.Id)
 
-	// ---------------------------------------------------------
-	//
-	// ChecksumGet is not implemented in Pharos. Hmm...
-	//
-	// ---------------------------------------------------------
 	// Make sure we can get it back.
 	resp = client.ChecksumGet(savedChecksum.Id)
 	require.Nil(t, resp.Error)

@@ -528,12 +528,6 @@ func (client *PharosClient) GenericFileFinishDelete(identifier string) *PharosRe
 	return resp
 }
 
-// ---------------------------------------------------------------------
-//
-// Leaving this commented out for now, since it's not even implemented
-// in Pharos. If we do implement it, we can uncomment this.
-//
-// ---------------------------------------------------------------------
 // ChecksumGet returns the checksum with the specified id
 func (client *PharosClient) ChecksumGet(id int) *PharosResponse {
 	// Set up the response object

@@ -125,22 +125,18 @@ func TestGenericFiles(t *testing.T) {
 	assert.NotEmpty(t, resp.GenericFiles())
 }
 
-// ---------------------------------------------------------------------
-//
-// Part of this is broken in Pharos. The checksums table stores the
-// datetime field as a string.
-//
-// ---------------------------------------------------------------------
-// func TestChecksum(t *testing.T) {
-// 	checksums := GetChecksums(t)
-// 	client := GetPharosClient(t)
+func TestChecksum(t *testing.T) {
+	// We have to get the checksums from the db first,
+	// because we don't know their ids.
+	checksums := GetChecksums(t)
+	client := GetPharosClient(t)
 
-// 	for _, checksum := range checksums {
-// 		resp := client.ChecksumGet(checksum.Id)
-// 		assert.Nil(t, resp.Error)
-// 		assert.NotNil(t, resp.Checksum())
-// 	}
-// }
+	for _, checksum := range checksums {
+		resp := client.ChecksumGet(checksum.Id)
+		assert.Nil(t, resp.Error)
+		assert.NotNil(t, resp.Checksum())
+	}
+}
 
 func TestChecksums(t *testing.T) {
 	client := GetPharosClient(t)
