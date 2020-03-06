@@ -9,9 +9,11 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"strings"
 	"testing"
 	"time"
 )
@@ -21,6 +23,13 @@ const ObjIdExists = "institution2.edu/toads"
 const FileIdExists = "institution2.edu/coal/doc3"
 
 const TestBagWorkItemId = 31337
+
+// The following the pathInBag of tag files that do not
+// appear in any tag manifest. This is legal according
+// to the BagIt spec. Par of our test bag
+// example.edu.tag_sample_good.tar.
+const UntrackedTagFile = "custom_tags/untracked_tag_file.txt"
+const JunkFile = "junk_file.txt"
 
 // This function scans bag example.edu.tagsample_good.tar
 // and saves the ingest metadata in Redis.
@@ -262,5 +271,94 @@ func TestProcessObject(t *testing.T) {
 	assert.Nil(t, err)
 
 	// TODO: Test object and each file record in Redis.
-	// TODO: Alter Redis checksums and test that this flags files correctly.
+	fileMap, _, err := manager.Context.RedisClient.GetBatchOfFileKeys(
+		TestBagWorkItemId,
+		0,
+		int64(50))
+	require.Nil(t, err)
+	for _, ingestFile := range fileMap {
+		//json, err := ingestFile.ToJson()
+		//assert.Nil(t, err)
+		//fmt.Println(json)
+		testIngestFile_ReingestManager(t, ingestFile)
+		// NeedsSave should be false because file has
+		// not changed since initial ingest.
+		assert.False(t, ingestFile.NeedsSave)
+
+	}
+
+	// --------------------------------------------------------------------
+	//
+	// START HERE
+	//
+	// TODO: Alter Redis checksums and test that this flags files correctly
+	//.
+	// --------------------------------------------------------------------
+}
+
+func testIngestFile_ReingestManager(t *testing.T, f *service.IngestFile) {
+	testExpectedChecksums(t, f)
+	assert.True(t, strings.Contains(f.FileFormat, "/"))
+	assert.False(t, f.FileModified.IsZero())
+	assert.NotEqual(t, 0, f.InstitutionId)
+	assert.Equal(t, "example.edu/example.edu.tagsample_good", f.ObjectIdentifier)
+	assert.NotEqual(t, "", f.PathInBag)
+	assert.True(t, f.Size > int64(0))
+	assert.Equal(t, constants.StorageStandard, f.StorageOption)
+	assert.Equal(t, 36, len(f.UUID))
+	assert.True(t, util.LooksLikeUUID(f.UUID), f.PathInBag)
+	require.Equal(t, 1, len(f.StorageRecords), f.PathInBag)
+	assert.True(t, strings.HasPrefix(f.StorageRecords[0].URL,
+		"https://s3.amazonaws.com/aptrust.preservation.storage/"), f.PathInBag)
+	assert.True(t, strings.HasSuffix(f.StorageRecords[0].URL, f.UUID))
+	assert.True(t, util.LooksLikeURL(f.StorageRecords[0].URL), f.PathInBag)
+	assert.True(t, f.StorageRecords[0].StoredAt.IsZero())
+}
+
+func shouldHaveManifestChecksum(f *service.IngestFile) bool {
+	return (f.PathInBag != UntrackedTagFile &&
+		f.PathInBag != JunkFile &&
+		f.FileType() == constants.FileTypePayload)
+}
+
+func shouldHaveTagManifestChecksum(f *service.IngestFile) bool {
+	return (f.PathInBag != UntrackedTagFile &&
+		f.PathInBag != JunkFile &&
+		f.FileType() != constants.FileTypeTagManifest &&
+		f.FileType() != constants.FileTypePayload)
+}
+
+func testExpectedChecksums(t *testing.T, f *service.IngestFile) {
+	ingestMd5 := f.GetChecksum(constants.SourceIngest, constants.AlgMd5)
+	ingestSha256 := f.GetChecksum(constants.SourceIngest, constants.AlgSha256)
+	ingestSha512 := f.GetChecksum(constants.SourceIngest, constants.AlgSha512)
+	manifestMd5 := f.GetChecksum(constants.SourceManifest, constants.AlgMd5)
+	manifestSha256 := f.GetChecksum(constants.SourceManifest, constants.AlgSha256)
+	tagmanifestMd5 := f.GetChecksum(constants.SourceTagManifest, constants.AlgMd5)
+	tagmanifestSha256 := f.GetChecksum(constants.SourceTagManifest, constants.AlgSha256)
+
+	testExpectedChecksum(t, f, ingestMd5)
+	testExpectedChecksum(t, f, ingestSha256)
+	testExpectedChecksum(t, f, ingestSha512)
+	if shouldHaveManifestChecksum(f) {
+		testExpectedChecksum(t, f, manifestMd5)
+		testExpectedChecksum(t, f, manifestSha256)
+	}
+	if shouldHaveTagManifestChecksum(f) {
+		testExpectedChecksum(t, f, tagmanifestMd5)
+		testExpectedChecksum(t, f, tagmanifestSha256)
+	}
+}
+
+func testExpectedChecksum(t *testing.T, f *service.IngestFile, cs *service.IngestChecksum) {
+	require.NotNil(t, cs, f.PathInBag)
+	validSources := []string{
+		constants.SourceIngest,
+		constants.SourceManifest,
+		constants.SourceTagManifest,
+	}
+	assert.NotEqual(t, "", cs.Algorithm, f.PathInBag)
+	assert.False(t, cs.DateTime.IsZero(), f.PathInBag)
+	assert.True(t, len(cs.Digest) >= 32, f.PathInBag)
+	assert.True(t, util.StringListContains(validSources, cs.Source), f.PathInBag)
 }

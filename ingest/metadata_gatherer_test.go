@@ -69,12 +69,12 @@ func testRedisRecords(t *testing.T, context *common.Context, objIdentifier strin
 		ingestFile, err := context.RedisClient.IngestFileGet(9999, fullpath)
 		require.Nil(t, err)
 		require.NotNil(t, ingestFile)
-		testIngestFile(t, ingestFile)
+		testIngestFile_MetadataGatherer(t, ingestFile)
 	}
-	testIngestObject(t, context, objIdentifier)
+	testIngestObject_MetadataGatherer(t, context, objIdentifier)
 }
 
-func testIngestObject(t *testing.T, context *common.Context, objIdentifier string) {
+func testIngestObject_MetadataGatherer(t *testing.T, context *common.Context, objIdentifier string) {
 	obj, err := context.RedisClient.IngestObjectGet(9999, objIdentifier)
 	require.Nil(t, err)
 	require.NotNil(t, obj)
@@ -128,7 +128,7 @@ func testIngestObject(t *testing.T, context *common.Context, objIdentifier strin
 	}
 }
 
-func testIngestFile(t *testing.T, ingestFile *service.IngestFile) {
+func testIngestFile_MetadataGatherer(t *testing.T, ingestFile *service.IngestFile) {
 	assert.NotEmpty(t, ingestFile.UUID)
 	assert.Equal(t, 1, len(ingestFile.StorageRecords))
 	assert.Equal(t, "Standard", ingestFile.StorageOption)

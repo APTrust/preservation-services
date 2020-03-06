@@ -39,6 +39,18 @@ func LooksLikeTagManifest(name string) bool {
 	return strings.HasPrefix(name, "tagmanifest-") && strings.HasSuffix(name, ".txt")
 }
 
+// LooksLikeURL returns true if url looks like a URL.
+func LooksLikeURL(url string) bool {
+	reUrl := regexp.MustCompile(`^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$`)
+	return reUrl.Match([]byte(url))
+}
+
+// LooksLikeUUID returns true if uuid looks like a valid UUID.
+func LooksLikeUUID(uuid string) bool {
+	reUUID := regexp.MustCompile(`(?i)^([a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}?)$`)
+	return reUUID.Match([]byte(uuid))
+}
+
 func AlgorithmFromManifestName(filename string) (string, error) {
 	re := regexp.MustCompile(`manifest-(?P<Alg>[^\.]+).txt$`)
 	match := re.FindStringSubmatch(filename)

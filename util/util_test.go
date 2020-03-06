@@ -38,6 +38,22 @@ func TestAlgorithmFromManifestName(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestLooksLikeURL(t *testing.T) {
+	assert.True(t, util.LooksLikeURL("http://s3.amazonaws.com/bucket/key"))
+	assert.True(t, util.LooksLikeURL("https://s3.amazonaws.com/bucket/key"))
+	assert.False(t, util.LooksLikeURL("tpph\\backslash\\slackbash\\iaintnourl!"))
+	assert.False(t, util.LooksLikeURL(""))
+}
+
+func TestLooksLikeUUID(t *testing.T) {
+	assert.True(t, util.LooksLikeUUID("1552abf5-28f3-46a5-ba63-95302d08e209"))
+	assert.True(t, util.LooksLikeUUID("88198c5a-ec91-4ce1-bfcc-0f607ebdcca3"))
+	assert.True(t, util.LooksLikeUUID("88198C5A-EC91-4CE1-BFCC-0F607EBDCCA3"))
+	assert.False(t, util.LooksLikeUUID("88198c5a-ec91-4ce1-bfcc-0f607ebdccx3"))
+	assert.False(t, util.LooksLikeUUID("88198c5a-ec91-4ce1-bfcc-0f6c"))
+	assert.False(t, util.LooksLikeUUID(""))
+}
+
 func TestLooksLikeManifest(t *testing.T) {
 	assert.True(t, util.LooksLikeManifest("manifest-md5.txt"))
 	assert.True(t, util.LooksLikeManifest("manifest-sha256.txt"))
