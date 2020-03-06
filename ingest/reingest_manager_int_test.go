@@ -12,10 +12,8 @@ import (
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	//	"os"
-	//	"path"
-	//	"strings"
 	"testing"
+	"time"
 )
 
 // Existing ids, loaded in Pharos integration test fixture data
@@ -114,7 +112,7 @@ func TestFlagUnchanged(t *testing.T) {
 	assert.Equal(t, pharosUUID, ingestFile.UUID)
 }
 
-func TestChecksumsChanged(t *testing.T) {
+func TestChecksumChanged(t *testing.T) {
 	pharosChecksums := make(map[string]*registry.Checksum)
 	pharosChecksums[constants.AlgMd5] = &registry.Checksum{
 		Algorithm: constants.AlgMd5,
@@ -156,4 +154,53 @@ func TestChecksumsChanged(t *testing.T) {
 	// causes no error. Both md5s are the same now.
 	ingestFile.Checksums = ingestFile.Checksums[0:0]
 	assert.False(t, manager.ChecksumChanged(ingestFile, pharosChecksums))
+}
+
+func TestGetNewest(t *testing.T) {
+	t1, _ := time.Parse(time.RFC3339, "2020-01-01T12:00:00Z")
+	t2, _ := time.Parse(time.RFC3339, "2020-01-02T12:00:00Z")
+	t3, _ := time.Parse(time.RFC3339, "2020-01-03T12:00:00Z")
+	t4, _ := time.Parse(time.RFC3339, "2020-01-04T12:00:00Z")
+	t5, _ := time.Parse(time.RFC3339, "2020-01-05T12:00:00Z")
+	t6, _ := time.Parse(time.RFC3339, "2020-01-06T12:00:00Z")
+	checksums := []*registry.Checksum{
+		&registry.Checksum{
+			Id:        1,
+			Algorithm: constants.AlgMd5,
+			DateTime:  t1,
+		},
+		&registry.Checksum{
+			Id:        2,
+			Algorithm: constants.AlgMd5,
+			DateTime:  t2,
+		},
+		&registry.Checksum{
+			Id:        3,
+			Algorithm: constants.AlgSha256,
+			DateTime:  t3,
+		},
+		&registry.Checksum{
+			Id:        4,
+			Algorithm: constants.AlgSha256,
+			DateTime:  t4,
+		},
+		&registry.Checksum{
+			Id:        5,
+			Algorithm: constants.AlgSha512,
+			DateTime:  t5,
+		},
+		&registry.Checksum{
+			Id:        6,
+			Algorithm: constants.AlgSha512,
+			DateTime:  t6,
+		},
+	}
+	manager := GetReingestManager()
+
+	// For each algorithm, we should get the checksum
+	// with the latest DateTime.
+	newest := manager.GetNewest(checksums)
+	assert.Equal(t, 2, newest[constants.AlgMd5].Id)
+	assert.Equal(t, 4, newest[constants.AlgSha256].Id)
+	assert.Equal(t, 6, newest[constants.AlgSha512].Id)
 }
