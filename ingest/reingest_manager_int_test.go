@@ -9,7 +9,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
-	//	"github.com/APTrust/preservation-services/util"
+	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	//	"os"
@@ -112,4 +112,48 @@ func TestFlagUnchanged(t *testing.T) {
 	manager.FlagUnchanged(ingestFile, genericFile)
 	assert.False(t, ingestFile.NeedsSave)
 	assert.Equal(t, pharosUUID, ingestFile.UUID)
+}
+
+func TestChecksumsChanged(t *testing.T) {
+	pharosChecksums := make(map[string]*registry.Checksum)
+	pharosChecksums[constants.AlgMd5] = &registry.Checksum{
+		Algorithm: constants.AlgMd5,
+		Digest:    "12345",
+	}
+	pharosChecksums[constants.AlgSha256] = &registry.Checksum{
+		Algorithm: constants.AlgSha256,
+		Digest:    "54321",
+	}
+
+	ingestFile := testutil.GetIngestFile(false, false)
+	ingestFile.SetChecksum(&service.IngestChecksum{
+		Algorithm: constants.AlgMd5,
+		Source:    constants.SourceIngest,
+		Digest:    "12345",
+	})
+	ingestFile.SetChecksum(&service.IngestChecksum{
+		Algorithm: constants.AlgSha256,
+		Source:    constants.SourceIngest,
+		Digest:    "54321",
+	})
+
+	manager := GetReingestManager()
+
+	// Ingest checksums match registry checksums,
+	// so this this should return false.
+	assert.False(t, manager.ChecksumChanged(ingestFile, pharosChecksums))
+
+	// Change one md5 checksum, and we should get true.
+	pharosChecksums[constants.AlgMd5].Digest = "99999"
+	assert.True(t, manager.ChecksumChanged(ingestFile, pharosChecksums))
+
+	// Fix the md5 and make sure we catch the changed sha256
+	pharosChecksums[constants.AlgMd5].Digest = "12345"
+	pharosChecksums[constants.AlgSha256].Digest = "99999"
+	assert.True(t, manager.ChecksumChanged(ingestFile, pharosChecksums))
+
+	// Delete the ingest sha256 and make sure missing checksum
+	// causes no error. Both md5s are the same now.
+	ingestFile.Checksums = ingestFile.Checksums[0:0]
+	assert.False(t, manager.ChecksumChanged(ingestFile, pharosChecksums))
 }
