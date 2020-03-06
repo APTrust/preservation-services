@@ -222,10 +222,21 @@ func TestPharosIntellectualObjectList(t *testing.T) {
 		fmt.Sprintf("/api/v2/objects/?%s", v.Encode()),
 		resp.Request.URL.Opaque)
 	objects := resp.IntellectualObjects()
-	assert.Equal(t, len(ObjectFixtures), len(objects))
-	// Make sure we got the expected items in our list of 4
-	for _, obj := range objects {
-		assert.NotNil(t, ObjectFixtures[obj.Identifier])
+
+	// Should contain all fixtures. May also contain
+	// objects created by other integration tests.
+	assert.True(t, len(objects) >= len(ObjectFixtures))
+
+	// Make sure all our known fixtures are there
+	for identifier, _ := range ObjectFixtures {
+		foundInResults := false
+		for _, obj := range objects {
+			if obj.Identifier == identifier {
+				foundInResults = true
+				break
+			}
+		}
+		assert.True(t, foundInResults, identifier)
 	}
 }
 

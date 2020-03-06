@@ -22,5 +22,11 @@
       "identifier": "test.edu",
       "receiving_bucket": "aptrust.receiving.test.test.edu",
       "restore_bucket": "aptrust.restore.test.test.edu"
+   },
+   "example.edu": {
+      "name": "Example Institution (for integration tests)",
+      "identifier": "example.edu",
+      "receiving_bucket": "aptrust.receiving.test.example.edu",
+      "restore_bucket": "aptrust.restore.test.example.edu"
    }
 }

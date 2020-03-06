@@ -20,12 +20,55 @@ import (
 const ObjIdExists = "institution2.edu/toads"
 const FileIdExists = "institution2.edu/coal/doc3"
 
-func SetupReingest(t *testing.T) {
+const TestBagWorkItemId = 31337
+
+// This function scans bag example.edu.tagsample_good.tar
+// and saves the ingest metadata in Redis.
+func PutBagMetadataInRedis(t *testing.T) *service.IngestObject {
 	context := common.NewContext()
 	obj := getIngestObject(pathToGoodBag, goodbagMd5)
-	g := ingest.NewMetadataGatherer(context, 9999, obj)
+	g := ingest.NewMetadataGatherer(context, TestBagWorkItemId, obj)
 	err := g.ScanBag()
 	require.Nil(t, err)
+
+	// At this point, the IngestObject has tag values
+	// parsed from the actual bag.
+	return g.IngestObject
+}
+
+func PutBagMetadataInPharos(t *testing.T, obj *service.IngestObject) {
+	context := common.NewContext()
+
+	// Get the correct institution id from Pharos
+	inst := context.PharosClient.InstitutionGet("example.edu").Institution()
+	require.NotNil(t, inst)
+	obj.InstitutionId = inst.Id
+
+	// Save the intel obj in Pharos
+	resp := context.PharosClient.IntellectualObjectSave(obj.ToIntellectualObject())
+	require.Nil(t, resp.Error)
+
+	fileMap, _, err := context.RedisClient.GetBatchOfFileKeys(
+		TestBagWorkItemId,
+		0,
+		int64(50))
+	require.Nil(t, err)
+	for _, ingestFile := range fileMap {
+		ingestFile.InstitutionId = inst.Id
+		ingestFile.IntellectualObjectId = obj.Id
+		resp = context.PharosClient.GenericFileSave(ingestFile.ToGenericFile())
+		require.Nil(t, resp.Error)
+		gf := resp.GenericFile()
+		require.NotNil(t, gf)
+		require.NotEqual(t, 0, gf.Id)
+
+		for _, cs := range ingestFile.Checksums {
+			resp = context.PharosClient.ChecksumSave(
+				cs.ToRegistryChecksum(gf.Id),
+				gf.Identifier)
+			require.Nil(t, resp.Error)
+		}
+	}
 }
 
 func GetReingestManager() *ingest.ReingestManager {
@@ -203,4 +246,21 @@ func TestGetNewest(t *testing.T) {
 	assert.Equal(t, 2, newest[constants.AlgMd5].Id)
 	assert.Equal(t, 4, newest[constants.AlgSha256].Id)
 	assert.Equal(t, 6, newest[constants.AlgSha512].Id)
+}
+
+// This one tests all of the ReingestManager's functions,
+// including the ones not explicitly covered above. Those
+// include: ProcessFiles, ProcessFile, and CompareFiles.
+func TestProcessObject(t *testing.T) {
+	obj := PutBagMetadataInRedis(t)
+	PutBagMetadataInPharos(t, obj)
+	manager := GetReingestManager()
+	manager.WorkItemId = TestBagWorkItemId
+
+	wasPreviouslyIngested, err := manager.ProcessObject()
+	assert.True(t, wasPreviouslyIngested)
+	assert.Nil(t, err)
+
+	// TODO: Test object and each file record in Redis.
+	// TODO: Alter Redis checksums and test that this flags files correctly.
 }

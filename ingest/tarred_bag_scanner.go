@@ -14,6 +14,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -112,6 +113,18 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 	ingestFile.Size = header.Size
 	ingestFile.StorageOption = scanner.IngestObject.StorageOption
 	ingestFile.UUID = uuid.NewV4().String()
+
+	// Set storage URL
+	baseUrl := constants.BaseURIFor[ingestFile.StorageOption]
+	ingestFile.StorageRecords = append(ingestFile.StorageRecords,
+		&service.StorageRecord{
+			URL: fmt.Sprintf("%s%s", baseUrl, ingestFile.UUID),
+		})
+
+	ingestFile.FileFormat = constants.MimeTypeForExtension[filepath.Ext(pathInBag)]
+	if ingestFile.FileFormat == "" {
+		ingestFile.FileFormat = "application/binary"
+	}
 
 	return ingestFile, nil
 }

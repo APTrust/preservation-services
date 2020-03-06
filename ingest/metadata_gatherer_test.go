@@ -130,7 +130,7 @@ func testIngestObject(t *testing.T, context *common.Context, objIdentifier strin
 
 func testIngestFile(t *testing.T, ingestFile *service.IngestFile) {
 	assert.NotEmpty(t, ingestFile.UUID)
-	assert.Empty(t, ingestFile.StorageRecords)
+	assert.Equal(t, 1, len(ingestFile.StorageRecords))
 	assert.Equal(t, "Standard", ingestFile.StorageOption)
 	assert.True(t, ingestFile.Size > 0)
 	assert.NotEmpty(t, ingestFile.PathInBag)
