@@ -142,6 +142,45 @@ func (c *RedisClient) GetBatchOfFileKeys(workItemId int, offset uint64, limit in
 	return keysAndValues, nextOffset, nil
 }
 
+// IngestFilesApply applies function fn to all IngestFiles belonging
+// the the specified workItemId. Note that this saves changes applied
+// by fn back to Redis.
+//
+// This stops processing on the first error and return the number of
+// items on which the function was run successfully.
+func (c *RedisClient) IngestFilesApply(workItemId int, fn func(ingestFile *service.IngestFile) error) (int, error) {
+	nextOffset := uint64(0)
+	count := 0
+	var fileMap map[string]*service.IngestFile
+	var err error
+	for {
+		// Get a batch of files from Redis
+		fileMap, nextOffset, err = c.GetBatchOfFileKeys(
+			workItemId, nextOffset, int64(200))
+		if err != nil {
+			return count, err
+		}
+		// Apply function fn to each file in the batch...
+		for key, ingestFile := range fileMap {
+			err := fn(ingestFile)
+			if err != nil {
+				return count, fmt.Errorf("Error processing file %s: %v", key, err)
+			}
+			// And then save the file back to Redis.
+			err = c.IngestFileSave(workItemId, ingestFile)
+			if err != nil {
+				return count, fmt.Errorf("After processing, error saving file %s: %v", key, err)
+			}
+			count++
+		}
+		// If next offset is zero, we've reached the end
+		if nextOffset == 0 {
+			break
+		}
+	}
+	return count, nil
+}
+
 func (c *RedisClient) WorkResultGet(workItemId int, operationName string) (*service.WorkResult, error) {
 	key := strconv.Itoa(workItemId)
 	field := fmt.Sprintf("workresult:%s", operationName)

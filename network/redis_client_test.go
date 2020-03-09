@@ -8,8 +8,8 @@ import (
 	"github.com/APTrust/preservation-services/network"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"strings"
 	"testing"
-	//"time"
 )
 
 func getRedisClient() *network.RedisClient {
@@ -174,6 +174,81 @@ func testGetBatch(t *testing.T, client *network.RedisClient, totalItems, batchSi
 		}
 	}
 	assert.Equal(t, totalItems, count)
+}
+
+func TestIngestFileApply(t *testing.T) {
+	workItemId := 7654
+	client := getRedisClient()
+	require.NotNil(t, client)
+
+	// Create 20 ingest file records in Redis.
+	// They all have format "text/xml"
+	for i := 0; i < 20; i++ {
+		f := service.NewIngestFile("test.edu/bag1",
+			fmt.Sprintf("file_%d.jpg", i))
+		f.FileFormat = "text/xml"
+		err := client.IngestFileSave(workItemId, f)
+		assert.Nil(t, err)
+	}
+
+	// Create a function that changes IngestFile.FileFormat
+	// to "text/plain"
+	fn := func(ingestFile *service.IngestFile) error {
+		ingestFile.FileFormat = "text/plain"
+		return nil
+	}
+
+	// Apply the function above to all IngestFile records
+	// with our workItemId.
+	count, err := client.IngestFilesApply(workItemId, fn)
+	require.Nil(t, err)
+	assert.Equal(t, 20, count)
+
+	// Make sure all records were actually updated.
+	fileMap, _, err := client.GetBatchOfFileKeys(workItemId, 0, int64(50))
+	require.Nil(t, err)
+	for _, ingestFile := range fileMap {
+		assert.Equal(t, "text/plain", ingestFile.FileFormat)
+	}
+}
+
+func TestIngestFileApply_WithError(t *testing.T) {
+	workItemId := 988762
+	client := getRedisClient()
+	require.NotNil(t, client)
+
+	// Create 20 ingest file records in Redis.
+	// They all have format "text/xml"
+	for i := 0; i < 20; i++ {
+		f := service.NewIngestFile("test.edu/bag1",
+			fmt.Sprintf("file_%d.jpg", i))
+		f.FileFormat = "text/xml"
+		err := client.IngestFileSave(workItemId, f)
+		assert.Nil(t, err)
+	}
+
+	// Create a function that throws an error when it
+	// finds file_12.jpg
+	fn := func(ingestFile *service.IngestFile) error {
+		if strings.Contains(ingestFile.Identifier(), "12") {
+			return fmt.Errorf("Found file 12")
+		}
+		return nil
+	}
+
+	// Apply the function above to all IngestFile records
+	// with our workItemId. It should throw an error on 12.
+	count, err := client.IngestFilesApply(workItemId, fn)
+	require.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "Error processing file"))
+	assert.True(t, strings.Contains(err.Error(), "Found file 12"))
+
+	// We should get back the number of files
+	// on which the function was run successfully.
+	// Because Redis loops through records in random
+	// order, we can't really know what this number
+	// will be.
+	assert.True(t, count >= 0)
 }
 
 func TestWorkResultSaveAndGet(t *testing.T) {
