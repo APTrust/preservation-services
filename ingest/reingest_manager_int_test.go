@@ -270,30 +270,54 @@ func TestProcessObject(t *testing.T) {
 	assert.True(t, wasPreviouslyIngested)
 	assert.Nil(t, err)
 
-	// TODO: Test object and each file record in Redis.
-	fileMap, _, err := manager.Context.RedisClient.GetBatchOfFileKeys(
-		TestBagWorkItemId,
-		0,
-		int64(50))
-	require.Nil(t, err)
-	for _, ingestFile := range fileMap {
-		//json, err := ingestFile.ToJson()
-		//assert.Nil(t, err)
-		//fmt.Println(json)
+	// Test basic attributes on each ingest file.
+	// Not should need saving, because they haven't changed
+	// since last ingest.
+	testAttrs := func(ingestFile *service.IngestFile) error {
 		testIngestFile_ReingestManager(t, ingestFile)
-		// NeedsSave should be false because file has
-		// not changed since initial ingest.
 		assert.False(t, ingestFile.NeedsSave)
+		return nil
+	}
+	count, err := manager.Context.RedisClient.IngestFilesApply(
+		TestBagWorkItemId, testAttrs)
+	assert.Nil(t, err)
+	assert.Equal(t, 16, count)
 
+	// Create a function that alters the checksums
+	// on the IngestFile records in Redis.
+	changeChecksums := func(f *service.IngestFile) error {
+		for _, cs := range f.Checksums {
+			cs.Digest = "00000000000000000000000000000000"
+		}
+		return nil
 	}
 
-	// --------------------------------------------------------------------
-	//
-	// START HERE
-	//
-	// TODO: Alter Redis checksums and test that this flags files correctly
-	//.
-	// --------------------------------------------------------------------
+	// Apply the function to alter checksums of all files
+	// belonging to this work item.
+	count, err = manager.Context.RedisClient.IngestFilesApply(
+		TestBagWorkItemId, changeChecksums)
+	assert.Nil(t, err)
+	assert.Equal(t, 16, count)
+
+	// Now when we process the object again, it should mark all
+	// files as needing save, because all have checksums that
+	// do not match the Pharos checksums.
+	wasPreviouslyIngested, err = manager.ProcessObject()
+	assert.True(t, wasPreviouslyIngested)
+	assert.Nil(t, err)
+
+	testFilesNeedSave := func(ingestFile *service.IngestFile) error {
+		testIngestFile_ReingestManager(t, ingestFile)
+		// This is the main thing we want to test.
+		// NeedsSave should have changed from false to true.
+		assert.True(t, ingestFile.NeedsSave)
+		return nil
+	}
+	count, err = manager.Context.RedisClient.IngestFilesApply(
+		TestBagWorkItemId, testFilesNeedSave)
+	assert.Nil(t, err)
+	assert.Equal(t, 16, count)
+
 }
 
 func testIngestFile_ReingestManager(t *testing.T, f *service.IngestFile) {
