@@ -13,6 +13,7 @@ import (
 )
 
 type IngestObject struct {
+	CopiedToStagingAt      time.Time    `json:"copied_to_staging_at,omitempty"`
 	DeletedFromReceivingAt time.Time    `json:"deleted_from_receiving_at,omitempty"`
 	ETag                   string       `json:"etag,omitempty"`
 	ErrorMessage           string       `json:"error_message,omitempty"`

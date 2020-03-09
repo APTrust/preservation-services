@@ -12,6 +12,7 @@ import (
 
 type IngestFile struct {
 	Checksums            []*IngestChecksum `json:"checksums"`
+	CopiedToStagingAt    time.Time         `json:"copied_to_staging_at,omitempty"`
 	ErrorMessage         string            `json:"error_message,omitempty"`
 	FileFormat           string            `json:"file_format,omitempty"`
 	FileModified         time.Time         `json:"file_modified,omitempty"`

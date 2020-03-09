@@ -49,6 +49,8 @@ class TestRunner
   def clean_test_cache
     puts "Deleting test cache from last run"
     `go clean -testcache`
+    puts "Deleting old Redis data"
+    File.delete('dump.rdb') if File.exists?('dump.rdb')
   end
 
   def run_unit_tests(arg)
