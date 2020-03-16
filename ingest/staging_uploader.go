@@ -6,9 +6,9 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/minio/minio-go/v6"
 	"io"
-	"strings"
 	"time"
 )
 
@@ -145,19 +145,9 @@ func (s *StagingUploader) GetIngestFile(name string) (*service.IngestFile, error
 }
 
 func (s *StagingUploader) GetGenericFileIdentifier(name string) (string, error) {
-	pathInBag, err := s.GetPathInBag(name)
+	pathInBag, err := util.TarPathToBagPath(name)
 	if err != nil {
 		return "", err
 	}
 	return s.IngestObject.FileIdentifier(pathInBag), nil
-}
-
-// TODO: Dedupe from TarredBagScanner
-func (s *StagingUploader) GetPathInBag(name string) (string, error) {
-	prefix := strings.Split(name, "/")[0] + "/"
-	pathInBag := strings.Replace(name, prefix, "", 1)
-	if pathInBag == name {
-		return "", fmt.Errorf("Illegal path, '%s'. Should start with '%s'.", name, prefix)
-	}
-	return pathInBag, nil
 }

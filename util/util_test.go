@@ -3,6 +3,7 @@ package util_test
 import (
 	"github.com/APTrust/preservation-services/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -222,4 +223,23 @@ func TestUCFirst(t *testing.T) {
 	assert.Equal(t, "Institution", util.UCFirst("institution"))
 	assert.Equal(t, "Institution", util.UCFirst("INSTITUTION"))
 	assert.Equal(t, "Institution", util.UCFirst("inStiTuTioN"))
+}
+
+func TestTarPathToBagPath(t *testing.T) {
+	pathInBag, err := util.TarPathToBagPath("my_bag/bagit.txt")
+	require.Nil(t, err)
+	assert.Equal(t, "bagit.txt", pathInBag)
+
+	pathInBag, err = util.TarPathToBagPath("my_bag/data/file.docx")
+	require.Nil(t, err)
+	assert.Equal(t, "data/file.docx", pathInBag)
+
+	pathInBag, err = util.TarPathToBagPath("my_bag/data/img/photo.jpg")
+	require.Nil(t, err)
+	assert.Equal(t, "data/img/photo.jpg", pathInBag)
+
+	// Should be an error. We're expecting a top-level directory.
+	// bagit.txt and the data dir should be inside of that.
+	pathInBag, err = util.TarPathToBagPath("bagit.txt")
+	assert.NotNil(t, err)
 }

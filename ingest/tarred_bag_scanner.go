@@ -15,7 +15,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -98,13 +97,9 @@ func (scanner *TarredBagScanner) processFileEntry(header *tar.Header) (*service.
 // deserialized to a single top-level directory, and we're going to trim
 // that off to get what APTrust considers the canonical file path.
 func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.IngestFile, error) {
-	prefix := strings.Split(header.Name, "/")[0] + "/"
-	// Strip off the expected prefix
-	pathInBag := strings.Replace(header.Name, prefix, "", 1)
-	// If nothing was trimmed off, bag untarred to some top-level directory
-	// name that doesn't match what we expect.
-	if pathInBag == header.Name {
-		return nil, fmt.Errorf("Illegal path, '%s'. Should start with '%s'.", header.Name, prefix)
+	pathInBag, err := util.TarPathToBagPath(header.Name)
+	if err != nil {
+		return nil, err
 	}
 	ingestFile := service.NewIngestFile(scanner.IngestObject.Identifier(), pathInBag)
 	ingestFile.FileModified = header.ModTime

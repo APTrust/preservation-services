@@ -90,3 +90,27 @@ func ContainsEscapedControl(str string) bool {
 func UCFirst(str string) string {
 	return strings.Title(strings.ToLower(str))
 }
+
+// TarPathToBagPath, given the path of a file inside a tarball, returns
+// the path of the file in a bag. The name param generally comes from
+// the Name property of a tar file header. For example, in a tar file
+// called my_bag.tar the paths would translate as follows:
+//
+// Input                      ->  Output
+// my_bag/bagit.txt           ->  bagit.txt
+// my_bag/data/file.docx      ->  data/file.docx
+// my_bag/data/img/photo.jpg  ->  data/img/photo.jpg
+//
+// This function assumes (perhaps dangerously) that tarred bags follow
+// the recommdation of pre-1.0 versions of the BagIt spec that say
+// a tarred bag should deserialize to a single top-level directory.
+// This function does not assume that the directory will match the
+// bag name.
+func TarPathToBagPath(name string) (string, error) {
+	prefix := strings.Split(name, "/")[0] + "/"
+	pathInBag := strings.Replace(name, prefix, "", 1)
+	if pathInBag == name {
+		return "", fmt.Errorf("Illegal path, '%s'. Should start with '%s'.", name, prefix)
+	}
+	return pathInBag, nil
+}
