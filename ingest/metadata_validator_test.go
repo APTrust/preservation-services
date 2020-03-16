@@ -477,5 +477,10 @@ func TestIngestFileOk_NonRequiredTagFile(t *testing.T) {
 	// it has to be there.
 	require.Equal(t, 1, len(validator.Errors))
 	require.Equal(t, "File example.edu/example.edu.tagsample_good/custom_tags/untracked_tag_file.txt in tagmanifest-sha256.txt is missing from bag", validator.Errors[0])
+}
 
+func TestValidator_IsValid(t *testing.T) {
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5, true)
+	assert.True(t, validator.IsValid())
 }
