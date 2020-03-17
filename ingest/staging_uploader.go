@@ -29,6 +29,16 @@ func NewStagingUploader(context *common.Context, workItemId int, ingestObject *s
 	}
 }
 
+// CopyFilesToStaging does all of the work, including:
+//
+// 1. Retrieving the tarred bag from the depositor's receiving bucket.
+//
+// 2. Copying the bag's individual files to a staging bucket with correct
+//    metadata.
+//
+// 3. Telling Redis that each file has been copied.
+//
+// This is the only method external callers need to call.
 func (s *StagingUploader) CopyFilesToStaging() error {
 	tarredBag, err := s.GetS3Object()
 	if err != nil {
@@ -43,6 +53,8 @@ func (s *StagingUploader) CopyFilesToStaging() error {
 	return s.Context.RedisClient.IngestObjectSave(s.WorkItemId, s.IngestObject)
 }
 
+// GetS3Object retrieves the object, in this case a tarred bag, from a
+// depositor's receiving bucket.
 func (s *StagingUploader) GetS3Object() (*minio.Object, error) {
 	return s.Context.S3Clients[constants.S3ClientAWS].GetObject(
 		s.IngestObject.S3Bucket,
@@ -50,6 +62,10 @@ func (s *StagingUploader) GetS3Object() (*minio.Object, error) {
 		minio.GetObjectOptions{})
 }
 
+// CopyFiles unpacks files from a tarball copies each individual
+// file to an S3 staging bucket so we can work with individual files
+// later. There is no need to call this directly. Use CopyFilesToStaging()
+// instead.
 func (s *StagingUploader) CopyFiles(tarredBag *minio.Object) error {
 	errCount := 0
 	tarReader := tar.NewReader(tarredBag)
@@ -68,7 +84,7 @@ func (s *StagingUploader) CopyFiles(tarredBag *minio.Object) error {
 			}
 			if ingestFile.CopiedToStagingAt.IsZero() {
 				err := s.CopyFileToStaging(tarReader, ingestFile)
-				if err == nil {
+				if err != nil {
 					// Most S3 copy errors are transient. Log this
 					// as a warning, and we can retry later.
 					s.Context.Logger.Warning(err.Error())
@@ -85,6 +101,9 @@ func (s *StagingUploader) CopyFiles(tarredBag *minio.Object) error {
 	return nil
 }
 
+// CopyFileToStaging copies a single file from the tarball to the staging
+// bucket, and updates the IngestFile's Redis record to indicate it's been
+// copied.
 func (s *StagingUploader) CopyFileToStaging(tarReader *tar.Reader, ingestFile *service.IngestFile) error {
 	putOptions, err := s.GetPutOptions(ingestFile)
 	if err != nil {
@@ -105,6 +124,21 @@ func (s *StagingUploader) CopyFileToStaging(tarReader *tar.Reader, ingestFile *s
 	return s.MarkFileAsCopied(ingestFile)
 }
 
+// GetPutOptions returns the metadata we'll need to store with a file
+// in the staging bucket, and later in preservation storage. The metadata
+// inclues the following:
+//
+// * institution - The identifier of the institution that owns the file.
+//
+// * bag - The name of the intellectual object to which the file belongs.
+//
+// * bagpath - The path of this file within the original bag. You can derive
+//   the file's identifier by combining institution/bag/bagpath
+//
+// * md5 - The md5 digest of this file.
+//
+// * sha256 - The sha256 digest of this file.
+//
 func (s *StagingUploader) GetPutOptions(ingestFile *service.IngestFile) (minio.PutObjectOptions, error) {
 	emptyOpts := minio.PutObjectOptions{}
 	md5 := ingestFile.GetChecksum(constants.SourceIngest, constants.AlgMd5)
@@ -127,6 +161,8 @@ func (s *StagingUploader) GetPutOptions(ingestFile *service.IngestFile) (minio.P
 	}, nil
 }
 
+// MarkFileAsCopied adds a timestamp to the IngestFile record and saves the
+// record to Redis, so we know when it was copied to staging.
 func (s *StagingUploader) MarkFileAsCopied(ingestFile *service.IngestFile) error {
 	ingestFile.CopiedToStagingAt = time.Now().UTC()
 	err := s.Context.RedisClient.IngestFileSave(s.WorkItemId, ingestFile)
@@ -136,6 +172,9 @@ func (s *StagingUploader) MarkFileAsCopied(ingestFile *service.IngestFile) error
 	return nil
 }
 
+// GetIngestFile returns the IngestFile record from Redis. The name param
+// comes from the tar.Header.Name, and is translated interally into a
+// GenericFileIdentifier by GetGenericFileIdentifier.
 func (s *StagingUploader) GetIngestFile(name string) (*service.IngestFile, error) {
 	identifier, err := s.GetGenericFileIdentifier(name)
 	if err != nil {
