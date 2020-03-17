@@ -144,6 +144,10 @@ func (s *StagingUploader) GetIngestFile(name string) (*service.IngestFile, error
 	return s.Context.RedisClient.IngestFileGet(s.WorkItemId, identifier)
 }
 
+// GetGenericFileIdentifier converts the name from the tar header into
+// the GenericFile identifier. The tar header name will typically look
+// like "bagname/data/file.txt", while the GenericFile identifier should
+// look like "test.edu/bagname/data/file.txt"
 func (s *StagingUploader) GetGenericFileIdentifier(name string) (string, error) {
 	pathInBag, err := util.TarPathToBagPath(name)
 	if err != nil {
