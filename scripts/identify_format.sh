@@ -121,7 +121,7 @@ CURL_CMD="curl -s -r 0-524288 $1"
 # FIDO not to try to identify what's inside of zip files, tarballs, and
 # other containers.
 #
-PYTHON_CMD="PYTHON2 -u $FIDO -q -matchprintf=$MATCH -nomatchprintf=$NOMATCH -nocontainer"
+PYTHON_CMD="$PYTHON2 -u $FIDO -q -matchprintf=$MATCH -nomatchprintf=$NOMATCH -nocontainer"
 
 #
 # Finally, run the curl command and pipe it's output to python/fido,
