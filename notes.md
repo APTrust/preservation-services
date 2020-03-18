@@ -63,29 +63,41 @@
        - Mark WorkItem failed with error messages
        - Delete data from redis
 
-5. File Characterization
-   - Ideally, we find a package that allows for stream-based characterization,
-     so we don't have to write all the files to disk.
-   - Consider JHOVE, which works with URIs.
-     See https://github.com/openpreserve/jhove
-     http://jhove.openpreservation.org/getting-started/#running
-   - Apache Tika also can examine URLs and supports JSON output
-     See https://tika.apache.org/1.4/gettingstarted.html
-     Tika also has a server mode, averting Java's huge startup costs,
-     but server mode requires a PUT of the entire file contents.
-   - DROID does not seem to work against URLs
-   - FITS does not seem to work against URLs
-   - Maybe use DROID or FITS with s3fs.
-     See https://github.com/s3fs-fuse/s3fs-fuse
-     But this could also be a huge pain in the ass.
-   - FIDO does not fetch URLs but can read from STDIN.
-     See https://github.com/openpreserve/fido
-     __FIDO may be the best of the lot for our purposes, since it can
-     read from STDIN and matches against the PRONOM registry. We
-     may want to create a fork that can read from URLs instead of
-     relying only on files and STDIN.__ If we do decide to modify
-     FIDO to fetch URLs, the code would probably go into this block:
-     https://github.com/openpreserve/fido/blob/master/fido/fido.py#L848
+5. File Format Identification
+   - We'll be using [FIDO](https://github.com/openpreserve/fido) for file
+     identification. After reviewing a number of tools including JHOVE,
+     DROID, FITS, and Apache Tika, this was by far the simplest to set up,
+     configure, and integrate into our workflow. It will also be the
+     easiest to maintain.
+   - File Format Id has some requirements outside the ingest workflow,
+     including a long-standing open reqest to retroactively identify
+     files already in preservation storage. We will likely run format
+     identification AFTER files have been ingested. (The pre-fetch worker
+     in step 1 above will make a preliminary guess about the file type
+     based on extension. That guess will stick until we run the format
+     identifier worker against the file in preservation storage, unless
+     it's Glacier-only or Glacier Deep.)
+   - Workflow for this worker when checking items in preservation storage:
+       - Find active Generic Files in Pharos that have no file format
+         identification. (How to do this? Add a field to GF record?)
+       - For each file, get the UUID primary storage URL, and file
+         extension (from the GF identifier).
+       - Create a signed URL to retrieve to scan the file using the
+         [identify_format](./scripts/identify_format.sh) script.
+         Use UUID + extension for filename.
+       - If possible (and it may not be), change the ContentType of the
+         object in S3 and Glacier storage. Do NOT rewrite the object
+         because that risks corruption. It may not be possible to update
+         ContentType in S3 an especially in Glacier, so we may have to
+         skip this step for older items already in preservation storage.
+       - Save the file format back to Pharos in the GenericFile record,
+         and add a timestamp indicating when the format was identified.
+   - Workflow for this worker when checking items in ingest staging:
+       - Get the Redis record for each IngestFile.
+       - If it's already been identified, skip.
+       - Run through [identify_format](./scripts/identify_format.sh) as above.
+       - Record the file format and timestamp in the IngestFile struct.
+       - Save the IngestFile back to Redis.
 
 6. Store
    - Copy each file from staging bucket to preservation and/or glacier, using
