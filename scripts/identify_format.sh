@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# identify_file.sh
+# identify_format.sh
 #
 # Use FIDO to identify file formats. For more on FIDO, see the GitHub
 # repo at https://github.com/openpreserve/fido, or the wiki at
@@ -29,7 +29,7 @@
 #
 # Usage:
 #
-# identify_file.sh <url> [filename]
+# identify_format.sh <url> [filename]
 #
 # The URL param should be quoted to ensure safety.
 #
@@ -65,11 +65,11 @@
 #
 #   Try to identify http://aptrust.org without specifying a file name:
 #
-#   identify_file.sh 'http://aptrust.org'
+#   identify_format.sh 'http://aptrust.org'
 #
 #   Try to identify the same URL with a file name:
 #
-#   identify_file.sh 'http://aptrust.org' 'index.html'
+#   identify_format.sh 'http://aptrust.org' 'index.html'
 #
 # The filename param is optional but useful. If fido can't identify the
 # file by its contents, it will try to identify it by the less reliable
