@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"os/exec"
 	"regexp"
 	"strings"
 	"unicode"
@@ -113,4 +114,13 @@ func TarPathToBagPath(name string) (string, error) {
 		return "", fmt.Errorf("Illegal path, '%s'. Should start with '%s'.", name, prefix)
 	}
 	return pathInBag, nil
+}
+
+// PathTo returns the path to the specified program.
+func PathTo(program string) (string, error) {
+	output, err := exec.Command("which", program).Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(output)), nil
 }

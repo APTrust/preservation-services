@@ -4,6 +4,8 @@ import (
 	"github.com/APTrust/preservation-services/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -242,4 +244,18 @@ func TestTarPathToBagPath(t *testing.T) {
 	// bagit.txt and the data dir should be inside of that.
 	pathInBag, err = util.TarPathToBagPath("bagit.txt")
 	assert.NotNil(t, err)
+}
+
+func TestPathTo(t *testing.T) {
+	programs := []string{
+		"go",
+		"ls",
+		"which",
+	}
+	pathSep := string(os.PathSeparator)
+	for _, program := range programs {
+		pathToProgram, err := util.PathTo(program)
+		require.Nil(t, err)
+		assert.True(t, strings.HasSuffix(pathToProgram, pathSep+program))
+	}
 }
