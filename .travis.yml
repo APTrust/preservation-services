@@ -9,6 +9,10 @@ addons:
   apt:
     packages:
     - docker-ce
+    - python2.7
+    - python-pip
+install:
+    - pip install opf-fido
 # env:
 # - APT_SERVICES_CONFIG=test
 # script: make unittest
