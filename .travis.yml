@@ -13,7 +13,7 @@ addons:
     - python2.7
     - python-pip
 install:
-    - pip install opf-fido
+    - pip install --user opf-fido
 # env:
 # - APT_SERVICES_CONFIG=test
 # script: make unittest
