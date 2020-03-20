@@ -118,6 +118,10 @@ func loadConfig() *Config {
 	}
 }
 
+func (config *Config) FormatIdentifierScript() string {
+	return config.PathToScript("identify_format.sh")
+}
+
 func (config *Config) PathToScript(name string) string {
 	return path.Join(config.ScriptDir, name)
 }

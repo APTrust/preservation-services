@@ -14,19 +14,17 @@ type IdRecord struct {
 
 type FormatIdentifier struct {
 	hasPrerequisites bool
-	pathToCurl       string
-	pathToFido       string
+	pathToScript     string
 }
 
 // NewFormatIdentifier returns a new FormatIdentifier object.
-func NewFormatIdentifier() *FormatIdentifier {
-	pathToFido, _ := PathTo("fido")
-	pathToCurl, _ := PathTo("curl")
-	hasPrerequisites, _ := SystemHasIdentifierPrograms()
+// Param pathToScript is the path to the format identifier script.
+// You can get that from Config.PathTo("identify_format.sh")
+func NewFormatIdentifier(pathToScript string) *FormatIdentifier {
+	hasPrerequisites, _ := SystemHasIdentifierPrograms(pathToScript)
 	return &FormatIdentifier{
 		hasPrerequisites: hasPrerequisites,
-		pathToCurl:       pathToCurl,
-		pathToFido:       pathToFido,
+		pathToScript:     pathToScript,
 	}
 }
 
@@ -41,15 +39,15 @@ func NewFormatIdentifier() *FormatIdentifier {
 // all external requirements are present.
 func (f *FormatIdentifier) Identify(url, filename string) (*IdRecord, error) {
 	if !f.hasPrerequisites {
-		return nil, fmt.Errorf("System is missing one or more of: curl, fido, python2")
+		return nil, fmt.Errorf("System is missing one or more of: curl, fido, python2, identify_format.sh")
 	}
-	cmdString, err := f.GetCommandString(url, filename)
+	err := f.ValidateParams(url, filename)
 	if err != nil {
 		return nil, err
 	}
-	output, err := exec.Command(cmdString).Output()
+	output, err := exec.Command(f.pathToScript, url, filename).Output()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(string(err.(*exec.ExitError).Stderr))
 	}
 	idRecord := f.ParseOutput(strings.TrimSpace(string(output)))
 	return idRecord, nil
@@ -59,11 +57,6 @@ func (f *FormatIdentifier) Identify(url, filename string) (*IdRecord, error) {
 // to run FIDO.
 func (f *FormatIdentifier) CanRun() bool {
 	return f.hasPrerequisites
-}
-
-// PathToFido returns the full path to the system's FIDO installation.
-func (f *FormatIdentifier) PathToFido() string {
-	return f.pathToFido
 }
 
 // ParseOutput parses the output of the FIDO file identification command.
@@ -79,36 +72,6 @@ func (f *FormatIdentifier) ParseOutput(output string) *IdRecord {
 		idRecord.Succeeded = false
 	}
 	return idRecord
-}
-
-// GetCommand returns a command for streaming S3 data through FIDO.
-// This performs some rudimentary checks of the URL and filename to
-// ensure we're not passing unsafe data to an external command. Since
-// URLs come from pharos and follow a known format (s3host/bucket/uuid)
-// and because we're constructing the filenames ourselves (uuid.ext),
-// we should not have problems.
-func (f *FormatIdentifier) GetCommandString(url, filename string) (string, error) {
-	err := f.ValidateParams(url, filename)
-	if err != nil {
-		return "", err
-	}
-
-	// Format strings for FIDO output.
-	match := "OK,%(info.mimetype)s,%(info.matchtype)s"
-	noMatch := "FAIL,,%(info.matchtype)s"
-
-	// The full command pipes the output of curl to python2
-	// in an unbuffered stream (-u) through STDIN. We fetch
-	// about the first half megabyte, and -nocontainer tells
-	// fido not to try to identify what's inside of zip files
-	// and other containers. We just need to know the type of
-	// the top-level file, and we don't want to fetch 50GB of
-	// data to figure that out.
-	cmdString := fmt.Sprintf(`%s -s -r 0-524288 '%s' | `+
-		`python2 %s -q -matchprintf="%s" -nomatchprintf="%s" `+
-		`-nocontainer -filename='%s' -`,
-		f.pathToCurl, url, f.pathToFido, match, noMatch, filename)
-	return cmdString, nil
 }
 
 // ValidateParams returns an error if url or filename are empty, or
@@ -132,7 +95,10 @@ func (f *FormatIdentifier) ValidateParams(url, filename string) error {
 // SystemHasIdentifierPrograms returns true if the system has the
 // software we need to run file format identification. If this returns
 // false, the string slice will contain a list of missing programs.
-func SystemHasIdentifierPrograms() (bool, []string) {
+//
+// Param pathToScript is the path to the format identifier script.
+// You can get that from Config.PathTo("identify_format.sh")
+func SystemHasIdentifierPrograms(pathToScript string) (bool, []string) {
 	prerequisites := []string{
 		"fido",
 		"python2",
@@ -144,6 +110,9 @@ func SystemHasIdentifierPrograms() (bool, []string) {
 		if err != nil || pathToProgram == "" {
 			missing = append(missing, program)
 		}
+	}
+	if !FileExists(pathToScript) {
+		missing = append(missing, pathToScript)
 	}
 	return len(missing) == 0, missing
 }
