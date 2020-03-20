@@ -14,15 +14,18 @@ type IdRecord struct {
 
 type FormatIdentifier struct {
 	hasPrerequisites bool
+	pathToCurl       string
 	pathToFido       string
 }
 
 // NewFormatIdentifier returns a new FormatIdentifier object.
 func NewFormatIdentifier() *FormatIdentifier {
 	pathToFido, _ := PathTo("fido")
+	pathToCurl, _ := PathTo("curl")
 	hasPrerequisites, _ := SystemHasIdentifierPrograms()
 	return &FormatIdentifier{
 		hasPrerequisites: hasPrerequisites,
+		pathToCurl:       pathToCurl,
 		pathToFido:       pathToFido,
 	}
 }
@@ -101,10 +104,10 @@ func (f *FormatIdentifier) GetCommandString(url, filename string) (string, error
 	// and other containers. We just need to know the type of
 	// the top-level file, and we don't want to fetch 50GB of
 	// data to figure that out.
-	cmdString := fmt.Sprintf(`curl -s -r 0-524288 '%s' | `+
+	cmdString := fmt.Sprintf(`%s -s -r 0-524288 '%s' | `+
 		`python2 %s -q -matchprintf="%s" -nomatchprintf="%s" `+
 		`-nocontainer -filename='%s' -`,
-		url, f.pathToFido, match, noMatch, filename)
+		f.pathToCurl, url, f.pathToFido, match, noMatch, filename)
 	return cmdString, nil
 }
 

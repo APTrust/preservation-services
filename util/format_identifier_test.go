@@ -16,6 +16,16 @@ func TestSystemHasIdentifierPrograms(t *testing.T) {
 		fmt.Sprintf("Missing: %s", strings.Join(missing, ", ")))
 }
 
+func TestCanRun(t *testing.T) {
+	f := util.NewFormatIdentifier()
+	assert.True(t, f.CanRun())
+}
+
+func TestPathToFido(t *testing.T) {
+	f := util.NewFormatIdentifier()
+	assert.True(t, strings.HasSuffix(f.PathToFido(), "fido"))
+}
+
 func TestValidateParams(t *testing.T) {
 	f := util.NewFormatIdentifier()
 	assert.NotNil(t, f.ValidateParams("https://example.com", ""))
@@ -40,5 +50,32 @@ func TestGetCommandString(t *testing.T) {
 	assert.True(t, strings.Contains(cmdString, "fido"))
 	assert.True(t, strings.Contains(cmdString, "https://example.com"))
 	assert.True(t, strings.Contains(cmdString, "index.html"))
-	assert.True(t, strings.Contains(cmdString, "zzzzzzzzzz"), cmdString)
+}
+
+func TestParseOutput(t *testing.T) {
+	f := util.NewFormatIdentifier()
+	idRecord := f.ParseOutput("OK,text/html,signature")
+	assert.Equal(t, "text/html", idRecord.MimeType)
+	assert.Equal(t, "signature", idRecord.MatchType)
+	assert.True(t, idRecord.Succeeded)
+
+	idRecord = f.ParseOutput("FAIL,,fail")
+	assert.Equal(t, "", idRecord.MimeType)
+	assert.Equal(t, "fail", idRecord.MatchType)
+	assert.False(t, idRecord.Succeeded)
+}
+
+func TestIdentify(t *testing.T) {
+	f := util.NewFormatIdentifier()
+	idRecord, err := f.Identify("https://google.com", "index.html")
+	assert.Nil(t, err)
+	assert.NotNil(t, idRecord)
+	assert.True(t, idRecord.Succeeded)
+	assert.Equal(t, "text/html", idRecord.MimeType)
+	assert.Equal(t, "signature", idRecord.MatchType)
+
+	idRecord, err = f.Identify("https://example.com/doesnotexist", "index.html")
+	assert.Nil(t, err)
+	assert.NotNil(t, err)
+	assert.Nil(t, idRecord)
 }
