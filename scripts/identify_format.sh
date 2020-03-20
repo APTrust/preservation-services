@@ -105,14 +105,29 @@ fi
 [ -z "$PYTHON2" ] && echo "Can't find python2 in your PATH" && exit 2
 [ -z "$1" ] && echo "You must specify a URL" && exit 3
 
+#
+# Make sure the URL exists
+#
+HEAD=`curl -s --head $1 | head -n 1`
+STATUS=`echo $HEAD | cut -d$' ' -f2`
+if [ "$HEAD" == "" ]
+then
+   >&2 echo "No response or connection refused"
+   exit 4
+fi
+
+if [ "$STATUS" != "200" ]
+then
+    >&2 echo "Server returned status code $STATUS"
+    exit 5
+fi
 
 #
 # Our basic curl command includes -s to run silently (i.e. without
-# printing out progress info), and -r 0-524288 to get only the first
-# half megabyte or so of the file. The number 524288 is a default
-# buffer size for FIDO.
+# printing out progress info), and -r 0-131072 to get only the first
+# 128k or so of the file. 131072 is the default buffer size for FIDO.
 #
-CURL_CMD="curl -s -r 0-524288 $1"
+CURL_CMD="curl -s -r 0-131072 $1"
 
 #
 # Our default Python command tells Python2 to run FIDO quiety (limiting
