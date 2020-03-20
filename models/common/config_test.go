@@ -7,6 +7,8 @@ import (
 	"github.com/op/go-logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"path"
+	"strings"
 	"testing"
 	"time"
 )
@@ -38,6 +40,7 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, "localhost:6379", config.RedisURL)
 	assert.Equal(t, "", config.RedisUser)
 	assert.Equal(t, restoreDir, config.RestoreDir)
+	assert.True(t, strings.HasSuffix(config.ScriptDir, "scripts"))
 	assert.Equal(t, "staging", config.StagingBucket)
 	assert.Equal(t, 3, config.StagingUploadRetries)
 	assert.Equal(t, time.Duration(250*time.Millisecond), config.StagingUploadRetryMs)
@@ -53,6 +56,12 @@ func TestNewConfig(t *testing.T) {
 		assert.Equal(t, "minioadmin", provider.KeyId)
 		assert.Equal(t, "minioadmin", provider.SecretKey)
 	}
+}
+
+func TestPathToScript(t *testing.T) {
+	config := common.NewConfig()
+	script := config.PathToScript("identify_format.sh")
+	assert.True(t, strings.HasSuffix(script, path.Join("scripts", "identify_format.sh")))
 }
 
 // TODO: Test that different configs get the right settings.

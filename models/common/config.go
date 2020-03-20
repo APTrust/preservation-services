@@ -3,12 +3,14 @@ package common
 import (
 	"fmt"
 	"os"
+	"path"
 	"runtime"
 	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/util"
+	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 )
@@ -35,6 +37,7 @@ type Config struct {
 	RedisUser               string
 	RestoreDir              string
 	S3Credentials           map[string]S3Credentials
+	ScriptDir               string
 	StagingBucket           string
 	StagingUploadRetries    int
 	StagingUploadRetryMs    time.Duration
@@ -107,11 +110,16 @@ func loadConfig() *Config {
 				SecretKey: v.GetString("S3_WASABI_SECRET"),
 			},
 		},
+		ScriptDir:            v.GetString("SCRIPT_DIR"),
 		StagingBucket:        v.GetString("STAGING_BUCKET"),
 		StagingUploadRetries: v.GetInt("STAGING_UPLOAD_RETRIES"),
 		StagingUploadRetryMs: v.GetDuration("STAGING_UPLOAD_RETRY_MS"),
 		VolumeServiceURL:     v.GetString("VOLUME_SERVICE_URL"),
 	}
+}
+
+func (config *Config) PathToScript(name string) string {
+	return path.Join(config.ScriptDir, name)
 }
 
 func getEnvVars() (string, string) {
@@ -141,6 +149,9 @@ func (c *Config) expandPaths() {
 	c.IngestTempDir = expandPath(c.IngestTempDir)
 	c.LogDir = expandPath(c.LogDir)
 	c.RestoreDir = expandPath(c.RestoreDir)
+
+	projectRoot := testutil.ProjectRoot()
+	c.ScriptDir = strings.Replace(c.ScriptDir, "PROJECT_ROOT", projectRoot, 1)
 }
 
 func expandPath(dirName string) string {
