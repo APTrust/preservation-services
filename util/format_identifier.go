@@ -91,8 +91,8 @@ func (f *FormatIdentifier) GetCommandString(url, filename string) (string, error
 	}
 
 	// Format strings for FIDO output.
-	match := "OK,%(info.mimetype)s,%(info.matchtype)s\n"
-	noMatch := "FAIL,,%(info.matchtype)s\n"
+	match := "OK,%(info.mimetype)s,%(info.matchtype)s"
+	noMatch := "FAIL,,%(info.matchtype)s"
 
 	// The full command pipes the output of curl to python2
 	// in an unbuffered stream (-u) through STDIN. We fetch
@@ -101,10 +101,9 @@ func (f *FormatIdentifier) GetCommandString(url, filename string) (string, error
 	// and other containers. We just need to know the type of
 	// the top-level file, and we don't want to fetch 50GB of
 	// data to figure that out.
-	cmdString := fmt.Sprintf(
-		`curl -s -r 0-524288 '%s' | `+
-			`python2 %s -q -matchprintf="%s" -nomatchprintf="%s" `+
-			`-nocontainer -filename='%s' -`,
+	cmdString := fmt.Sprintf(`curl -s -r 0-524288 '%s' | `+
+		`python2 %s -q -matchprintf="%s" -nomatchprintf="%s" `+
+		`-nocontainer -filename='%s' -`,
 		url, f.pathToFido, match, noMatch, filename)
 	return cmdString, nil
 }
