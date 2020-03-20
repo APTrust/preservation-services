@@ -259,3 +259,19 @@ func TestPathTo(t *testing.T) {
 		assert.True(t, strings.HasSuffix(pathToProgram, pathSep+program))
 	}
 }
+
+func TestStringIsShellSafe(t *testing.T) {
+	assert.True(t, util.StringIsShellSafe("https://example.com?a=b"))
+	assert.False(t, util.StringIsShellSafe("No\""))
+	assert.False(t, util.StringIsShellSafe("No'"))
+	assert.False(t, util.StringIsShellSafe("No;"))
+	assert.False(t, util.StringIsShellSafe("No{"))
+	assert.False(t, util.StringIsShellSafe("No}"))
+	assert.False(t, util.StringIsShellSafe("No|"))
+	assert.False(t, util.StringIsShellSafe("No$"))
+	assert.False(t, util.StringIsShellSafe("No\t"))
+	assert.False(t, util.StringIsShellSafe("No\r"))
+	assert.False(t, util.StringIsShellSafe("No\n"))
+	assert.False(t, util.StringIsShellSafe("No<"))
+	assert.False(t, util.StringIsShellSafe("No>"))
+}

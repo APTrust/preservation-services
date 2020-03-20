@@ -124,3 +124,8 @@ func PathTo(program string) (string, error) {
 	}
 	return strings.TrimSpace(string(output)), nil
 }
+
+func StringIsShellSafe(s string) bool {
+	unsafeChars := "\"';{}|$` \t\r\n<>"
+	return !strings.ContainsAny(s, unsafeChars)
+}
