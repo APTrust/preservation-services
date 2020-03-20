@@ -65,17 +65,17 @@ func TestParseOutput(t *testing.T) {
 	assert.False(t, idRecord.Succeeded)
 }
 
-func TestIdentify(t *testing.T) {
-	f := util.NewFormatIdentifier()
-	idRecord, err := f.Identify("https://google.com", "index.html")
-	assert.Nil(t, err)
-	assert.NotNil(t, idRecord)
-	assert.True(t, idRecord.Succeeded)
-	assert.Equal(t, "text/html", idRecord.MimeType)
-	assert.Equal(t, "signature", idRecord.MatchType)
+// func TestIdentify(t *testing.T) {
+// 	f := util.NewFormatIdentifier()
+// 	idRecord, err := f.Identify("https://google.com", "index.html")
+// 	assert.Nil(t, err)
+// 	assert.NotNil(t, idRecord)
+// 	assert.True(t, idRecord.Succeeded)
+// 	assert.Equal(t, "text/html", idRecord.MimeType)
+// 	assert.Equal(t, "signature", idRecord.MatchType)
 
-	idRecord, err = f.Identify("https://example.com/doesnotexist", "index.html")
-	assert.Nil(t, err)
-	assert.NotNil(t, err)
-	assert.Nil(t, idRecord)
-}
+// 	idRecord, err = f.Identify("https://example.com/doesnotexist", "index.html")
+// 	assert.Nil(t, err)
+// 	assert.NotNil(t, err)
+// 	assert.Nil(t, idRecord)
+// }
