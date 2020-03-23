@@ -120,6 +120,8 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 	if ingestFile.FileFormat == "" {
 		ingestFile.FileFormat = "application/binary"
 	}
+	ingestFile.FormatIdentifiedBy = constants.FmtIdExtMap
+	ingestFile.FormatIdentifiedAt = time.Now().UTC()
 
 	return ingestFile, nil
 }

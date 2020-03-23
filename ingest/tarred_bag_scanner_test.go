@@ -97,6 +97,9 @@ func assertIngestFileComplete(t *testing.T, f *service.IngestFile) {
 	assert.Equal(t, "Standard", f.StorageOption)
 	assert.Equal(t, 36, len(f.UUID))
 
+	assert.Equal(t, constants.FmtIdExtMap, f.FormatIdentifiedBy)
+	assert.False(t, f.FormatIdentifiedAt.IsZero())
+
 	assertChecksumsComplete(t, f)
 }
 

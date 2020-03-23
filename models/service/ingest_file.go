@@ -15,6 +15,8 @@ type IngestFile struct {
 	CopiedToStagingAt    time.Time         `json:"copied_to_staging_at,omitempty"`
 	ErrorMessage         string            `json:"error_message,omitempty"`
 	FileFormat           string            `json:"file_format,omitempty"`
+	FormatIdentifiedBy   string            `json:"format_identified_by,omitempty"`
+	FormatIdentifiedAt   time.Time         `json:"format_identified_at,omitempty"`
 	FileModified         time.Time         `json:"file_modified,omitempty"`
 	Id                   int               `json:"id,omitempty"`
 	InstitutionId        int               `json:"institution_id,omitempty"`

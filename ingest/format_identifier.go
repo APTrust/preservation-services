@@ -57,5 +57,8 @@ func NewFormatIdentifier(context *common.Context, workItemId int, ingestObject *
 // Save Redis record
 
 func (f *FormatIdentifier) IdentifyFormats() error {
+	// identify := func(ingestFile *service.IngestFile) error {
+	// 	return nil
+	// }
 	return nil
 }
