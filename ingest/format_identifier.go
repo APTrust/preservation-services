@@ -2,9 +2,12 @@ package ingest
 
 import (
 	"fmt"
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
+	"net/url"
+	"time"
 )
 
 // FormatIdentifier streams an S3 file, or the first chunk of it, through
@@ -56,9 +59,37 @@ func NewFormatIdentifier(context *common.Context, workItemId int, ingestObject *
 //   (Method comes from identifier script: 'signature' or 'extension')
 // Save Redis record
 
-func (f *FormatIdentifier) IdentifyFormats() error {
-	// identify := func(ingestFile *service.IngestFile) error {
-	// 	return nil
-	// }
-	return nil
+func (fi *FormatIdentifier) IdentifyFormats() error {
+	identify := func(ingestFile *service.IngestFile) error {
+		// No need to re-identify if already id'd by FIDO
+		if ingestFile.FormatIdentifiedBy == constants.FmtIdFido {
+			return nil
+		}
+		signedURL, err := fi.GetPresignedURL(
+			fi.Context.Config.StagingBucket,
+			ingestFile.UUID)
+		if err != nil {
+			return err
+		}
+		idRecord, err := fi.FmtIdentifier.Identify(
+			signedURL.String(),
+			ingestFile.FidoSafeName())
+		if err == nil {
+			return err
+		}
+		ingestFile.FileFormat = idRecord.MimeType
+		ingestFile.FormatMatchType = idRecord.MatchType
+		ingestFile.FormatIdentifiedBy = constants.FmtIdFido
+		ingestFile.FormatIdentifiedAt = time.Now().UTC()
+		return fi.Context.RedisClient.IngestFileSave(fi.WorkItemId, ingestFile)
+	}
+	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemId, identify)
+	return err
+}
+
+func (fi *FormatIdentifier) GetPresignedURL(bucket, key string) (*url.URL, error) {
+	urlParams := url.Values{}
+	expires := time.Second * 24 * 60 * 60
+	client := fi.Context.S3Clients[constants.S3ClientAWS]
+	return client.PresignedGetObject(bucket, key, expires, urlParams)
 }

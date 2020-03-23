@@ -6,6 +6,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
+	"path"
 	"strings"
 	"time"
 )
@@ -17,6 +18,7 @@ type IngestFile struct {
 	FileFormat           string            `json:"file_format,omitempty"`
 	FormatIdentifiedBy   string            `json:"format_identified_by,omitempty"`
 	FormatIdentifiedAt   time.Time         `json:"format_identified_at,omitempty"`
+	FormatMatchType      string            `json:"format_match_type,omitempty"`
 	FileModified         time.Time         `json:"file_modified,omitempty"`
 	Id                   int               `json:"id,omitempty"`
 	InstitutionId        int               `json:"institution_id,omitempty"`
@@ -226,6 +228,21 @@ func (f *IngestFile) ChecksumsMatch(manifestName string) (bool, error) {
 		}
 	}
 	return ok, err
+}
+
+// FidoSafeName returns the IngestFile's UUID + extension.
+// E.g. "209b478a-95cd-4217-b0a3-c80e3e7a2f0e.pdf"
+//
+// If FIDO can't identify the file from the first 128k of
+// data, it will identify it by file extension.
+// Since FmtIdentifier will exec an external command,
+// we want to be sure to pass a safe filename.
+// The file UUID + extension allows FIDO to see the file
+// extension, while ensuring that the file name is shell-safe.
+// We DO NOT want to pass in some of the file names we get
+// that contain backticks, curly braces, dollar signs, etc.
+func (f *IngestFile) FidoSafeName() string {
+	return f.UUID + path.Ext(f.PathInBag)
 }
 
 // URI returns the URL of this file's first storage record.

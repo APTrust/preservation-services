@@ -99,6 +99,7 @@ func assertIngestFileComplete(t *testing.T, f *service.IngestFile) {
 
 	assert.Equal(t, constants.FmtIdExtMap, f.FormatIdentifiedBy)
 	assert.False(t, f.FormatIdentifiedAt.IsZero())
+	assert.Equal(t, constants.MatchTypeExtension, f.FormatMatchType)
 
 	assertChecksumsComplete(t, f)
 }

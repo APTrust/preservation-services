@@ -122,7 +122,7 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 	}
 	ingestFile.FormatIdentifiedBy = constants.FmtIdExtMap
 	ingestFile.FormatIdentifiedAt = time.Now().UTC()
-
+	ingestFile.FormatMatchType = constants.MatchTypeExtension
 	return ingestFile, nil
 }
 

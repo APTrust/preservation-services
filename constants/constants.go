@@ -42,6 +42,9 @@ const (
 	FileTypeTagManifest       = "tag_manifest"
 	FmtIdExtMap               = "ext map"
 	FmtIdFido                 = "fido"
+	MatchTypeContainer        = "container"
+	MatchTypeExtension        = "extension"
+	MatchTypeSignature        = "signature"
 	MaxValidationErrors       = 30
 	OpIngestCharacterize      = "Ingest - File Characterization"
 	OpIngestCheckForUpdate    = "Ingest - Check for Update"
