@@ -156,11 +156,7 @@ func (s *StagingUploader) GetPutOptions(ingestFile *service.IngestFile) (minio.P
 // record to Redis, so we know when it was copied to staging.
 func (s *StagingUploader) MarkFileAsCopied(ingestFile *service.IngestFile) error {
 	ingestFile.CopiedToStagingAt = time.Now().UTC()
-	err := s.Context.RedisClient.IngestFileSave(s.WorkItemId, ingestFile)
-	if err != nil {
-		return fmt.Errorf("%s was copied to staging but could not be updated in Redis: %v", ingestFile.Identifier(), err)
-	}
-	return nil
+	return s.IngestFileSave(ingestFile)
 }
 
 // GetIngestFile returns the IngestFile record from Redis. The name param

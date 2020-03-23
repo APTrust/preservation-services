@@ -81,7 +81,7 @@ func (fi *FormatIdentifier) IdentifyFormats() error {
 		ingestFile.FormatMatchType = idRecord.MatchType
 		ingestFile.FormatIdentifiedBy = constants.FmtIdFido
 		ingestFile.FormatIdentifiedAt = time.Now().UTC()
-		return fi.Context.RedisClient.IngestFileSave(fi.WorkItemId, ingestFile)
+		return fi.IngestFileSave(ingestFile)
 	}
 	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemId, identify)
 	return err

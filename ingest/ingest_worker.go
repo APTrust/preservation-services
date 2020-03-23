@@ -30,9 +30,21 @@ func (i *IngestWorker) GetS3Object() (*minio.Object, error) {
 }
 
 func (i *IngestWorker) IngestFileGet(gfIdentifier string) (*service.IngestFile, error) {
-	return i.Context.RedisClient.IngestFileGet(i.WorkItemId, gfIdentifier)
+	ingestFile, err := i.Context.RedisClient.IngestFileGet(i.WorkItemId, gfIdentifier)
+	if err != nil {
+		i.Context.Logger.Errorf(
+			"Failed to retrieve IngestFile from redis: WorkItem %d, %s: %s",
+			i.WorkItemId, gfIdentifier, err.Error())
+	}
+	return ingestFile, err
 }
 
 func (i *IngestWorker) IngestFileSave(ingestFile *service.IngestFile) error {
-	return i.Context.RedisClient.IngestFileSave(i.WorkItemId, ingestFile)
+	err := i.Context.RedisClient.IngestFileSave(i.WorkItemId, ingestFile)
+	if err != nil {
+		i.Context.Logger.Errorf(
+			"Failed to save IngestFile to redis: WorkItem %d, %s: %s",
+			i.WorkItemId, ingestFile.Identifier(), err.Error())
+	}
+	return err
 }

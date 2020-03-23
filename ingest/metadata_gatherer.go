@@ -107,12 +107,10 @@ func (m *MetadataGatherer) scan(scanner *TarredBagScanner) error {
 		m.noteSpecialFileType(ingestFile)
 		m.IngestObject.FileCount += 1
 
-		err = m.Context.RedisClient.IngestFileSave(m.WorkItemId, ingestFile)
+		err = m.IngestFileSave(ingestFile)
 		if err != nil {
-			m.logIngestFileNotSaved(ingestFile, err)
 			return err
 		}
-		m.logIngestFileSaved(ingestFile)
 	}
 	return nil
 }
@@ -234,7 +232,8 @@ func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum, sourceT
 	var err error
 	var ingestFile *service.IngestFile
 	for i := 0; i < 3; i++ {
-		ingestFile, err = m.IngestFileGet(m.IngestObject.FileIdentifier(checksum.Path))
+		gfIdentifier := m.IngestObject.FileIdentifier(checksum.Path)
+		ingestFile, err = m.IngestFileGet(gfIdentifier)
 		if err == nil {
 			// We got the record.
 			break
@@ -253,7 +252,7 @@ func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum, sourceT
 		ingestFile = m.newIngestFile(checksum.Path)
 	}
 	ingestFile.Checksums = append(ingestFile.Checksums, ingestChecksum)
-	return m.Context.RedisClient.IngestFileSave(m.WorkItemId, ingestFile)
+	return m.IngestFileSave(ingestFile)
 }
 
 func (m *MetadataGatherer) newIngestFile(relFilePath string) *service.IngestFile {
@@ -304,15 +303,4 @@ func (m *MetadataGatherer) logFileNotSaved(filename string, err error) {
 	m.Context.Logger.Errorf(
 		"Failed copy to staging: WorkItem %d, %s: %s",
 		m.WorkItemId, filename, err.Error())
-}
-
-func (m *MetadataGatherer) logIngestFileSaved(ingestFile *service.IngestFile) {
-	m.Context.Logger.Infof("Saved to redis: WorkItem %d, %s",
-		m.WorkItemId, ingestFile.Identifier())
-}
-
-func (m *MetadataGatherer) logIngestFileNotSaved(ingestFile *service.IngestFile, err error) {
-	m.Context.Logger.Errorf(
-		"Faild save to redis: WorkItem %d, %s: %s",
-		m.WorkItemId, ingestFile.Identifier(), err.Error())
 }

@@ -125,7 +125,7 @@ func (r *ReingestManager) ProcessFile(ingestFile *service.IngestFile) (bool, err
 	pharosFile := resp.GenericFile()
 	if pharosFile != nil {
 		r.CompareFiles(ingestFile, pharosFile)
-		err := r.Context.RedisClient.IngestFileSave(r.WorkItemId, ingestFile)
+		err := r.IngestFileSave(ingestFile)
 		if err != nil {
 			return updatedInRedis, err
 		}
