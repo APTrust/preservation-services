@@ -77,16 +77,38 @@ func (fi *FormatIdentifier) IdentifyFormats() error {
 		if err == nil {
 			return err
 		}
+
+		// See comments above "if formatChanged" below.
+		// formatChanged := (idRecord.MimeType != idRecord.MimeType)
+
 		ingestFile.FileFormat = idRecord.MimeType
 		ingestFile.FormatMatchType = idRecord.MatchType
 		ingestFile.FormatIdentifiedBy = constants.FmtIdFido
 		ingestFile.FormatIdentifiedAt = time.Now().UTC()
+
+		//
+		// Here, we should update the object's Content-Type in S3,
+		// but we can't. Minio supports updating user metadata using
+		// CopyObject to copy an object over itself. If the user metadata
+		// changes but the source and destination are the same, Minio
+		// simply updates the user metadata. Unfortunately, the
+		// ContentType is outside the user metadata and is not touched
+		// in the copy process. We can and will still store the correct
+		// mimetype in the GenericFile.FileFormat property in Pharos.
+		//
+		// if formatChanged {
+		// 	fi.UpdateS3Metadata(ingestFile)
+		// }
+
 		return fi.IngestFileSave(ingestFile)
 	}
 	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemId, identify)
 	return err
 }
 
+// GetPresignedURL returns a pre-signed S3 URL that we can pass to the
+// identify_format.sh script, so it can access the file without needing
+// an S3 library.
 func (fi *FormatIdentifier) GetPresignedURL(bucket, key string) (*url.URL, error) {
 	urlParams := url.Values{}
 	expires := time.Second * 24 * 60 * 60
