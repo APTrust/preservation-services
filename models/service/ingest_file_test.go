@@ -43,6 +43,11 @@ func TestIdentifier(t *testing.T) {
 	assert.Equal(t, "test.edu/test-bag/data/image.jpg", f.Identifier())
 }
 
+func TestInstitution(t *testing.T) {
+	f := service.NewIngestFile(testutil.ObjIdentifier, "data/image.jpg")
+	assert.Equal(t, "test.edu", f.Institution())
+}
+
 func TestFileType(t *testing.T) {
 	f := testutil.GetIngestFile(false, false)
 	assert.Equal(t, constants.FileTypePayload, f.FileType())
@@ -284,6 +289,35 @@ func TestFidoSafeName(t *testing.T) {
 		PathInBag: "data/docs/blah/blah/blah/somefile.pdf",
 	}
 	assert.Equal(t, "209b478a-95cd-4217-b0a3-c80e3e7a2f0e.pdf", f.FidoSafeName())
+}
+
+func TestGetPutOptions(t *testing.T) {
+	ingestFile := &service.IngestFile{
+		FileFormat:       "image/jpeg",
+		ObjectIdentifier: "example.edu/bag-of-photos",
+		PathInBag:        "data/image.jpg",
+	}
+	ingestFile.SetChecksum(
+		&service.IngestChecksum{
+			Algorithm: constants.AlgMd5,
+			Digest:    "12345",
+			Source:    constants.SourceIngest,
+		})
+	ingestFile.SetChecksum(
+		&service.IngestChecksum{
+			Algorithm: constants.AlgSha256,
+			Digest:    "98765",
+			Source:    constants.SourceIngest,
+		})
+
+	opts, err := ingestFile.GetPutOptions()
+	require.Nil(t, err)
+	assert.Equal(t, "example.edu", opts.UserMetadata["institution"])
+	assert.Equal(t, "example.edu/bag-of-photos", opts.UserMetadata["bag"])
+	assert.Equal(t, "data/image.jpg", opts.UserMetadata["bagpath"])
+	assert.Equal(t, "12345", opts.UserMetadata["md5"])
+	assert.Equal(t, "98765", opts.UserMetadata["sha256"])
+	assert.Equal(t, "image/jpeg", opts.ContentType)
 }
 
 const IngestFileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:ingest","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:registry","source":"registry"}],"copied_to_staging_at":"0001-01-01T00:00:00Z","error_message":"no error","file_format":"text/javascript","format_identified_at":"0001-01-01T00:00:00Z","file_modified":"1904-06-16T15:04:05Z","id":999,"institution_id":9855,"intellectual_object_id":4432,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","size":5555,"storage_option":"Standard","storage_records":[{"url":"https://example.com/storage/record/1","stored_at":"1904-06-16T15:04:05Z"},{"url":"https://example.com/storage/record/2","stored_at":"1904-06-16T15:04:05Z"}],"uuid":"00000000-0000-0000-0000-000000000000"}`

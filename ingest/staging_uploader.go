@@ -96,7 +96,7 @@ func (s *StagingUploader) CopyFiles(tarredBag *minio.Object) error {
 // bucket, and updates the IngestFile's Redis record to indicate it's been
 // copied.
 func (s *StagingUploader) CopyFileToStaging(tarReader *tar.Reader, ingestFile *service.IngestFile) error {
-	putOptions, err := s.GetPutOptions(ingestFile)
+	putOptions, err := ingestFile.GetPutOptions()
 	if err != nil {
 		// TODO: This is a fatal error. Need to mark as such & stop processing.
 		return err
@@ -113,43 +113,6 @@ func (s *StagingUploader) CopyFileToStaging(tarReader *tar.Reader, ingestFile *s
 		return fmt.Errorf("Error copying %s to staging: %v", ingestFile.Identifier(), err)
 	}
 	return s.MarkFileAsCopied(ingestFile)
-}
-
-// GetPutOptions returns the metadata we'll need to store with a file
-// in the staging bucket, and later in preservation storage. The metadata
-// inclues the following:
-//
-// * institution - The identifier of the institution that owns the file.
-//
-// * bag - The name of the intellectual object to which the file belongs.
-//
-// * bagpath - The path of this file within the original bag. You can derive
-//   the file's identifier by combining institution/bag/bagpath
-//
-// * md5 - The md5 digest of this file.
-//
-// * sha256 - The sha256 digest of this file.
-//
-func (s *StagingUploader) GetPutOptions(ingestFile *service.IngestFile) (minio.PutObjectOptions, error) {
-	emptyOpts := minio.PutObjectOptions{}
-	md5 := ingestFile.GetChecksum(constants.SourceIngest, constants.AlgMd5)
-	if md5 == nil {
-		return emptyOpts, fmt.Errorf("%s has no ingest md5 checksum", ingestFile.Identifier())
-	}
-	sha256 := ingestFile.GetChecksum(constants.SourceIngest, constants.AlgSha256)
-	if sha256 == nil {
-		return emptyOpts, fmt.Errorf("%s has no ingest sha256 checksum", ingestFile.Identifier())
-	}
-	return minio.PutObjectOptions{
-		UserMetadata: map[string]string{
-			"institution": s.IngestObject.Institution,
-			"bag":         s.IngestObject.Identifier(),
-			"bagpath":     ingestFile.PathInBag,
-			"md5":         md5.Digest,
-			"sha256":      sha256.Digest,
-		},
-		ContentType: ingestFile.FileFormat,
-	}, nil
 }
 
 // MarkFileAsCopied adds a timestamp to the IngestFile record and saves the

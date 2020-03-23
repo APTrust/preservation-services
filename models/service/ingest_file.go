@@ -6,6 +6,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
+	"github.com/minio/minio-go/v6"
 	"path"
 	"strings"
 	"time"
@@ -60,9 +61,15 @@ func (f *IngestFile) ToJson() (string, error) {
 	return string(bytes), nil
 }
 
-// Returns the file's GenericFile.Identifier.
+// Identifier returns the file's GenericFile.Identifier.
 func (f *IngestFile) Identifier() string {
 	return fmt.Sprintf("%s/%s", f.ObjectIdentifier, f.PathInBag)
+}
+
+// Institution returns this file's institution identifier, which
+// is typically a domain name.
+func (f *IngestFile) Institution() string {
+	return strings.Split(f.ObjectIdentifier, "/")[0]
 }
 
 // Returns the type of bag file: payload_file, manifest, tag_manifest,
@@ -243,6 +250,43 @@ func (f *IngestFile) ChecksumsMatch(manifestName string) (bool, error) {
 // that contain backticks, curly braces, dollar signs, etc.
 func (f *IngestFile) FidoSafeName() string {
 	return f.UUID + path.Ext(f.PathInBag)
+}
+
+// GetPutOptions returns the metadata we'll need to store with a file
+// in the staging bucket, and later in preservation storage. The metadata
+// inclues the following:
+//
+// * institution - The identifier of the institution that owns the file.
+//
+// * bag - The name of the intellectual object to which the file belongs.
+//
+// * bagpath - The path of this file within the original bag. You can derive
+//   the file's identifier by combining institution/bag/bagpath
+//
+// * md5 - The md5 digest of this file.
+//
+// * sha256 - The sha256 digest of this file.
+//
+func (f *IngestFile) GetPutOptions() (minio.PutObjectOptions, error) {
+	emptyOpts := minio.PutObjectOptions{}
+	md5 := f.GetChecksum(constants.SourceIngest, constants.AlgMd5)
+	if md5 == nil {
+		return emptyOpts, fmt.Errorf("%s has no ingest md5 checksum", f.Identifier())
+	}
+	sha256 := f.GetChecksum(constants.SourceIngest, constants.AlgSha256)
+	if sha256 == nil {
+		return emptyOpts, fmt.Errorf("%s has no ingest sha256 checksum", f.Identifier())
+	}
+	return minio.PutObjectOptions{
+		UserMetadata: map[string]string{
+			"institution": f.Institution(),
+			"bag":         f.ObjectIdentifier,
+			"bagpath":     f.PathInBag,
+			"md5":         md5.Digest,
+			"sha256":      sha256.Digest,
+		},
+		ContentType: f.FileFormat,
+	}, nil
 }
 
 // URI returns the URL of this file's first storage record.

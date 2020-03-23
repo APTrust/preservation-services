@@ -118,16 +118,6 @@ func testIdentifierGetFileAndPutOptions(t *testing.T, uploader *ingest.StagingUp
 	assert.Equal(t, objectIdentifier, ingestFile.ObjectIdentifier)
 	assert.Equal(t, filePathInBag, ingestFile.PathInBag)
 	assert.Equal(t, int64(6191), ingestFile.Size)
-
-	// Test GetPutOptions
-	opts, err := uploader.GetPutOptions(ingestFile)
-	require.Nil(t, err)
-	assert.Equal(t, "example.edu", opts.UserMetadata["institution"])
-	assert.Equal(t, objectIdentifier, opts.UserMetadata["bag"])
-	assert.Equal(t, filePathInBag, opts.UserMetadata["bagpath"])
-	assert.Equal(t, "4bd0ad5f85c00ce84a455466b24c8960", opts.UserMetadata["md5"])
-	assert.Equal(t, "cf9cbce80062932e10ee9cd70ec05ebc24019deddfea4e54b8788decd28b4bc7", opts.UserMetadata["sha256"])
-	assert.Equal(t, ingestFile.FileFormat, opts.ContentType)
 }
 
 func stagingPostTestS3AndRedis(t *testing.T, context *common.Context) {
