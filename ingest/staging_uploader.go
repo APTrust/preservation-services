@@ -15,17 +15,17 @@ import (
 // StagingUploader unpacks a tarfile from a receiving bucket and
 // stores each file unpacked from the tar in a staging bucket.
 type StagingUploader struct {
-	Context      *common.Context
-	IngestObject *service.IngestObject
-	WorkItemId   int
+	IngestWorker
 }
 
 // NewStagingUploader creates a new StagingUploader.
 func NewStagingUploader(context *common.Context, workItemId int, ingestObject *service.IngestObject) *StagingUploader {
 	return &StagingUploader{
-		Context:      context,
-		IngestObject: ingestObject,
-		WorkItemId:   workItemId,
+		IngestWorker{
+			Context:      context,
+			IngestObject: ingestObject,
+			WorkItemId:   workItemId,
+		},
 	}
 }
 
@@ -51,15 +51,6 @@ func (s *StagingUploader) CopyFilesToStaging() error {
 	}
 	s.IngestObject.CopiedToStagingAt = time.Now().UTC()
 	return s.Context.RedisClient.IngestObjectSave(s.WorkItemId, s.IngestObject)
-}
-
-// GetS3Object retrieves the object, in this case a tarred bag, from a
-// depositor's receiving bucket.
-func (s *StagingUploader) GetS3Object() (*minio.Object, error) {
-	return s.Context.S3Clients[constants.S3ClientAWS].GetObject(
-		s.IngestObject.S3Bucket,
-		s.IngestObject.S3Key,
-		minio.GetObjectOptions{})
 }
 
 // CopyFiles unpacks files from a tarball copies each individual

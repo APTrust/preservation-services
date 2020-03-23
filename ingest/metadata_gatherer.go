@@ -25,9 +25,7 @@ import (
 // this object to gather the metadata that subsequent workers will
 // need to perform their jobs.
 type MetadataGatherer struct {
-	Context      *common.Context
-	IngestObject *service.IngestObject
-	WorkItemId   int
+	IngestWorker
 }
 
 // NewMetadataGatherer creates a new MetadataGatherer.
@@ -35,9 +33,11 @@ type MetadataGatherer struct {
 // with S3 and our working data store (Redis).
 func NewMetadataGatherer(context *common.Context, workItemId int, ingestObject *service.IngestObject) *MetadataGatherer {
 	return &MetadataGatherer{
-		Context:      context,
-		IngestObject: ingestObject,
-		WorkItemId:   workItemId,
+		IngestWorker{
+			Context:      context,
+			IngestObject: ingestObject,
+			WorkItemId:   workItemId,
+		},
 	}
 }
 
@@ -115,14 +115,6 @@ func (m *MetadataGatherer) scan(scanner *TarredBagScanner) error {
 		m.logIngestFileSaved(ingestFile)
 	}
 	return nil
-}
-
-// GetS3Object retrieves a tarred bag from a depositor's receiving bucket.
-func (m *MetadataGatherer) GetS3Object() (*minio.Object, error) {
-	return m.Context.S3Clients[constants.S3ClientAWS].GetObject(
-		m.IngestObject.S3Bucket,
-		m.IngestObject.S3Key,
-		minio.GetObjectOptions{})
 }
 
 // CopyTempFilesToS3 copies payload manifests, tag manifests, bagit.txt,

@@ -11,20 +11,20 @@ import (
 )
 
 type MetadataValidator struct {
-	Context      *common.Context
-	Errors       []string
-	IngestObject *service.IngestObject
-	Profile      *bagit.BagItProfile
-	WorkItemId   int
+	IngestWorker
+	Errors  []string
+	Profile *bagit.BagItProfile
 }
 
 func NewMetadataValidator(context *common.Context, profile *bagit.BagItProfile, ingestObject *service.IngestObject, workItemId int) *MetadataValidator {
 	return &MetadataValidator{
-		Context:      context,
-		Errors:       make([]string, 0),
-		IngestObject: ingestObject,
-		Profile:      profile,
-		WorkItemId:   workItemId,
+		IngestWorker: IngestWorker{
+			Context:      context,
+			IngestObject: ingestObject,
+			WorkItemId:   workItemId,
+		},
+		Errors:  make([]string, 0),
+		Profile: profile,
 	}
 }
 
