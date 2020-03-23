@@ -28,3 +28,11 @@ func (i *IngestWorker) GetS3Object() (*minio.Object, error) {
 		i.IngestObject.S3Key,
 		minio.GetObjectOptions{})
 }
+
+func (i *IngestWorker) IngestFileGet(gfIdentifier string) (*service.IngestFile, error) {
+	return i.Context.RedisClient.IngestFileGet(i.WorkItemId, gfIdentifier)
+}
+
+func (i *IngestWorker) IngestFileSave(ingestFile *service.IngestFile) error {
+	return i.Context.RedisClient.IngestFileSave(i.WorkItemId, ingestFile)
+}

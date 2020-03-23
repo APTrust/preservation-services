@@ -234,8 +234,7 @@ func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum, sourceT
 	var err error
 	var ingestFile *service.IngestFile
 	for i := 0; i < 3; i++ {
-		ingestFile, err = m.Context.RedisClient.IngestFileGet(m.WorkItemId,
-			m.IngestObject.FileIdentifier(checksum.Path))
+		ingestFile, err = m.IngestFileGet(m.IngestObject.FileIdentifier(checksum.Path))
 		if err == nil {
 			// We got the record.
 			break

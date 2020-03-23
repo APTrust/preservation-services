@@ -296,8 +296,7 @@ func TestIngestFileOk_PayloadFile(t *testing.T) {
 	identifier := fmt.Sprintf("%s/%s",
 		validator.IngestObject.Identifier(),
 		"data/datastream-descMetadata")
-	f, err := validator.Context.RedisClient.IngestFileGet(
-		9999, identifier)
+	f, err := validator.IngestFileGet(identifier)
 	require.Nil(t, err)
 
 	// Force check of manifests.
@@ -369,8 +368,7 @@ func TestIngestFileOk_RequiredTagFile(t *testing.T) {
 	identifier := fmt.Sprintf("%s/%s",
 		validator.IngestObject.Identifier(),
 		"manifest-md5.txt")
-	f, err := validator.Context.RedisClient.IngestFileGet(
-		9999, identifier)
+	f, err := validator.IngestFileGet(identifier)
 	require.Nil(t, err)
 
 	// Force check of tag manifests.
@@ -426,8 +424,7 @@ func TestIngestFileOk_NonRequiredTagFile(t *testing.T) {
 	identifier := fmt.Sprintf("%s/%s",
 		validator.IngestObject.Identifier(),
 		"custom_tags/untracked_tag_file.txt")
-	f, err := validator.Context.RedisClient.IngestFileGet(
-		9999, identifier)
+	f, err := validator.IngestFileGet(identifier)
 	require.Nil(t, err)
 
 	// Verify that there's no tag manifest checksum for this file.

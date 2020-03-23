@@ -171,7 +171,7 @@ func (s *StagingUploader) GetIngestFile(name string) (*service.IngestFile, error
 	if err != nil {
 		return nil, err
 	}
-	return s.Context.RedisClient.IngestFileGet(s.WorkItemId, identifier)
+	return s.IngestFileGet(identifier)
 }
 
 // GetGenericFileIdentifier converts the name from the tar header into
