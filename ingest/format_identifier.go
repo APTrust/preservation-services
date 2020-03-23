@@ -55,3 +55,7 @@ func NewFormatIdentifier(context *common.Context, workItemId int, ingestObject *
 // Stamp Redis record with new ContentType, time of identification and method
 //   (Method comes from identifier script: 'signature' or 'extension')
 // Save Redis record
+
+func (f *FormatIdentifier) IdentifyFormats() error {
+	return nil
+}

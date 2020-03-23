@@ -90,30 +90,18 @@ func (r *ReingestManager) ObjectWasPreviouslyIngested() (bool, error) {
 // to match the one in Pharos, and compares checksums to see if we need to
 // re-copy the file into preservation storage.
 func (r *ReingestManager) ProcessFiles() error {
-	batchSize := 500
-	nextOffset := uint64(0)
-	for {
-		fileMap, nextOffset, err := r.Context.RedisClient.GetBatchOfFileKeys(
-			r.WorkItemId,
-			nextOffset,
-			int64(batchSize))
+	processFile := func(ingestFile *service.IngestFile) error {
+		updatedInRedis, err := r.ProcessFile(ingestFile)
 		if err != nil {
 			return err
 		}
-		for _, ingestFile := range fileMap {
-			updatedInRedis, err := r.ProcessFile(ingestFile)
-			if err != nil {
-				return err
-			}
-			if updatedInRedis {
-				r.Context.Logger.Infof("Updated %s in Redis", ingestFile.Identifier())
-			}
+		if updatedInRedis {
+			r.Context.Logger.Infof("Updated %s in Redis", ingestFile.Identifier())
 		}
-		if nextOffset == 0 {
-			break
-		}
+		return nil
 	}
-	return nil
+	_, err := r.Context.RedisClient.IngestFilesApply(r.WorkItemId, processFile)
+	return err
 }
 
 // ProcessFile requests a GenericFile object from Pharos. If Pharos returns
