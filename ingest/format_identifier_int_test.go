@@ -18,7 +18,7 @@ func getFormatIdentifier(t *testing.T) *ingest.FormatIdentifier {
 	assert.Equal(t, context, f.Context)
 	assert.Equal(t, obj, f.IngestObject)
 	assert.Equal(t, suWorkItemId, f.WorkItemId)
-	assert.NotNil(t, f.Identifier)
+	assert.NotNil(t, f.FmtIdentifier)
 	return f
 }
 

@@ -11,10 +11,8 @@ import (
 // an external program to determine its file format. Currently, the tool
 // is FIDO, which uses the PRONOM registry to identify formats.
 type FormatIdentifier struct {
-	Context      *common.Context
-	Identifier   *util.FormatIdentifier
-	IngestObject *service.IngestObject
-	WorkItemId   int
+	IngestWorker
+	FmtIdentifier *util.FormatIdentifier
 }
 
 // NewFormatIdentifier creates a new FormatIdentifier. This will panic
@@ -22,17 +20,19 @@ type FormatIdentifier struct {
 // not present.
 func NewFormatIdentifier(context *common.Context, workItemId int, ingestObject *service.IngestObject) *FormatIdentifier {
 	pathToScript := context.Config.FormatIdentifierScript()
-	identifier := util.NewFormatIdentifier(pathToScript)
-	if !identifier.CanRun() {
+	fmtIdentifier := util.NewFormatIdentifier(pathToScript)
+	if !fmtIdentifier.CanRun() {
 		panic(fmt.Sprintf("Missing prerequisites for format identifier. "+
 			"Be sure the following are installed: curl, fido, python2, and "+
 			"identify_format.sh. The last should be at %s", pathToScript))
 	}
 	return &FormatIdentifier{
-		Context:      context,
-		Identifier:   identifier,
-		IngestObject: ingestObject,
-		WorkItemId:   workItemId,
+		IngestWorker: IngestWorker{
+			Context:      context,
+			IngestObject: ingestObject,
+			WorkItemId:   workItemId,
+		},
+		FmtIdentifier: fmtIdentifier,
 	}
 }
 
