@@ -10,6 +10,7 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"path"
 	"strings"
 	"testing"
 	"time"
@@ -47,6 +48,8 @@ func TestIdentifyFormat(t *testing.T) {
 
 	err = fi.IdentifyFormats()
 	assert.Nil(t, err)
+
+	testFormatMetadata(t, fi)
 }
 
 func testGetPresignedURL(t *testing.T, fi *ingest.FormatIdentifier) {
@@ -59,6 +62,32 @@ func testGetPresignedURL(t *testing.T, fi *ingest.FormatIdentifier) {
 	assert.True(t, strings.Contains(presignedURL.String(), bucketAndKey))
 	assert.True(t, strings.Contains(presignedURL.String(), "?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential"))
 	assert.True(t, strings.Contains(presignedURL.String(), "X-Amz-Signature="))
+}
+
+// Note that all files in our test bag are either txt or xml, and some of the
+// xml files have no extension.
+func testFormatMetadata(t *testing.T, fi *ingest.FormatIdentifier) {
+	testFn := func(ingestFile *service.IngestFile) error {
+		if ingestFile.PathInBag == "data/datastream-DC" || ingestFile.PathInBag == "data/datastream-MARC" {
+			// Fido can't identify these because they have no
+			// file extension, and they're missing the opening
+			// <xml> tags that signify a proper XML file signature.
+			// It does correctly identify other extensionless files
+			// that have proper <xml> tags.
+			return nil
+		}
+		if path.Ext(ingestFile.PathInBag) == ".txt" {
+			assert.Equal(t, "text/plain", ingestFile.FileFormat, ingestFile.PathInBag)
+		} else {
+			assert.True(t, (ingestFile.FileFormat == "text/xml" || ingestFile.FileFormat == "application/xml"), ingestFile.PathInBag)
+		}
+		assert.Equal(t, constants.FmtIdFido, ingestFile.FormatIdentifiedBy, ingestFile.PathInBag)
+		assert.False(t, ingestFile.FormatIdentifiedAt.IsZero(), ingestFile.PathInBag)
+		assert.True(t, (ingestFile.FormatMatchType == constants.MatchTypeSignature || ingestFile.FormatMatchType == constants.MatchTypeExtension), ingestFile.PathInBag)
+		return nil
+	}
+	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemId, testFn)
+	assert.Nil(t, err)
 }
 
 func clearFileFormats(t *testing.T, fi *ingest.FormatIdentifier) {

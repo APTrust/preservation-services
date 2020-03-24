@@ -52,6 +52,7 @@ func (f *FormatIdentifier) Identify(url, filename string) (*IdRecord, error) {
 			strings.Replace(errMsg, "\n", "", -1),
 			f.pathToScript, url, filename)
 	}
+	// fmt.Println(" >>>>>> ", filename, string(output))
 	idRecord := f.ParseOutput(strings.TrimSpace(string(output)))
 	return idRecord, nil
 }
@@ -63,8 +64,10 @@ func (f *FormatIdentifier) CanRun() bool {
 }
 
 // ParseOutput parses the output of the FIDO file identification command.
+// The output may include more than one line. This parses the first line.
 func (f *FormatIdentifier) ParseOutput(output string) *IdRecord {
-	record := strings.Split(output, ",")
+	firstLine := strings.Split(output, "\n")[0]
+	record := strings.Split(firstLine, ",")
 	idRecord := &IdRecord{
 		MatchType: record[2],
 		MimeType:  record[1],

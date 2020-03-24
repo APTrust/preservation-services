@@ -80,10 +80,12 @@ func (fi *FormatIdentifier) IdentifyFormats() error {
 		// See comments above "if formatChanged" below.
 		// formatChanged := (idRecord.MimeType != idRecord.MimeType)
 
-		ingestFile.FileFormat = idRecord.MimeType
-		ingestFile.FormatMatchType = idRecord.MatchType
-		ingestFile.FormatIdentifiedBy = constants.FmtIdFido
-		ingestFile.FormatIdentifiedAt = time.Now().UTC()
+		if idRecord.Succeeded {
+			ingestFile.FileFormat = idRecord.MimeType
+			ingestFile.FormatMatchType = idRecord.MatchType
+			ingestFile.FormatIdentifiedBy = constants.FmtIdFido
+			ingestFile.FormatIdentifiedAt = time.Now().UTC()
+		}
 
 		//
 		// Here, we should update the object's Content-Type in S3,
