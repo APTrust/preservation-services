@@ -65,16 +65,15 @@ func (fi *FormatIdentifier) IdentifyFormats() error {
 		if ingestFile.FormatIdentifiedBy == constants.FmtIdFido {
 			return nil
 		}
-		signedURL, err := fi.GetPresignedURL(
-			fi.Context.Config.StagingBucket,
-			ingestFile.UUID)
+		key := fmt.Sprintf("%d/%s", fi.WorkItemId, ingestFile.UUID)
+		signedURL, err := fi.GetPresignedURL(fi.Context.Config.StagingBucket, key)
 		if err != nil {
 			return err
 		}
 		idRecord, err := fi.FmtIdentifier.Identify(
 			signedURL.String(),
 			ingestFile.FidoSafeName())
-		if err == nil {
+		if err != nil {
 			return err
 		}
 
@@ -111,7 +110,7 @@ func (fi *FormatIdentifier) IdentifyFormats() error {
 // an S3 library.
 func (fi *FormatIdentifier) GetPresignedURL(bucket, key string) (*url.URL, error) {
 	urlParams := url.Values{}
-	expires := time.Second * 24 * 60 * 60
+	expires := time.Second * 24 * 60 * 60 * 7 // 7 days
 	client := fi.Context.S3Clients[constants.S3ClientAWS]
 	return client.PresignedGetObject(bucket, key, expires, urlParams)
 }

@@ -164,7 +164,7 @@ func (c *RedisClient) IngestFilesApply(workItemId int, fn func(ingestFile *servi
 		for key, ingestFile := range fileMap {
 			err := fn(ingestFile)
 			if err != nil {
-				return count, fmt.Errorf("Error processing file %s: %v", key, err)
+				return count, fmt.Errorf("Error processing file '%s': %v", key, err)
 			}
 			// And then save the file back to Redis.
 			err = c.IngestFileSave(workItemId, ingestFile)

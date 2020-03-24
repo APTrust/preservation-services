@@ -186,6 +186,10 @@ func prepareForCopyToStaging(t *testing.T, context *common.Context) *ingest.Stag
 	// Put tagsample_good in S3 receiving bucket.
 	setupS3(t, context, keyToGoodBag, pathToGoodBag)
 
+	// Get rid of old redis records related to this bag / work item
+	_, err := context.RedisClient.WorkItemDelete(testWorkItemId)
+	require.Nil(t, err)
+
 	// Set up an ingest object, and assign the correct institution id.
 	// We can't know this id ahead of time because of the way Pharos
 	// loads fixture data.
@@ -194,9 +198,12 @@ func prepareForCopyToStaging(t *testing.T, context *common.Context) *ingest.Stag
 	require.NotNil(t, inst)
 	obj.InstitutionId = inst.Id
 
+	err = context.RedisClient.IngestObjectSave(testWorkItemId, obj)
+	require.Nil(t, err)
+
 	// Scan and validate the bag, so Redis has all the expected data.
 	gatherer := ingest.NewMetadataGatherer(context, testWorkItemId, obj)
-	err := gatherer.ScanBag()
+	err = gatherer.ScanBag()
 	require.Nil(t, err)
 
 	// Validate the bag.

@@ -52,7 +52,7 @@ func TestNewConfig(t *testing.T) {
 	// so we don't save/delete/overwrite in any external services.
 	for _, name := range constants.S3Providers {
 		provider := config.S3Credentials[name]
-		assert.Equal(t, "127.0.0.1:9899", provider.Host)
+		assert.Equal(t, "localhost:9899", provider.Host)
 		assert.Equal(t, "minioadmin", provider.KeyId)
 		assert.Equal(t, "minioadmin", provider.SecretKey)
 	}

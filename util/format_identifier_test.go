@@ -60,12 +60,12 @@ func TestIdentify(t *testing.T) {
 	// 404 error
 	idRecord, err = f.Identify("https://example.com/doesnotexist", "index.html")
 	assert.NotNil(t, err)
-	assert.Equal(t, "Server returned status code 404\n", err.Error())
+	assert.True(t, strings.HasPrefix(err.Error(), "Server returned status code 404"))
 	assert.Nil(t, idRecord)
 
 	// Connection refused
 	idRecord, err = f.Identify("https://localhost:0", "index.html")
 	assert.NotNil(t, err)
-	assert.Equal(t, "No response or connection refused\n", err.Error())
+	assert.True(t, strings.HasPrefix(err.Error(), "No response or connection refused"))
 	assert.Nil(t, idRecord)
 }

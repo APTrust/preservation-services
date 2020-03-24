@@ -21,9 +21,11 @@ class TestRunner
         msg: "Redis is running on 127.0.0.1:6379"
       },
       {
+        # For localhost testing, use 'localhost' instead of '127.0.0.1'
+        # because Minio signed URLs use hostname, not IP.
         name: "minio",
-        cmd: "#{bin}/minio server --quiet --address=127.0.0.1:9899 ~/tmp/minio",
-        msg: "Minio is running on 127.0.0.1:9899. User/Pwd: minioadmin/minioadmin"
+        cmd: "#{bin}/minio server --quiet --address=localhost:9899 ~/tmp/minio",
+        msg: "Minio is running on locaohost:9899. User/Pwd: minioadmin/minioadmin"
       }
     ]
     @integration_services = [

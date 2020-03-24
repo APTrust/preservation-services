@@ -47,7 +47,10 @@ func (f *FormatIdentifier) Identify(url, filename string) (*IdRecord, error) {
 	}
 	output, err := exec.Command(f.pathToScript, url, filename).Output()
 	if err != nil {
-		return nil, fmt.Errorf(string(err.(*exec.ExitError).Stderr))
+		errMsg := string(err.(*exec.ExitError).Stderr)
+		return nil, fmt.Errorf("%s ... Command %s %s %s",
+			strings.Replace(errMsg, "\n", "", -1),
+			f.pathToScript, url, filename)
 	}
 	idRecord := f.ParseOutput(strings.TrimSpace(string(output)))
 	return idRecord, nil

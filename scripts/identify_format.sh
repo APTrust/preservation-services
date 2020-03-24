@@ -106,21 +106,27 @@ fi
 [ -z "$1" ] && echo "You must specify a URL" && exit 3
 
 #
-# Make sure the URL exists
+# First make sure we can get this file. This script is intended for
+# getting signed S3 URLs. Attempting a HEAD request for a signed GET
+# URL will return a 403 error. So we'll do a GET on the first 128 bytes,
+# and check the headers. We expect a 206 (partial content) or a 200
+# if the file happens to be <=128 bytes. Any other response means we
+# won't be able to get the data FIDO needs to analyze.
 #
-HEAD=`curl -s --head $1 | head -n 1`
+HEAD=`curl -s -i -r0-128  $1 | head -n 1`
 STATUS=`echo $HEAD | cut -d$' ' -f2`
 if [ "$HEAD" == "" ]
 then
-   >&2 echo "No response or connection refused"
-   exit 4
+    >&2 echo "No response or connection refused"
+    exit 4
 fi
 
-if [ "$STATUS" != "200" ]
+if [ "$STATUS" != "200" ] && [ "$STATUS" != "206" ]
 then
     >&2 echo "Server returned status code $STATUS"
     exit 5
 fi
+
 
 #
 # Our basic curl command includes -s to run silently (i.e. without
