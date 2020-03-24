@@ -13,11 +13,11 @@ import (
 func getFormatIdentifier(t *testing.T) *ingest.FormatIdentifier {
 	context := common.NewContext()
 	obj := getIngestObject(pathToGoodBag, goodbagMd5)
-	f := ingest.NewFormatIdentifier(context, suWorkItemId, obj)
+	f := ingest.NewFormatIdentifier(context, testWorkItemId, obj)
 	require.NotNil(t, f)
 	assert.Equal(t, context, f.Context)
 	assert.Equal(t, obj, f.IngestObject)
-	assert.Equal(t, suWorkItemId, f.WorkItemId)
+	assert.Equal(t, testWorkItemId, f.WorkItemId)
 	assert.NotNil(t, f.FmtIdentifier)
 	return f
 }

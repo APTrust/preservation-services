@@ -16,10 +16,15 @@ import (
 	"testing"
 )
 
+// WorkItem ID for StagingUploader tests, so we don't conflict with ids
+// used in other tests inside of ingest_test
+const testWorkItemId = 77977
+
 var keyToGoodBag = "example.edu.tagsample_good.tar"
 var pathToGoodBag = testutil.PathToUnitTestBag(keyToGoodBag)
 var goodbagMd5 = "f4323e5e631834c50d077fc3e03c2fed"
 var goodbagSize = int64(40960)
+
 var goodbagS3Files = []string{
 	"aptrust-info.txt",
 	"bag-info.txt",
@@ -175,4 +180,31 @@ func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string
 	}
 
 	return validator
+}
+
+func prepareForCopyToStaging(t *testing.T, context *common.Context) *ingest.StagingUploader {
+	// Put tagsample_good in S3 receiving bucket.
+	setupS3(t, context, keyToGoodBag, pathToGoodBag)
+
+	// Set up an ingest object, and assign the correct institution id.
+	// We can't know this id ahead of time because of the way Pharos
+	// loads fixture data.
+	obj := getIngestObject(pathToGoodBag, goodbagMd5)
+	inst := context.PharosClient.InstitutionGet("example.edu").Institution()
+	require.NotNil(t, inst)
+	obj.InstitutionId = inst.Id
+
+	// Scan and validate the bag, so Redis has all the expected data.
+	gatherer := ingest.NewMetadataGatherer(context, testWorkItemId, obj)
+	err := gatherer.ScanBag()
+	require.Nil(t, err)
+
+	// Validate the bag.
+	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
+	profile, err := bagit.BagItProfileLoad(filename)
+	require.Nil(t, err)
+	validator := ingest.NewMetadataValidator(context, profile, obj, testWorkItemId)
+	require.True(t, validator.IsValid())
+
+	return ingest.NewStagingUploader(context, testWorkItemId, obj)
 }
