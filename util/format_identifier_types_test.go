@@ -25,6 +25,9 @@ import (
 //       new versions of the PRONOM registry files, or updates to the
 //       static file type lookup map at constants/mime_types.go.
 //
+//       Also note that these tests can take a long time to run, since they
+//       do a number of HTTP requests.
+//
 //
 
 var urlPrefix = "https://file-examples.com/wp-content/uploads/"
@@ -69,6 +72,13 @@ var typeForURL = map[string]string{
 	"2017/10/file_example_favicon.ico":     "image/vnd.microsoft.icon",
 	"2020/03/file_example_SVG_30kB.svg":    "image/svg+xml",
 	"2020/03/file_example_WEBP_250kB.webp": "image/webp",
+
+	// Misc Common file types
+	"2017/02/file_example_CSV_5000.csv":  "text/csv",
+	"2017/02/file_example_JSON_1kb.json": "application/json",
+	"2017/02/file_example_XML_24kb.xml":  "application/xml",
+	"2017/02/index.html":                 "text/html",
+	"2017/02/zip_2MB.zip":                "application/zip",
 }
 
 func TestFidoIdentification(t *testing.T) {
