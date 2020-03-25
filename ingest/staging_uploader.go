@@ -50,7 +50,7 @@ func (s *StagingUploader) CopyFilesToStaging() error {
 		return err
 	}
 	s.IngestObject.CopiedToStagingAt = time.Now().UTC()
-	return s.Context.RedisClient.IngestObjectSave(s.WorkItemId, s.IngestObject)
+	return s.IngestObjectSave()
 }
 
 // CopyFiles unpacks files from a tarball copies each individual

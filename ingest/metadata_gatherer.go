@@ -80,7 +80,7 @@ func (m *MetadataGatherer) ScanBag() error {
 
 	m.setMissingDefaultTags()
 
-	return m.Context.RedisClient.IngestObjectSave(m.WorkItemId, m.IngestObject)
+	return m.IngestObjectSave()
 }
 
 func (m *MetadataGatherer) scan(scanner *TarredBagScanner) error {

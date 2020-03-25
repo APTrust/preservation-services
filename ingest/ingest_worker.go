@@ -29,12 +29,12 @@ func (i *IngestWorker) GetS3Object() (*minio.Object, error) {
 		minio.GetObjectOptions{})
 }
 
-func (i *IngestWorker) IngestFileGet(gfIdentifier string) (*service.IngestFile, error) {
-	ingestFile, err := i.Context.RedisClient.IngestFileGet(i.WorkItemId, gfIdentifier)
+func (i *IngestWorker) IngestFileGet(identifier string) (*service.IngestFile, error) {
+	ingestFile, err := i.Context.RedisClient.IngestFileGet(i.WorkItemId, identifier)
 	if err != nil {
 		i.Context.Logger.Errorf(
 			"Failed to retrieve IngestFile from redis: WorkItem %d, %s: %s",
-			i.WorkItemId, gfIdentifier, err.Error())
+			i.WorkItemId, identifier, err.Error())
 	}
 	return ingestFile, err
 }
@@ -45,6 +45,16 @@ func (i *IngestWorker) IngestFileSave(ingestFile *service.IngestFile) error {
 		i.Context.Logger.Errorf(
 			"Failed to save IngestFile to redis: WorkItem %d, %s: %s",
 			i.WorkItemId, ingestFile.Identifier(), err.Error())
+	}
+	return err
+}
+
+func (i *IngestWorker) IngestObjectSave() error {
+	err := i.Context.RedisClient.IngestObjectSave(i.WorkItemId, i.IngestObject)
+	if err != nil {
+		i.Context.Logger.Errorf(
+			"Failed to save IngestObject to redis: WorkItem %d, %s: %s",
+			i.WorkItemId, i.IngestObject.Identifier(), err.Error())
 	}
 	return err
 }
