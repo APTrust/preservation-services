@@ -39,26 +39,6 @@ func NewFormatIdentifier(context *common.Context, workItemId int, ingestObject *
 	}
 }
 
-// TODO:
-//
-// For each IngestFile:
-//
-// Get Redis record
-//   Skip if it already has a format identification timestamp and method
-// Get signed URL for item in staging
-// Run identifier on signed URL
-//   If identification completes and fails, stick with the existing mime type
-//   and note that ident tried and failed.
-//   If identification cannot complete due to bad server response, proceed
-//   to the next file.
-//   Track whether all files complete & if any need retries.
-// If format changed:
-//   Save format back to Redis record
-//   Use CopyObject to update ContentType metadata on S3 object
-// Stamp Redis record with new ContentType, time of identification and method
-//   (Method comes from identifier script: 'signature' or 'extension')
-// Save Redis record
-
 func (fi *FormatIdentifier) IdentifyFormats() error {
 	identify := func(ingestFile *service.IngestFile) error {
 		// No need to re-identify if already id'd by FIDO
@@ -78,8 +58,13 @@ func (fi *FormatIdentifier) IdentifyFormats() error {
 		}
 
 		// See comments above "if formatChanged" below.
-		// formatChanged := (idRecord.MimeType != idRecord.MimeType)
+		// formatChanged := (idRecord.Succeeded && idRecord.MimeType != idRecord.MimeType)
 
+		// The TarredBagScanner did an initial file format identification
+		// when it scanned the bag, identifying by file extension. We want
+		// to change the format only if FIDO actually succeeded in
+		// identifying something. Otherwise, we stick with the original
+		// id-by-extension.
 		if idRecord.Succeeded {
 			ingestFile.FileFormat = idRecord.MimeType
 			ingestFile.FormatMatchType = idRecord.MatchType
@@ -101,8 +86,12 @@ func (fi *FormatIdentifier) IdentifyFormats() error {
 		// 	fi.UpdateS3Metadata(ingestFile)
 		// }
 
-		return fi.IngestFileSave(ingestFile)
+		return nil
 	}
+
+	// IngestFilesApply runs our function on all ingest file records
+	// for the specified WorkItemId, and it saves each record back to
+	// Redis.
 	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemId, identify)
 	return err
 }

@@ -73,7 +73,8 @@ func testFormatMetadata(t *testing.T, fi *ingest.FormatIdentifier) {
 			// file extension, and they're missing the opening
 			// <xml> tags that signify a proper XML file signature.
 			// It does correctly identify other extensionless files
-			// that have proper <xml> tags.
+			// that have proper <xml> tags. Why does Fedora export
+			// invalid XML?
 			return nil
 		}
 		if path.Ext(ingestFile.PathInBag) == ".txt" {
