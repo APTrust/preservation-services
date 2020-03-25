@@ -148,14 +148,14 @@ func getLogLevel(level string) logging.Level {
 }
 
 // Expand ~ to home dir in path settings.
-func (c *Config) expandPaths() {
-	c.BaseWorkingDir = expandPath(c.BaseWorkingDir)
-	c.IngestTempDir = expandPath(c.IngestTempDir)
-	c.LogDir = expandPath(c.LogDir)
-	c.RestoreDir = expandPath(c.RestoreDir)
+func (config *Config) expandPaths() {
+	config.BaseWorkingDir = expandPath(config.BaseWorkingDir)
+	config.IngestTempDir = expandPath(config.IngestTempDir)
+	config.LogDir = expandPath(config.LogDir)
+	config.RestoreDir = expandPath(config.RestoreDir)
 
 	projectRoot := testutil.ProjectRoot()
-	c.ScriptDir = strings.Replace(c.ScriptDir, "PROJECT_ROOT", projectRoot, 1)
+	config.ScriptDir = strings.Replace(config.ScriptDir, "PROJECT_ROOT", projectRoot, 1)
 }
 
 func expandPath(dirName string) string {
@@ -171,99 +171,99 @@ func isLocalHost(host string) bool {
 		strings.Contains(host, "127.0.0.1"))
 }
 
-func (c *Config) checkHostSafety() {
-	if c.ConfigName == "dev" || c.ConfigName == "test" || runtime.GOOS == "darwin" {
-		if !isLocalHost(c.NsqURL) {
-			panic(fmt.Sprintf("Dev/Test setup cannot point to external NSQ instance %s", c.NsqURL))
+func (config *Config) checkHostSafety() {
+	if config.ConfigName == "dev" || config.ConfigName == "test" || runtime.GOOS == "darwin" {
+		if !isLocalHost(config.NsqURL) {
+			panic(fmt.Sprintf("Dev/Test setup cannot point to external NSQ instance %s", config.NsqURL))
 		}
-		if !isLocalHost(c.PharosURL) {
-			panic(fmt.Sprintf("Dev/Test setup cannot point to external Pharos instance %s", c.PharosURL))
+		if !isLocalHost(config.PharosURL) {
+			panic(fmt.Sprintf("Dev/Test setup cannot point to external Pharos instance %s", config.PharosURL))
 		}
-		if !isLocalHost(c.RedisURL) {
-			panic(fmt.Sprintf("Dev/Test setup cannot point to external Redis instance %s", c.RedisURL))
+		if !isLocalHost(config.RedisURL) {
+			panic(fmt.Sprintf("Dev/Test setup cannot point to external Redis instance %s", config.RedisURL))
 		}
 		for _, name := range constants.S3Providers {
-			if !isLocalHost(c.S3Credentials[name].Host) {
-				panic(fmt.Sprintf("Dev/Test setup cannot point to external S3 URL %s for S3 service %s", c.S3Credentials[name].Host, name))
+			if !isLocalHost(config.S3Credentials[name].Host) {
+				panic(fmt.Sprintf("Dev/Test setup cannot point to external S3 URL %s for S3 service %s", config.S3Credentials[name].Host, name))
 			}
 		}
 	}
 }
 
-func (c *Config) checkBasicSettings() {
-	if c.BaseWorkingDir == "" {
+func (config *Config) checkBasicSettings() {
+	if config.BaseWorkingDir == "" {
 		panic("Config is missing BaseWorkingDir")
 	}
-	if c.IngestTempDir == "" {
+	if config.IngestTempDir == "" {
 		panic("Config is missing IngestTempDir")
 	}
-	if c.LogDir == "" {
+	if config.LogDir == "" {
 		panic("Config is missing LogDir")
 	}
-	if c.MaxDaysSinceFixityCheck == 0 {
+	if config.MaxDaysSinceFixityCheck == 0 {
 		panic("Config is missing MaxDaysSinceFixityCheck")
 	}
-	if c.MaxFileSize == int64(0) {
+	if config.MaxFileSize == int64(0) {
 		panic("Config is missing MaxFileSize")
 	}
-	if c.NsqLookupd == "" {
+	if config.NsqLookupd == "" {
 		panic("Config is missing NsqLookupd")
 	}
-	if c.NsqURL == "" {
+	if config.NsqURL == "" {
 		panic("Config is missing NsqURL")
 	}
-	if c.PharosAPIKey == "" {
+	if config.PharosAPIKey == "" {
 		panic("Config is missing PharosAPIKey")
 	}
-	if c.PharosAPIUser == "" {
+	if config.PharosAPIUser == "" {
 		panic("Config is missing PharosAPIUser")
 	}
-	if c.PharosAPIVersion == "" {
+	if config.PharosAPIVersion == "" {
 		panic("Config is missing PharosAPIVersion")
 	}
-	if c.PharosURL == "" {
+	if config.PharosURL == "" {
 		panic("Config is missing PharosURL")
 	}
-	if c.RedisDefaultDB < 0 || c.RedisDefaultDB > 16 {
+	if config.RedisDefaultDB < 0 || config.RedisDefaultDB > 16 {
 		panic("RedisDefaultDB must be 0 <=> 16 (usually 0)")
 	}
 	// This one should be empty for dev/test
 	// if c.RedisPassword == "" {
 	// 	panic("Config is missing RedisPassword")
 	// }
-	if c.RedisRetries < 1 {
+	if config.RedisRetries < 1 {
 		panic("Config is missing RedisRetries")
 	}
-	if c.RedisRetryMs < time.Duration(1*time.Millisecond) {
+	if config.RedisRetryMs < time.Duration(1*time.Millisecond) {
 		panic("Config is missing RedisRetryMs (be sure format is like 200ms)")
 	}
-	if c.RedisURL == "" {
+	if config.RedisURL == "" {
 		panic("Config is missing RedisURL")
 	}
 	// This one should be empty for dev/test
 	// if c.RedisUser == "" {
 	// 	panic("Config is missing RedisUser")
 	// }
-	if c.RestoreDir == "" {
+	if config.RestoreDir == "" {
 		panic("Config is missing RestoreDir")
 	}
-	if c.StagingBucket == "" {
+	if config.StagingBucket == "" {
 		panic("Config is missing StagingBucket")
 	}
-	if c.StagingUploadRetries < 1 {
+	if config.StagingUploadRetries < 1 {
 		panic("Config is missing StagingUploadRetries")
 	}
-	if c.StagingUploadRetryMs < time.Duration(1*time.Millisecond) {
+	if config.StagingUploadRetryMs < time.Duration(1*time.Millisecond) {
 		panic("Config is missing StagingUploadRetryMs (be sure format is like 200ms)")
 	}
-	if c.VolumeServiceURL == "" {
+	if config.VolumeServiceURL == "" {
 		panic("Config is missing VolumeServiceURL")
 	}
 }
 
-func (c *Config) checkS3Providers() {
+func (config *Config) checkS3Providers() {
 	for _, name := range constants.S3Providers {
-		provider := c.S3Credentials[name]
+		provider := config.S3Credentials[name]
 		if provider.Host == "" {
 			panic(fmt.Sprintf("S3 provider %s is missing Host", name))
 		}
@@ -276,20 +276,20 @@ func (c *Config) checkS3Providers() {
 	}
 }
 
-func (c *Config) sanityCheck() {
+func (config *Config) sanityCheck() {
 	// If this is dev or test env, don't let config point
 	// to any external services. This prevents a dev/test
 	// installation from touching data in demo and prod systems.
-	c.checkBasicSettings()
-	c.checkS3Providers()
-	c.checkHostSafety()
+	config.checkBasicSettings()
+	config.checkS3Providers()
+	config.checkHostSafety()
 }
 
-func (c *Config) makeDirs() error {
+func (config *Config) makeDirs() error {
 	dirs := []string{
-		c.IngestTempDir,
-		c.LogDir,
-		c.RestoreDir,
+		config.IngestTempDir,
+		config.LogDir,
+		config.RestoreDir,
 	}
 	for _, dir := range dirs {
 		err := os.MkdirAll(dir, 0755)
