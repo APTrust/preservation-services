@@ -1,20 +1,21 @@
 package service_test
 
 import (
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"strings"
-	"testing"
-	"time"
 )
 
 func TestNewIngestFile(t *testing.T) {
 	f := service.NewIngestFile(testutil.ObjIdentifier, "data/image.jpg")
 	assert.NotNil(t, f.Checksums)
-	assert.EqualValues(t, 0, f.Id)
+	assert.EqualValues(t, 0, f.ID)
 	assert.Equal(t, testutil.ObjIdentifier, f.ObjectIdentifier)
 	assert.True(t, f.NeedsSave)
 	assert.Equal(t, "data/image.jpg", f.PathInBag)
@@ -24,7 +25,7 @@ func TestNewIngestFile(t *testing.T) {
 
 func TestFileFromJson(t *testing.T) {
 	expectedFile := testutil.GetIngestFile(true, true)
-	f, err := service.IngestFileFromJson(IngestFileJson)
+	f, err := service.IngestFileFromJSON(IngestFileJson)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedFile.Checksums, f.Checksums)
 	assert.Equal(t, expectedFile.ObjectIdentifier, f.ObjectIdentifier)
@@ -33,7 +34,7 @@ func TestFileFromJson(t *testing.T) {
 
 func TestFileToJson(t *testing.T) {
 	f := testutil.GetIngestFile(true, true)
-	data, err := f.ToJson()
+	data, err := f.ToJSON()
 	assert.Nil(t, err)
 	assert.Equal(t, IngestFileJson, data)
 }
@@ -272,10 +273,10 @@ func TestToGenericFile(t *testing.T) {
 
 	assert.Equal(t, "text/javascript", gf.FileFormat)
 	assert.Equal(t, testutil.Bloomsday, gf.FileModified)
-	assert.Equal(t, f.Id, gf.Id)
+	assert.Equal(t, f.ID, gf.ID)
 	assert.Equal(t, "test.edu/some-bag/data/text/file.txt", gf.Identifier)
-	assert.Equal(t, 9855, gf.InstitutionId)
-	assert.Equal(t, 4432, gf.IntellectualObjectId)
+	assert.Equal(t, 9855, gf.InstitutionID)
+	assert.Equal(t, 4432, gf.IntellectualObjectID)
 	assert.Equal(t, "test.edu/some-bag", gf.IntellectualObjectIdentifier)
 	assert.Equal(t, int64(5555), gf.Size)
 	assert.Equal(t, constants.StateActive, gf.State)

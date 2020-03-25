@@ -1,14 +1,15 @@
 package testutil_test
 
 import (
-	"github.com/APTrust/preservation-services/util/testutil"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"path"
 	"testing"
+
+	"github.com/APTrust/preservation-services/util/testutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const expectedText = "Test http file\n"
@@ -22,7 +23,7 @@ var headers = map[string]string{
 // along with the specified headers.
 func TestHttpFileResponder(t *testing.T) {
 	filePath := path.Join(testutil.PathToTestData(), "files", "test_http_file.txt")
-	handler := testutil.HttpFileResponder(headers, filePath)
+	handler := testutil.HTTPFileResponder(headers, filePath)
 	testServer := httptest.NewServer(handler)
 	defer testServer.Close()
 
@@ -37,7 +38,7 @@ func TestHttpFileResponder(t *testing.T) {
 
 // Should return the string expectedText.
 func TestHttpStringResponder(t *testing.T) {
-	handler := testutil.HttpStringResponder(headers, expectedText)
+	handler := testutil.HTTPStringResponder(headers, expectedText)
 	testServer := httptest.NewServer(handler)
 	defer testServer.Close()
 

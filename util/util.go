@@ -42,8 +42,8 @@ func LooksLikeTagManifest(name string) bool {
 
 // LooksLikeURL returns true if url looks like a URL.
 func LooksLikeURL(url string) bool {
-	reUrl := regexp.MustCompile(`^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$`)
-	return reUrl.Match([]byte(url))
+	reURL := regexp.MustCompile(`^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$`)
+	return reURL.Match([]byte(url))
 }
 
 // LooksLikeUUID returns true if uuid looks like a valid UUID.

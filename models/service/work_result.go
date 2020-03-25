@@ -2,9 +2,10 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/APTrust/preservation-services/constants"
 	"os"
 	"time"
+
+	"github.com/APTrust/preservation-services/constants"
 )
 
 type WorkResult struct {
@@ -63,7 +64,7 @@ func (result *WorkResult) Reset() {
 	result.FinishedAt = time.Time{}
 }
 
-func WorkResultFromJson(jsonData string) (*WorkResult, error) {
+func WorkResultFromJSON(jsonData string) (*WorkResult, error) {
 	result := &WorkResult{}
 	err := json.Unmarshal([]byte(jsonData), result)
 	if err != nil {
@@ -72,7 +73,7 @@ func WorkResultFromJson(jsonData string) (*WorkResult, error) {
 	return result, nil
 }
 
-func (result *WorkResult) ToJson() (string, error) {
+func (result *WorkResult) ToJSON() (string, error) {
 	bytes, err := json.Marshal(result)
 	if err != nil {
 		return "", err

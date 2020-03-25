@@ -3,10 +3,11 @@ package network
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/APTrust/preservation-services/models/registry"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"github.com/APTrust/preservation-services/models/registry"
 )
 
 type PharosResponse struct {
@@ -152,9 +153,9 @@ func (resp *PharosResponse) HasPreviousPage() bool {
 // or nil if there is no next page.
 func (resp *PharosResponse) ParamsForNextPage() url.Values {
 	if resp.HasNextPage() {
-		nextUrl, _ := url.Parse(*resp.Next)
-		if nextUrl != nil {
-			return nextUrl.Query()
+		nextURL, _ := url.Parse(*resp.Next)
+		if nextURL != nil {
+			return nextURL.Query()
 		}
 	}
 	return nil
@@ -164,9 +165,9 @@ func (resp *PharosResponse) ParamsForNextPage() url.Values {
 // or nil if there is no previous page.
 func (resp *PharosResponse) ParamsForPreviousPage() url.Values {
 	if resp.HasPreviousPage() {
-		previousUrl, _ := url.Parse(*resp.Previous)
-		if previousUrl != nil {
-			return previousUrl.Query()
+		previousURL, _ := url.Parse(*resp.Previous)
+		if previousURL != nil {
+			return previousURL.Query()
 		}
 	}
 	return nil
@@ -269,7 +270,7 @@ func (resp *PharosResponse) WorkItems() []*registry.WorkItem {
 	return resp.workItems
 }
 
-// UnmarshalJsonList converts JSON response from the Pharos server
+// UnmarshalJSONList converts JSON response from the Pharos server
 // into a list of usable objects. The Pharos list response has this
 // structure:
 //
@@ -279,7 +280,7 @@ func (resp *PharosResponse) WorkItems() []*registry.WorkItem {
 //   "previous": "https://example.com/objects/per_page=20&page=9"
 //   "results": [... array of arbitrary objects ...]
 // }
-func (resp *PharosResponse) UnmarshalJsonList() error {
+func (resp *PharosResponse) UnmarshalJSONList() error {
 	switch resp.objectType {
 	case PharosIntellectualObject:
 		return resp.decodeAsObjectList()

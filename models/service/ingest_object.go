@@ -3,13 +3,14 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/APTrust/preservation-services/bagit"
-	"github.com/APTrust/preservation-services/constants"
-	"github.com/APTrust/preservation-services/models/registry"
 	"path"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/APTrust/preservation-services/bagit"
+	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/models/registry"
 )
 
 type IngestObject struct {
@@ -19,9 +20,9 @@ type IngestObject struct {
 	ErrorMessage           string       `json:"error_message,omitempty"`
 	FileCount              int          `json:"file_count"`
 	HasFetchTxt            bool         `json:"has_fetch_txt"`
-	Id                     int          `json:"id,omitempty"`
+	ID                     int          `json:"id,omitempty"`
 	Institution            string       `json:"institution,omitempty"`
-	InstitutionId          int          `json:"institution_id,omitempty"`
+	InstitutionID          int          `json:"institution_id,omitempty"`
 	Manifests              []string     `json:"manifests"`
 	ParsableTagFiles       []string     `json:"parsable_tag_files"`
 	S3Bucket               string       `json:"s3_bucket,omitempty"`
@@ -34,12 +35,12 @@ type IngestObject struct {
 	Tags                   []*bagit.Tag `json:"tags"`
 }
 
-func NewIngestObject(s3Bucket, s3Key, eTag, institution string, institutionId int, size int64) *IngestObject {
+func NewIngestObject(s3Bucket, s3Key, eTag, institution string, institutionID int, size int64) *IngestObject {
 	return &IngestObject{
 		ETag:             strings.Replace(eTag, "\"", "", -1),
 		HasFetchTxt:      false,
 		Institution:      institution,
-		InstitutionId:    institutionId,
+		InstitutionID:    institutionID,
 		Manifests:        make([]string, 0),
 		ParsableTagFiles: make([]string, 0),
 		S3Bucket:         s3Bucket,
@@ -52,7 +53,7 @@ func NewIngestObject(s3Bucket, s3Key, eTag, institution string, institutionId in
 	}
 }
 
-func IngestObjectFromJson(jsonData string) (*IngestObject, error) {
+func IngestObjectFromJSON(jsonData string) (*IngestObject, error) {
 	obj := &IngestObject{}
 	err := json.Unmarshal([]byte(jsonData), obj)
 	if err != nil {
@@ -61,7 +62,7 @@ func IngestObjectFromJson(jsonData string) (*IngestObject, error) {
 	return obj, nil
 }
 
-func (obj *IngestObject) ToJson() (string, error) {
+func (obj *IngestObject) ToJSON() (string, error) {
 	bytes, err := json.Marshal(obj)
 	if err != nil {
 		return "", err
@@ -203,10 +204,10 @@ func (obj *IngestObject) ToIntellectualObject() *registry.IntellectualObject {
 		BagName:                obj.BagName(),
 		Description:            obj.BestAvailableDescription(),
 		ETag:                   obj.ETag,
-		Id:                     obj.Id,
+		ID:                     obj.ID,
 		Identifier:             obj.Identifier(),
 		Institution:            obj.Institution,
-		InstitutionId:          obj.InstitutionId,
+		InstitutionID:          obj.InstitutionID,
 		SourceOrganization:     obj.SourceOrganization(),
 		State:                  constants.StateActive,
 		StorageOption:          obj.StorageOption,

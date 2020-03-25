@@ -14,10 +14,10 @@ type IntellectualObject struct {
 	CreatedAt              time.Time `json:"created_at,omitempty"`
 	Description            string    `json:"description,omitempty"`
 	ETag                   string    `json:"etag,omitempty"`
-	Id                     int       `json:"id,omitempty"`
+	ID                     int       `json:"id,omitempty"`
 	Identifier             string    `json:"identifier,omitempty"`
 	Institution            string    `json:"institution,omitempty"`
-	InstitutionId          int       `json:"institution_id,omitempty"`
+	InstitutionID          int       `json:"institution_id,omitempty"`
 	SourceOrganization     string    `json:"source_organization,omitempty"`
 	State                  string    `json:"state"`
 	StorageOption          string    `json:"storage_option"`
@@ -25,7 +25,7 @@ type IntellectualObject struct {
 	UpdatedAt              time.Time `json:"updated_at,omitempty"`
 }
 
-func IntellectualObjectFromJson(jsonData []byte) (*IntellectualObject, error) {
+func IntellectualObjectFromJSON(jsonData []byte) (*IntellectualObject, error) {
 	obj := &IntellectualObject{}
 	err := json.Unmarshal(jsonData, obj)
 	if err != nil {
@@ -34,7 +34,7 @@ func IntellectualObjectFromJson(jsonData []byte) (*IntellectualObject, error) {
 	return obj, nil
 }
 
-func (obj *IntellectualObject) ToJson() ([]byte, error) {
+func (obj *IntellectualObject) ToJSON() ([]byte, error) {
 	bytes, err := json.Marshal(obj)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ type IntellectualObjectForPharos struct {
 	Description            string `json:"description"`
 	ETag                   string `json:"etag"`
 	Identifier             string `json:"identifier"`
-	InstitutionId          int    `json:"institution_id"`
+	InstitutionID          int    `json:"institution_id"`
 	SourceOrganization     string `json:"source_organization"`
 	State                  string `json:"state"`
 	StorageOption          string `json:"storage_option"`
@@ -76,7 +76,7 @@ func NewIntellectualObjectForPharos(obj *IntellectualObject) *IntellectualObject
 		Description:            obj.Description,
 		ETag:                   obj.ETag,
 		Identifier:             obj.Identifier,
-		InstitutionId:          obj.InstitutionId,
+		InstitutionID:          obj.InstitutionID,
 		SourceOrganization:     obj.SourceOrganization,
 		State:                  obj.State,
 		StorageOption:          obj.StorageOption,

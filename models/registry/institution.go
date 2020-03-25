@@ -8,9 +8,9 @@ import (
 type Institution struct {
 	CreatedAt           time.Time `json:"created_at"`
 	DeactivatedAt       time.Time `json:"deactivated_at,omitempty"`
-	Id                  int       `json:"id"`
+	ID                  int       `json:"id"`
 	Identifier          string    `json:"identifier"`
-	MemberInstitutionId int       `json:"member_institution_id"`
+	MemberInstitutionID int       `json:"member_institution_id"`
 	Name                string    `json:"name"`
 	OTPEnabled          bool      `json:"otp_enabled"`
 	ReceivingBucket     string    `json:"receiving_bucket"`
@@ -20,7 +20,7 @@ type Institution struct {
 	UpdatedAt           time.Time `json:"updated_at"`
 }
 
-func InstitutionFromJson(jsonData []byte) (*Institution, error) {
+func InstitutionFromJSON(jsonData []byte) (*Institution, error) {
 	inst := &Institution{}
 	err := json.Unmarshal(jsonData, inst)
 	if err != nil {
@@ -29,7 +29,7 @@ func InstitutionFromJson(jsonData []byte) (*Institution, error) {
 	return inst, nil
 }
 
-func (inst *Institution) ToJson() ([]byte, error) {
+func (inst *Institution) ToJSON() ([]byte, error) {
 	bytes, err := json.Marshal(inst)
 	if err != nil {
 		return nil, err

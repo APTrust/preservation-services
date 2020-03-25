@@ -246,10 +246,10 @@ func TestPharosIntellectualObjectSave_Create(t *testing.T) {
 	// Make sure we're using an institution id that was
 	// loaded with the test fixtures
 	testInst := GetInstitution(t, "test.edu")
-	intelObj.InstitutionId = testInst.Id
+	intelObj.InstitutionID = testInst.ID
 
 	// Id of zero means it's never been saved.
-	require.Equal(t, 0, intelObj.Id)
+	require.Equal(t, 0, intelObj.ID)
 
 	client := GetPharosClient(t)
 	resp := client.IntellectualObjectSave(intelObj)
@@ -261,7 +261,7 @@ func TestPharosIntellectualObjectSave_Create(t *testing.T) {
 	obj := resp.IntellectualObject()
 	require.NotNil(t, obj)
 	assert.Equal(t, intelObj.Identifier, obj.Identifier)
-	assert.NotEqual(t, 0, obj.Id)
+	assert.NotEqual(t, 0, obj.ID)
 	assert.NotEqual(t, intelObj.UpdatedAt, obj.UpdatedAt)
 }
 
@@ -418,7 +418,7 @@ func TestPharosGenericFileSave_Create(t *testing.T) {
 	gfSaved := resp.GenericFile()
 	require.NotNil(t, gfSaved)
 	assert.Equal(t, gf.Identifier, gfSaved.Identifier)
-	assert.NotEqual(t, 0, gfSaved.Id)
+	assert.NotEqual(t, 0, gfSaved.ID)
 	assert.NotEqual(t, gf.UpdatedAt, gfSaved.UpdatedAt)
 }
 
@@ -458,7 +458,7 @@ func TestPharosGenericFileSaveBatch(t *testing.T) {
 
 	testInst := GetInstitution(t, "test.edu")
 	intelObj.Identifier = "test.edu/TestBag002"
-	intelObj.InstitutionId = testInst.Id
+	intelObj.InstitutionID = testInst.ID
 	client := GetPharosClient(t)
 
 	resp := client.IntellectualObjectSave(intelObj)
@@ -541,14 +541,14 @@ func TestPharosChecksumSaveAndList(t *testing.T) {
 	require.Nil(t, resp.Error)
 	savedChecksum := resp.Checksum()
 	require.NotNil(t, savedChecksum)
-	require.NotEqual(t, 0, savedChecksum.Id)
+	require.NotEqual(t, 0, savedChecksum.ID)
 
 	// Make sure we can get it back.
-	resp = client.ChecksumGet(savedChecksum.Id)
+	resp = client.ChecksumGet(savedChecksum.ID)
 	require.Nil(t, resp.Error)
 	retrievedChecksum := resp.Checksum()
 	require.NotNil(t, retrievedChecksum)
-	require.Equal(t, savedChecksum.Id, retrievedChecksum.Id)
+	require.Equal(t, savedChecksum.ID, retrievedChecksum.ID)
 
 	// Add one more
 	sha256Checksum := testutil.GetChecksum(gf, constants.AlgSha256)
@@ -564,8 +564,8 @@ func TestPharosChecksumSaveAndList(t *testing.T) {
 	checksums := resp.Checksums()
 	assert.Equal(t, 2, len(checksums))
 	for _, cs := range checksums {
-		assert.Equal(t, gf.Id, cs.GenericFileId)
-		assert.NotEqual(t, 0, cs.Id)
+		assert.Equal(t, gf.ID, cs.GenericFileID)
+		assert.NotEqual(t, 0, cs.ID)
 	}
 
 	v.Add("algorithm", constants.AlgMd5)
@@ -574,7 +574,7 @@ func TestPharosChecksumSaveAndList(t *testing.T) {
 	checksums = resp.Checksums()
 	assert.Equal(t, 1, len(checksums))
 	for _, cs := range checksums {
-		assert.Equal(t, gf.Id, cs.GenericFileId)
+		assert.Equal(t, gf.ID, cs.GenericFileID)
 		assert.Equal(t, constants.AlgMd5, cs.Algorithm)
 	}
 
@@ -585,7 +585,7 @@ func TestPharosChecksumSaveAndList(t *testing.T) {
 	checksums = resp.Checksums()
 	assert.Equal(t, 1, len(checksums))
 	for _, cs := range checksums {
-		assert.Equal(t, gf.Id, cs.GenericFileId)
+		assert.Equal(t, gf.ID, cs.GenericFileID)
 		assert.Equal(t, constants.AlgSha256, cs.Algorithm)
 	}
 }
@@ -657,10 +657,10 @@ func TestPharosPremisEventSave(t *testing.T) {
 		OutcomeInformation:           "Object was ingested",
 		Object:                       "Exchange ingest code",
 		Agent:                        "https://github.com/APTrust/exchange",
-		IntellectualObjectId:         obj.Id,
+		IntellectualObjectID:         obj.ID,
 		IntellectualObjectIdentifier: obj.Identifier,
 		Outcome:                      "Success",
-		InstitutionId:                inst.Id,
+		InstitutionID:                inst.ID,
 	}
 
 	client := GetPharosClient(t)
@@ -670,7 +670,7 @@ func TestPharosPremisEventSave(t *testing.T) {
 	require.NotNil(t, savedEvent)
 	assert.Equal(t, event.Identifier, savedEvent.Identifier)
 	assert.Equal(t, event.EventType, savedEvent.EventType)
-	assert.NotEqual(t, 0, savedEvent.Id)
+	assert.NotEqual(t, 0, savedEvent.ID)
 }
 
 func TestWorkItemGet(t *testing.T) {
@@ -680,11 +680,11 @@ func TestWorkItemGet(t *testing.T) {
 	item := GetWorkItem(t, etag)
 
 	client := GetPharosClient(t)
-	resp := client.WorkItemGet(item.Id)
+	resp := client.WorkItemGet(item.ID)
 	require.Nil(t, resp.Error)
 	retrievedItem := resp.WorkItem()
 	require.NotNil(t, retrievedItem)
-	assert.Equal(t, item.Id, retrievedItem.Id)
+	assert.Equal(t, item.ID, retrievedItem.ID)
 	assert.Equal(t, item.ETag, retrievedItem.ETag)
 	assert.Equal(t, item.Action, retrievedItem.Action)
 }
@@ -737,24 +737,24 @@ func TestWorkItemSaveAndFinish(t *testing.T) {
 		Date:          testutil.Bloomsday,
 		Retry:         false,
 		Pid:           0,
-		InstitutionId: inst.Id,
+		InstitutionID: inst.ID,
 	}
 	client := GetPharosClient(t)
 	resp := client.WorkItemSave(item)
 	require.Nil(t, resp.Error)
 	savedItem := resp.WorkItem()
 	require.NotNil(t, savedItem)
-	assert.NotEqual(t, 0, savedItem.Id)
+	assert.NotEqual(t, 0, savedItem.ID)
 	assert.Equal(t, item.ETag, savedItem.ETag)
 	assert.Equal(t, item.Action, savedItem.Action)
 
 	// As long as we have a restoration work item,
 	// test this method as well.
-	resp = client.FinishRestorationSpotTest(savedItem.Id)
+	resp = client.FinishRestorationSpotTest(savedItem.ID)
 	require.Nil(t, resp.Error)
 	finishedItem := resp.WorkItem()
 	require.NotNil(t, finishedItem)
-	assert.Equal(t, savedItem.Id, finishedItem.Id)
+	assert.Equal(t, savedItem.ID, finishedItem.ID)
 	assert.True(t, strings.Contains(finishedItem.Note, "Email sent to admins"))
 }
 
@@ -762,13 +762,13 @@ func TestBuildURL(t *testing.T) {
 	relativeUrl := "/api/v2/blah/dir%2Ffile.pdf?param=value"
 	expected := "http://localhost:9292/api/v2/blah/dir%2Ffile.pdf?param=value"
 	client := GetPharosClient(t)
-	assert.Equal(t, expected, client.BuildUrl(relativeUrl))
+	assert.Equal(t, expected, client.BuildURL(relativeUrl))
 }
 
-func TestNewJsonRequest(t *testing.T) {
+func TestNewJSONRequest(t *testing.T) {
 	client := GetPharosClient(t)
 	postData := []byte(`{"key":"value"}`)
-	req, err := client.NewJsonRequest("GET", "https://example.com", bytes.NewBuffer(postData))
+	req, err := client.NewJSONRequest("GET", "https://example.com", bytes.NewBuffer(postData))
 	require.Nil(t, err)
 	require.NotNil(t, req)
 

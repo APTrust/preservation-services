@@ -1,6 +1,11 @@
 package ingest_test
 
 import (
+	"io"
+	"os"
+	"path"
+	"testing"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/service"
@@ -8,10 +13,6 @@ import (
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
-	"os"
-	"path"
-	"testing"
 )
 
 func getTarFileReader(t *testing.T, filename string) io.ReadCloser {
@@ -90,7 +91,7 @@ func assertIngestFileComplete(t *testing.T, f *service.IngestFile) {
 	assert.Equal(t, 0, f.StorageRecords)
 	assert.Equal(t, "", f.ErrorMessage)
 	assert.Equal(t, "", f.FileFormat) // TODO: This may change
-	assert.Equal(t, 0, f.Id)
+	assert.Equal(t, 0, f.ID)
 	assert.True(t, f.NeedsSave)
 	assert.Equal(t, "example.edu/example.edu.tagsample_good.tar", f.ObjectIdentifier)
 	assert.True(t, len(f.PathInBag) > 1)

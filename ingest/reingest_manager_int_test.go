@@ -51,7 +51,7 @@ func PutBagMetadataInPharos(t *testing.T, obj *service.IngestObject) {
 	// Get the correct institution id from Pharos
 	inst := context.PharosClient.InstitutionGet("example.edu").Institution()
 	require.NotNil(t, inst)
-	obj.InstitutionId = inst.Id
+	obj.InstitutionID = inst.ID
 
 	// Save the intel obj in Pharos
 	resp := context.PharosClient.IntellectualObjectSave(obj.ToIntellectualObject())
@@ -63,17 +63,17 @@ func PutBagMetadataInPharos(t *testing.T, obj *service.IngestObject) {
 		int64(50))
 	require.Nil(t, err)
 	for _, ingestFile := range fileMap {
-		ingestFile.InstitutionId = inst.Id
-		ingestFile.IntellectualObjectId = obj.Id
+		ingestFile.InstitutionID = inst.ID
+		ingestFile.IntellectualObjectID = obj.ID
 		resp = context.PharosClient.GenericFileSave(ingestFile.ToGenericFile())
 		require.Nil(t, resp.Error)
 		gf := resp.GenericFile()
 		require.NotNil(t, gf)
-		require.NotEqual(t, 0, gf.Id)
+		require.NotEqual(t, 0, gf.ID)
 
 		for _, cs := range ingestFile.Checksums {
 			resp = context.PharosClient.ChecksumSave(
-				cs.ToRegistryChecksum(gf.Id),
+				cs.ToRegistryChecksum(gf.ID),
 				gf.Identifier)
 			require.Nil(t, resp.Error)
 		}
@@ -217,32 +217,32 @@ func TestGetNewest(t *testing.T) {
 	t6, _ := time.Parse(time.RFC3339, "2020-01-06T12:00:00Z")
 	checksums := []*registry.Checksum{
 		&registry.Checksum{
-			Id:        1,
+			ID:        1,
 			Algorithm: constants.AlgMd5,
 			DateTime:  t1,
 		},
 		&registry.Checksum{
-			Id:        2,
+			ID:        2,
 			Algorithm: constants.AlgMd5,
 			DateTime:  t2,
 		},
 		&registry.Checksum{
-			Id:        3,
+			ID:        3,
 			Algorithm: constants.AlgSha256,
 			DateTime:  t3,
 		},
 		&registry.Checksum{
-			Id:        4,
+			ID:        4,
 			Algorithm: constants.AlgSha256,
 			DateTime:  t4,
 		},
 		&registry.Checksum{
-			Id:        5,
+			ID:        5,
 			Algorithm: constants.AlgSha512,
 			DateTime:  t5,
 		},
 		&registry.Checksum{
-			Id:        6,
+			ID:        6,
 			Algorithm: constants.AlgSha512,
 			DateTime:  t6,
 		},
@@ -252,9 +252,9 @@ func TestGetNewest(t *testing.T) {
 	// For each algorithm, we should get the checksum
 	// with the latest DateTime.
 	newest := manager.GetNewest(checksums)
-	assert.Equal(t, 2, newest[constants.AlgMd5].Id)
-	assert.Equal(t, 4, newest[constants.AlgSha256].Id)
-	assert.Equal(t, 6, newest[constants.AlgSha512].Id)
+	assert.Equal(t, 2, newest[constants.AlgMd5].ID)
+	assert.Equal(t, 4, newest[constants.AlgSha256].ID)
+	assert.Equal(t, 6, newest[constants.AlgSha512].ID)
 }
 
 // This one tests all of the ReingestManager's functions,
@@ -324,7 +324,7 @@ func testIngestFile_ReingestManager(t *testing.T, f *service.IngestFile) {
 	testExpectedChecksums(t, f)
 	assert.True(t, strings.Contains(f.FileFormat, "/"))
 	assert.False(t, f.FileModified.IsZero())
-	assert.NotEqual(t, 0, f.InstitutionId)
+	assert.NotEqual(t, 0, f.InstitutionID)
 	assert.Equal(t, "example.edu/example.edu.tagsample_good", f.ObjectIdentifier)
 	assert.NotEqual(t, "", f.PathInBag)
 	assert.True(t, f.Size > int64(0))

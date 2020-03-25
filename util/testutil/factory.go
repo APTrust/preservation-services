@@ -2,12 +2,13 @@ package testutil
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
-	"github.com/satori/go.uuid"
-	"time"
+	uuid "github.com/satori/go.uuid"
 )
 
 var Bloomsday, _ = time.Parse(time.RFC3339, "1904-06-16T15:04:05Z")
@@ -32,9 +33,9 @@ func GetIngestFile(withChecksums, withStorageRecords bool) *service.IngestFile {
 	f.ErrorMessage = "no error"
 	f.FileFormat = "text/javascript"
 	f.FileModified = Bloomsday
-	f.Id = 999
-	f.InstitutionId = 9855
-	f.IntellectualObjectId = 4432
+	f.ID = 999
+	f.InstitutionID = 9855
+	f.IntellectualObjectID = 4432
 	f.ObjectIdentifier = "test.edu/some-bag"
 	f.PathInBag = "data/text/file.txt"
 	f.Size = 5555
@@ -66,9 +67,9 @@ func GetIngestObject() *service.IngestObject {
 		DeletedFromReceivingAt: Bloomsday,
 		ETag:                   "12345678",
 		ErrorMessage:           "No error",
-		Id:                     555,
+		ID:                     555,
 		Institution:            "test.edu",
-		InstitutionId:          9855,
+		InstitutionID:          9855,
 		Manifests:              []string{"manifest-md5.txt", "manifest-sha256.txt"},
 		ParsableTagFiles:       []string{"bag-info.txt", "aptrust-info.txt"},
 		S3Bucket:               "aptrust.receiving.test.edu",
@@ -133,10 +134,10 @@ func GetIntellectualObject() *registry.IntellectualObject {
 		BagName:                "TestBag001",
 		Description:            "Test bag from factory",
 		ETag:                   "86753098675309",
-		Id:                     0,
+		ID:                     0,
 		Identifier:             "test.edu/TestBag001",
 		Institution:            "test.edu",
-		InstitutionId:          0,
+		InstitutionID:          0,
 		SourceOrganization:     "Test Univerisity Library",
 		State:                  constants.StateActive,
 		StorageOption:          constants.StorageStandard,
@@ -148,10 +149,10 @@ func GetGenericFileForObj(obj *registry.IntellectualObject, suffix int, withChec
 	gf := &registry.GenericFile{
 		FileFormat:                   "text/plain",
 		FileModified:                 Bloomsday,
-		Id:                           0,
+		ID:                           0,
 		Identifier:                   fmt.Sprintf("%s/object/data/file_%d.txt", obj.Identifier, suffix),
-		InstitutionId:                obj.InstitutionId,
-		IntellectualObjectId:         obj.Id,
+		InstitutionID:                obj.InstitutionID,
+		IntellectualObjectID:         obj.ID,
 		IntellectualObjectIdentifier: obj.Identifier,
 		Size:                         484896,
 		State:                        constants.StateActive,
@@ -181,7 +182,7 @@ func GetChecksum(gf *registry.GenericFile, alg string) *registry.Checksum {
 		Algorithm:     alg,
 		DateTime:      Bloomsday,
 		Digest:        "0000000099999999",
-		GenericFileId: gf.Id,
+		GenericFileID: gf.ID,
 	}
 }
 
@@ -191,11 +192,11 @@ func GetPremisEvent(gf *registry.GenericFile, eventType string) *registry.Premis
 		DateTime:                     Bloomsday,
 		Detail:                       "Fake event detail",
 		EventType:                    eventType,
-		GenericFileId:                gf.Id,
+		GenericFileID:                gf.ID,
 		GenericFileIdentifier:        gf.Identifier,
 		Identifier:                   uuid.NewV4().String(),
-		InstitutionId:                gf.InstitutionId,
-		IntellectualObjectId:         gf.IntellectualObjectId,
+		InstitutionID:                gf.InstitutionID,
+		IntellectualObjectID:         gf.IntellectualObjectID,
 		IntellectualObjectIdentifier: gf.IntellectualObjectIdentifier,
 		Object:                       "Fake event object",
 		OutcomeDetail:                constants.OutcomeSuccess,

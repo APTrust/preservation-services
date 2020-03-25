@@ -1,13 +1,14 @@
 package service_test
 
 import (
+	"os"
+	"testing"
+	"time"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
-	"time"
 )
 
 func TestNewWorkResult(t *testing.T) {
@@ -100,13 +101,13 @@ func TestWorkResultToJson(t *testing.T) {
 	result.FinishWithError("fatal oops", true)
 	result.StartedAt = timestamp
 	result.FinishedAt = timestamp
-	jsonData, err := result.ToJson()
+	jsonData, err := result.ToJSON()
 	require.Nil(t, err)
 	assert.Equal(t, expectedJson, jsonData)
 }
 
 func TestWorkResultFromJson(t *testing.T) {
-	result, err := service.WorkResultFromJson(expectedJson)
+	result, err := service.WorkResultFromJSON(expectedJson)
 	require.Nil(t, err)
 	assert.Equal(t, constants.OpIngestGatherMeta, result.Operation)
 	assert.Equal(t, "Bogus-Host-Name", result.Host)

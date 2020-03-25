@@ -14,9 +14,9 @@ type WorkItem struct {
 	Date                  time.Time `json:"date"`
 	ETag                  string    `json:"etag"`
 	GenericFileIdentifier string    `json:"generic_file_identifier"`
-	Id                    int       `json:"id,omitempty"`
+	ID                    int       `json:"id,omitempty"`
 	InstApprover          string    `json:"inst_appropver"`
-	InstitutionId         int       `json:"institution_id"`
+	InstitutionID         int       `json:"institution_id"`
 	Name                  string    `json:"name"`
 	NeedsAdminReview      bool      `json:"needs_admin_review"`
 	Node                  string    `json:"node"`
@@ -34,7 +34,7 @@ type WorkItem struct {
 	User                  string    `json:"user"`
 }
 
-func WorkItemFromJson(jsonData []byte) (*WorkItem, error) {
+func WorkItemFromJSON(jsonData []byte) (*WorkItem, error) {
 	item := &WorkItem{}
 	err := json.Unmarshal(jsonData, item)
 	if err != nil {
@@ -43,7 +43,7 @@ func WorkItemFromJson(jsonData []byte) (*WorkItem, error) {
 	return item, nil
 }
 
-func (item *WorkItem) ToJson() ([]byte, error) {
+func (item *WorkItem) ToJSON() ([]byte, error) {
 	bytes, err := json.Marshal(item)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ type WorkItemForPharos struct {
 	ETag                  string    `json:"etag"`
 	GenericFileIdentifier string    `json:"generic_file_identifier"`
 	InstApprover          string    `json:"inst_appropver"`
-	InstitutionId         int       `json:"institution_id"`
+	InstitutionID         int       `json:"institution_id"`
 	Name                  string    `json:"name"`
 	NeedsAdminReview      bool      `json:"needs_admin_review"`
 	Node                  string    `json:"node"`
@@ -98,7 +98,7 @@ func NewWorkItemForPharos(item *WorkItem) *WorkItemForPharos {
 		ETag:                  item.ETag,
 		GenericFileIdentifier: item.GenericFileIdentifier,
 		InstApprover:          item.InstApprover,
-		InstitutionId:         item.InstitutionId,
+		InstitutionID:         item.InstitutionID,
 		Name:                  item.Name,
 		NeedsAdminReview:      item.NeedsAdminReview,
 		Node:                  item.Node,

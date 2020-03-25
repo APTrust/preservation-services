@@ -11,12 +11,12 @@ type PremisEvent struct {
 	DateTime                     time.Time `json:"date_time"`
 	Detail                       string    `json:"detail"`
 	EventType                    string    `json:"event_type"`
-	GenericFileId                int       `json:"generic_file_id,omitempty"`
+	GenericFileID                int       `json:"generic_file_id,omitempty"`
 	GenericFileIdentifier        string    `json:"generic_file_identifier,omitempty"`
-	Id                           int       `json:"id,omitempty"`
+	ID                           int       `json:"id,omitempty"`
 	Identifier                   string    `json:"identifier"`
-	InstitutionId                int       `json:"institution_id"`
-	IntellectualObjectId         int       `json:"intellectual_object_id"`
+	InstitutionID                int       `json:"institution_id"`
+	IntellectualObjectID         int       `json:"intellectual_object_id"`
 	IntellectualObjectIdentifier string    `json:"intellectual_object_identifier"`
 	Object                       string    `json:"object"`
 	OutcomeDetail                string    `json:"outcome_detail"`
@@ -25,7 +25,7 @@ type PremisEvent struct {
 	UpdatedAt                    time.Time `json:"updated_at,omitempty"`
 }
 
-func PremisEventFromJson(jsonData []byte) (*PremisEvent, error) {
+func PremisEventFromJSON(jsonData []byte) (*PremisEvent, error) {
 	event := &PremisEvent{}
 	err := json.Unmarshal(jsonData, event)
 	if err != nil {
@@ -34,7 +34,7 @@ func PremisEventFromJson(jsonData []byte) (*PremisEvent, error) {
 	return event, nil
 }
 
-func (event *PremisEvent) ToJson() ([]byte, error) {
+func (event *PremisEvent) ToJSON() ([]byte, error) {
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		return nil, err
@@ -45,5 +45,5 @@ func (event *PremisEvent) ToJson() ([]byte, error) {
 // Note that Pharos uses the same format as ToJson() for this
 // object.
 func (event *PremisEvent) SerializeForPharos() ([]byte, error) {
-	return event.ToJson()
+	return event.ToJSON()
 }

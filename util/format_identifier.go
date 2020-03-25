@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type IdRecord struct {
+type IDRecord struct {
 	MatchType string
 	MimeType  string
 	Succeeded bool
@@ -37,7 +37,7 @@ func NewFormatIdentifier(pathToScript string) *FormatIdentifier {
 // While the FormatIdentifier object is reusable, you should call
 // SystemHasIdentifierPrograms once before the first use to ensure that
 // all external requirements are present.
-func (f *FormatIdentifier) Identify(url, filename string) (*IdRecord, error) {
+func (f *FormatIdentifier) Identify(url, filename string) (*IDRecord, error) {
 	if !f.hasPrerequisites {
 		return nil, fmt.Errorf("System is missing one or more of: curl, fido, python2, identify_format.sh")
 	}
@@ -65,10 +65,10 @@ func (f *FormatIdentifier) CanRun() bool {
 
 // ParseOutput parses the output of the FIDO file identification command.
 // The output may include more than one line. This parses the first line.
-func (f *FormatIdentifier) ParseOutput(output string) *IdRecord {
+func (f *FormatIdentifier) ParseOutput(output string) *IDRecord {
 	firstLine := strings.Split(output, "\n")[0]
 	record := strings.Split(firstLine, ",")
-	idRecord := &IdRecord{
+	idRecord := &IDRecord{
 		MatchType: record[2],
 		MimeType:  record[1],
 	}

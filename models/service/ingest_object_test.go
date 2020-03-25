@@ -1,13 +1,14 @@
 package service_test
 
 import (
+	"testing"
+
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 var etag = "12345678"
@@ -88,7 +89,7 @@ func TestIngestObjectIdentifier(t *testing.T) {
 
 func TestObjFromJson(t *testing.T) {
 	expectedObj := testutil.GetIngestObject()
-	obj, err := service.IngestObjectFromJson(IngestObjectJson)
+	obj, err := service.IngestObjectFromJSON(IngestObjectJson)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedObj.Identifier(), obj.Identifier())
 	assert.Equal(t, expectedObj.ParsableTagFiles, obj.ParsableTagFiles)
@@ -96,7 +97,7 @@ func TestObjFromJson(t *testing.T) {
 
 func TestObjToJson(t *testing.T) {
 	obj := testutil.GetIngestObject()
-	data, err := obj.ToJson()
+	data, err := obj.ToJSON()
 	assert.Nil(t, err)
 	assert.Equal(t, IngestObjectJson, data)
 }
@@ -242,10 +243,10 @@ func TestToIntellectualObject(t *testing.T) {
 	assert.Equal(t, "some-bag", intelObj.BagName)
 	assert.Equal(t, description, intelObj.Description)
 	assert.Equal(t, etag, intelObj.ETag)
-	assert.Equal(t, obj.Id, intelObj.Id)
+	assert.Equal(t, obj.ID, intelObj.ID)
 	assert.Equal(t, "test.edu/some-bag", intelObj.Identifier)
 	assert.Equal(t, institution, intelObj.Institution)
-	assert.Equal(t, institutionId, intelObj.InstitutionId)
+	assert.Equal(t, institutionId, intelObj.InstitutionID)
 	assert.Equal(t, sourceOrganization, intelObj.SourceOrganization)
 	assert.Equal(t, constants.StateActive, intelObj.State)
 	assert.Equal(t, constants.StorageStandard, intelObj.StorageOption)

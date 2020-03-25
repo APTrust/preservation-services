@@ -1,22 +1,23 @@
 package registry_test
 
 import (
+	"testing"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 var genericFile = &registry.GenericFile{
 	CreatedAt:                    testutil.Bloomsday,
 	FileFormat:                   "text/html",
 	FileModified:                 testutil.Bloomsday,
-	Id:                           5432,
+	ID:                           5432,
 	Identifier:                   "test.edu.bag/data/index.html",
-	InstitutionId:                9355,
-	IntellectualObjectId:         1000,
+	InstitutionID:                9355,
+	IntellectualObjectID:         1000,
 	IntellectualObjectIdentifier: "test.edu.bag",
 	LastFixityCheck:              testutil.Bloomsday,
 	Size:                         int64(8900),
@@ -33,13 +34,13 @@ var gfJson = `{"created_at":"1904-06-16T15:04:05Z","file_format":"text/html","fi
 var gfJsonForPharos = `{"generic_file":{"file_format":"text/html","id":5432,"identifier":"test.edu.bag/data/index.html","institution_id":9355,"intellectual_object_id":1000,"size":8900,"storage_option":"Standard","uri":"https://s3.example.com/preservation/5432"}}`
 
 func TestGenericFileFromJson(t *testing.T) {
-	gf, err := registry.GenericFileFromJson([]byte(gfJson))
+	gf, err := registry.GenericFileFromJSON([]byte(gfJson))
 	require.Nil(t, err)
 	assert.Equal(t, genericFile, gf)
 }
 
 func TestGenericFileToJson(t *testing.T) {
-	actualJson, err := genericFile.ToJson()
+	actualJson, err := genericFile.ToJSON()
 	require.Nil(t, err)
 	assert.Equal(t, gfJson, string(actualJson))
 }

@@ -3,13 +3,14 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"path"
+	"strings"
+	"time"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/minio/minio-go/v6"
-	"path"
-	"strings"
-	"time"
 )
 
 type IngestFile struct {
@@ -21,9 +22,9 @@ type IngestFile struct {
 	FormatIdentifiedAt   time.Time         `json:"format_identified_at,omitempty"`
 	FormatMatchType      string            `json:"format_match_type,omitempty"`
 	FileModified         time.Time         `json:"file_modified,omitempty"`
-	Id                   int               `json:"id,omitempty"`
-	InstitutionId        int               `json:"institution_id,omitempty"`
-	IntellectualObjectId int               `json:"intellectual_object_id,omitempty"`
+	ID                   int               `json:"id,omitempty"`
+	InstitutionID        int               `json:"institution_id,omitempty"`
+	IntellectualObjectID int               `json:"intellectual_object_id,omitempty"`
 	NeedsSave            bool              `json:"needs_save"`
 	ObjectIdentifier     string            `json:"object_identifier"`
 	PathInBag            string            `json:"path_in_bag"`
@@ -44,7 +45,7 @@ func NewIngestFile(objIdentifier, pathInBag string) *IngestFile {
 	}
 }
 
-func IngestFileFromJson(jsonData string) (*IngestFile, error) {
+func IngestFileFromJSON(jsonData string) (*IngestFile, error) {
 	f := &IngestFile{}
 	err := json.Unmarshal([]byte(jsonData), f)
 	if err != nil {
@@ -53,7 +54,7 @@ func IngestFileFromJson(jsonData string) (*IngestFile, error) {
 	return f, nil
 }
 
-func (f *IngestFile) ToJson() (string, error) {
+func (f *IngestFile) ToJSON() (string, error) {
 	bytes, err := json.Marshal(f)
 	if err != nil {
 		return "", err
@@ -312,10 +313,10 @@ func (f *IngestFile) ToGenericFile() *registry.GenericFile {
 	return &registry.GenericFile{
 		FileFormat:                   f.FileFormat,
 		FileModified:                 f.FileModified,
-		Id:                           f.Id,
+		ID:                           f.ID,
 		Identifier:                   f.Identifier(),
-		InstitutionId:                f.InstitutionId,
-		IntellectualObjectId:         f.IntellectualObjectId,
+		InstitutionID:                f.InstitutionID,
+		IntellectualObjectID:         f.IntellectualObjectID,
 		IntellectualObjectIdentifier: f.ObjectIdentifier,
 		Size:                         f.Size,
 		State:                        constants.StateActive,

@@ -11,10 +11,10 @@ type GenericFile struct {
 	CreatedAt                    time.Time      `json:"created_at,omitempty"`
 	FileFormat                   string         `json:"file_format,omitempty"`
 	FileModified                 time.Time      `json:"file_modified,omitempty"`
-	Id                           int            `json:"id,omitempty"`
+	ID                           int            `json:"id,omitempty"`
 	Identifier                   string         `json:"identifier,omitempty"`
-	InstitutionId                int            `json:"institution_id,omitempty"`
-	IntellectualObjectId         int            `json:"intellectual_object_id,omitempty"`
+	InstitutionID                int            `json:"institution_id,omitempty"`
+	IntellectualObjectID         int            `json:"intellectual_object_id,omitempty"`
 	IntellectualObjectIdentifier string         `json:"intellectual_object_identifier,omitempty"`
 	LastFixityCheck              time.Time      `json:"last_fixity_check,omitempty"`
 	PremisEvents                 []*PremisEvent `json:"premis_events,omitempty"`
@@ -25,7 +25,7 @@ type GenericFile struct {
 	UpdatedAt                    time.Time      `json:"updated_at,omitempty"`
 }
 
-func GenericFileFromJson(jsonData []byte) (*GenericFile, error) {
+func GenericFileFromJSON(jsonData []byte) (*GenericFile, error) {
 	gf := &GenericFile{}
 	err := json.Unmarshal(jsonData, gf)
 	if err != nil {
@@ -34,7 +34,7 @@ func GenericFileFromJson(jsonData []byte) (*GenericFile, error) {
 	return gf, nil
 }
 
-func (gf *GenericFile) ToJson() ([]byte, error) {
+func (gf *GenericFile) ToJSON() ([]byte, error) {
 	bytes, err := json.Marshal(gf)
 	if err != nil {
 		return nil, err
@@ -60,10 +60,10 @@ func (gf *GenericFile) UUID() string {
 type GenericFileForPharos struct {
 	Checksums            []*Checksum    `json:"checksums_attributes,omitempty"`
 	FileFormat           string         `json:"file_format,omitempty"`
-	Id                   int            `json:"id,omitempty"`
+	ID                   int            `json:"id,omitempty"`
 	Identifier           string         `json:"identifier,omitempty"`
-	InstitutionId        int            `json:"institution_id"`
-	IntellectualObjectId int            `json:"intellectual_object_id"`
+	InstitutionID        int            `json:"institution_id"`
+	IntellectualObjectID int            `json:"intellectual_object_id"`
 	PremisEvents         []*PremisEvent `json:"premis_events_attributes,omitempty"`
 	Size                 int64          `json:"size,omitempty"`
 	StorageOption        string         `json:"storage_option"`
@@ -74,10 +74,10 @@ func NewGenericFileForPharos(gf *GenericFile) *GenericFileForPharos {
 	return &GenericFileForPharos{
 		Checksums:            gf.Checksums,
 		FileFormat:           gf.FileFormat,
-		Id:                   gf.Id,
+		ID:                   gf.ID,
 		Identifier:           gf.Identifier,
-		InstitutionId:        gf.InstitutionId,
-		IntellectualObjectId: gf.IntellectualObjectId,
+		InstitutionID:        gf.InstitutionID,
+		IntellectualObjectID: gf.IntellectualObjectID,
 		PremisEvents:         gf.PremisEvents,
 		Size:                 gf.Size,
 		StorageOption:        gf.StorageOption,

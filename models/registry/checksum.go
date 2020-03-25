@@ -10,12 +10,12 @@ type Checksum struct {
 	CreatedAt     time.Time `json:"created_at,omitempty"`
 	DateTime      time.Time `json:"datetime"`
 	Digest        string    `json:"digest"`
-	GenericFileId int       `json:"generic_file_id"`
-	Id            int       `json:"id,omitempty"`
+	GenericFileID int       `json:"generic_file_id"`
+	ID            int       `json:"id,omitempty"`
 	UpdatedAt     time.Time `json:"updated_at,omitempty"`
 }
 
-func ChecksumFromJson(jsonData []byte) (*Checksum, error) {
+func ChecksumFromJSON(jsonData []byte) (*Checksum, error) {
 	c := &Checksum{}
 	err := json.Unmarshal(jsonData, c)
 	if err != nil {
@@ -24,7 +24,7 @@ func ChecksumFromJson(jsonData []byte) (*Checksum, error) {
 	return c, nil
 }
 
-func (c *Checksum) ToJson() ([]byte, error) {
+func (c *Checksum) ToJSON() ([]byte, error) {
 	bytes, err := json.Marshal(c)
 	if err != nil {
 		return nil, err

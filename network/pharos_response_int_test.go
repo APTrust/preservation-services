@@ -144,7 +144,7 @@ func TestChecksum(t *testing.T) {
 	client := GetPharosClient(t)
 
 	for _, checksum := range checksums {
-		resp := client.ChecksumGet(checksum.Id)
+		resp := client.ChecksumGet(checksum.ID)
 		assert.Nil(t, resp.Error)
 		assert.NotNil(t, resp.Checksum())
 	}
@@ -175,7 +175,7 @@ func TestWorkItem(t *testing.T) {
 	item := GetWorkItem(t, etag)
 
 	client := GetPharosClient(t)
-	resp := client.WorkItemGet(item.Id)
+	resp := client.WorkItemGet(item.ID)
 	assert.NotNil(t, resp.WorkItem())
 }
 

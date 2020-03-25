@@ -22,7 +22,7 @@ var EmptyHeaders = make(map[string]string, 0)
 
 // Returns an http handler function that returns the contents
 // of the specified file, along with the specified headers.
-func HttpFileResponder(headers map[string]string, filePath string) http.HandlerFunc {
+func HTTPFileResponder(headers map[string]string, filePath string) http.HandlerFunc {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		setHeaders(w, headers)
 		f, err := os.Open(filePath)
@@ -36,7 +36,7 @@ func HttpFileResponder(headers map[string]string, filePath string) http.HandlerF
 
 // Returns an http handler function that returns the specified
 // string, along with the specified headers.
-func HttpStringResponder(headers map[string]string, data string) http.HandlerFunc {
+func HTTPStringResponder(headers map[string]string, data string) http.HandlerFunc {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		setHeaders(w, headers)
 		w.Write([]byte(data))

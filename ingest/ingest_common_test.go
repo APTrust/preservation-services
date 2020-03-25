@@ -197,7 +197,7 @@ func prepareForCopyToStaging(t *testing.T, context *common.Context) *ingest.Stag
 	obj := getIngestObject(pathToGoodBag, goodbagMd5)
 	inst := context.PharosClient.InstitutionGet("example.edu").Institution()
 	require.NotNil(t, inst)
-	obj.InstitutionId = inst.Id
+	obj.InstitutionID = inst.ID
 
 	err = context.RedisClient.IngestObjectSave(testWorkItemId, obj)
 	require.Nil(t, err)
