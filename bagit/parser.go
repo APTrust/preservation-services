@@ -66,6 +66,9 @@ func ParseTagFile(reader io.Reader, relFilePath string) ([]*Tag, error) {
 	return tags, nil
 }
 
+// ParseManifest parses a checksum manifest, returning a slice of
+// Checksums. Param reader should be an open reader. Param algorithm
+// should be name of the digest algorithm ("md5", "sha256", etc).
 func ParseManifest(reader io.Reader, algorithm string) ([]*Checksum, error) {
 	checksums := make([]*Checksum, 0)
 	re := regexp.MustCompile(`^(\S*)\s*(.*)`)
@@ -87,7 +90,7 @@ func ParseManifest(reader io.Reader, algorithm string) ([]*Checksum, error) {
 		} else {
 			return nil, fmt.Errorf("Unable to parse line %d: %s", lineNum, line)
 		}
-		lineNum += 1
+		lineNum++
 	}
 	return checksums, nil
 }

@@ -7,6 +7,7 @@ type Tag struct {
 	Value   string `json:"value"`
 }
 
+// NewTag returns a new Tag object. Params are self-explanatory.
 func NewTag(sourceFile, label, value string) *Tag {
 	return &Tag{
 		TagFile: sourceFile,

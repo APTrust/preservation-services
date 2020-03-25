@@ -1,6 +1,7 @@
 package bagit
 
-type BagItProfileInfo struct {
+// ProfileInfo contains meta info about the profile.
+type ProfileInfo struct {
 	BagItProfileIdentifier string `json:"bagItProfileIdentifier"`
 	BagItProfileVersion    string `json:"bagItProfileVersion"`
 	ContactEmail           string `json:"contactEmail"`

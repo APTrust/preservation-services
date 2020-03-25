@@ -2,21 +2,22 @@ package ingest
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
-	"strings"
 )
 
 type MetadataValidator struct {
 	IngestWorker
 	Errors  []string
-	Profile *bagit.BagItProfile
+	Profile *bagit.Profile
 }
 
-func NewMetadataValidator(context *common.Context, profile *bagit.BagItProfile, ingestObject *service.IngestObject, workItemId int) *MetadataValidator {
+func NewMetadataValidator(context *common.Context, profile *bagit.Profile, ingestObject *service.IngestObject, workItemId int) *MetadataValidator {
 	return &MetadataValidator{
 		IngestWorker: IngestWorker{
 			Context:      context,

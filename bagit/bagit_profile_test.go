@@ -1,18 +1,19 @@
 package bagit_test
 
 import (
+	"path"
+	"testing"
+
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"path"
-	"testing"
 )
 
 // This also implicitly tests BagItProfileFromJson
 func TestBagItProfileLoad(t *testing.T) {
 	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
-	profile, err := bagit.BagItProfileLoad(filename)
+	profile, err := bagit.ProfileLoad(filename)
 	assert.Nil(t, err)
 	require.NotNil(t, profile)
 
@@ -24,18 +25,18 @@ func TestBagItProfileLoad(t *testing.T) {
 	assert.Equal(t, 7, len(profile.Tags[13].Values))
 
 	// Test with bad filename
-	_, err = bagit.BagItProfileLoad("__file_does_not_exist__")
+	_, err = bagit.ProfileLoad("__file_does_not_exist__")
 	assert.NotNil(t, err)
 
 	// Test with non-JSON file. This is a tar file.
 	filename = path.Join(testutil.PathToUnitTestBag("example.edu.tagsample_good.tar"))
-	_, err = bagit.BagItProfileLoad(filename)
+	_, err = bagit.ProfileLoad(filename)
 	assert.NotNil(t, err)
 }
 
 func TestGetTagDef(t *testing.T) {
 	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
-	profile, err := bagit.BagItProfileLoad(filename)
+	profile, err := bagit.ProfileLoad(filename)
 	assert.Nil(t, err)
 	require.NotNil(t, profile)
 

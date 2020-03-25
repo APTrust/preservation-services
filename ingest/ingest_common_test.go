@@ -2,6 +2,10 @@ package ingest_test
 
 import (
 	"fmt"
+	"path"
+	"path/filepath"
+	"testing"
+
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
@@ -11,9 +15,6 @@ import (
 	"github.com/minio/minio-go/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"path"
-	"path/filepath"
-	"testing"
 )
 
 // WorkItem ID for StagingUploader tests, so we don't conflict with ids
@@ -132,9 +133,9 @@ func getIngestObject(pathToBagFile, md5Digest string) *service.IngestObject {
 }
 
 // Valid names are constants.BagItProfileBTR and constant.BagItProfileDefault
-func getProfile(name string) (*bagit.BagItProfile, error) {
+func getProfile(name string) (*bagit.Profile, error) {
 	filename := path.Join(testutil.ProjectRoot(), "profiles", name)
-	return bagit.BagItProfileLoad(filename)
+	return bagit.ProfileLoad(filename)
 }
 
 func getMetadataValidator(t *testing.T, profileName, pathToBag, bagMd5 string) *ingest.MetadataValidator {
@@ -208,7 +209,7 @@ func prepareForCopyToStaging(t *testing.T, context *common.Context) *ingest.Stag
 
 	// Validate the bag.
 	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
-	profile, err := bagit.BagItProfileLoad(filename)
+	profile, err := bagit.ProfileLoad(filename)
 	require.Nil(t, err)
 	validator := ingest.NewMetadataValidator(context, profile, obj, testWorkItemId)
 	require.True(t, validator.IsValid())
