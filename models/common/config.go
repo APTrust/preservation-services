@@ -96,17 +96,17 @@ func loadConfig() *Config {
 		S3Credentials: map[string]S3Credentials{
 			constants.S3ClientAWS: S3Credentials{
 				Host:      v.GetString("S3_AWS_HOST"),
-				KeyId:     v.GetString("S3_AWS_KEY"),
+				KeyID:     v.GetString("S3_AWS_KEY"),
 				SecretKey: v.GetString("S3_AWS_SECRET"),
 			},
 			constants.S3ClientLocal: S3Credentials{
 				Host:      v.GetString("S3_LOCAL_HOST"),
-				KeyId:     v.GetString("S3_LOCAL_KEY"),
+				KeyID:     v.GetString("S3_LOCAL_KEY"),
 				SecretKey: v.GetString("S3_LOCAL_SECRET"),
 			},
 			constants.S3ClientWasabi: S3Credentials{
 				Host:      v.GetString("S3_WASABI_HOST"),
-				KeyId:     v.GetString("S3_WASABI_KEY"),
+				KeyID:     v.GetString("S3_WASABI_KEY"),
 				SecretKey: v.GetString("S3_WASABI_SECRET"),
 			},
 		},
@@ -267,7 +267,7 @@ func (config *Config) checkS3Providers() {
 		if provider.Host == "" {
 			panic(fmt.Sprintf("S3 provider %s is missing Host", name))
 		}
-		if provider.KeyId == "" {
+		if provider.KeyID == "" {
 			panic(fmt.Sprintf("S3 provider %s is missing KeyId", name))
 		}
 		if provider.SecretKey == "" {

@@ -1,16 +1,17 @@
 package common_test
 
 import (
+	"path"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/op/go-logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"path"
-	"strings"
-	"testing"
-	"time"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -53,7 +54,7 @@ func TestNewConfig(t *testing.T) {
 	for _, name := range constants.S3Providers {
 		provider := config.S3Credentials[name]
 		assert.Equal(t, "localhost:9899", provider.Host)
-		assert.Equal(t, "minioadmin", provider.KeyId)
+		assert.Equal(t, "minioadmin", provider.KeyID)
 		assert.Equal(t, "minioadmin", provider.SecretKey)
 	}
 }

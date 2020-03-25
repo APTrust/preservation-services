@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+
 	"github.com/APTrust/preservation-services/network"
 	"github.com/APTrust/preservation-services/util/logger"
 	"github.com/minio/minio-go/v6"
@@ -72,7 +73,7 @@ func getS3Clients(config *Config) map[string]*minio.Client {
 	for name, creds := range config.S3Credentials {
 		client, err := minio.New(
 			creds.Host,
-			creds.KeyId,
+			creds.KeyID,
 			creds.SecretKey,
 			useSSL)
 		if err != nil {

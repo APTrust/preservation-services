@@ -63,7 +63,7 @@ func TestErrorDetail(t *testing.T) {
 }
 
 func TestNewHttpError(t *testing.T) {
-	err := common.NewHttpError(
+	err := common.NewHTTPError(
 		msg,
 		innerError,
 		http.MethodGet,
@@ -95,7 +95,7 @@ func TestDetailedError(t *testing.T) {
 	)
 	assert.Equal(t, err.Detail(), testfunc(err))
 
-	httpError := common.NewHttpError(
+	httpError := common.NewHTTPError(
 		msg,
 		innerError,
 		http.MethodGet,

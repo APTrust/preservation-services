@@ -52,9 +52,9 @@ func (e *Error) Detail() string {
 		prefix, e.Message, e.File, e.Line, underlyingError)
 }
 
-// HttpError is a custom error struct that captures details of errors
+// HTTPError is a custom error struct that captures details of errors
 // coming from Pharos, Redis, and S3.
-type HttpError struct {
+type HTTPError struct {
 	Err        error
 	Message    string
 	Method     string
@@ -62,8 +62,8 @@ type HttpError struct {
 	URL        string
 }
 
-func NewHttpError(message string, err error, method, url string, statusCode int) *HttpError {
-	return &HttpError{
+func NewHTTPError(message string, err error, method, url string, statusCode int) *HTTPError {
+	return &HTTPError{
 		Err:        err,
 		Message:    message,
 		Method:     method,
@@ -72,15 +72,15 @@ func NewHttpError(message string, err error, method, url string, statusCode int)
 	}
 }
 
-func (e *HttpError) Unwrap() error {
+func (e *HTTPError) Unwrap() error {
 	return e.Err
 }
 
-func (e *HttpError) Error() string {
+func (e *HTTPError) Error() string {
 	return e.Message
 }
 
-func (e *HttpError) Detail() string {
+func (e *HTTPError) Detail() string {
 	underlyingError := ""
 	if e.Err != nil {
 		underlyingError = fmt.Sprintf("(Underlying error: %s)", e.Err.Error())
