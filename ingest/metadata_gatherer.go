@@ -106,7 +106,7 @@ func (m *MetadataGatherer) scan(scanner *TarredBagScanner) error {
 		// Make a note of tag files and fetch.txt file
 		// for validator.
 		m.noteSpecialFileType(ingestFile)
-		m.IngestObject.FileCount += 1
+		m.IngestObject.FileCount++
 
 		err = m.IngestFileSave(ingestFile)
 		if err != nil {

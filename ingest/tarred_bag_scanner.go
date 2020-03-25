@@ -73,9 +73,8 @@ func (scanner *TarredBagScanner) ProcessNextEntry() (ingestFile *service.IngestF
 	}
 	if header.Typeflag == tar.TypeReg || header.Typeflag == tar.TypeRegA {
 		return scanner.processFileEntry(header)
-	} else {
-		return nil, nil
 	}
+	return nil, nil
 }
 
 // Process a single file in the tarball.
