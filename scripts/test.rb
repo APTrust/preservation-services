@@ -69,7 +69,12 @@ class TestRunner
     # Note: -p 1 flag helps prevent Redis overwrites on Linux/Travis
     puts "Starting unit tests..."
     arg = "./..." if arg.nil?
-    cmd = "go test -p 1 #{arg}"
+    if @options[:formats]
+      puts "Will run additional format identification tests"
+      cmd = "go test -p 1 -tags=formats #{arg}"
+    else
+      cmd = "go test -p 1 #{arg}"
+    end
     puts cmd
     pid = Process.spawn(env_hash, cmd, chdir: project_root)
     Process.wait pid
@@ -218,6 +223,7 @@ class TestRunner
     puts "APTrust Preservation Services tests\n\n"
 	puts "Usage: "
     puts "  test.rb units                   # Run unit tests"
+    puts "  test.rb units --formats         # Run unit and extra format tests"
     puts "  test.rb integration             # Run integration tests"
     puts "  test.rb integration --rebuild   # Rebuild Docker & run integration"
     puts "\n"
@@ -239,6 +245,9 @@ if __FILE__ == $0
   OptionParser.new do |opts|
     opts.on("-r", "--rebuild", "Rebuild Pharos docker container") do |r|
       options[:rebuild] = r
+    end
+    opts.on("-f", "--formats", "Run extra format identification tests") do |f|
+      options[:formats] = f
     end
   end.parse!
 
