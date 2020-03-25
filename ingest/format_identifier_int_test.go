@@ -4,16 +4,17 @@ package ingest_test
 
 import (
 	"fmt"
+	"path"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"path"
-	"strings"
-	"testing"
-	"time"
 )
 
 func getFormatIdentifier(t *testing.T) *ingest.FormatIdentifier {
@@ -23,7 +24,7 @@ func getFormatIdentifier(t *testing.T) *ingest.FormatIdentifier {
 	require.NotNil(t, f)
 	assert.Equal(t, context, f.Context)
 	assert.Equal(t, obj, f.IngestObject)
-	assert.Equal(t, testWorkItemId, f.WorkItemId)
+	assert.Equal(t, testWorkItemId, f.WorkItemID)
 	assert.NotNil(t, f.FmtIdentifier)
 	return f
 }
@@ -41,7 +42,7 @@ func TestIdentifyFormat(t *testing.T) {
 	require.Nil(t, err)
 
 	fi := ingest.NewFormatIdentifier(context,
-		stagingUploader.WorkItemId, stagingUploader.IngestObject)
+		stagingUploader.WorkItemID, stagingUploader.IngestObject)
 
 	testGetPresignedURL(t, fi)
 	clearFileFormats(t, fi)
@@ -54,7 +55,7 @@ func TestIdentifyFormat(t *testing.T) {
 
 func testGetPresignedURL(t *testing.T, fi *ingest.FormatIdentifier) {
 	bucket := fi.Context.Config.StagingBucket
-	key := fmt.Sprintf("%d/%s", fi.WorkItemId, constants.EmptyUUID)
+	key := fmt.Sprintf("%d/%s", fi.WorkItemID, constants.EmptyUUID)
 	presignedURL, err := fi.GetPresignedURL(bucket, key)
 	assert.Nil(t, err)
 
@@ -87,7 +88,7 @@ func testFormatMetadata(t *testing.T, fi *ingest.FormatIdentifier) {
 		assert.True(t, (ingestFile.FormatMatchType == constants.MatchTypeSignature || ingestFile.FormatMatchType == constants.MatchTypeExtension), ingestFile.PathInBag)
 		return nil
 	}
-	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemId, testFn)
+	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemID, testFn)
 	assert.Nil(t, err)
 }
 
@@ -99,6 +100,6 @@ func clearFileFormats(t *testing.T, fi *ingest.FormatIdentifier) {
 		ingestFile.FormatMatchType = ""
 		return nil
 	}
-	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemId, clearFn)
+	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemID, clearFn)
 	assert.Nil(t, err)
 }

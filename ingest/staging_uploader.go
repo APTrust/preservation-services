@@ -3,28 +3,29 @@ package ingest
 import (
 	"archive/tar"
 	"fmt"
+	"io"
+	"time"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/minio/minio-go/v6"
-	"io"
-	"time"
 )
 
 // StagingUploader unpacks a tarfile from a receiving bucket and
 // stores each file unpacked from the tar in a staging bucket.
 type StagingUploader struct {
-	IngestWorker
+	Worker
 }
 
 // NewStagingUploader creates a new StagingUploader.
-func NewStagingUploader(context *common.Context, workItemId int, ingestObject *service.IngestObject) *StagingUploader {
+func NewStagingUploader(context *common.Context, workItemID int, ingestObject *service.IngestObject) *StagingUploader {
 	return &StagingUploader{
-		IngestWorker{
+		Worker{
 			Context:      context,
 			IngestObject: ingestObject,
-			WorkItemId:   workItemId,
+			WorkItemID:   workItemID,
 		},
 	}
 }
@@ -102,7 +103,7 @@ func (s *StagingUploader) CopyFileToStaging(tarReader *tar.Reader, ingestFile *s
 		return err
 	}
 	bucket := s.Context.Config.StagingBucket
-	key := fmt.Sprintf("%d/%s", s.WorkItemId, ingestFile.UUID)
+	key := fmt.Sprintf("%d/%s", s.WorkItemID, ingestFile.UUID)
 	_, err = s.Context.S3Clients[constants.S3ClientAWS].PutObject(
 		bucket,
 		key,

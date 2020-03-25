@@ -1,21 +1,22 @@
 package ingest_test
 
 import (
+	"testing"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
-func getIngestWorker() *ingest.IngestWorker {
+func getIngestWorker() *ingest.Worker {
 	context := common.NewContext()
 	obj := getIngestObject(pathToGoodBag, goodbagMd5)
-	return &ingest.IngestWorker{
+	return &ingest.Worker{
 		Context:      context,
-		WorkItemId:   3349,
+		WorkItemID:   3349,
 		IngestObject: obj,
 	}
 }
@@ -27,7 +28,7 @@ func TestIngestWorker_ObjectSave(t *testing.T) {
 
 	client := ingestWorker.Context.RedisClient
 	objIdentifier := ingestWorker.IngestObject.Identifier()
-	obj, err := client.IngestObjectGet(ingestWorker.WorkItemId, objIdentifier)
+	obj, err := client.IngestObjectGet(ingestWorker.WorkItemID, objIdentifier)
 	require.Nil(t, err)
 	require.NotNil(t, obj)
 	assert.Equal(t, objIdentifier, obj.Identifier())

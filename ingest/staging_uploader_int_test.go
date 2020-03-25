@@ -42,7 +42,7 @@ func TestNewStagingUploader(t *testing.T) {
 	uploader := ingest.NewStagingUploader(context, testWorkItemId, obj)
 	require.NotNil(t, uploader)
 	assert.Equal(t, context, uploader.Context)
-	assert.Equal(t, testWorkItemId, uploader.WorkItemId)
+	assert.Equal(t, testWorkItemId, uploader.WorkItemID)
 	assert.Equal(t, obj, uploader.IngestObject)
 }
 

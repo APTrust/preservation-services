@@ -2,6 +2,11 @@ package ingest_test
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"strings"
+	"testing"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
@@ -9,10 +14,6 @@ import (
 	"github.com/APTrust/preservation-services/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path"
-	"strings"
-	"testing"
 )
 
 // The setup/teardown functions for these tests, along with definitions
@@ -24,7 +25,7 @@ func TestNewMetadataGatherer(t *testing.T) {
 	g := ingest.NewMetadataGatherer(context, 9999, obj)
 	require.NotNil(t, g)
 	assert.Equal(t, context, g.Context)
-	assert.Equal(t, 9999, g.WorkItemId)
+	assert.Equal(t, 9999, g.WorkItemID)
 	assert.Equal(t, obj, g.IngestObject)
 }
 

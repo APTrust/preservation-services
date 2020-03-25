@@ -6,16 +6,17 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
-	"github.com/APTrust/preservation-services/constants"
-	"github.com/APTrust/preservation-services/models/service"
-	"github.com/APTrust/preservation-services/util"
-	"github.com/satori/go.uuid"
 	"hash"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
+
+	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util"
+	uuid "github.com/satori/go.uuid"
 )
 
 // TarredBagScanner reads a tarred BagIt file to collect metadata for
@@ -110,10 +111,10 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 	ingestFile.UUID = uuid.NewV4().String()
 
 	// Set storage URL
-	baseUrl := constants.BaseURIFor[ingestFile.StorageOption]
+	baseURL := constants.BaseURIFor[ingestFile.StorageOption]
 	ingestFile.StorageRecords = append(ingestFile.StorageRecords,
 		&service.StorageRecord{
-			URL: fmt.Sprintf("%s%s", baseUrl, ingestFile.UUID),
+			URL: fmt.Sprintf("%s%s", baseURL, ingestFile.UUID),
 		})
 
 	ingestFile.FileFormat = constants.MimeTypeForExtension[filepath.Ext(pathInBag)]

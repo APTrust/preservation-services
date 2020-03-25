@@ -12,17 +12,17 @@ import (
 )
 
 type MetadataValidator struct {
-	IngestWorker
+	Worker
 	Errors  []string
 	Profile *bagit.Profile
 }
 
-func NewMetadataValidator(context *common.Context, profile *bagit.Profile, ingestObject *service.IngestObject, workItemId int) *MetadataValidator {
+func NewMetadataValidator(context *common.Context, profile *bagit.Profile, ingestObject *service.IngestObject, workItemID int) *MetadataValidator {
 	return &MetadataValidator{
-		IngestWorker: IngestWorker{
+		Worker: Worker{
 			Context:      context,
 			IngestObject: ingestObject,
-			WorkItemId:   workItemId,
+			WorkItemID:   workItemID,
 		},
 		Errors:  make([]string, 0),
 		Profile: profile,
@@ -220,7 +220,7 @@ func (v *MetadataValidator) IngestFilesOk() bool {
 	var err error
 	for {
 		fileMap, nextOffset, err = v.Context.RedisClient.GetBatchOfFileKeys(
-			v.WorkItemId, nextOffset, batchSize)
+			v.WorkItemID, nextOffset, batchSize)
 		if err != nil {
 			v.AddError("Internal error during validation: "+
 				"could not get file info from cache: %s. "+

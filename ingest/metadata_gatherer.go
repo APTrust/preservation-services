@@ -2,17 +2,18 @@ package ingest
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/minio/minio-go/v6"
-	"github.com/satori/go.uuid"
-	"io"
-	"os"
-	"path/filepath"
-	"time"
+	uuid "github.com/satori/go.uuid"
 )
 
 // MetadataGatherer scans a tarred bag, collects metadata such as
@@ -25,18 +26,18 @@ import (
 // this object to gather the metadata that subsequent workers will
 // need to perform their jobs.
 type MetadataGatherer struct {
-	IngestWorker
+	Worker
 }
 
 // NewMetadataGatherer creates a new MetadataGatherer.
 // The context parameter provides methods for communicating
 // with S3 and our working data store (Redis).
-func NewMetadataGatherer(context *common.Context, workItemId int, ingestObject *service.IngestObject) *MetadataGatherer {
+func NewMetadataGatherer(context *common.Context, workItemID int, ingestObject *service.IngestObject) *MetadataGatherer {
 	return &MetadataGatherer{
-		IngestWorker{
+		Worker{
 			Context:      context,
 			IngestObject: ingestObject,
-			WorkItemId:   workItemId,
+			WorkItemID:   workItemID,
 		},
 	}
 }
@@ -127,7 +128,7 @@ func (m *MetadataGatherer) CopyTempFilesToS3(tempFiles []string) error {
 		// manifests, tag manifests, bagit.txt, bag-info.txt, and aptrust-info.txt
 		basename := filepath.Base(filePath)
 		// s3Key will look like 425005/manifest-sha256.txt
-		key := fmt.Sprintf("%d/%s", m.WorkItemId, basename)
+		key := fmt.Sprintf("%d/%s", m.WorkItemID, basename)
 
 		// TODO: Fatal vs. transient errors. Retries.
 		_, err := m.Context.S3Clients[constants.S3ClientAWS].FPutObject(
@@ -296,11 +297,11 @@ func (m *MetadataGatherer) setMissingDefaultTags() {
 
 func (m *MetadataGatherer) logFileSaved(filename string) {
 	m.Context.Logger.Infof("Copied to staging: WorkItem %d, %s",
-		m.WorkItemId, filename)
+		m.WorkItemID, filename)
 }
 
 func (m *MetadataGatherer) logFileNotSaved(filename string, err error) {
 	m.Context.Logger.Errorf(
 		"Failed copy to staging: WorkItem %d, %s: %s",
-		m.WorkItemId, filename, err.Error())
+		m.WorkItemID, filename, err.Error())
 }

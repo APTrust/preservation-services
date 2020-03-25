@@ -90,7 +90,7 @@ func TestNewReingestManager(t *testing.T) {
 	manager := GetReingestManager()
 	assert.NotNil(t, manager.Context)
 	assert.Equal(t, "example.edu.tagsample_good.tar", manager.IngestObject.S3Key)
-	assert.Equal(t, 9999, manager.WorkItemId)
+	assert.Equal(t, 9999, manager.WorkItemID)
 }
 
 func TestObjectWasPreviouslyIngested(t *testing.T) {
@@ -264,7 +264,7 @@ func TestProcessObject(t *testing.T) {
 	obj := PutBagMetadataInRedis(t)
 	PutBagMetadataInPharos(t, obj)
 	manager := GetReingestManager()
-	manager.WorkItemId = TestBagWorkItemId
+	manager.WorkItemID = TestBagWorkItemId
 
 	wasPreviouslyIngested, err := manager.ProcessObject()
 	assert.True(t, wasPreviouslyIngested)

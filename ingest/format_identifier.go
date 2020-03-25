@@ -2,26 +2,27 @@ package ingest
 
 import (
 	"fmt"
+	"net/url"
+	"time"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
-	"net/url"
-	"time"
 )
 
 // FormatIdentifier streams an S3 file, or the first chunk of it, through
 // an external program to determine its file format. Currently, the tool
 // is FIDO, which uses the PRONOM registry to identify formats.
 type FormatIdentifier struct {
-	IngestWorker
+	Worker
 	FmtIdentifier *util.FormatIdentifier
 }
 
 // NewFormatIdentifier creates a new FormatIdentifier. This will panic
 // if the prerequisites for running the format identifier script are
 // not present.
-func NewFormatIdentifier(context *common.Context, workItemId int, ingestObject *service.IngestObject) *FormatIdentifier {
+func NewFormatIdentifier(context *common.Context, workItemID int, ingestObject *service.IngestObject) *FormatIdentifier {
 	pathToScript := context.Config.FormatIdentifierScript()
 	fmtIdentifier := util.NewFormatIdentifier(pathToScript)
 	if !fmtIdentifier.CanRun() {
@@ -30,10 +31,10 @@ func NewFormatIdentifier(context *common.Context, workItemId int, ingestObject *
 			"identify_format.sh. The last should be at %s", pathToScript))
 	}
 	return &FormatIdentifier{
-		IngestWorker: IngestWorker{
+		Worker: Worker{
 			Context:      context,
 			IngestObject: ingestObject,
-			WorkItemId:   workItemId,
+			WorkItemID:   workItemID,
 		},
 		FmtIdentifier: fmtIdentifier,
 	}
@@ -45,7 +46,7 @@ func (fi *FormatIdentifier) IdentifyFormats() error {
 		if ingestFile.FormatIdentifiedBy == constants.FmtIdFido {
 			return nil
 		}
-		key := fmt.Sprintf("%d/%s", fi.WorkItemId, ingestFile.UUID)
+		key := fmt.Sprintf("%d/%s", fi.WorkItemID, ingestFile.UUID)
 		signedURL, err := fi.GetPresignedURL(fi.Context.Config.StagingBucket, key)
 		if err != nil {
 			return err
@@ -92,7 +93,7 @@ func (fi *FormatIdentifier) IdentifyFormats() error {
 	// IngestFilesApply runs our function on all ingest file records
 	// for the specified WorkItemId, and it saves each record back to
 	// Redis.
-	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemId, identify)
+	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemID, identify)
 	return err
 }
 

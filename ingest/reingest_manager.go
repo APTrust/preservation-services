@@ -40,16 +40,16 @@ import (
 // the ingest process know how to process the object and files. This does not
 // alter new objects at all, only object that have been previously ingested.
 type ReingestManager struct {
-	IngestWorker
+	Worker
 }
 
 // NewReingestManager creates a new ReingestManager.
-func NewReingestManager(context *common.Context, workItemId int, ingestObject *service.IngestObject) *ReingestManager {
+func NewReingestManager(context *common.Context, workItemID int, ingestObject *service.IngestObject) *ReingestManager {
 	return &ReingestManager{
-		IngestWorker{
+		Worker{
 			Context:      context,
 			IngestObject: ingestObject,
-			WorkItemId:   workItemId,
+			WorkItemID:   workItemID,
 		},
 	}
 }
@@ -100,7 +100,7 @@ func (r *ReingestManager) ProcessFiles() error {
 		}
 		return nil
 	}
-	_, err := r.Context.RedisClient.IngestFilesApply(r.WorkItemId, processFile)
+	_, err := r.Context.RedisClient.IngestFilesApply(r.WorkItemID, processFile)
 	return err
 }
 
