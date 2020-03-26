@@ -97,7 +97,7 @@ func stagingPostTestS3AndRedis(t *testing.T, context *common.Context) {
 		assert.False(t, ingestFile.CopiedToStagingAt.IsZero())
 
 		// Make sure the object was copied to S3 staging.
-		s3ObjInfo, err := context.S3Clients[constants.S3ClientAWS].StatObject(
+		s3ObjInfo, err := context.S3Clients[constants.StorageProviderAWS].StatObject(
 			context.Config.StagingBucket,
 			ingestFile.UUID,
 			minio.StatObjectOptions{})

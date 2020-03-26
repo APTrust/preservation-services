@@ -131,7 +131,7 @@ func (m *MetadataGatherer) CopyTempFilesToS3(tempFiles []string) error {
 		key := fmt.Sprintf("%d/%s", m.WorkItemID, basename)
 
 		// TODO: Fatal vs. transient errors. Retries.
-		_, err := m.Context.S3Clients[constants.S3ClientAWS].FPutObject(
+		_, err := m.Context.S3Clients[constants.StorageProviderAWS].FPutObject(
 			bucket,
 			key,
 			filePath,

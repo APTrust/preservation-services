@@ -15,7 +15,7 @@ type Worker struct {
 
 // GetS3Object retrieves a tarred bag from a depositor's receiving bucket.
 func (i *Worker) GetS3Object() (*minio.Object, error) {
-	return i.Context.S3Clients[constants.S3ClientAWS].GetObject(
+	return i.Context.S3Clients[constants.StorageProviderAWS].GetObject(
 		i.IngestObject.S3Bucket,
 		i.IngestObject.S3Key,
 		minio.GetObjectOptions{})

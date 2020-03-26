@@ -58,9 +58,13 @@ const (
 	OpIngestValidate          = "Ingest - Validation"
 	OutcomeFailure            = "Failure"
 	OutcomeSuccess            = "Success"
-	S3ClientAWS               = "AWS"
-	S3ClientLocal             = "Local"
-	S3ClientWasabi            = "Wasabi"
+	RegionAWSUSEast1          = "us-east-1" // AWS Virginia
+	RegionAWSUSEast2          = "us-east-2" // AWS Ohio
+	RegionAWSUSWest1          = "us-west-1" // AWS California
+	RegionAWSUSWest2          = "us-west-2" // AWS Oregon
+	RegionWasabiUSEast1       = "us-east-1" // Wasabi Virginia
+	RegionWasabiUSEast2       = "us-east-2" // Wasabi Virginia (2)
+	RegionWasabiUSWest1       = "us-west-1" // Wasabi Oregon
 	SourceIngest              = "ingest"
 	SourceManifest            = "manifest"
 	SourceRegistry            = "registry"
@@ -84,12 +88,22 @@ const (
 	StatusPending             = "Pending"
 	StatusStarted             = "Started"
 	StatusSuccess             = "Success"
+	StorageClassStandard      = "Standard"
+	StorageClassIntelligent   = "Intelligent-Tiering"
+	StorageClassStandardIA    = "Standard IA"
+	StorageClassOneZoneIA     = "One Zone IA"
+	StorageClassGlacier       = "Glacier"
+	StorageClassGlacierDeep   = "Glacier Deep Archive"
+	StorageClassWasabi        = "Wasabi"
 	StorageGlacierDeepOH      = "Glacier-Deep-OH"
 	StorageGlacierDeepOR      = "Glacier-Deep-OR"
 	StorageGlacierDeepVA      = "Glacier-Deep-VA"
 	StorageGlacierOH          = "Glacier-OH"
 	StorageGlacierOR          = "Glacier-OR"
 	StorageGlacierVA          = "Glacier-VA"
+	StorageProviderAWS        = "AWS"
+	StorageProviderLocal      = "Local"
+	StorageProviderWasabi     = "Wasabi"
 	StorageStandard           = "Standard"
 	StorageWasabiOR           = "Wasabi-OR"
 	StorageWasabiVA           = "Wasabi-VA"
@@ -101,10 +115,10 @@ var PreferredAlgsInOrder []string = []string{
 	AlgMd5,
 }
 
-var S3Providers = []string{
-	S3ClientAWS,
-	S3ClientLocal,
-	S3ClientWasabi,
+var StorageProviders = []string{
+	StorageProviderAWS,
+	StorageProviderLocal,
+	StorageProviderWasabi,
 }
 
 var StorageOptions = []string{

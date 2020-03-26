@@ -79,7 +79,7 @@ func setupS3(t *testing.T, context *common.Context, key, pathToBagFile string) {
 func clearS3Files(t *testing.T, context *common.Context) {
 	for _, filename := range goodbagS3Files {
 		key := fmt.Sprintf("9999/%s", filename)
-		_ = context.S3Clients[constants.S3ClientAWS].RemoveObject(
+		_ = context.S3Clients[constants.StorageProviderAWS].RemoveObject(
 			constants.TestBucketReceiving,
 			key)
 		//require.Nil(t, err)
@@ -90,9 +90,9 @@ func clearS3Files(t *testing.T, context *common.Context) {
 func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string) {
 	// Uncomment the following to get a full printout
 	// of the client's HTTP exchanges on Stderr.
-	//context.S3Clients[constants.S3ClientAWS].TraceOn(os.Stderr)
+	//context.S3Clients[constants.StorageProviderAWS].TraceOn(os.Stderr)
 
-	bytesWritten, err := context.S3Clients[constants.S3ClientAWS].FPutObject(
+	bytesWritten, err := context.S3Clients[constants.StorageProviderAWS].FPutObject(
 		constants.TestBucketReceiving,
 		key,
 		pathToBagFile,

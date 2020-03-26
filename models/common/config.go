@@ -17,6 +17,16 @@ import (
 
 type Config struct {
 	BaseWorkingDir          string
+	BucketStandardOR        string
+	BucketStandardVA        string
+	BucketGlacierOH         string
+	BucketGlacierOR         string
+	BucketGlacierVA         string
+	BucketGlacierDeepOH     string
+	BucketGlacierDeepOR     string
+	BucketGlacierDeepVA     string
+	BucketWasabiOR          string
+	BucketWasabiVA          string
 	ConfigName              string
 	IngestTempDir           string
 	LogDir                  string
@@ -41,6 +51,7 @@ type Config struct {
 	StagingBucket           string
 	StagingUploadRetries    int
 	StagingUploadRetryMs    time.Duration
+	UploadTargets           []*UploadTarget
 	VolumeServiceURL        string
 }
 
@@ -57,6 +68,7 @@ var logLevels = map[string]logging.Level{
 func NewConfig() *Config {
 	config := loadConfig()
 	config.expandPaths()
+	config.initUploadTargets()
 	config.sanityCheck()
 	config.makeDirs()
 	return config
@@ -74,6 +86,16 @@ func loadConfig() *Config {
 	}
 	return &Config{
 		BaseWorkingDir:          v.GetString("BASE_WORKING_DIR"),
+		BucketStandardOR:        v.GetString("BUCKET_STANDARD_OR"),
+		BucketStandardVA:        v.GetString("BUCKET_STANDARD_VA"),
+		BucketGlacierOH:         v.GetString("BUCKET_GLACIER_OH"),
+		BucketGlacierOR:         v.GetString("BUCKET_GLACIER_OR"),
+		BucketGlacierVA:         v.GetString("BUCKET_GLACIER_VA"),
+		BucketGlacierDeepOH:     v.GetString("BUCKET_GLACIER_DEEP_OH"),
+		BucketGlacierDeepOR:     v.GetString("BUCKET_GLACIER_DEEP_OR"),
+		BucketGlacierDeepVA:     v.GetString("BUCKET_GLACIER_DEEP_VA"),
+		BucketWasabiOR:          v.GetString("BUCKET_WASABI_OR"),
+		BucketWasabiVA:          v.GetString("BUCKET_WASABI_VA"),
 		ConfigName:              envName,
 		IngestTempDir:           v.GetString("INGEST_TEMP_DIR"),
 		LogDir:                  v.GetString("LOG_DIR"),
@@ -94,17 +116,17 @@ func loadConfig() *Config {
 		RedisUser:               v.GetString("REDIS_USER"),
 		RestoreDir:              v.GetString("RESTORE_DIR"),
 		S3Credentials: map[string]S3Credentials{
-			constants.S3ClientAWS: S3Credentials{
+			constants.StorageProviderAWS: S3Credentials{
 				Host:      v.GetString("S3_AWS_HOST"),
 				KeyID:     v.GetString("S3_AWS_KEY"),
 				SecretKey: v.GetString("S3_AWS_SECRET"),
 			},
-			constants.S3ClientLocal: S3Credentials{
+			constants.StorageProviderLocal: S3Credentials{
 				Host:      v.GetString("S3_LOCAL_HOST"),
 				KeyID:     v.GetString("S3_LOCAL_KEY"),
 				SecretKey: v.GetString("S3_LOCAL_SECRET"),
 			},
-			constants.S3ClientWasabi: S3Credentials{
+			constants.StorageProviderWasabi: S3Credentials{
 				Host:      v.GetString("S3_WASABI_HOST"),
 				KeyID:     v.GetString("S3_WASABI_KEY"),
 				SecretKey: v.GetString("S3_WASABI_SECRET"),
@@ -124,6 +146,20 @@ func (config *Config) FormatIdentifierScript() string {
 
 func (config *Config) PathToScript(name string) string {
 	return path.Join(config.ScriptDir, name)
+}
+
+// UploadTargetFor returns the upload targets for the specified storage option.
+// Storage options are enumerated in constants.StorageOptions. For most options,
+// this will return a single item. For the Standard storage option, it returns
+// two upload targets.
+func (config *Config) UploadTargetsFor(storageOption string) []*UploadTarget {
+	targets := make([]*UploadTarget, 0)
+	for _, target := range config.UploadTargets {
+		if target.OptionName == storageOption {
+			targets = append(targets, target)
+		}
+	}
+	return targets
 }
 
 func getEnvVars() (string, string) {
@@ -182,7 +218,7 @@ func (config *Config) checkHostSafety() {
 		if !isLocalHost(config.RedisURL) {
 			panic(fmt.Sprintf("Dev/Test setup cannot point to external Redis instance %s", config.RedisURL))
 		}
-		for _, name := range constants.S3Providers {
+		for _, name := range constants.StorageProviders {
 			if !isLocalHost(config.S3Credentials[name].Host) {
 				panic(fmt.Sprintf("Dev/Test setup cannot point to external S3 URL %s for S3 service %s", config.S3Credentials[name].Host, name))
 			}
@@ -193,6 +229,36 @@ func (config *Config) checkHostSafety() {
 func (config *Config) checkBasicSettings() {
 	if config.BaseWorkingDir == "" {
 		panic("Config is missing BaseWorkingDir")
+	}
+	if config.BucketStandardOR == "" {
+		panic("Config is missing BucketStandardOR")
+	}
+	if config.BucketStandardVA == "" {
+		panic("Config is missing BucketStandardVA")
+	}
+	if config.BucketGlacierOH == "" {
+		panic("Config is missing BucketGlacierOH")
+	}
+	if config.BucketGlacierOR == "" {
+		panic("Config is missing BucketGlacierOR")
+	}
+	if config.BucketGlacierVA == "" {
+		panic("Config is missing BucketGlacierVA")
+	}
+	if config.BucketGlacierDeepOH == "" {
+		panic("Config is missing BucketGlacierDeepOH")
+	}
+	if config.BucketGlacierDeepOR == "" {
+		panic("Config is missing BucketGlacierDeepOR")
+	}
+	if config.BucketGlacierDeepVA == "" {
+		panic("Config is missing BucketGlacierDeepVA")
+	}
+	if config.BucketWasabiOR == "" {
+		panic("Config is missing BucketWasabiOR")
+	}
+	if config.BucketWasabiVA == "" {
+		panic("Config is missing BucketWasabiVA")
 	}
 	if config.IngestTempDir == "" {
 		panic("Config is missing IngestTempDir")
@@ -262,7 +328,7 @@ func (config *Config) checkBasicSettings() {
 }
 
 func (config *Config) checkS3Providers() {
-	for _, name := range constants.S3Providers {
+	for _, name := range constants.StorageProviders {
 		provider := config.S3Credentials[name]
 		if provider.Host == "" {
 			panic(fmt.Sprintf("S3 provider %s is missing Host", name))
@@ -298,4 +364,89 @@ func (config *Config) makeDirs() error {
 		}
 	}
 	return nil
+}
+
+func (config *Config) initUploadTargets() {
+	config.UploadTargets = []*UploadTarget{
+		&UploadTarget{
+			Bucket:       config.BucketStandardOR,
+			Description:  "AWS Oregon Glacier bucket for Standard storage repilication",
+			OptionName:   constants.StorageStandard,
+			Provider:     constants.StorageProviderAWS,
+			Region:       constants.RegionAWSUSWest2,
+			StorageClass: constants.StorageClassGlacier,
+		},
+		&UploadTarget{
+			Bucket:       config.BucketStandardVA,
+			Description:  "AWS Virginia S3 bucket for Standard primary preservation",
+			OptionName:   constants.StorageStandard,
+			Provider:     constants.StorageProviderAWS,
+			Region:       constants.RegionAWSUSEast1,
+			StorageClass: constants.StorageClassStandard,
+		},
+		&UploadTarget{
+			Bucket:       config.BucketGlacierOH,
+			Description:  "AWS Ohio Glacier storage",
+			OptionName:   constants.StorageGlacierOH,
+			Provider:     constants.StorageProviderAWS,
+			Region:       constants.RegionAWSUSEast2,
+			StorageClass: constants.StorageClassGlacier,
+		},
+		&UploadTarget{
+			Bucket:       config.BucketGlacierOR,
+			Description:  "AWS Oregon Glacier storage",
+			OptionName:   constants.StorageGlacierOR,
+			Provider:     constants.StorageProviderAWS,
+			Region:       constants.RegionAWSUSWest2,
+			StorageClass: constants.StorageClassGlacier,
+		},
+		&UploadTarget{
+			Bucket:       config.BucketGlacierVA,
+			Description:  "AWS Virginia Glacier storage",
+			OptionName:   constants.StorageGlacierVA,
+			Provider:     constants.StorageProviderAWS,
+			Region:       constants.RegionAWSUSEast1,
+			StorageClass: constants.StorageClassGlacier,
+		},
+		&UploadTarget{
+			Bucket:       config.BucketGlacierDeepOH,
+			Description:  "AWS Ohio Glacier deep storage",
+			OptionName:   constants.StorageGlacierDeepOH,
+			Provider:     constants.StorageProviderAWS,
+			Region:       constants.RegionAWSUSEast2,
+			StorageClass: constants.StorageClassGlacierDeep,
+		},
+		&UploadTarget{
+			Bucket:       config.BucketGlacierDeepOR,
+			Description:  "AWS Oregon Glacier deep storage",
+			OptionName:   constants.StorageGlacierDeepOR,
+			Provider:     constants.StorageProviderAWS,
+			Region:       constants.RegionAWSUSWest2,
+			StorageClass: constants.StorageClassGlacierDeep,
+		},
+		&UploadTarget{
+			Bucket:       config.BucketGlacierDeepVA,
+			Description:  "AWS Virginia Glacier deep storage",
+			OptionName:   constants.StorageGlacierDeepVA,
+			Provider:     constants.StorageProviderAWS,
+			Region:       constants.RegionAWSUSEast1,
+			StorageClass: constants.StorageClassGlacierDeep,
+		},
+		&UploadTarget{
+			Bucket:       config.BucketWasabiOR,
+			Description:  "Wasabi Oregon storage",
+			OptionName:   constants.StorageWasabiOR,
+			Provider:     constants.StorageProviderWasabi,
+			Region:       constants.RegionWasabiUSWest1,
+			StorageClass: constants.StorageClassWasabi,
+		},
+		&UploadTarget{
+			Bucket:       config.BucketWasabiVA,
+			Description:  "Wasabi Virginia storage (us-east-1)",
+			OptionName:   constants.StorageWasabiVA,
+			Provider:     constants.StorageProviderWasabi,
+			Region:       constants.RegionWasabiUSEast1,
+			StorageClass: constants.StorageClassWasabi,
+		},
+	}
 }

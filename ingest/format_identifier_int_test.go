@@ -47,8 +47,9 @@ func TestIdentifyFormat(t *testing.T) {
 	testGetPresignedURL(t, fi)
 	clearFileFormats(t, fi)
 
-	err = fi.IdentifyFormats()
+	numberIdentified, err := fi.IdentifyFormats()
 	assert.Nil(t, err)
+	assert.Equal(t, 16, numberIdentified)
 
 	testFormatMetadata(t, fi)
 }

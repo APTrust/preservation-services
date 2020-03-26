@@ -22,6 +22,16 @@ func TestNewConfig(t *testing.T) {
 
 	config := common.NewConfig()
 	assert.Equal(t, workingDir, config.BaseWorkingDir)
+	assert.Equal(t, "preservation-or", config.BucketStandardOR)
+	assert.Equal(t, "preservation-va", config.BucketStandardVA)
+	assert.Equal(t, "glacier-oh", config.BucketGlacierOH)
+	assert.Equal(t, "glacier-or", config.BucketGlacierOR)
+	assert.Equal(t, "glacier-va", config.BucketGlacierVA)
+	assert.Equal(t, "glacier-deep-oh", config.BucketGlacierDeepOH)
+	assert.Equal(t, "glacier-deep-or", config.BucketGlacierDeepOR)
+	assert.Equal(t, "glacier-deep-va", config.BucketGlacierDeepVA)
+	assert.Equal(t, "wasabi-or", config.BucketWasabiOR)
+	assert.Equal(t, "wasabi-va", config.BucketWasabiVA)
 	assert.Equal(t, "test", config.ConfigName)
 	assert.Equal(t, tempDir, config.IngestTempDir)
 	assert.Equal(t, logDir, config.LogDir)
@@ -51,7 +61,7 @@ func TestNewConfig(t *testing.T) {
 
 	// In test env, these are all set to the local minio instance,
 	// so we don't save/delete/overwrite in any external services.
-	for _, name := range constants.S3Providers {
+	for _, name := range constants.StorageProviders {
 		provider := config.S3Credentials[name]
 		assert.Equal(t, "localhost:9899", provider.Host)
 		assert.Equal(t, "minioadmin", provider.KeyID)
@@ -63,6 +73,19 @@ func TestPathToScript(t *testing.T) {
 	config := common.NewConfig()
 	script := config.PathToScript("identify_format.sh")
 	assert.True(t, strings.HasSuffix(script, path.Join("scripts", "identify_format.sh")))
+}
+
+func TestUploadTargetsFor(t *testing.T) {
+	config := common.NewConfig()
+	targets := config.UploadTargetsFor(constants.StorageStandard)
+	require.Equal(t, 2, len(targets))
+	for _, target := range targets {
+		assert.Equal(t, constants.StorageStandard, target.OptionName)
+	}
+
+	targets = config.UploadTargetsFor(constants.StorageWasabiVA)
+	require.Equal(t, 1, len(targets))
+	assert.Equal(t, constants.StorageWasabiVA, targets[0].OptionName)
 }
 
 // TODO: Test that different configs get the right settings.

@@ -40,7 +40,19 @@ func NewFormatIdentifier(context *common.Context, workItemID int, ingestObject *
 	}
 }
 
-func (fi *FormatIdentifier) IdentifyFormats() error {
+// IdentifyFormats runs all of the files belonging to this object's IngestObject
+// the format identifier script. It saves format information data within each
+// IngestFile record in Redis. If the script completes without error but is
+// unable to identify a file, the IngestFile record will keep the original
+// format identification supplied by constants.mime_types.go when the bag was
+// scanned in an earlier phase of the ingest process.
+//
+// This returns the number of files that passed through the format identifier
+// script without error, along with any error that did occur. Consider this
+// successful if the returned count matches the IngestObject's FileCount.
+// If not all files were identified, you re-run this function. It's intelligent
+// enough to skip files that were successfully identified on a previous run.
+func (fi *FormatIdentifier) IdentifyFormats() (int, error) {
 	identify := func(ingestFile *service.IngestFile) error {
 		// No need to re-identify if already id'd by FIDO
 		if ingestFile.FormatIdentifiedBy == constants.FmtIdFido {
@@ -93,8 +105,8 @@ func (fi *FormatIdentifier) IdentifyFormats() error {
 	// IngestFilesApply runs our function on all ingest file records
 	// for the specified WorkItemId, and it saves each record back to
 	// Redis.
-	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemID, identify)
-	return err
+	numberCompleted, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemID, identify)
+	return numberCompleted, err
 }
 
 // GetPresignedURL returns a pre-signed S3 URL that we can pass to the
@@ -103,6 +115,6 @@ func (fi *FormatIdentifier) IdentifyFormats() error {
 func (fi *FormatIdentifier) GetPresignedURL(bucket, key string) (*url.URL, error) {
 	urlParams := url.Values{}
 	expires := time.Second * 24 * 60 * 60 * 7 // 7 days
-	client := fi.Context.S3Clients[constants.S3ClientAWS]
+	client := fi.Context.S3Clients[constants.StorageProviderAWS]
 	return client.PresignedGetObject(bucket, key, expires, urlParams)
 }

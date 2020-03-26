@@ -1,9 +1,7 @@
 package constants
 
 const (
-	TestBucketPreservation = "preservation"
-	TestBucketReceiving    = "receiving"
-	TestBucketReplication  = "replication"
+	TestBucketReceiving = "receiving"
 	// TestBucketStaging      = "staging"
 	// TestMinioServerURL     = "127.0.0.1:9899"
 	// TestMinioUser          = "minioadmin"

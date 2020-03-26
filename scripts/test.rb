@@ -156,8 +156,22 @@ class TestRunner
       puts "Creating #{full_dir}"
       FileUtils.mkdir_p full_dir
     end
-    # S3 buckets for minio
-    buckets = ["preservation", "receiving", "replication", "staging"]
+    # S3 buckets for minio. We should ideally read these from the
+    # .env.test file.
+    buckets = [
+      "preservation-or",
+      "preservation-va",
+      "glacier-oh",
+      "glacier-or",
+      "glacier-va",
+      "glacier-deep-oh",
+      "glacier-deep-or",
+      "glacier-deep-va",
+      "wasabi-or",
+      "wasabi-va",
+      "receiving",
+      "staging",
+    ]
     buckets.each do |bucket|
       full_bucket = File.join(base, "minio", bucket)
       puts "Creating local minio bucket #{bucket}"
