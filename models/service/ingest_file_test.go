@@ -300,12 +300,71 @@ func TestToGenericFile(t *testing.T) {
 	assert.Equal(t, "https://example.com/storage/record/1", gf.URI)
 }
 
+func TestHasPreservatbleName(t *testing.T) {
+	no := []string{
+		"bagit.txt",
+		"fetch.txt",
+		"manifest-sha256.txt",
+		"tagmanifest-sha256.txt",
+	}
+	yes := []string{
+		"random-tag-file.txt",
+		"data/payload-file.txt",
+		"data/subdir/image.jpg",
+		"tag-dir/some-other-tag-file.xml",
+	}
+	for _, pathInBag := range no {
+		f := &service.IngestFile{
+			PathInBag: pathInBag,
+		}
+		assert.False(t, f.HasPreservableName(), pathInBag)
+	}
+	for _, pathInBag := range yes {
+		f := &service.IngestFile{
+			PathInBag: pathInBag,
+		}
+		assert.True(t, f.HasPreservableName(), pathInBag)
+	}
+}
+
+func TestNeedsSaveAt(t *testing.T) {
+	provider := "example-provider"
+	bucket := "example-bucket"
+	f := &service.IngestFile{
+		PathInBag: "data/some-file.txt",
+	}
+	// True because name is preservavable, and there's no StorageRecord
+	// for this provider/bucket combination.
+	assert.True(t, f.NeedsSaveAt(provider, bucket))
+
+	rec1 := testutil.GetStorageRecord(provider, bucket, "http://example.com/rec1")
+	rec1.StoredAt = time.Time{}
+	f.SetStorageRecord(rec1)
+
+	// True because name is preservable and StorageRecord.StoredAt is empty.
+	assert.True(t, f.NeedsSaveAt(provider, bucket))
+
+	rec1.StoredAt = testutil.Bloomsday
+
+	// False because StorageRecord.StoredAt is non-empty
+	assert.False(t, f.NeedsSaveAt(provider, bucket))
+
+	// Try a new ingest file...
+	f = &service.IngestFile{
+		PathInBag: "bagit.txt",
+	}
+
+	// False because file does not have preservable name
+	assert.False(t, f.NeedsSaveAt(provider, bucket))
+}
+
 func TestFidoSafeName(t *testing.T) {
 	f := &service.IngestFile{
 		UUID:      "209b478a-95cd-4217-b0a3-c80e3e7a2f0e",
 		PathInBag: "data/docs/blah/blah/blah/somefile.pdf",
 	}
 	assert.Equal(t, "209b478a-95cd-4217-b0a3-c80e3e7a2f0e.pdf", f.FidoSafeName())
+
 }
 
 func TestGetPutOptions(t *testing.T) {

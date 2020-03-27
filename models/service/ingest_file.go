@@ -290,6 +290,40 @@ func (f *IngestFile) GetPutOptions() (minio.PutObjectOptions, error) {
 	}, nil
 }
 
+// HasPreservableName returns true if this file's name indicates it should
+// be preserved. We preserve all files except: "bagit.txt", "fetch.txt",
+// tag manifests and payload manifests.
+func (f *IngestFile) HasPreservableName() bool {
+	fileType := f.FileType()
+	if f.PathInBag == "bagit.txt" ||
+		fileType == constants.FileTypeFetchTxt ||
+		fileType == constants.FileTypeManifest ||
+		fileType == constants.FileTypeTagManifest {
+		return false
+	}
+	return true
+}
+
+// NeedsSaveAt returns true if this file needs to be copied the specified
+// bucket at the specified provider. This will return true if the file
+// has a savable name and has no confirmed storage record at the specified
+// provider + bucket.
+//
+// The ingest processes that manipulate this file are responsible for
+// creating and updating this file's storage records. Also note that this
+// will return true if you pass in bogus provider and bucket names,
+// because the file likely has not been stored at those places.
+// Therefore, it's the caller's responsibility to know, based on the file's
+// StorageOption, whether the file actually *should* be stored at
+// the provider + bucket.
+func (f *IngestFile) NeedsSaveAt(provider, bucket string) bool {
+	if f.HasPreservableName() == false {
+		return false
+	}
+	storageRecord := f.GetStorageRecord(provider, bucket)
+	return storageRecord == nil || storageRecord.StoredAt.IsZero()
+}
+
 // URI returns the URL of this file's first storage record.
 // TODO: Fix this, because it doesn't map to Pharos' db structure.
 // Pharos allows one URI per generic file, but it should allow
