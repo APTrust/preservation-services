@@ -53,7 +53,7 @@ func (uploader *PreservationUploader) getUploadFunction() func(*service.IngestFi
 // Since staging bucket and upload target are both within AWS,
 // we can use CopyObject to do a bucket-to-bucket copy.
 func (uploader *PreservationUploader) copyToAWSPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) error {
-	client, err := uploader.getS3Client(uploadTarget)
+	client, err := uploader.getS3Client(uploadTarget.Provider)
 	if err != nil {
 		return err
 	}
@@ -85,17 +85,46 @@ func (uploader *PreservationUploader) copyToAWSPreservation(ingestFile *service.
 // stream data from source, through localhost, to destination. That
 // will be slow.
 func (uploader *PreservationUploader) copyToExternalPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) error {
-	// client, err := uploader.getS3Client(uploadTarget)
-	// if err != nil {
-	// 	return err
-	// }
+	srcClient, err := uploader.getS3Client(constants.StorageProviderAWS)
+	if err != nil {
+		return err
+	}
+	destClient, err := uploader.getS3Client(uploadTarget.Provider)
+	if err != nil {
+		return err
+	}
+	srcObject, err := srcClient.GetObject(
+		uploader.Context.Config.StagingBucket,
+		ingestFile.UUID,
+		minio.GetObjectOptions{},
+	)
+	if err != nil {
+		return fmt.Errorf("Error getting source object for copy: %s", err.Error())
+	}
+	putOptions, err := ingestFile.GetPutOptions()
+	if err != nil {
+		return err
+	}
+	bytesCopied, err := destClient.PutObject(
+		uploadTarget.Bucket,
+		ingestFile.UUID,
+		srcObject,
+		ingestFile.Size,
+		putOptions,
+	)
+	if err != nil {
+		return fmt.Errorf("Error copying object to preservation: %s", err.Error())
+	}
+	if bytesCopied != ingestFile.Size {
+		return fmt.Errorf("Copied only %d of %d bytes from staging to preservation", bytesCopied, ingestFile.Size)
+	}
 	return nil
 }
 
-func (uploader *PreservationUploader) getS3Client(uploadTarget *common.UploadTarget) (*minio.Client, error) {
-	client := uploader.Context.S3Clients[uploadTarget.Provider]
+func (uploader *PreservationUploader) getS3Client(provider string) (*minio.Client, error) {
+	client := uploader.Context.S3Clients[provider]
 	if client == nil {
-		return nil, fmt.Errorf("Cannot find S3 client for provider %s", uploadTarget.Provider)
+		return nil, fmt.Errorf("Cannot find S3 client for provider %s", provider)
 	}
 	return client, nil
 }
