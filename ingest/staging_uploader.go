@@ -103,7 +103,7 @@ func (s *StagingUploader) CopyFileToStaging(tarReader *tar.Reader, ingestFile *s
 		return err
 	}
 	bucket := s.Context.Config.StagingBucket
-	key := fmt.Sprintf("%d/%s", s.WorkItemID, ingestFile.UUID)
+	key := s.S3KeyFor(ingestFile)
 	_, err = s.Context.S3Clients[constants.StorageProviderAWS].PutObject(
 		bucket,
 		key,

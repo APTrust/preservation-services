@@ -56,7 +56,10 @@ func TestIdentifyFormat(t *testing.T) {
 
 func testGetPresignedURL(t *testing.T, fi *ingest.FormatIdentifier) {
 	bucket := fi.Context.Config.StagingBucket
-	key := fmt.Sprintf("%d/%s", fi.WorkItemID, constants.EmptyUUID)
+	ingestFile := &service.IngestFile{
+		UUID: constants.EmptyUUID,
+	}
+	key := fi.S3KeyFor(ingestFile)
 	presignedURL, err := fi.GetPresignedURL(bucket, key)
 	assert.Nil(t, err)
 

@@ -58,7 +58,7 @@ func (fi *FormatIdentifier) IdentifyFormats() (int, error) {
 		if ingestFile.FormatIdentifiedBy == constants.FmtIdFido {
 			return nil
 		}
-		key := fmt.Sprintf("%d/%s", fi.WorkItemID, ingestFile.UUID)
+		key := fi.S3KeyFor(ingestFile)
 		signedURL, err := fi.GetPresignedURL(fi.Context.Config.StagingBucket, key)
 		if err != nil {
 			return err
