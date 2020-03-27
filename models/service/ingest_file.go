@@ -123,10 +123,11 @@ func (f *IngestFile) GetChecksum(source, algorithm string) *IngestChecksum {
 	return nil
 }
 
+// SetStorageRecord adds or updates a storage record.
 func (f *IngestFile) SetStorageRecord(record *StorageRecord) {
 	updated := false
 	for i, rec := range f.StorageRecords {
-		if rec.URL == record.URL {
+		if rec.Provider == record.Provider && rec.Bucket == record.Bucket {
 			f.StorageRecords[i] = record
 			updated = true
 		}

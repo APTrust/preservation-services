@@ -4,7 +4,7 @@ import (
 	"fmt"
 	//"net/url"
 	"strings"
-	//"time"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
@@ -33,6 +33,9 @@ func (uploader *PreservationUploader) getUploadFunction() func(*service.IngestFi
 	return func(ingestFile *service.IngestFile) error {
 		errMessages := make([]string, 0)
 		for _, uploadTarget := range uploadTargets {
+			if !ingestFile.NeedsSaveAt(uploadTarget.Provider, uploadTarget.Bucket) {
+				continue
+			}
 			var err error
 			if uploadTarget.Provider == constants.StorageProviderAWS {
 				err = uploader.copyToAWSPreservation(ingestFile, uploadTarget)
@@ -41,6 +44,18 @@ func (uploader *PreservationUploader) getUploadFunction() func(*service.IngestFi
 			}
 			if err != nil {
 				errMessages = append(errMessages, err.Error())
+			} else {
+				// Add a StorageRecord to this file. Set only the
+				// properties that indicate we've uploaded it.
+				// Additional StorageRecord properties will be set
+				// later when we confirm the upload succeeded.
+				storageRecord := &service.StorageRecord{
+					Bucket:   uploadTarget.Bucket,
+					Provider: uploadTarget.Provider,
+					StoredAt: time.Now().UTC(),
+					URL:      uploadTarget.URLFor(ingestFile.UUID),
+				}
+				ingestFile.SetStorageRecord(storageRecord)
 			}
 		}
 		if len(errMessages) > 0 {
