@@ -121,10 +121,18 @@ func TestGetChecksum(t *testing.T) {
 	assert.Nil(t, nilChecksum)
 }
 
-func TestSetStorageRecord(t *testing.T) {
+func TestSetAndGetStorageRecord(t *testing.T) {
 	f := testutil.GetIngestFile(false, false)
-	rec1 := testutil.GetStorageRecord("http://example.com/rec1")
-	rec2 := testutil.GetStorageRecord("http://example.com/rec2")
+	rec1 := testutil.GetStorageRecord(
+		"ExampleProvider",
+		"PresBucket",
+		"http://example.com/rec1",
+	)
+	rec2 := testutil.GetStorageRecord(
+		"OtherProvider",
+		"OtherBucket",
+		"http://example.com/other/rec2",
+	)
 
 	f.SetStorageRecord(rec1)
 	assert.Equal(t, 1, len(f.StorageRecords))
@@ -132,7 +140,7 @@ func TestSetStorageRecord(t *testing.T) {
 
 	f.SetStorageRecord(rec2)
 	assert.Equal(t, 2, len(f.StorageRecords))
-	assert.Equal(t, "http://example.com/rec2", f.StorageRecords[1].URL)
+	assert.Equal(t, "http://example.com/other/rec2", f.StorageRecords[1].URL)
 
 	// Reseting the a storage record should update, not append
 	now := time.Now()
@@ -140,6 +148,14 @@ func TestSetStorageRecord(t *testing.T) {
 	f.SetStorageRecord(rec1)
 	assert.Equal(t, 2, len(f.StorageRecords))
 	assert.Equal(t, now, f.StorageRecords[0].StoredAt)
+
+	retrievedRecord1 := f.GetStorageRecord(rec1.Provider, rec1.Bucket)
+	require.NotNil(t, retrievedRecord1)
+	assert.Equal(t, rec1.URL, retrievedRecord1.URL)
+
+	retrievedRecord2 := f.GetStorageRecord(rec2.Provider, rec2.Bucket)
+	require.NotNil(t, retrievedRecord2)
+	assert.Equal(t, rec2.URL, retrievedRecord2.URL)
 }
 
 func TestIdentifierIsLegal(t *testing.T) {
@@ -321,4 +337,4 @@ func TestGetPutOptions(t *testing.T) {
 	assert.Equal(t, "image/jpeg", opts.ContentType)
 }
 
-const IngestFileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:ingest","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:registry","source":"registry"}],"copied_to_staging_at":"0001-01-01T00:00:00Z","error_message":"no error","file_format":"text/javascript","format_identified_at":"0001-01-01T00:00:00Z","file_modified":"1904-06-16T15:04:05Z","id":999,"institution_id":9855,"intellectual_object_id":4432,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","size":5555,"storage_option":"Standard","storage_records":[{"url":"https://example.com/storage/record/1","stored_at":"1904-06-16T15:04:05Z"},{"url":"https://example.com/storage/record/2","stored_at":"1904-06-16T15:04:05Z"}],"uuid":"00000000-0000-0000-0000-000000000000"}`
+const IngestFileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:ingest","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:registry","source":"registry"}],"copied_to_staging_at":"0001-01-01T00:00:00Z","error_message":"no error","file_format":"text/javascript","format_identified_at":"0001-01-01T00:00:00Z","file_modified":"1904-06-16T15:04:05Z","id":999,"institution_id":9855,"intellectual_object_id":4432,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","size":5555,"storage_option":"Standard","storage_records":[{"bucket":"","etag":"","provider":"","size":0,"stored_at":"1904-06-16T15:04:05Z","url":"https://example.com/storage/record/1","verified_at":"0001-01-01T00:00:00Z"},{"bucket":"","etag":"","provider":"","size":0,"stored_at":"1904-06-16T15:04:05Z","url":"https://example.com/storage/record/2","verified_at":"0001-01-01T00:00:00Z"}],"uuid":"00000000-0000-0000-0000-000000000000"}`

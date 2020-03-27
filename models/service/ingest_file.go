@@ -136,9 +136,9 @@ func (f *IngestFile) SetStorageRecord(record *StorageRecord) {
 	}
 }
 
-func (f *IngestFile) GetStorageRecord(url string) *StorageRecord {
+func (f *IngestFile) GetStorageRecord(provider, bucket string) *StorageRecord {
 	for _, rec := range f.StorageRecords {
-		if rec.URL == url {
+		if rec.Provider == provider && rec.Bucket == bucket {
 			return rec
 		}
 	}

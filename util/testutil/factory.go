@@ -83,10 +83,12 @@ func GetIngestObject() *service.IngestObject {
 	}
 }
 
-func GetStorageRecord(url string) *service.StorageRecord {
+func GetStorageRecord(provider, bucket, url string) *service.StorageRecord {
 	return &service.StorageRecord{
-		URL:      url,
+		Bucket:   bucket,
+		Provider: provider,
 		StoredAt: Bloomsday,
+		URL:      url,
 	}
 }
 

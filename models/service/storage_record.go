@@ -5,6 +5,11 @@ import (
 )
 
 type StorageRecord struct {
-	URL      string    `json:"url"`
-	StoredAt time.Time `json:"stored_at"`
+	Bucket     string    `json:"bucket"`
+	ETag       string    `json:"etag"`
+	Provider   string    `json:"provider"`
+	Size       int64     `json:"size"`
+	StoredAt   time.Time `json:"stored_at"`
+	URL        string    `json:"url"`
+	VerifiedAt time.Time `json:"verified_at"`
 }
