@@ -2,14 +2,12 @@ package ingest
 
 import (
 	"fmt"
-	//"net/url"
 	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
-	//"github.com/APTrust/preservation-services/util"
 	"github.com/minio/minio-go/v6"
 )
 
@@ -25,6 +23,29 @@ func NewPreservationUploader(context *common.Context, workItemID int, ingestObje
 			WorkItemID:   workItemID,
 		},
 	}
+}
+
+// UploadAll uploads all of a bag's files that should be preserved to each
+// of the preservation buckets in which they should be preserved. It returns
+// the number of items preserved, and an error, if there was one.
+//
+// Note that "number of files preserved" will almost never match the number
+// of files in the bag because:
+//
+// 1. We preserve all payload files and tag files, but we do not preserve
+// bagit.txt, fetch.txt (which we consider illegal anyway), or any payload
+// or tag manifests.
+//
+// 2. For certain preservation options, such as "Standard", we copy to two
+// buckets in two different regions. That's two copies for each file. So a
+// bag with 10 payload files can return a count of 22 if the storage option is
+// "Standard" (10 * 2 payload files, plus 2 copies of aptrust-info.txt).
+//
+// The StorageRecords attached to each IngestFile record where and when each
+// file was uploaded.
+func (uploader *PreservationUploader) UploadAll() (int, error) {
+	uploadFn := uploader.getUploadFunction()
+	return uploader.Context.RedisClient.IngestFilesApply(uploader.WorkItemID, uploadFn)
 }
 
 func (uploader *PreservationUploader) getUploadFunction() func(*service.IngestFile) error {

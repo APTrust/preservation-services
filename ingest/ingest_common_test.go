@@ -149,6 +149,9 @@ func getMetadataValidator(t *testing.T, profileName, pathToBag, bagMd5 string) *
 	return validator
 }
 
+// This function prepares a bag for validation by running it through
+// the MetadataGatherer. It returns a MetadataValidator that is ready
+// to be tested.
 func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string, testForScanError bool) *ingest.MetadataValidator {
 	// Create a validator
 	validator := getMetadataValidator(t, profileName, pathToBag, bagMd5)
@@ -183,6 +186,11 @@ func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string
 	return validator
 }
 
+// This function does the prep work required to test the StagingUploader.
+// It sends our test bag through all stages of ingest prior to the
+// staging upload. Note that this ensures proper S3 setup and deletes
+// Redis records related to our WorkItem so that we start with a fresh
+// slate each time.
 func prepareForCopyToStaging(t *testing.T, context *common.Context) *ingest.StagingUploader {
 	// Put tagsample_good in S3 receiving bucket.
 	setupS3(t, context, keyToGoodBag, pathToGoodBag)
@@ -215,4 +223,18 @@ func prepareForCopyToStaging(t *testing.T, context *common.Context) *ingest.Stag
 	require.True(t, validator.IsValid())
 
 	return ingest.NewStagingUploader(context, testWorkItemId, obj)
+}
+
+// This lays the groundwork to test the PreservationUploader. It pushes our
+// test bag through all phases of ingest prior to preservation upload.
+func prepareForPreservationUpload(t *testing.T, context *common.Context) *ingest.PreservationUploader {
+	uploader := prepareForCopyToStaging(t, context)
+	err := uploader.CopyFilesToStaging()
+	require.Nil(t, err)
+
+	fi := ingest.NewFormatIdentifier(context, uploader.WorkItemID, uploader.IngestObject)
+	numberIdentified, err := fi.IdentifyFormats()
+	assert.Nil(t, err)
+	assert.Equal(t, 16, numberIdentified)
+	return ingest.NewPreservationUploader(context, testWorkItemId, uploader.IngestObject)
 }
