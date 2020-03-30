@@ -131,7 +131,7 @@ func testIngestObject_MetadataGatherer(t *testing.T, context *common.Context, ob
 
 func testIngestFile_MetadataGatherer(t *testing.T, ingestFile *service.IngestFile) {
 	assert.NotEmpty(t, ingestFile.UUID)
-	assert.Equal(t, 1, len(ingestFile.StorageRecords))
+	assert.Equal(t, 0, len(ingestFile.StorageRecords))
 	assert.Equal(t, "Standard", ingestFile.StorageOption)
 	assert.True(t, ingestFile.Size > 0)
 	assert.NotEmpty(t, ingestFile.PathInBag)

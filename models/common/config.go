@@ -46,7 +46,10 @@ type Config struct {
 	RedisURL                string
 	RedisUser               string
 	RestoreDir              string
+	S3AWSHost               string
 	S3Credentials           map[string]S3Credentials
+	S3LocalHost             string
+	S3WasabiHost            string
 	ScriptDir               string
 	StagingBucket           string
 	StagingUploadRetries    int
@@ -115,6 +118,7 @@ func loadConfig() *Config {
 		RedisURL:                v.GetString("REDIS_URL"),
 		RedisUser:               v.GetString("REDIS_USER"),
 		RestoreDir:              v.GetString("RESTORE_DIR"),
+		S3AWSHost:               v.GetString("S3_AWS_HOST"),
 		S3Credentials: map[string]S3Credentials{
 			constants.StorageProviderAWS: S3Credentials{
 				Host:      v.GetString("S3_AWS_HOST"),
@@ -132,6 +136,8 @@ func loadConfig() *Config {
 				SecretKey: v.GetString("S3_WASABI_SECRET"),
 			},
 		},
+		S3LocalHost:          v.GetString("S3_LOCAL_HOST"),
+		S3WasabiHost:         v.GetString("S3_WASABI_HOST"),
 		ScriptDir:            v.GetString("SCRIPT_DIR"),
 		StagingBucket:        v.GetString("STAGING_BUCKET"),
 		StagingUploadRetries: v.GetInt("STAGING_UPLOAD_RETRIES"),
@@ -342,12 +348,27 @@ func (config *Config) checkS3Providers() {
 	}
 }
 
+func (config *Config) checkUploadTargets() {
+	for _, target := range config.UploadTargets {
+		if target.Host == "" {
+			panic(fmt.Sprintf("S3 target %s is missing Host", target.OptionName))
+		}
+		if target.Bucket == "" {
+			panic(fmt.Sprintf("S3 provider %s is missing Bucket", target.OptionName))
+		}
+		if target.Region == "" {
+			panic(fmt.Sprintf("S3 provider %s is missing Region", target.OptionName))
+		}
+	}
+}
+
 func (config *Config) sanityCheck() {
 	// If this is dev or test env, don't let config point
 	// to any external services. This prevents a dev/test
 	// installation from touching data in demo and prod systems.
 	config.checkBasicSettings()
 	config.checkS3Providers()
+	config.checkUploadTargets()
 	config.checkHostSafety()
 }
 
@@ -371,6 +392,7 @@ func (config *Config) initUploadTargets() {
 		&UploadTarget{
 			Bucket:       config.BucketStandardOR,
 			Description:  "AWS Oregon Glacier bucket for Standard storage repilication",
+			Host:         config.S3AWSHost,
 			OptionName:   constants.StorageStandard,
 			Provider:     constants.StorageProviderAWS,
 			Region:       constants.RegionAWSUSWest2,
@@ -379,6 +401,7 @@ func (config *Config) initUploadTargets() {
 		&UploadTarget{
 			Bucket:       config.BucketStandardVA,
 			Description:  "AWS Virginia S3 bucket for Standard primary preservation",
+			Host:         config.S3AWSHost,
 			OptionName:   constants.StorageStandard,
 			Provider:     constants.StorageProviderAWS,
 			Region:       constants.RegionAWSUSEast1,
@@ -387,6 +410,7 @@ func (config *Config) initUploadTargets() {
 		&UploadTarget{
 			Bucket:       config.BucketGlacierOH,
 			Description:  "AWS Ohio Glacier storage",
+			Host:         config.S3AWSHost,
 			OptionName:   constants.StorageGlacierOH,
 			Provider:     constants.StorageProviderAWS,
 			Region:       constants.RegionAWSUSEast2,
@@ -395,6 +419,7 @@ func (config *Config) initUploadTargets() {
 		&UploadTarget{
 			Bucket:       config.BucketGlacierOR,
 			Description:  "AWS Oregon Glacier storage",
+			Host:         config.S3AWSHost,
 			OptionName:   constants.StorageGlacierOR,
 			Provider:     constants.StorageProviderAWS,
 			Region:       constants.RegionAWSUSWest2,
@@ -403,6 +428,7 @@ func (config *Config) initUploadTargets() {
 		&UploadTarget{
 			Bucket:       config.BucketGlacierVA,
 			Description:  "AWS Virginia Glacier storage",
+			Host:         config.S3AWSHost,
 			OptionName:   constants.StorageGlacierVA,
 			Provider:     constants.StorageProviderAWS,
 			Region:       constants.RegionAWSUSEast1,
@@ -411,6 +437,7 @@ func (config *Config) initUploadTargets() {
 		&UploadTarget{
 			Bucket:       config.BucketGlacierDeepOH,
 			Description:  "AWS Ohio Glacier deep storage",
+			Host:         config.S3AWSHost,
 			OptionName:   constants.StorageGlacierDeepOH,
 			Provider:     constants.StorageProviderAWS,
 			Region:       constants.RegionAWSUSEast2,
@@ -419,6 +446,7 @@ func (config *Config) initUploadTargets() {
 		&UploadTarget{
 			Bucket:       config.BucketGlacierDeepOR,
 			Description:  "AWS Oregon Glacier deep storage",
+			Host:         config.S3AWSHost,
 			OptionName:   constants.StorageGlacierDeepOR,
 			Provider:     constants.StorageProviderAWS,
 			Region:       constants.RegionAWSUSWest2,
@@ -427,6 +455,7 @@ func (config *Config) initUploadTargets() {
 		&UploadTarget{
 			Bucket:       config.BucketGlacierDeepVA,
 			Description:  "AWS Virginia Glacier deep storage",
+			Host:         config.S3AWSHost,
 			OptionName:   constants.StorageGlacierDeepVA,
 			Provider:     constants.StorageProviderAWS,
 			Region:       constants.RegionAWSUSEast1,
@@ -435,6 +464,7 @@ func (config *Config) initUploadTargets() {
 		&UploadTarget{
 			Bucket:       config.BucketWasabiOR,
 			Description:  "Wasabi Oregon storage",
+			Host:         config.S3WasabiHost,
 			OptionName:   constants.StorageWasabiOR,
 			Provider:     constants.StorageProviderWasabi,
 			Region:       constants.RegionWasabiUSWest1,
@@ -443,6 +473,7 @@ func (config *Config) initUploadTargets() {
 		&UploadTarget{
 			Bucket:       config.BucketWasabiVA,
 			Description:  "Wasabi Virginia storage (us-east-1)",
+			Host:         config.S3WasabiHost,
 			OptionName:   constants.StorageWasabiVA,
 			Provider:     constants.StorageProviderWasabi,
 			Region:       constants.RegionWasabiUSEast1,

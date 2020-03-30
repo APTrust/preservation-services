@@ -65,7 +65,10 @@ func PutBagMetadataInPharos(t *testing.T, obj *service.IngestObject) {
 	for _, ingestFile := range fileMap {
 		ingestFile.InstitutionID = inst.ID
 		ingestFile.IntellectualObjectID = obj.ID
-		resp = context.PharosClient.GenericFileSave(ingestFile.ToGenericFile())
+
+		genericFile := ingestFile.ToGenericFile()
+		genericFile.URI = fmt.Sprintf("http://localhost/fake-url/%s", ingestFile.UUID)
+		resp = context.PharosClient.GenericFileSave(genericFile)
 		require.Nil(t, resp.Error)
 		gf := resp.GenericFile()
 		require.NotNil(t, gf)
@@ -331,12 +334,7 @@ func testIngestFile_ReingestManager(t *testing.T, f *service.IngestFile) {
 	assert.Equal(t, constants.StorageStandard, f.StorageOption)
 	assert.Equal(t, 36, len(f.UUID))
 	assert.True(t, util.LooksLikeUUID(f.UUID), f.PathInBag)
-	require.Equal(t, 1, len(f.StorageRecords), f.PathInBag)
-	assert.True(t, strings.HasPrefix(f.StorageRecords[0].URL,
-		"https://s3.amazonaws.com/aptrust.preservation.storage/"), f.PathInBag)
-	assert.True(t, strings.HasSuffix(f.StorageRecords[0].URL, f.UUID))
-	assert.True(t, util.LooksLikeURL(f.StorageRecords[0].URL), f.PathInBag)
-	assert.True(t, f.StorageRecords[0].StoredAt.IsZero())
+	require.Equal(t, 0, len(f.StorageRecords), f.PathInBag)
 }
 
 func shouldHaveManifestChecksum(f *service.IngestFile) bool {

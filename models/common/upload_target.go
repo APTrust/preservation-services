@@ -2,12 +2,12 @@ package common
 
 import (
 	"fmt"
-	"github.com/APTrust/preservation-services/constants"
 )
 
 type UploadTarget struct {
 	Bucket       string
 	Description  string
+	Host         string
 	OptionName   string
 	Provider     string
 	Region       string
@@ -21,10 +21,6 @@ type UploadTarget struct {
 // https://s3.us-west-1.wasabisys.com/aptrust.wasabi.or/
 // for a Wasabi target.
 func (target *UploadTarget) URLFor(key string) string {
-	hostSuffix := "amazonaws.com"
-	if target.Provider == constants.StorageProviderWasabi {
-		hostSuffix = "wasabisys.com"
-	}
 	return fmt.Sprintf("https://s3.%s.%s/%s/%s",
-		target.Region, hostSuffix, target.Bucket, key)
+		target.Region, target.Host, target.Bucket, key)
 }

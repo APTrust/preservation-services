@@ -3,7 +3,7 @@
 package ingest_test
 
 import (
-	"fmt"
+	//"fmt"
 	//"path"
 	//"strings"
 	"testing"
@@ -40,9 +40,9 @@ func TestPreservationUploadAll(t *testing.T) {
 	testFn := func(ingestFile *service.IngestFile) error {
 		if ingestFile.HasPreservableName() {
 			assert.Equal(t, 2, len(ingestFile.StorageRecords))
-			fmt.Println(ingestFile.PathInBag)
+			//fmt.Println(ingestFile.PathInBag)
 			for _, record := range ingestFile.StorageRecords {
-				fmt.Println(record)
+				//fmt.Println(record)
 				assert.True(t, record.Bucket == context.Config.BucketStandardVA || record.Bucket == context.Config.BucketStandardOR)
 				assert.False(t, record.StoredAt.IsZero())
 			}
