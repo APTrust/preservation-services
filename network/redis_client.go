@@ -14,6 +14,7 @@ type RedisApplyOptions struct {
 	ContinueOnError bool
 	Fn              func(*service.IngestFile) error
 	SaveChanges     bool
+	WorkItemID      int
 }
 
 // RedisClient is a client that lets workers store and retrieve working
