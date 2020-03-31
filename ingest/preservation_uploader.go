@@ -27,19 +27,12 @@ func NewPreservationUploader(context *common.Context, workItemID int, ingestObje
 
 // UploadAll uploads all of a bag's files that should be preserved to each
 // of the preservation buckets in which they should be preserved. It returns
-// the number of items preserved, and an error, if there was one.
+// the number of files processed and an error, if there was one.
 //
-// Note that "number of files preserved" will almost never match the number
-// of files in the bag because:
-//
-// 1. We preserve all payload files and tag files, but we do not preserve
-// bagit.txt, fetch.txt (which we consider illegal anyway), or any payload
-// or tag manifests.
-//
-// 2. For certain preservation options, such as "Standard", we copy to two
-// buckets in two different regions. That's two copies for each file. So a
-// bag with 10 payload files can return a count of 22 if the storage option is
-// "Standard" (10 * 2 payload files, plus 2 copies of aptrust-info.txt).
+// Note that "number of files processed" should match the number of files
+// in the bag. That doesn't mean all of those files were copied to preservation
+// because bagit.txt, manifests and other files are never copied to
+// preservation.
 //
 // The StorageRecords attached to each IngestFile record where and when each
 // file was uploaded.
@@ -141,7 +134,7 @@ func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *ser
 	}
 	srcObject, err := srcClient.GetObject(
 		uploader.Context.Config.StagingBucket,
-		ingestFile.UUID,
+		uploader.S3KeyFor(ingestFile),
 		minio.GetObjectOptions{},
 	)
 	if err != nil {

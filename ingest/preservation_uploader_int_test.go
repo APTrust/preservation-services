@@ -3,11 +3,7 @@
 package ingest_test
 
 import (
-	"fmt"
-	//"path"
-	//"strings"
 	"testing"
-	//"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
@@ -30,18 +26,19 @@ func TestNewPreservationUploader(t *testing.T) {
 func TestPreservationUploadAll(t *testing.T) {
 	context := common.NewContext()
 	uploader := prepareForPreservationUpload(t, context)
-	_, err := uploader.UploadAll()
+	filesUploaded, err := uploader.UploadAll()
 	require.Nil(t, err)
 
-	// Should be 10 files each copied to 2 locations, for a
-	// total of 20 files uploaded.
-	// assert.Equal(t, 20, filesUploaded)
+	// Bag has 16 files, all of which should have been
+	// processed, though not all will have been uplaoded.
+	assert.Equal(t, 16, filesUploaded)
 
 	testStorageRecords(t, uploader)
 	testFilesAreInRightBuckets(t, uploader)
 
 	fileIdentifier := uploader.IngestObject.FileIdentifier("aptrust-info.txt")
 	testCopyToAWSPreservation(t, uploader, fileIdentifier)
+	testCopyToExternalPreservation(t, uploader, fileIdentifier)
 }
 
 // This function tests that each file was copied to both
@@ -50,24 +47,29 @@ func TestPreservationUploadAll(t *testing.T) {
 // copy occurred.
 func testStorageRecords(t *testing.T, uploader *ingest.PreservationUploader) {
 	config := uploader.Context.Config
+	uploadCount := 0
 	testFn := func(ingestFile *service.IngestFile) error {
 		if ingestFile.HasPreservableName() {
 			assert.Equal(t, 2, len(ingestFile.StorageRecords))
-			fmt.Println(" >>> YES >>> ", ingestFile.PathInBag)
 			for _, record := range ingestFile.StorageRecords {
 				//fmt.Println(record)
+				uploadCount++
 				assert.True(t, record.Bucket == config.BucketStandardVA || record.Bucket == config.BucketStandardOR)
 				assert.False(t, record.StoredAt.IsZero())
 			}
 		} else {
 			// If HasPreservableName() is false, file should not
 			// have been copied to preservation,
-			fmt.Println(" >>> NO >>> ", ingestFile.PathInBag)
 			assert.Equal(t, 0, len(ingestFile.StorageRecords))
 		}
 		return nil
 	}
 	uploader.Context.RedisClient.IngestFilesApply(uploader.WorkItemID, testFn)
+
+	// We should have preserved 11 of this bag's 16 files.
+	// bagit.txt, manifests and tag manifests are not preserved.
+	// 11 files times 2 copies each equals 22 files.
+	assert.Equal(t, 22, uploadCount)
 }
 
 func testFilesAreInRightBuckets(t *testing.T, uploader *ingest.PreservationUploader) {
@@ -119,6 +121,25 @@ func testCopyToAWSPreservation(t *testing.T, uploader *ingest.PreservationUpload
 	require.EqualValues(t, ingestFile.Size, stats.Size)
 }
 
-func testCopyToExternalPreservation(t *testing.T, uploader *ingest.PreservationUploader) {
+func testCopyToExternalPreservation(t *testing.T, uploader *ingest.PreservationUploader, fileIdentifier string) {
+	ingestFile, err := uploader.Context.RedisClient.IngestFileGet(
+		uploader.WorkItemID,
+		fileIdentifier,
+	)
+	require.Nil(t, err)
+	require.NotNil(t, ingestFile)
+
+	uploadTarget := uploader.Context.Config.UploadTargetsFor(constants.StorageWasabiOR)[0]
+
+	err = uploader.CopyToExternalPreservation(ingestFile, uploadTarget)
+	require.Nil(t, err)
+
+	stats, err := uploader.Context.S3StatObject(
+		constants.StorageProviderWasabi,
+		uploadTarget.Bucket,
+		ingestFile.UUID,
+	)
+	require.Nil(t, err)
+	require.EqualValues(t, ingestFile.Size, stats.Size)
 
 }
