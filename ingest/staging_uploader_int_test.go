@@ -6,7 +6,6 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
-	"github.com/minio/minio-go/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -97,10 +96,10 @@ func stagingPostTestS3AndRedis(t *testing.T, context *common.Context) {
 		assert.False(t, ingestFile.CopiedToStagingAt.IsZero())
 
 		// Make sure the object was copied to S3 staging.
-		s3ObjInfo, err := context.S3Clients[constants.StorageProviderAWS].StatObject(
+		s3ObjInfo, err := context.S3StatObject(
+			constants.StorageProviderAWS,
 			context.Config.StagingBucket,
-			ingestFile.UUID,
-			minio.StatObjectOptions{})
+			ingestFile.UUID)
 		require.Nil(t, err)
 		require.NotNil(t, s3ObjInfo)
 

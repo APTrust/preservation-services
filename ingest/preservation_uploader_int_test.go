@@ -37,26 +37,54 @@ func TestPreservationUploadAll(t *testing.T) {
 	// total of 20 files uploaded.
 	// assert.Equal(t, 20, filesUploaded)
 
+	testStorageRecords(t, uploader)
+	testFilesAreInRightBuckets(t, uploader)
+}
+
+// This function tests that each file was copied to both
+// preservation buckets (VA and OR for Standard storage),
+// and that they have timestamps indicating when the
+// copy occurred.
+func testStorageRecords(t *testing.T, uploader *ingest.PreservationUploader) {
+	config := uploader.Context.Config
 	testFn := func(ingestFile *service.IngestFile) error {
 		if ingestFile.HasPreservableName() {
 			assert.Equal(t, 2, len(ingestFile.StorageRecords))
 			//fmt.Println(ingestFile.PathInBag)
 			for _, record := range ingestFile.StorageRecords {
 				//fmt.Println(record)
-				assert.True(t, record.Bucket == context.Config.BucketStandardVA || record.Bucket == context.Config.BucketStandardOR)
+				assert.True(t, record.Bucket == config.BucketStandardVA || record.Bucket == config.BucketStandardOR)
 				assert.False(t, record.StoredAt.IsZero())
 			}
+		} else {
+			// If HasPreservableName() is false, file should not
+			// have been copied to preservation,
+			assert.Equal(t, 0, len(ingestFile.StorageRecords))
 		}
 		return nil
 	}
-
-	context.RedisClient.IngestFilesApply(uploader.WorkItemID, testFn)
+	uploader.Context.RedisClient.IngestFilesApply(uploader.WorkItemID, testFn)
 }
 
-func testCopyToAWSPreservation(t *testing.T) {
+func testFilesAreInRightBuckets(t *testing.T, uploader *ingest.PreservationUploader) {
+	testFn := func(ingestFile *service.IngestFile) error {
+		if ingestFile.HasPreservableName() {
+
+		} else {
+			// If HasPreservableName() is false, file should not
+			// have been copied to preservation,
+			assert.Equal(t, 0, len(ingestFile.StorageRecords))
+		}
+		return nil
+	}
+	uploader.Context.RedisClient.IngestFilesApply(uploader.WorkItemID, testFn)
 
 }
 
-func testCopyToExternalPreservation(t *testing.T) {
+func testCopyToAWSPreservation(t *testing.T, uploader *ingest.PreservationUploader) {
+
+}
+
+func testCopyToExternalPreservation(t *testing.T, uploader *ingest.PreservationUploader) {
 
 }
