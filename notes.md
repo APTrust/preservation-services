@@ -201,6 +201,15 @@ The fixity and deletion workers would not be affected by the architectural chang
 
 # Notes on Restoration changes
 
+See the stream-to-stream uploading in [PreservationUploader.CopyToExternalStorage](https://github.com/APTrust/preservation-services/blob/master/ingest/preservation_uploader.go#L126). If the stream can go through a tar writer, we could do this:
+
+1. Pass each file from perservation, through multiwriter, to restoration, calculating manifest data along the way.
+2. End by writing manifests into the tar stream/restoration staging bucket with name like <WorkItemId>-Restore.tar.
+3. Validate the restored bag as we do during ingest with MetadataGatherer and MetadataValidator.
+4. Copy file from restoration staging to depositor's restoration bucket using S3's server-to-server copy.
+
+That may be more feasible than the original idea, which is:
+
 Will we still need a staging disk for restoration? Or use minio's [ComposeObject](https://docs.min.io/docs/golang-client-api-reference.html#ComposeObject)? Or can we stream on the fly to an S3 restoration bucket?
 
 Problems:

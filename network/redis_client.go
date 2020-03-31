@@ -8,15 +8,6 @@ import (
 	"github.com/go-redis/redis/v7"
 )
 
-// RedisApplyOptions describe a function to be applied to all IngestFiles
-// in a collection. This may have to move.
-type RedisApplyOptions struct {
-	ContinueOnError bool
-	Fn              func(*service.IngestFile) error
-	SaveChanges     bool
-	WorkItemID      int
-}
-
 // RedisClient is a client that lets workers store and retrieve working
 // data from a Redis server.
 type RedisClient struct {
@@ -158,6 +149,8 @@ func (c *RedisClient) GetBatchOfFileKeys(workItemID int, offset uint64, limit in
 //
 // This stops processing on the first error and return the number of
 // items on which the function was run successfully.
+//
+// TODO: Change to use IngestFileForeachOptions
 func (c *RedisClient) IngestFilesApply(workItemID int, fn func(ingestFile *service.IngestFile) error) (int, error) {
 	nextOffset := uint64(0)
 	count := 0
