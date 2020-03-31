@@ -39,6 +39,9 @@ func TestPreservationUploadAll(t *testing.T) {
 
 	testStorageRecords(t, uploader)
 	testFilesAreInRightBuckets(t, uploader)
+
+	fileIdentifier := uploader.IngestObject.FileIdentifier("aptrust-info.txt")
+	testCopyToAWSPreservation(t, uploader, fileIdentifier)
 }
 
 // This function tests that each file was copied to both
@@ -94,8 +97,26 @@ func testFilesAreInRightBuckets(t *testing.T, uploader *ingest.PreservationUploa
 
 }
 
-func testCopyToAWSPreservation(t *testing.T, uploader *ingest.PreservationUploader) {
+func testCopyToAWSPreservation(t *testing.T, uploader *ingest.PreservationUploader, fileIdentifier string) {
+	ingestFile, err := uploader.Context.RedisClient.IngestFileGet(
+		uploader.WorkItemID,
+		fileIdentifier,
+	)
+	require.Nil(t, err)
+	require.NotNil(t, ingestFile)
 
+	uploadTarget := uploader.Context.Config.UploadTargetsFor(constants.StorageGlacierOH)[0]
+
+	err = uploader.CopyToAWSPreservation(ingestFile, uploadTarget)
+	require.Nil(t, err)
+
+	stats, err := uploader.Context.S3StatObject(
+		constants.StorageProviderAWS,
+		uploadTarget.Bucket,
+		ingestFile.UUID,
+	)
+	require.Nil(t, err)
+	require.EqualValues(t, ingestFile.Size, stats.Size)
 }
 
 func testCopyToExternalPreservation(t *testing.T, uploader *ingest.PreservationUploader) {

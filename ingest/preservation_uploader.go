@@ -59,9 +59,9 @@ func (uploader *PreservationUploader) getUploadFunction() func(*service.IngestFi
 			}
 			var err error
 			if uploadTarget.Provider == constants.StorageProviderAWS {
-				err = uploader.copyToAWSPreservation(ingestFile, uploadTarget)
+				err = uploader.CopyToAWSPreservation(ingestFile, uploadTarget)
 			} else {
-				err = uploader.copyToExternalPreservation(ingestFile, uploadTarget)
+				err = uploader.CopyToExternalPreservation(ingestFile, uploadTarget)
 			}
 			if err != nil {
 				errMessages = append(errMessages, err.Error())
@@ -86,9 +86,13 @@ func (uploader *PreservationUploader) getUploadFunction() func(*service.IngestFi
 	}
 }
 
+// CopyToAWSPreservation copies an object from AWS staging to AWS preservation.
 // Since staging bucket and upload target are both within AWS,
 // we can use CopyObject to do a bucket-to-bucket copy.
-func (uploader *PreservationUploader) copyToAWSPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) error {
+//
+// Avoid calling this directly. Call UploadAll() instead. This is
+// public so we can test it.
+func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) error {
 	client, err := uploader.getS3Client(uploadTarget.Provider)
 	if err != nil {
 		return err
@@ -115,12 +119,18 @@ func (uploader *PreservationUploader) copyToAWSPreservation(ingestFile *service.
 	return client.CopyObject(destInfo, sourceInfo)
 }
 
+// CopyToExternalPreservation copies an object from AWS staging to an
+// external S3 provider, like Wasabi.
+//
 // When copying from AWS staging to an external provider, we need two
 // Minio clients: one that has credentials to connect to the source,
 // and one with credentials to connect to the destination. We need to
 // stream data from source, through localhost, to destination. That
 // will be slow.
-func (uploader *PreservationUploader) copyToExternalPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) error {
+//
+// Avoid calling this directly. Call UploadAll() instead. This is
+// public so we can test it.
+func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) error {
 	srcClient, err := uploader.getS3Client(constants.StorageProviderAWS)
 	if err != nil {
 		return err
