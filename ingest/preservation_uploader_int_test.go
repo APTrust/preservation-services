@@ -3,13 +3,13 @@
 package ingest_test
 
 import (
-	//"fmt"
+	"fmt"
 	//"path"
 	//"strings"
 	"testing"
 	//"time"
 
-	//"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
@@ -50,7 +50,7 @@ func testStorageRecords(t *testing.T, uploader *ingest.PreservationUploader) {
 	testFn := func(ingestFile *service.IngestFile) error {
 		if ingestFile.HasPreservableName() {
 			assert.Equal(t, 2, len(ingestFile.StorageRecords))
-			//fmt.Println(ingestFile.PathInBag)
+			fmt.Println(" >>> YES >>> ", ingestFile.PathInBag)
 			for _, record := range ingestFile.StorageRecords {
 				//fmt.Println(record)
 				assert.True(t, record.Bucket == config.BucketStandardVA || record.Bucket == config.BucketStandardOR)
@@ -59,6 +59,7 @@ func testStorageRecords(t *testing.T, uploader *ingest.PreservationUploader) {
 		} else {
 			// If HasPreservableName() is false, file should not
 			// have been copied to preservation,
+			fmt.Println(" >>> NO >>> ", ingestFile.PathInBag)
 			assert.Equal(t, 0, len(ingestFile.StorageRecords))
 		}
 		return nil
@@ -67,9 +68,21 @@ func testStorageRecords(t *testing.T, uploader *ingest.PreservationUploader) {
 }
 
 func testFilesAreInRightBuckets(t *testing.T, uploader *ingest.PreservationUploader) {
+	buckets := []string{
+		uploader.Context.Config.BucketStandardVA,
+		uploader.Context.Config.BucketStandardOR,
+	}
 	testFn := func(ingestFile *service.IngestFile) error {
 		if ingestFile.HasPreservableName() {
-
+			for _, bucket := range buckets {
+				stats, err := uploader.Context.S3StatObject(
+					constants.StorageProviderAWS,
+					bucket,
+					ingestFile.UUID,
+				)
+				require.Nil(t, err)
+				assert.EqualValues(t, ingestFile.Size, stats.Size)
+			}
 		} else {
 			// If HasPreservableName() is false, file should not
 			// have been copied to preservation,
