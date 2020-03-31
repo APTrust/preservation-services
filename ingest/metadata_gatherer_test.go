@@ -29,23 +29,6 @@ func TestNewMetadataGatherer(t *testing.T) {
 	assert.Equal(t, obj, g.IngestObject)
 }
 
-func TestGetS3Object(t *testing.T) {
-	context := common.NewContext()
-	setupS3(t, context, keyToGoodBag, pathToGoodBag)
-	obj := getIngestObject(pathToGoodBag, goodbagMd5)
-	g := ingest.NewMetadataGatherer(context, 9999, obj)
-
-	minioObj, err := g.GetS3Object()
-	require.NotNil(t, minioObj)
-	defer minioObj.Close()
-	require.Nil(t, err)
-	assert.NotNil(t, minioObj)
-
-	stats, err := minioObj.Stat()
-	require.Nil(t, err)
-	assert.Equal(t, stats.Size, goodbagSize)
-}
-
 func TestScanBag(t *testing.T) {
 	context := common.NewContext()
 	setupS3(t, context, keyToGoodBag, pathToGoodBag)

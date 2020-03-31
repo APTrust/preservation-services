@@ -52,7 +52,11 @@ func NewMetadataGatherer(context *common.Context, workItemID int, ingestObject *
 // S3 staging bucket. The text files include manifests, tag manifests,
 // and selected tag files.
 func (m *MetadataGatherer) ScanBag() error {
-	tarredBag, err := m.GetS3Object()
+	tarredBag, err := m.Context.S3GetObject(
+		constants.StorageProviderAWS,
+		m.IngestObject.S3Bucket,
+		m.IngestObject.S3Key,
+	)
 	if err != nil {
 		return err
 	}

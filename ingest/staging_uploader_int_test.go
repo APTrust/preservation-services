@@ -45,16 +45,6 @@ func TestNewStagingUploader(t *testing.T) {
 	assert.Equal(t, obj, uploader.IngestObject)
 }
 
-func TestStagingUploader_GetS3Object(t *testing.T) {
-	context := common.NewContext()
-	setupS3(t, context, keyToGoodBag, pathToGoodBag)
-	obj := getIngestObject(pathToGoodBag, goodbagMd5)
-	uploader := ingest.NewStagingUploader(context, testWorkItemId, obj)
-	s3Obj, err := uploader.GetS3Object()
-	require.Nil(t, err)
-	require.NotNil(t, s3Obj)
-}
-
 func TestCopyFilesToStaging(t *testing.T) {
 	context := common.NewContext()
 	uploader := prepareForCopyToStaging(t, context)

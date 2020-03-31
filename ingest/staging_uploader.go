@@ -41,7 +41,11 @@ func NewStagingUploader(context *common.Context, workItemID int, ingestObject *s
 //
 // This is the only method external callers need to call.
 func (s *StagingUploader) CopyFilesToStaging() error {
-	tarredBag, err := s.GetS3Object()
+	tarredBag, err := s.Context.S3GetObject(
+		constants.StorageProviderAWS,
+		s.IngestObject.S3Bucket,
+		s.IngestObject.S3Key,
+	)
 	if err != nil {
 		return err
 	}
