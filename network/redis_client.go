@@ -8,6 +8,14 @@ import (
 	"github.com/go-redis/redis/v7"
 )
 
+// RedisApplyOptions describe a function to be applied to all IngestFiles
+// in a collection. This may have to move.
+type RedisApplyOptions struct {
+	ContinueOnError bool
+	Fn              func(*service.IngestFile) error
+	SaveChanges     bool
+}
+
 // RedisClient is a client that lets workers store and retrieve working
 // data from a Redis server.
 type RedisClient struct {
