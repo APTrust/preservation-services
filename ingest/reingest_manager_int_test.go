@@ -269,9 +269,9 @@ func TestProcessObject(t *testing.T) {
 	manager := GetReingestManager()
 	manager.WorkItemID = TestBagWorkItemId
 
-	wasPreviouslyIngested, err := manager.ProcessObject()
+	wasPreviouslyIngested, errors := manager.ProcessObject()
 	assert.True(t, wasPreviouslyIngested)
-	assert.Nil(t, err)
+	assert.Empty(t, errors, errors)
 
 	// Test basic attributes on each ingest file.
 	// Not should need saving, because they haven't changed
@@ -281,9 +281,15 @@ func TestProcessObject(t *testing.T) {
 		assert.False(t, ingestFile.NeedsSave)
 		return nil
 	}
-	count, err := manager.Context.RedisClient.IngestFilesApply(
-		TestBagWorkItemId, testAttrs)
-	assert.Nil(t, err)
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   1,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: false,
+		WorkItemID:  manager.WorkItemID,
+	}
+	count, errors := manager.Context.RedisClient.IngestFilesApply(testAttrs, options)
+	assert.Empty(t, errors, errors)
 	assert.Equal(t, 16, count)
 
 	// Create a function that alters the checksums
@@ -297,17 +303,23 @@ func TestProcessObject(t *testing.T) {
 
 	// Apply the function to alter checksums of all files
 	// belonging to this work item.
-	count, err = manager.Context.RedisClient.IngestFilesApply(
-		TestBagWorkItemId, changeChecksums)
-	assert.Nil(t, err)
+	options = service.IngestFileApplyOptions{
+		MaxErrors:   1,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: true,
+		WorkItemID:  manager.WorkItemID,
+	}
+	count, errors = manager.Context.RedisClient.IngestFilesApply(changeChecksums, options)
+	assert.Empty(t, errors, errors)
 	assert.Equal(t, 16, count)
 
 	// Now when we process the object again, it should mark all
 	// files as needing save, because all have checksums that
 	// do not match the Pharos checksums.
-	wasPreviouslyIngested, err = manager.ProcessObject()
+	wasPreviouslyIngested, errors = manager.ProcessObject()
 	assert.True(t, wasPreviouslyIngested)
-	assert.Nil(t, err)
+	assert.Empty(t, errors, errors)
 
 	testFilesNeedSave := func(ingestFile *service.IngestFile) error {
 		testIngestFile_ReingestManager(t, ingestFile)
@@ -316,9 +328,15 @@ func TestProcessObject(t *testing.T) {
 		assert.True(t, ingestFile.NeedsSave)
 		return nil
 	}
-	count, err = manager.Context.RedisClient.IngestFilesApply(
-		TestBagWorkItemId, testFilesNeedSave)
-	assert.Nil(t, err)
+	options = service.IngestFileApplyOptions{
+		MaxErrors:   1,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: false,
+		WorkItemID:  manager.WorkItemID,
+	}
+	count, errors = manager.Context.RedisClient.IngestFilesApply(testFilesNeedSave, options)
+	assert.Empty(t, errors, errors)
 	assert.Equal(t, 16, count)
 
 }

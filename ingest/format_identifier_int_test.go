@@ -47,8 +47,8 @@ func TestIdentifyFormat(t *testing.T) {
 	testGetPresignedURL(t, fi)
 	clearFileFormats(t, fi)
 
-	numberIdentified, err := fi.IdentifyFormats()
-	assert.Nil(t, err)
+	numberIdentified, errors := fi.IdentifyFormats()
+	assert.Empty(t, errors, errors)
 	assert.Equal(t, 16, numberIdentified)
 
 	testFormatMetadata(t, fi)
@@ -92,8 +92,15 @@ func testFormatMetadata(t *testing.T, fi *ingest.FormatIdentifier) {
 		assert.True(t, (ingestFile.FormatMatchType == constants.MatchTypeSignature || ingestFile.FormatMatchType == constants.MatchTypeExtension), ingestFile.PathInBag)
 		return nil
 	}
-	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemID, testFn)
-	assert.Nil(t, err)
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   1,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: false,
+		WorkItemID:  fi.WorkItemID,
+	}
+	_, errors := fi.Context.RedisClient.IngestFilesApply(testFn, options)
+	assert.Empty(t, errors, errors)
 }
 
 func clearFileFormats(t *testing.T, fi *ingest.FormatIdentifier) {
@@ -104,6 +111,13 @@ func clearFileFormats(t *testing.T, fi *ingest.FormatIdentifier) {
 		ingestFile.FormatMatchType = ""
 		return nil
 	}
-	_, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemID, clearFn)
-	assert.Nil(t, err)
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   1,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: true,
+		WorkItemID:  fi.WorkItemID,
+	}
+	_, errors := fi.Context.RedisClient.IngestFilesApply(clearFn, options)
+	assert.Empty(t, errors, errors)
 }

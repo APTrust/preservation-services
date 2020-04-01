@@ -233,8 +233,8 @@ func prepareForPreservationUpload(t *testing.T, context *common.Context) *ingest
 	require.Nil(t, err)
 
 	fi := ingest.NewFormatIdentifier(context, uploader.WorkItemID, uploader.IngestObject)
-	numberIdentified, err := fi.IdentifyFormats()
-	assert.Nil(t, err)
+	numberIdentified, errors := fi.IdentifyFormats()
+	require.Empty(t, errors)
 	assert.Equal(t, 16, numberIdentified)
 	return ingest.NewPreservationUploader(context, testWorkItemId, uploader.IngestObject)
 }

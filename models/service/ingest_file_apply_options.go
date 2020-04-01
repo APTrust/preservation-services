@@ -1,13 +1,9 @@
 package service
 
-// IngestFileForeachOptions describe a function to be applied to all
+// IngestFileApplyOptions describe a function to be applied to all
 // IngestFiles in a collection. For now, this is done through the
 // RedisClient's IngestFileForeach method.
-type IngestFileForeachOptions struct {
-
-	// Fn is the function to apply. The function will be applied to
-	// the IngestFile passed in.
-	Fn func(*IngestFile) error
+type IngestFileApplyOptions struct {
 
 	// MaxErrors is the maximum number of error to allow before
 	// IngestFilesForeach returns. In most cases, this should be

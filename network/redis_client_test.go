@@ -200,8 +200,15 @@ func TestIngestFileApply(t *testing.T) {
 
 	// Apply the function above to all IngestFile records
 	// with our workItemId.
-	count, err := client.IngestFilesApply(workItemId, fn)
-	require.Nil(t, err)
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   1,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: true,
+		WorkItemID:  workItemId,
+	}
+	count, errors := client.IngestFilesApply(fn, options)
+	require.Empty(t, errors, errors)
 	assert.Equal(t, 20, count)
 
 	// Make sure all records were actually updated.
@@ -238,10 +245,17 @@ func TestIngestFileApply_WithError(t *testing.T) {
 
 	// Apply the function above to all IngestFile records
 	// with our workItemId. It should throw an error on 12.
-	count, err := client.IngestFilesApply(workItemId, fn)
-	require.NotNil(t, err)
-	assert.True(t, strings.Contains(err.Error(), "Error processing file"))
-	assert.True(t, strings.Contains(err.Error(), "Found file 12"))
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   1,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: false,
+		WorkItemID:  workItemId,
+	}
+	count, errors := client.IngestFilesApply(fn, options)
+	require.Equal(t, 1, len(errors))
+	errMsg := errors[0].Error()
+	assert.True(t, strings.Contains(errMsg, "Found file 12"), errMsg)
 
 	// We should get back the number of files
 	// on which the function was run successfully.

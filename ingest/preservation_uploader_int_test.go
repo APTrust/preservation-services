@@ -26,8 +26,8 @@ func TestNewPreservationUploader(t *testing.T) {
 func TestPreservationUploadAll(t *testing.T) {
 	context := common.NewContext()
 	uploader := prepareForPreservationUpload(t, context)
-	filesUploaded, err := uploader.UploadAll()
-	require.Nil(t, err)
+	filesUploaded, errors := uploader.UploadAll()
+	require.Empty(t, errors, errors)
 
 	// Bag has 16 files, all of which should have been
 	// processed, though not all will have been uplaoded.
@@ -64,7 +64,15 @@ func testStorageRecords(t *testing.T, uploader *ingest.PreservationUploader) {
 		}
 		return nil
 	}
-	uploader.Context.RedisClient.IngestFilesApply(uploader.WorkItemID, testFn)
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   1,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: false,
+		WorkItemID:  uploader.WorkItemID,
+	}
+	_, errors := uploader.Context.RedisClient.IngestFilesApply(testFn, options)
+	assert.Empty(t, errors, errors)
 
 	// We should have preserved 11 of this bag's 16 files.
 	// bagit.txt, manifests and tag manifests are not preserved.
@@ -95,8 +103,15 @@ func testFilesAreInRightBuckets(t *testing.T, uploader *ingest.PreservationUploa
 		}
 		return nil
 	}
-	uploader.Context.RedisClient.IngestFilesApply(uploader.WorkItemID, testFn)
-
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   1,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: false,
+		WorkItemID:  uploader.WorkItemID,
+	}
+	_, errors := uploader.Context.RedisClient.IngestFilesApply(testFn, options)
+	assert.Empty(t, errors, errors)
 }
 
 func testCopyToAWSPreservation(t *testing.T, uploader *ingest.PreservationUploader, fileIdentifier string) {

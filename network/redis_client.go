@@ -3,6 +3,7 @@ package network
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/go-redis/redis/v7"
@@ -151,28 +152,65 @@ func (c *RedisClient) GetBatchOfFileKeys(workItemID int, offset uint64, limit in
 // items on which the function was run successfully.
 //
 // TODO: Change to use IngestFileForeachOptions
-func (c *RedisClient) IngestFilesApply(workItemID int, fn func(ingestFile *service.IngestFile) error) (int, error) {
-	nextOffset := uint64(0)
-	count := 0
-	var fileMap map[string]*service.IngestFile
+func (c *RedisClient) IngestFilesApply(fn func(ingestFile *service.IngestFile) error, options service.IngestFileApplyOptions) (count int, errors []service.ProcessingError) {
 	var err error
+	nextOffset := uint64(0)
+	var fileMap map[string]*service.IngestFile
 	for {
 		// Get a batch of files from Redis
 		fileMap, nextOffset, err = c.GetBatchOfFileKeys(
-			workItemID, nextOffset, int64(200))
+			options.WorkItemID, nextOffset, int64(200))
 		if err != nil {
-			return count, err
-		}
-		// Apply function fn to each file in the batch...
-		for key, ingestFile := range fileMap {
-			err := fn(ingestFile)
-			if err != nil {
-				return count, fmt.Errorf("Error processing file '%s': %v", key, err)
+			procErr := service.NewProcessingError(
+				options.WorkItemID,
+				"",
+				err.Error(),
+				false,
+			)
+			errors = append(errors, procErr)
+			if len(errors) >= options.MaxErrors {
+				return count, errors
 			}
-			// And then save the file back to Redis.
-			err = c.IngestFileSave(workItemID, ingestFile)
+		}
+		// For each file in the batch...
+		for _, ingestFile := range fileMap {
+			var err error
+			// Apply the function up to Retries times, with the
+			// specified interval between retries.
+			for attempt := 0; attempt < options.MaxRetries; attempt++ {
+				err = fn(ingestFile)
+				if err == nil {
+					break
+				}
+				time.Sleep(time.Duration(options.RetryMs) * time.Millisecond)
+			}
 			if err != nil {
-				return count, fmt.Errorf("After processing, error saving file %s: %v", key, err)
+				procErr := service.NewProcessingError(
+					options.WorkItemID,
+					ingestFile.Identifier(),
+					fmt.Sprintf("%s [%d attempts]", err.Error(), options.MaxRetries),
+					false,
+				)
+				errors = append(errors, procErr)
+				if len(errors) >= options.MaxErrors {
+					return count, errors
+				}
+			}
+			// Save the file back to Redis if options say so.
+			if options.SaveChanges {
+				err = c.IngestFileSave(options.WorkItemID, ingestFile)
+				if err != nil {
+					procErr := service.NewProcessingError(
+						options.WorkItemID,
+						ingestFile.Identifier(),
+						err.Error(),
+						false,
+					)
+					errors = append(errors, procErr)
+					if len(errors) >= options.MaxErrors {
+						return count, errors
+					}
+				}
 			}
 			count++
 		}
@@ -181,7 +219,7 @@ func (c *RedisClient) IngestFilesApply(workItemID int, fn func(ingestFile *servi
 			break
 		}
 	}
-	return count, nil
+	return count, errors
 }
 
 func (c *RedisClient) WorkResultGet(workItemID int, operationName string) (*service.WorkResult, error) {

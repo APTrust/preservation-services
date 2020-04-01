@@ -52,7 +52,7 @@ func NewFormatIdentifier(context *common.Context, workItemID int, ingestObject *
 // successful if the returned count matches the IngestObject's FileCount.
 // If not all files were identified, you re-run this function. It's intelligent
 // enough to skip files that were successfully identified on a previous run.
-func (fi *FormatIdentifier) IdentifyFormats() (int, error) {
+func (fi *FormatIdentifier) IdentifyFormats() (int, []service.ProcessingError) {
 	identify := func(ingestFile *service.IngestFile) error {
 		// No need to re-identify if already id'd by FIDO
 		if ingestFile.FormatIdentifiedBy == constants.FmtIdFido {
@@ -105,8 +105,14 @@ func (fi *FormatIdentifier) IdentifyFormats() (int, error) {
 	// IngestFilesApply runs our function on all ingest file records
 	// for the specified WorkItemId, and it saves each record back to
 	// Redis.
-	numberCompleted, err := fi.Context.RedisClient.IngestFilesApply(fi.WorkItemID, identify)
-	return numberCompleted, err
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   100,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: true,
+		WorkItemID:  fi.WorkItemID,
+	}
+	return fi.Context.RedisClient.IngestFilesApply(identify, options)
 }
 
 // GetPresignedURL returns a pre-signed S3 URL that we can pass to the

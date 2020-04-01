@@ -36,9 +36,16 @@ func NewPreservationUploader(context *common.Context, workItemID int, ingestObje
 //
 // The StorageRecords attached to each IngestFile record where and when each
 // file was uploaded.
-func (uploader *PreservationUploader) UploadAll() (int, error) {
+func (uploader *PreservationUploader) UploadAll() (int, []service.ProcessingError) {
 	uploadFn := uploader.getUploadFunction()
-	return uploader.Context.RedisClient.IngestFilesApply(uploader.WorkItemID, uploadFn)
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   30,
+		MaxRetries:  4,
+		RetryMs:     800,
+		SaveChanges: true,
+		WorkItemID:  uploader.WorkItemID,
+	}
+	return uploader.Context.RedisClient.IngestFilesApply(uploadFn, options)
 }
 
 func (uploader *PreservationUploader) getUploadFunction() func(*service.IngestFile) error {

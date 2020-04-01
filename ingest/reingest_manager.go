@@ -60,16 +60,24 @@ func NewReingestManager(context *common.Context, workItemID int, ingestObject *s
 //
 // Returns true if this object has been previously ingested. Returns an error
 // if any part of the processing failed.
-func (r *ReingestManager) ProcessObject() (bool, error) {
-	var err error
+func (r *ReingestManager) ProcessObject() (bool, []service.ProcessingError) {
+	errors := make([]service.ProcessingError, 0)
 	isReingest := false
-	if isReingest, err = r.ObjectWasPreviouslyIngested(); err == nil {
-		err = r.ProcessFiles()
-		if err != nil {
-			return isReingest, err
+	isReingest, err := r.ObjectWasPreviouslyIngested()
+	if err == nil {
+		_, errors := r.ProcessFiles()
+		if len(errors) > 0 {
+			return isReingest, errors
 		}
+	} else {
+		errors = append(errors, service.NewProcessingError(
+			r.WorkItemID,
+			r.IngestObject.Identifier(),
+			err.Error(),
+			false,
+		))
 	}
-	return isReingest, err
+	return isReingest, errors
 }
 
 // ObjectWasPreviouslyIngested returns true if the IngestObject has been
@@ -89,19 +97,26 @@ func (r *ReingestManager) ObjectWasPreviouslyIngested() (bool, error) {
 // Pharos. If it finds an existing record, it sets the UUID of the IngestFile
 // to match the one in Pharos, and compares checksums to see if we need to
 // re-copy the file into preservation storage.
-func (r *ReingestManager) ProcessFiles() error {
+func (r *ReingestManager) ProcessFiles() (int, []service.ProcessingError) {
 	processFile := func(ingestFile *service.IngestFile) error {
-		updatedInRedis, err := r.ProcessFile(ingestFile)
-		if err != nil {
-			return err
+		resp := r.Context.PharosClient.GenericFileGet(ingestFile.Identifier())
+		if resp.Error != nil {
+			return resp.Error
 		}
-		if updatedInRedis {
-			r.Context.Logger.Infof("Updated %s in Redis", ingestFile.Identifier())
+		pharosFile := resp.GenericFile()
+		if pharosFile != nil {
+			r.FlagChanges(ingestFile, pharosFile)
 		}
 		return nil
 	}
-	_, err := r.Context.RedisClient.IngestFilesApply(r.WorkItemID, processFile)
-	return err
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   10,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: true,
+		WorkItemID:  r.WorkItemID,
+	}
+	return r.Context.RedisClient.IngestFilesApply(processFile, options)
 }
 
 // ProcessFile requests a GenericFile object from Pharos. If Pharos returns
@@ -124,7 +139,7 @@ func (r *ReingestManager) ProcessFile(ingestFile *service.IngestFile) (bool, err
 	}
 	pharosFile := resp.GenericFile()
 	if pharosFile != nil {
-		r.CompareFiles(ingestFile, pharosFile)
+		r.FlagChanges(ingestFile, pharosFile)
 		err := r.IngestFileSave(ingestFile)
 		if err != nil {
 			return updatedInRedis, err
@@ -134,14 +149,14 @@ func (r *ReingestManager) ProcessFile(ingestFile *service.IngestFile) (bool, err
 	return updatedInRedis, nil
 }
 
-// CompareFiles checks to see if the checksums on the IngestFile match the
+// FlagChanges checks to see if the checksums on the IngestFile match the
 // checksums on Pharos' GenericFile. If not, this flags the file as needing
 // to be re-copied to preservation storage. If checksums match, this flags
 // the file as not needing to be copied.
 //
 // This returns a boolean indicating whether the file has changed since last
 // ingest. It returns an error if it has trouble getting info from Pharos.
-func (r *ReingestManager) CompareFiles(ingestFile *service.IngestFile, pharosFile *registry.GenericFile) (bool, error) {
+func (r *ReingestManager) FlagChanges(ingestFile *service.IngestFile, pharosFile *registry.GenericFile) (bool, error) {
 	fileChanged := false
 	params := url.Values{}
 	params.Add("generic_file_identifier", ingestFile.Identifier())
