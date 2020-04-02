@@ -48,7 +48,7 @@ func TestPreservationUploadAll(t *testing.T) {
 func testStorageRecords(t *testing.T, uploader *ingest.PreservationUploader) {
 	config := uploader.Context.Config
 	uploadCount := 0
-	testFn := func(ingestFile *service.IngestFile) error {
+	testFn := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		if ingestFile.HasPreservableName() {
 			assert.Equal(t, 2, len(ingestFile.StorageRecords))
 			for _, record := range ingestFile.StorageRecords {
@@ -62,7 +62,7 @@ func testStorageRecords(t *testing.T, uploader *ingest.PreservationUploader) {
 			// have been copied to preservation,
 			assert.Equal(t, 0, len(ingestFile.StorageRecords))
 		}
-		return nil
+		return errors
 	}
 	options := service.IngestFileApplyOptions{
 		MaxErrors:   1,
@@ -85,7 +85,7 @@ func testFilesAreInRightBuckets(t *testing.T, uploader *ingest.PreservationUploa
 		uploader.Context.Config.BucketStandardVA,
 		uploader.Context.Config.BucketStandardOR,
 	}
-	testFn := func(ingestFile *service.IngestFile) error {
+	testFn := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		if ingestFile.HasPreservableName() {
 			for _, bucket := range buckets {
 				stats, err := uploader.Context.S3StatObject(
@@ -101,7 +101,7 @@ func testFilesAreInRightBuckets(t *testing.T, uploader *ingest.PreservationUploa
 			// have been copied to preservation,
 			assert.Equal(t, 0, len(ingestFile.StorageRecords))
 		}
-		return nil
+		return errors
 	}
 	options := service.IngestFileApplyOptions{
 		MaxErrors:   1,

@@ -2,7 +2,6 @@ package ingest
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -11,10 +10,13 @@ import (
 	"github.com/minio/minio-go/v6"
 )
 
+// PreservationUploader copies files from S3 staging to preservation storage.
 type PreservationUploader struct {
 	Worker
 }
 
+// NewPreservationUploader returns a new PerservationUploader which can
+// all files from S3 staging to preservation storage.
 func NewPreservationUploader(context *common.Context, workItemID int, ingestObject *service.IngestObject) *PreservationUploader {
 	return &PreservationUploader{
 		Worker: Worker{
@@ -36,35 +38,34 @@ func NewPreservationUploader(context *common.Context, workItemID int, ingestObje
 //
 // The StorageRecords attached to each IngestFile record where and when each
 // file was uploaded.
-func (uploader *PreservationUploader) UploadAll() (int, []service.ProcessingError) {
+func (uploader *PreservationUploader) UploadAll() (int, []*service.ProcessingError) {
 	uploadFn := uploader.getUploadFunction()
 	options := service.IngestFileApplyOptions{
 		MaxErrors:   30,
 		MaxRetries:  4,
-		RetryMs:     800,
+		RetryMs:     1000,
 		SaveChanges: true,
 		WorkItemID:  uploader.WorkItemID,
 	}
 	return uploader.Context.RedisClient.IngestFilesApply(uploadFn, options)
 }
 
-func (uploader *PreservationUploader) getUploadFunction() func(*service.IngestFile) error {
+func (uploader *PreservationUploader) getUploadFunction() func(*service.IngestFile) []*service.ProcessingError {
 	uploadTargets := uploader.Context.Config.UploadTargetsFor(uploader.IngestObject.StorageOption)
 
-	return func(ingestFile *service.IngestFile) error {
-		errMessages := make([]string, 0)
+	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		for _, uploadTarget := range uploadTargets {
 			if !ingestFile.NeedsSaveAt(uploadTarget.Provider, uploadTarget.Bucket) {
 				continue
 			}
-			var err error
+			var processingError *service.ProcessingError
 			if uploadTarget.Provider == constants.StorageProviderAWS {
-				err = uploader.CopyToAWSPreservation(ingestFile, uploadTarget)
+				processingError = uploader.CopyToAWSPreservation(ingestFile, uploadTarget)
 			} else {
-				err = uploader.CopyToExternalPreservation(ingestFile, uploadTarget)
+				processingError = uploader.CopyToExternalPreservation(ingestFile, uploadTarget)
 			}
-			if err != nil {
-				errMessages = append(errMessages, err.Error())
+			if processingError != nil {
+				errors = append(errors, processingError)
 			} else {
 				// Add a StorageRecord to this file. Set only the
 				// properties that indicate we've uploaded it.
@@ -79,10 +80,7 @@ func (uploader *PreservationUploader) getUploadFunction() func(*service.IngestFi
 				ingestFile.SetStorageRecord(storageRecord)
 			}
 		}
-		if len(errMessages) > 0 {
-			return fmt.Errorf(strings.Join(errMessages, "; "))
-		}
-		return nil
+		return errors
 	}
 }
 
@@ -92,10 +90,10 @@ func (uploader *PreservationUploader) getUploadFunction() func(*service.IngestFi
 //
 // Avoid calling this directly. Call UploadAll() instead. This is
 // public so we can test it.
-func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) error {
+func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) *service.ProcessingError {
 	client, err := uploader.getS3Client(uploadTarget.Provider)
 	if err != nil {
-		return err
+		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	// Comments at https://github.com/minio/minio-go/blob/44ba45c1aa02cff384a840fe35950b50978bf620/api-compose-object.go#L48-L56
 	// suggest that CopyObject will copy all of the object's user metadata
@@ -114,9 +112,13 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 		nil,
 	)
 	if err != nil {
-		return fmt.Errorf("Error creating DestinationInfo: %s", err.Error())
+		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
-	return client.CopyObject(destInfo, sourceInfo)
+	err = client.CopyObject(destInfo, sourceInfo)
+	if err != nil {
+		return uploader.Error(ingestFile.Identifier(), err, false)
+	}
+	return nil
 }
 
 // CopyToExternalPreservation copies an object from AWS staging to an
@@ -130,14 +132,14 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 //
 // Avoid calling this directly. Call UploadAll() instead. This is
 // public so we can test it.
-func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) error {
+func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) *service.ProcessingError {
 	srcClient, err := uploader.getS3Client(constants.StorageProviderAWS)
 	if err != nil {
-		return err
+		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	destClient, err := uploader.getS3Client(uploadTarget.Provider)
 	if err != nil {
-		return err
+		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	srcObject, err := srcClient.GetObject(
 		uploader.Context.Config.StagingBucket,
@@ -145,11 +147,11 @@ func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *ser
 		minio.GetObjectOptions{},
 	)
 	if err != nil {
-		return fmt.Errorf("Error getting source object for copy: %s", err.Error())
+		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	putOptions, err := ingestFile.GetPutOptions()
 	if err != nil {
-		return err
+		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	bytesCopied, err := destClient.PutObject(
 		uploadTarget.Bucket,
@@ -159,10 +161,11 @@ func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *ser
 		putOptions,
 	)
 	if err != nil {
-		return fmt.Errorf("Error copying object to preservation: %s", err.Error())
+		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	if bytesCopied != ingestFile.Size {
-		return fmt.Errorf("Copied only %d of %d bytes from staging to preservation", bytesCopied, ingestFile.Size)
+		err = fmt.Errorf("Copied only %d of %d bytes from staging to preservation", bytesCopied, ingestFile.Size)
+		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	return nil
 }

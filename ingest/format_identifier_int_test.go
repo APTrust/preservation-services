@@ -72,7 +72,7 @@ func testGetPresignedURL(t *testing.T, fi *ingest.FormatIdentifier) {
 // Note that all files in our test bag are either txt or xml, and some of the
 // xml files have no extension.
 func testFormatMetadata(t *testing.T, fi *ingest.FormatIdentifier) {
-	testFn := func(ingestFile *service.IngestFile) error {
+	testFn := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		if ingestFile.PathInBag == "data/datastream-DC" || ingestFile.PathInBag == "data/datastream-MARC" {
 			// Fido can't identify these because they have no
 			// file extension, and they're missing the opening
@@ -90,7 +90,7 @@ func testFormatMetadata(t *testing.T, fi *ingest.FormatIdentifier) {
 		assert.Equal(t, constants.FmtIdFido, ingestFile.FormatIdentifiedBy, ingestFile.PathInBag)
 		assert.False(t, ingestFile.FormatIdentifiedAt.IsZero(), ingestFile.PathInBag)
 		assert.True(t, (ingestFile.FormatMatchType == constants.MatchTypeSignature || ingestFile.FormatMatchType == constants.MatchTypeExtension), ingestFile.PathInBag)
-		return nil
+		return errors
 	}
 	options := service.IngestFileApplyOptions{
 		MaxErrors:   1,
@@ -104,12 +104,12 @@ func testFormatMetadata(t *testing.T, fi *ingest.FormatIdentifier) {
 }
 
 func clearFileFormats(t *testing.T, fi *ingest.FormatIdentifier) {
-	clearFn := func(ingestFile *service.IngestFile) error {
+	clearFn := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		ingestFile.FileFormat = ""
 		ingestFile.FormatIdentifiedBy = ""
 		ingestFile.FormatIdentifiedAt = time.Time{}
 		ingestFile.FormatMatchType = ""
-		return nil
+		return errors
 	}
 	options := service.IngestFileApplyOptions{
 		MaxErrors:   1,

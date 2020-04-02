@@ -60,9 +60,7 @@ func NewReingestManager(context *common.Context, workItemID int, ingestObject *s
 //
 // Returns true if this object has been previously ingested. Returns an error
 // if any part of the processing failed.
-func (r *ReingestManager) ProcessObject() (bool, []service.ProcessingError) {
-	errors := make([]service.ProcessingError, 0)
-	isReingest := false
+func (r *ReingestManager) ProcessObject() (isReingest bool, errors []*service.ProcessingError) {
 	isReingest, err := r.ObjectWasPreviouslyIngested()
 	if err == nil {
 		_, errors := r.ProcessFiles()
@@ -70,12 +68,7 @@ func (r *ReingestManager) ProcessObject() (bool, []service.ProcessingError) {
 			return isReingest, errors
 		}
 	} else {
-		errors = append(errors, service.NewProcessingError(
-			r.WorkItemID,
-			r.IngestObject.Identifier(),
-			err.Error(),
-			false,
-		))
+		errors = append(errors, r.Error(r.IngestObject.Identifier(), err, false))
 	}
 	return isReingest, errors
 }
@@ -97,17 +90,17 @@ func (r *ReingestManager) ObjectWasPreviouslyIngested() (bool, error) {
 // Pharos. If it finds an existing record, it sets the UUID of the IngestFile
 // to match the one in Pharos, and compares checksums to see if we need to
 // re-copy the file into preservation storage.
-func (r *ReingestManager) ProcessFiles() (int, []service.ProcessingError) {
-	processFile := func(ingestFile *service.IngestFile) error {
+func (r *ReingestManager) ProcessFiles() (int, []*service.ProcessingError) {
+	processFile := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		resp := r.Context.PharosClient.GenericFileGet(ingestFile.Identifier())
 		if resp.Error != nil {
-			return resp.Error
+			return append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
 		}
 		pharosFile := resp.GenericFile()
 		if pharosFile != nil {
 			r.FlagChanges(ingestFile, pharosFile)
 		}
-		return nil
+		return errors
 	}
 	options := service.IngestFileApplyOptions{
 		MaxErrors:   10,

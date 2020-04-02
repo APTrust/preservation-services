@@ -46,3 +46,12 @@ func (w *Worker) IngestObjectSave() error {
 func (w *Worker) S3KeyFor(ingestFile *service.IngestFile) string {
 	return fmt.Sprintf("%d/%s", w.WorkItemID, ingestFile.UUID)
 }
+
+func (w *Worker) Error(identifier string, err error, isFatal bool) *service.ProcessingError {
+	return service.NewProcessingError(
+		w.WorkItemID,
+		identifier,
+		err.Error(),
+		isFatal,
+	)
+}

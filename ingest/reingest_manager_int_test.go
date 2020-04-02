@@ -276,10 +276,10 @@ func TestProcessObject(t *testing.T) {
 	// Test basic attributes on each ingest file.
 	// Not should need saving, because they haven't changed
 	// since last ingest.
-	testAttrs := func(ingestFile *service.IngestFile) error {
+	testAttrs := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		testIngestFile_ReingestManager(t, ingestFile)
 		assert.False(t, ingestFile.NeedsSave)
-		return nil
+		return errors
 	}
 	options := service.IngestFileApplyOptions{
 		MaxErrors:   1,
@@ -294,11 +294,11 @@ func TestProcessObject(t *testing.T) {
 
 	// Create a function that alters the checksums
 	// on the IngestFile records in Redis.
-	changeChecksums := func(f *service.IngestFile) error {
+	changeChecksums := func(f *service.IngestFile) (errors []*service.ProcessingError) {
 		for _, cs := range f.Checksums {
 			cs.Digest = "00000000000000000000000000000000"
 		}
-		return nil
+		return errors
 	}
 
 	// Apply the function to alter checksums of all files
@@ -321,7 +321,7 @@ func TestProcessObject(t *testing.T) {
 	assert.True(t, wasPreviouslyIngested)
 	assert.Empty(t, errors, errors)
 
-	testFilesNeedSave := func(ingestFile *service.IngestFile) error {
+	testFilesNeedSave := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		testIngestFile_ReingestManager(t, ingestFile)
 		// This is the main thing we want to test.
 		// NeedsSave should have changed from false to true.

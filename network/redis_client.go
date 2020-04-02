@@ -152,7 +152,7 @@ func (c *RedisClient) GetBatchOfFileKeys(workItemID int, offset uint64, limit in
 // items on which the function was run successfully.
 //
 // TODO: Change to use IngestFileForeachOptions
-func (c *RedisClient) IngestFilesApply(fn func(ingestFile *service.IngestFile) error, options service.IngestFileApplyOptions) (count int, errors []service.ProcessingError) {
+func (c *RedisClient) IngestFilesApply(fn func(ingestFile *service.IngestFile) []*service.ProcessingError, options service.IngestFileApplyOptions) (count int, errors []*service.ProcessingError) {
 	var err error
 	nextOffset := uint64(0)
 	var fileMap map[string]*service.IngestFile
@@ -174,24 +174,19 @@ func (c *RedisClient) IngestFilesApply(fn func(ingestFile *service.IngestFile) e
 		}
 		// For each file in the batch...
 		for _, ingestFile := range fileMap {
-			var err error
+			var procErrors []*service.ProcessingError
 			// Apply the function up to Retries times, with the
 			// specified interval between retries.
 			for attempt := 0; attempt < options.MaxRetries; attempt++ {
-				err = fn(ingestFile)
-				if err == nil {
+				procErrors = fn(ingestFile)
+				if len(procErrors) == 0 {
 					break
 				}
 				time.Sleep(time.Duration(options.RetryMs) * time.Millisecond)
 			}
-			if err != nil {
-				procErr := service.NewProcessingError(
-					options.WorkItemID,
-					ingestFile.Identifier(),
-					fmt.Sprintf("%s [%d attempts]", err.Error(), options.MaxRetries),
-					false,
-				)
-				errors = append(errors, procErr)
+			// Keep the processing error only after the last attempt.
+			if len(procErrors) > 0 {
+				errors = append(errors, procErrors...)
 				if len(errors) >= options.MaxErrors {
 					return count, errors
 				}

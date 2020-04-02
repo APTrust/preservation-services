@@ -52,22 +52,22 @@ func NewFormatIdentifier(context *common.Context, workItemID int, ingestObject *
 // successful if the returned count matches the IngestObject's FileCount.
 // If not all files were identified, you re-run this function. It's intelligent
 // enough to skip files that were successfully identified on a previous run.
-func (fi *FormatIdentifier) IdentifyFormats() (int, []service.ProcessingError) {
-	identify := func(ingestFile *service.IngestFile) error {
+func (fi *FormatIdentifier) IdentifyFormats() (int, []*service.ProcessingError) {
+	identify := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		// No need to re-identify if already id'd by FIDO
 		if ingestFile.FormatIdentifiedBy == constants.FmtIdFido {
-			return nil
+			return errors
 		}
 		key := fi.S3KeyFor(ingestFile)
 		signedURL, err := fi.GetPresignedURL(fi.Context.Config.StagingBucket, key)
 		if err != nil {
-			return err
+			errors = append(errors, fi.Error(ingestFile.Identifier(), err, false))
 		}
 		idRecord, err := fi.FmtIdentifier.Identify(
 			signedURL.String(),
 			ingestFile.FidoSafeName())
 		if err != nil {
-			return err
+			errors = append(errors, fi.Error(ingestFile.Identifier(), err, false))
 		}
 
 		// See comments above "if formatChanged" below.
@@ -99,7 +99,7 @@ func (fi *FormatIdentifier) IdentifyFormats() (int, []service.ProcessingError) {
 		// 	fi.UpdateS3Metadata(ingestFile)
 		// }
 
-		return nil
+		return errors
 	}
 
 	// IngestFilesApply runs our function on all ingest file records

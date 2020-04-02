@@ -6,6 +6,7 @@ import (
 
 type StorageRecord struct {
 	Bucket     string    `json:"bucket"`
+	Error      string    `json:"error"`
 	ETag       string    `json:"etag"`
 	Provider   string    `json:"provider"`
 	Size       int64     `json:"size"`

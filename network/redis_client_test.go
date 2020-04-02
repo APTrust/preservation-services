@@ -193,9 +193,9 @@ func TestIngestFileApply(t *testing.T) {
 
 	// Create a function that changes IngestFile.FileFormat
 	// to "text/plain"
-	fn := func(ingestFile *service.IngestFile) error {
+	fn := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		ingestFile.FileFormat = "text/plain"
-		return nil
+		return errors
 	}
 
 	// Apply the function above to all IngestFile records
@@ -236,11 +236,16 @@ func TestIngestFileApply_WithError(t *testing.T) {
 
 	// Create a function that throws an error when it
 	// finds file_12.jpg
-	fn := func(ingestFile *service.IngestFile) error {
+	fn := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		if strings.Contains(ingestFile.Identifier(), "12") {
-			return fmt.Errorf("Found file 12")
+			errors = append(errors, service.NewProcessingError(
+				workItemId,
+				ingestFile.Identifier(),
+				"Found file 12",
+				false,
+			))
 		}
-		return nil
+		return errors
 	}
 
 	// Apply the function above to all IngestFile records
