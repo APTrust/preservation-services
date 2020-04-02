@@ -152,7 +152,7 @@ func (c *RedisClient) GetBatchOfFileKeys(workItemID int, offset uint64, limit in
 // items on which the function was run successfully.
 //
 // TODO: Change to use IngestFileForeachOptions
-func (c *RedisClient) IngestFilesApply(fn func(ingestFile *service.IngestFile) []*service.ProcessingError, options service.IngestFileApplyOptions) (count int, errors []*service.ProcessingError) {
+func (c *RedisClient) IngestFilesApply(fn service.IngestFileApplyFn, options service.IngestFileApplyOptions) (count int, errors []*service.ProcessingError) {
 	var err error
 	nextOffset := uint64(0)
 	var fileMap map[string]*service.IngestFile

@@ -1,5 +1,9 @@
 package service
 
+// IngestFileApplyFn defines the type signature for functions passed
+// to RedisClient.IngestFilesApply.
+type IngestFileApplyFn = func(ingestFile *IngestFile) (errors []*ProcessingError)
+
 // IngestFileApplyOptions describe a function to be applied to all
 // IngestFiles in a collection. For now, this is done through the
 // RedisClient's IngestFileForeach method.

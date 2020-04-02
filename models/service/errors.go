@@ -5,11 +5,28 @@ import (
 	"runtime"
 )
 
+// ProcessingError contains detailed information about an error that
+// occurred during Ingest, Restoration, Deletion, or Fixity Checking.
 type ProcessingError struct {
+
+	// Identifier is a file identifier or object identifier, depending
+	// on whether we're processing an object or a file.
 	Identifier string
-	IsFatal    bool
-	Message    string
-	Source     string
+
+	// IsFatal describes whether or not an error is fatal. Most are
+	// transient, such as network errors. A fatal error indicates no
+	// further processing should occur.
+	IsFatal bool
+
+	// Message is the text of the error.
+	Message string
+
+	// Source contains the file name and line number where the error
+	// occurred.
+	Source string
+
+	// WorkItemID is the ID of the WorkItem being processed when the
+	// error occurree.
 	WorkItemID int
 }
 
