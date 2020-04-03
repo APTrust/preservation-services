@@ -238,3 +238,10 @@ func prepareForPreservationUpload(t *testing.T, context *common.Context) *ingest
 	assert.Equal(t, 16, numberIdentified)
 	return ingest.NewPreservationUploader(context, testWorkItemId, uploader.IngestObject)
 }
+
+func prepareForPreservationVerify(t *testing.T, context *common.Context) *ingest.PreservationVerifier {
+	uploader := prepareForPreservationUpload(t, context)
+	_, errors := uploader.UploadAll()
+	require.Empty(t, errors, errors)
+	return ingest.NewPreservationVerifier(context, uploader.WorkItemID, uploader.IngestObject)
+}
