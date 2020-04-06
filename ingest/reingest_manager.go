@@ -61,8 +61,16 @@ func NewReingestManager(context *common.Context, workItemID int, ingestObject *s
 // Returns true if this object has been previously ingested. Returns an error
 // if any part of the processing failed.
 func (r *ReingestManager) ProcessObject() (isReingest bool, errors []*service.ProcessingError) {
-	isReingest, err := r.ObjectWasPreviouslyIngested()
+	obj, err := r.GetExistingObject()
 	if err == nil {
+		if obj != nil {
+			isReingest = true
+			saveErr := r.FlagObjectAsReingest(obj)
+			if saveErr != nil {
+				errors = append(errors, r.Error(r.IngestObject.Identifier(), saveErr, true))
+				return true, errors
+			}
+		}
 		_, errors := r.ProcessFiles()
 		if len(errors) > 0 {
 			return isReingest, errors
@@ -73,17 +81,16 @@ func (r *ReingestManager) ProcessObject() (isReingest bool, errors []*service.Pr
 	return isReingest, errors
 }
 
-// ObjectWasPreviouslyIngested returns true if the IngestObject has been
+// GetExistingObject returns true if the IngestObject has been
 // previously ingested. Returns an error if it can't get info from Pharos.
-func (r *ReingestManager) ObjectWasPreviouslyIngested() (bool, error) {
+func (r *ReingestManager) GetExistingObject() (*registry.IntellectualObject, error) {
 	resp := r.Context.PharosClient.IntellectualObjectGet(r.IngestObject.Identifier())
 	if resp.ObjectNotFound() {
-		return false, nil
+		return nil, nil
 	} else if resp.Error != nil {
-		return false, resp.Error
+		return nil, resp.Error
 	}
-	obj := resp.IntellectualObject()
-	return obj != nil, nil
+	return resp.IntellectualObject(), nil
 }
 
 // ProcessFiles checks each of the IngestFiles against existing records in
@@ -237,4 +244,10 @@ func (r *ReingestManager) FlagForUpdate(ingestFile *service.IngestFile, pharosFi
 func (r *ReingestManager) FlagUnchanged(ingestFile *service.IngestFile, pharosFile *registry.GenericFile) {
 	ingestFile.NeedsSave = false
 	ingestFile.UUID = pharosFile.UUID()
+}
+
+func (r *ReingestManager) FlagObjectAsReingest(obj *registry.IntellectualObject) error {
+	r.IngestObject.ID = obj.ID
+	r.IngestObject.IsReingest = true
+	return r.Context.RedisClient.IngestObjectSave(r.WorkItemID, r.IngestObject)
 }

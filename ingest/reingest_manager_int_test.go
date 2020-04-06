@@ -96,7 +96,7 @@ func TestNewReingestManager(t *testing.T) {
 	assert.Equal(t, 9999, manager.WorkItemID)
 }
 
-func TestObjectWasPreviouslyIngested(t *testing.T) {
+func TestGetExistingObject(t *testing.T) {
 	manager := GetReingestManager()
 
 	// Set these properties on our test object so that
@@ -105,16 +105,21 @@ func TestObjectWasPreviouslyIngested(t *testing.T) {
 	// of the Pharos fixture data.
 	manager.IngestObject.S3Key = "toads.tar"
 	manager.IngestObject.Institution = "institution2.edu"
-	wasIngested, err := manager.ObjectWasPreviouslyIngested()
+	intelObj, err := manager.GetExistingObject()
 	require.Nil(t, err)
-	assert.True(t, wasIngested)
+	assert.NotNil(t, intelObj)
 
 	// Set this so Identifier() resolves to
 	// "institution.edu/bag-does-not-exist"
 	manager.IngestObject.S3Key = "bag-does-not-exist.tar"
-	wasIngested, err = manager.ObjectWasPreviouslyIngested()
+	manager.IngestObject.ID = 0
+	manager.IngestObject.IsReingest = false
+	intelObj, err = manager.GetExistingObject()
 	require.Nil(t, err)
-	assert.False(t, wasIngested)
+	assert.Nil(t, intelObj)
+
+	assert.Equal(t, 0, manager.IngestObject.ID)
+	assert.False(t, manager.IngestObject.IsReingest)
 }
 
 func TestSetStorageOption(t *testing.T) {
@@ -320,6 +325,17 @@ func TestProcessObject(t *testing.T) {
 	wasPreviouslyIngested, errors = manager.ProcessObject()
 	assert.True(t, wasPreviouslyIngested)
 	assert.Empty(t, errors, errors)
+
+	// Make sure these properties were set...
+	assert.True(t, manager.IngestObject.ID > 0)
+	assert.True(t, manager.IngestObject.IsReingest)
+
+	// Make sure these properties were set on the IngestObject in Redis.
+	ingestObj, err := manager.Context.RedisClient.IngestObjectGet(
+		manager.WorkItemID, manager.IngestObject.Identifier())
+	require.Nil(t, err)
+	assert.True(t, ingestObj.ID > 0)
+	assert.True(t, ingestObj.IsReingest)
 
 	testFilesNeedSave := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		testIngestFile_ReingestManager(t, ingestFile)
