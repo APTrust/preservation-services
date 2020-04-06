@@ -14,25 +14,27 @@ import (
 )
 
 type IngestObject struct {
-	CopiedToStagingAt      time.Time    `json:"copied_to_staging_at,omitempty"`
-	DeletedFromReceivingAt time.Time    `json:"deleted_from_receiving_at,omitempty"`
-	ETag                   string       `json:"etag,omitempty"`
-	ErrorMessage           string       `json:"error_message,omitempty"`
-	FileCount              int          `json:"file_count"`
-	HasFetchTxt            bool         `json:"has_fetch_txt"`
-	ID                     int          `json:"id,omitempty"`
-	Institution            string       `json:"institution,omitempty"`
-	InstitutionID          int          `json:"institution_id,omitempty"`
-	Manifests              []string     `json:"manifests"`
-	ParsableTagFiles       []string     `json:"parsable_tag_files"`
-	S3Bucket               string       `json:"s3_bucket,omitempty"`
-	S3Key                  string       `json:"s3_key,omitempty"`
-	Serialization          string       `json:"serialization,omitempty"`
-	Size                   int64        `json:"size,omitempty"`
-	StorageOption          string       `json:"storage_option"`
-	TagFiles               []string     `json:"tag_files"`
-	TagManifests           []string     `json:"tag_manifests"`
-	Tags                   []*bagit.Tag `json:"tags"`
+	CopiedToStagingAt      time.Time               `json:"copied_to_staging_at,omitempty"`
+	DeletedFromReceivingAt time.Time               `json:"deleted_from_receiving_at,omitempty"`
+	ETag                   string                  `json:"etag,omitempty"`
+	ErrorMessage           string                  `json:"error_message,omitempty"`
+	FileCount              int                     `json:"file_count"`
+	HasFetchTxt            bool                    `json:"has_fetch_txt"`
+	ID                     int                     `json:"id,omitempty"`
+	Institution            string                  `json:"institution,omitempty"`
+	InstitutionID          int                     `json:"institution_id,omitempty"`
+	IsReingest             bool                    `json:"is_reingest"`
+	Manifests              []string                `json:"manifests"`
+	ParsableTagFiles       []string                `json:"parsable_tag_files"`
+	PremisEvents           []*registry.PremisEvent `json:"premis_events,omitempty"`
+	S3Bucket               string                  `json:"s3_bucket,omitempty"`
+	S3Key                  string                  `json:"s3_key,omitempty"`
+	Serialization          string                  `json:"serialization,omitempty"`
+	Size                   int64                   `json:"size,omitempty"`
+	StorageOption          string                  `json:"storage_option"`
+	TagFiles               []string                `json:"tag_files"`
+	TagManifests           []string                `json:"tag_manifests"`
+	Tags                   []*bagit.Tag            `json:"tags"`
 }
 
 func NewIngestObject(s3Bucket, s3Key, eTag, institution string, institutionID int, size int64) *IngestObject {
@@ -41,8 +43,10 @@ func NewIngestObject(s3Bucket, s3Key, eTag, institution string, institutionID in
 		HasFetchTxt:      false,
 		Institution:      institution,
 		InstitutionID:    institutionID,
+		IsReingest:       false,
 		Manifests:        make([]string, 0),
 		ParsableTagFiles: make([]string, 0),
+		PremisEvents:     make([]*registry.PremisEvent, 0),
 		S3Bucket:         s3Bucket,
 		S3Key:            s3Key,
 		Size:             size,
@@ -213,4 +217,32 @@ func (obj *IngestObject) ToIntellectualObject() *registry.IntellectualObject {
 		StorageOption:          obj.StorageOption,
 		Title:                  obj.Title(),
 	}
+}
+
+func (obj *IngestObject) GetIngestEvents() []*registry.PremisEvent {
+	if obj.PremisEvents == nil {
+		obj.PremisEvents = make([]*registry.PremisEvent, 0)
+	}
+	if len(obj.PremisEvents) == 0 {
+		obj.initIngestEvents()
+	}
+	return obj.PremisEvents
+}
+
+func (obj *IngestObject) initIngestEvents() {
+	// Object creation and identifier assignment happen only
+	// on first ingest.
+	if !obj.IsReingest {
+		obj.PremisEvents = append(obj.PremisEvents,
+			registry.NewObjectCreationEvent())
+		obj.PremisEvents = append(obj.PremisEvents,
+			registry.NewObjectIdentifierEvent(obj.Identifier()))
+	}
+	// Ingest event is added for *every* ingest,
+	// and rights assignment is updated on each ingest,
+	// the usually it doesn't change.
+	obj.PremisEvents = append(obj.PremisEvents,
+		registry.NewObjectIngestEvent(obj.FileCount))
+	obj.PremisEvents = append(obj.PremisEvents,
+		registry.NewObjectRightsEvent(obj.Access()))
 }

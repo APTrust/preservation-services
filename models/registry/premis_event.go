@@ -2,7 +2,11 @@ package registry
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
+
+	"github.com/APTrust/preservation-services/constants"
+	uuid "github.com/satori/go.uuid"
 )
 
 type PremisEvent struct {
@@ -46,4 +50,64 @@ func (event *PremisEvent) ToJSON() ([]byte, error) {
 // object.
 func (event *PremisEvent) SerializeForPharos() ([]byte, error) {
 	return event.ToJSON()
+}
+
+func NewObjectCreationEvent() *PremisEvent {
+	eventId := uuid.NewV4()
+	return &PremisEvent{
+		Identifier:         eventId.String(),
+		EventType:          constants.EventCreation,
+		DateTime:           time.Now().UTC(),
+		Detail:             "Object created",
+		Outcome:            constants.StatusSuccess,
+		OutcomeDetail:      "Intellectual object created",
+		Object:             "APTrust preservation services",
+		Agent:              "https://github.com/APTrust/preservation-services",
+		OutcomeInformation: "Object created, files copied to preservation storage",
+	}
+}
+
+func NewObjectIngestEvent(numberOfFilesIngested int) *PremisEvent {
+	eventId := uuid.NewV4()
+	return &PremisEvent{
+		Identifier:         eventId.String(),
+		EventType:          constants.EventIngestion,
+		DateTime:           time.Now().UTC(),
+		Detail:             "Copied files to perservation storage",
+		Outcome:            constants.StatusSuccess,
+		OutcomeDetail:      fmt.Sprintf("%d files copied", numberOfFilesIngested),
+		Object:             "Minio S3 client",
+		Agent:              "https://github.com/minio/minio-go",
+		OutcomeInformation: "Multipart put using s3 etags",
+	}
+}
+
+func NewObjectIdentifierEvent(objectIdentifier string) *PremisEvent {
+	eventId := uuid.NewV4()
+	return &PremisEvent{
+		Identifier:         eventId.String(),
+		EventType:          constants.EventIdentifierAssignment,
+		DateTime:           time.Now().UTC(),
+		Detail:             "Assigned object identifier " + objectIdentifier,
+		Outcome:            constants.StatusSuccess,
+		OutcomeDetail:      objectIdentifier,
+		Object:             "APTrust preservation services",
+		Agent:              "https://github.com/APTrust/preservation-services",
+		OutcomeInformation: "Institution domain + tar file name",
+	}
+}
+
+func NewObjectRightsEvent(accessSetting string) *PremisEvent {
+	eventId := uuid.NewV4()
+	return &PremisEvent{
+		Identifier:         eventId.String(),
+		EventType:          constants.EventAccessAssignment,
+		DateTime:           time.Now().UTC(),
+		Detail:             "Assigned object access rights",
+		Outcome:            constants.StatusSuccess,
+		OutcomeDetail:      accessSetting,
+		Object:             "APTrust preservation services",
+		Agent:              "https://github.com/APTrust/preservation-services",
+		OutcomeInformation: "Set access to " + accessSetting,
+	}
 }

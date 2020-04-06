@@ -14,24 +14,25 @@ import (
 )
 
 type IngestFile struct {
-	Checksums            []*IngestChecksum `json:"checksums"`
-	CopiedToStagingAt    time.Time         `json:"copied_to_staging_at,omitempty"`
-	ErrorMessage         string            `json:"error_message,omitempty"`
-	FileFormat           string            `json:"file_format,omitempty"`
-	FormatIdentifiedBy   string            `json:"format_identified_by,omitempty"`
-	FormatIdentifiedAt   time.Time         `json:"format_identified_at,omitempty"`
-	FormatMatchType      string            `json:"format_match_type,omitempty"`
-	FileModified         time.Time         `json:"file_modified,omitempty"`
-	ID                   int               `json:"id,omitempty"`
-	InstitutionID        int               `json:"institution_id,omitempty"`
-	IntellectualObjectID int               `json:"intellectual_object_id,omitempty"`
-	NeedsSave            bool              `json:"needs_save"`
-	ObjectIdentifier     string            `json:"object_identifier"`
-	PathInBag            string            `json:"path_in_bag"`
-	Size                 int64             `json:"size"`
-	StorageOption        string            `json:"storage_option"`
-	StorageRecords       []*StorageRecord  `json:"storage_records"`
-	UUID                 string            `json:"uuid"`
+	Checksums            []*IngestChecksum       `json:"checksums"`
+	CopiedToStagingAt    time.Time               `json:"copied_to_staging_at,omitempty"`
+	ErrorMessage         string                  `json:"error_message,omitempty"`
+	FileFormat           string                  `json:"file_format,omitempty"`
+	FormatIdentifiedBy   string                  `json:"format_identified_by,omitempty"`
+	FormatIdentifiedAt   time.Time               `json:"format_identified_at,omitempty"`
+	FormatMatchType      string                  `json:"format_match_type,omitempty"`
+	FileModified         time.Time               `json:"file_modified,omitempty"`
+	ID                   int                     `json:"id,omitempty"`
+	InstitutionID        int                     `json:"institution_id,omitempty"`
+	IntellectualObjectID int                     `json:"intellectual_object_id,omitempty"`
+	NeedsSave            bool                    `json:"needs_save"`
+	ObjectIdentifier     string                  `json:"object_identifier"`
+	PathInBag            string                  `json:"path_in_bag"`
+	PremisEvents         []*registry.PremisEvent `json:"premis_events,omitempty"`
+	Size                 int64                   `json:"size"`
+	StorageOption        string                  `json:"storage_option"`
+	StorageRecords       []*StorageRecord        `json:"storage_records"`
+	UUID                 string                  `json:"uuid"`
 }
 
 func NewIngestFile(objIdentifier, pathInBag string) *IngestFile {
