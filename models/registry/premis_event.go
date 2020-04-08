@@ -182,13 +182,13 @@ func NewFileFixityCheckEvent(checksumVerifiedAt time.Time, fixityAlg, digest str
 // All params should come from the IngestFile's Checksum record.
 func NewFileDigestEvent(checksumGeneratedAt time.Time, fixityAlg, digest string) (*PremisEvent, error) {
 	if checksumGeneratedAt.IsZero() {
-		return nil, fmt.Errorf("Param checksumVerifiedAt cannot be empty.")
+		return nil, fmt.Errorf("Param checksumGeneratedAt cannot be empty.")
 	}
 	if !util.StringListContains(constants.PreferredAlgsInOrder, fixityAlg) {
 		return nil, fmt.Errorf("Param fixityAlg '%s' is not valid.", fixityAlg)
 	}
-	if len(digest) != 32 && len(digest) != 64 {
-		return nil, fmt.Errorf("Param digest must have 32 or 64 characters. '%s' doesn't.",
+	if len(digest) != 32 && len(digest) != 64 && len(digest) != 128 {
+		return nil, fmt.Errorf("Param digest must have 32, 64 or 128 characters. '%s' doesn't.",
 			digest)
 	}
 	eventId := uuid.NewV4()
@@ -220,10 +220,10 @@ func NewFileIdentifierEvent(identifierGeneratedAt time.Time, identifierType, ide
 	}
 	eventId := uuid.NewV4()
 	object := "APTrust exchange/ingest processor"
-	agent := "https://github.com/APTrust/exchange"
+	agent := "https://github.com/APTrust/preservation-services"
 	detail := "Assigned new institution.bag/path identifier"
 	if identifierType == constants.IdTypeStorageURL {
-		object = "Go uuid library + AWS Go SDK S3 library"
+		object = "Go uuid library + Minio S3 library"
 		agent = "http://github.com/satori/go.uuid"
 		// Don't change these words. They're used in IsUrlAssignment below.
 		detail = fmt.Sprintf("Assigned new storage URL identifier, and item was stored at %s",
