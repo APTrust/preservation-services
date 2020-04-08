@@ -12,6 +12,8 @@ import (
 )
 
 var Bloomsday, _ = time.Parse(time.RFC3339, "1904-06-16T15:04:05Z")
+var EmptyMd5 = "00000000000000000000000000000000"
+var EmptySha256 = EmptyMd5 + EmptyMd5
 
 const (
 	Institution   = "test.edu"

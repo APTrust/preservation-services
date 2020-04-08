@@ -326,6 +326,32 @@ func (f *IngestFile) NeedsSaveAt(provider, bucket string) bool {
 	return storageRecord == nil || storageRecord.StoredAt.IsZero()
 }
 
+// GetIngestEvents returns this files's list of ingest PremisEvents.
+// It generates the list if the list does not already exist.
+//
+// Note that this list should be generated only once, and the events
+// should be preserved in Redis so that if any part of registry data
+// recording process fails, we can retry and know that we are not
+// creating new PremisEvents in Pharos. When Pharos sees these event
+// UUIDs already exist, it will not create duplicate entries. If we
+// don't persist events with their UUIDs in Redis intermediate storage,
+// we will be sending new events with new UUIDs each time we retry
+// the ingest recording process, and we'll have lots of duplicate
+// events in our registry.
+func (f *IngestFile) GetIngestEvents() []*registry.PremisEvent {
+	if f.PremisEvents == nil {
+		f.PremisEvents = make([]*registry.PremisEvent, 0)
+	}
+	if len(f.PremisEvents) == 0 {
+		f.initIngestEvents()
+	}
+	return f.PremisEvents
+}
+
+func (f *IngestFile) initIngestEvents() {
+	// TODO: implement this
+}
+
 // URI returns the URL of this file's first storage record.
 // TODO: Fix this, because it doesn't map to Pharos' db structure.
 // Pharos allows one URI per generic file, but it should allow

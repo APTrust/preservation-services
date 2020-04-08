@@ -219,6 +219,18 @@ func (obj *IngestObject) ToIntellectualObject() *registry.IntellectualObject {
 	}
 }
 
+// GetIngestEvents returns this object's list of ingest PremisEvents.
+// It generates the list if the list does not already exist.
+//
+// Note that this list should be generated only once, and the events
+// should be preserved in Redis so that if any part of registry data
+// recording process fails, we can retry and know that we are not
+// creating new PremisEvents in Pharos. When Pharos sees these event
+// UUIDs already exist, it will not create duplicate entries. If we
+// don't persist events with their UUIDs in Redis intermediate storage,
+// we will be sending new events with new UUIDs each time we retry
+// the ingest recording process, and we'll have lots of duplicate
+// events in our registry.
 func (obj *IngestObject) GetIngestEvents() []*registry.PremisEvent {
 	if obj.PremisEvents == nil {
 		obj.PremisEvents = make([]*registry.PremisEvent, 0)

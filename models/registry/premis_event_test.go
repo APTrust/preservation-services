@@ -102,3 +102,37 @@ func TestNewObjectRightsEvent(t *testing.T) {
 	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
 	assert.Equal(t, "Set access to restricted", event.OutcomeInformation)
 }
+
+func TestNewFileIngestEvent(t *testing.T) {
+	event, err := registry.NewFileIngestEvent(testutil.Bloomsday, testutil.EmptyMd5, constants.EmptyUUID)
+	require.Nil(t, err)
+	require.NotNil(t, event)
+}
+
+func TestNewFileFixityCheckEvent(t *testing.T) {
+	event, err := registry.NewFileFixityCheckEvent(testutil.Bloomsday, constants.AlgMd5, testutil.EmptyMd5, true)
+	require.Nil(t, err)
+	require.NotNil(t, event)
+
+}
+
+func TestNewFileDigestEvent(t *testing.T) {
+	event, err := registry.NewFileDigestEvent(testutil.Bloomsday, constants.AlgSha256, testutil.EmptySha256)
+	require.Nil(t, err)
+	require.NotNil(t, event)
+
+}
+
+func TestNewFileIdentifierEvent(t *testing.T) {
+	event, err := registry.NewFileIdentifierEvent(testutil.Bloomsday, constants.IdTypeBagAndPath, "test.edu/bag/data/file.txt")
+	require.Nil(t, err)
+	require.NotNil(t, event)
+
+}
+
+func TestNewFileReplicationEvent(t *testing.T) {
+	event, err := registry.NewFileReplicationEvent(testutil.Bloomsday, "https://example.com/preservation/54321")
+	require.Nil(t, err)
+	require.NotNil(t, event)
+
+}

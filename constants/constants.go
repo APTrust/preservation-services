@@ -42,6 +42,8 @@ const (
 	FileTypeTagManifest       = "tag_manifest"
 	FmtIdExtMap               = "ext map"
 	FmtIdFido                 = "fido"
+	IdTypeStorageURL          = "url"
+	IdTypeBagAndPath          = "bag/filepath"
 	MatchTypeContainer        = "container"
 	MatchTypeExtension        = "extension"
 	MatchTypeSignature        = "signature"
