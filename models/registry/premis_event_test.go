@@ -1,7 +1,9 @@
 package registry_test
 
 import (
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
@@ -107,12 +109,76 @@ func TestNewFileIngestEvent(t *testing.T) {
 	event, err := registry.NewFileIngestEvent(testutil.Bloomsday, testutil.EmptyMd5, constants.EmptyUUID)
 	require.Nil(t, err)
 	require.NotNil(t, event)
+
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventIngestion, event.EventType)
+	assert.Equal(t, testutil.Bloomsday, event.DateTime)
+	assert.Equal(t, "Completed copy to preservation storage (00000000-0000-0000-0000-000000000000)", event.Detail)
+	assert.Equal(t, constants.StatusSuccess, event.Outcome)
+	assert.Equal(t, "md5:00000000000000000000000000000000", event.OutcomeDetail)
+	assert.Equal(t, "preservation-services + Minio S3 client", event.Object)
+	assert.Equal(t, "https://github.com/minio/minio-go", event.Agent)
+	assert.Equal(t, "Put using md5 checksum", event.OutcomeInformation)
+
+	event, err = registry.NewFileIngestEvent(time.Time{}, testutil.EmptyMd5, constants.EmptyUUID)
+	require.Nil(t, event)
+	require.NotNil(t, err)
+	assert.Equal(t, "Param storedAt cannot be empty.", err.Error())
+
+	event, err = registry.NewFileIngestEvent(testutil.Bloomsday, "", constants.EmptyUUID)
+	require.Nil(t, event)
+	require.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "Param md5Digest must have 32 characters"))
+
+	event, err = registry.NewFileIngestEvent(testutil.Bloomsday, testutil.EmptyMd5, "xyz")
+	require.Nil(t, event)
+	require.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "doesn't look like a uuid"))
 }
 
 func TestNewFileFixityCheckEvent(t *testing.T) {
 	event, err := registry.NewFileFixityCheckEvent(testutil.Bloomsday, constants.AlgMd5, testutil.EmptyMd5, true)
 	require.Nil(t, err)
 	require.NotNil(t, event)
+
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventFixityCheck, event.EventType)
+	assert.Equal(t, testutil.Bloomsday, event.DateTime)
+	assert.Equal(t, "Fixity check against registered hash", event.Detail)
+	assert.Equal(t, constants.StatusSuccess, event.Outcome)
+	assert.Equal(t, "md5:00000000000000000000000000000000", event.OutcomeDetail)
+	assert.Equal(t, "Go language crypto/md5", event.Object)
+	assert.Equal(t, "http://golang.org/pkg/crypto/md5/", event.Agent)
+	assert.Equal(t, "Fixity matches", event.OutcomeInformation)
+
+	event, err = registry.NewFileFixityCheckEvent(testutil.Bloomsday, constants.AlgSha256, testutil.EmptySha256, false)
+	require.Nil(t, err)
+	require.NotNil(t, event)
+
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventFixityCheck, event.EventType)
+	assert.Equal(t, testutil.Bloomsday, event.DateTime)
+	assert.Equal(t, "Fixity check against registered hash", event.Detail)
+	assert.Equal(t, constants.StatusFailed, event.Outcome)
+	assert.Equal(t, "sha256:0000000000000000000000000000000000000000000000000000000000000000", event.OutcomeDetail)
+	assert.Equal(t, "Go language crypto/sha256", event.Object)
+	assert.Equal(t, "http://golang.org/pkg/crypto/sha256/", event.Agent)
+	assert.Equal(t, "Fixity did not match", event.OutcomeInformation)
+
+	event, err = registry.NewFileFixityCheckEvent(time.Time{}, constants.AlgMd5, testutil.EmptyMd5, true)
+	require.Nil(t, event)
+	require.NotNil(t, err)
+	assert.Equal(t, "Param checksumVerifiedAt cannot be empty.", err.Error())
+
+	event, err = registry.NewFileFixityCheckEvent(testutil.Bloomsday, "", testutil.EmptyMd5, true)
+	require.Nil(t, event)
+	require.NotNil(t, err)
+	assert.Equal(t, "Param fixityAlg '' is not valid.", err.Error())
+
+	event, err = registry.NewFileFixityCheckEvent(testutil.Bloomsday, constants.AlgMd5, "xyz", true)
+	require.Nil(t, event)
+	require.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "Param digest must have 32, 64, or 128 characters"))
 
 }
 

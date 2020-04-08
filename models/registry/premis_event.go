@@ -134,7 +134,7 @@ func NewFileIngestEvent(storedAt time.Time, md5Digest, _uuid string) (*PremisEve
 		Identifier:         eventId.String(),
 		EventType:          constants.EventIngestion,
 		DateTime:           storedAt,
-		Detail:             fmt.Sprintf("Completed copy to S3 (%s)", _uuid),
+		Detail:             fmt.Sprintf("Completed copy to preservation storage (%s)", _uuid),
 		Outcome:            constants.StatusSuccess,
 		OutcomeDetail:      fmt.Sprintf("md5:%s", md5Digest),
 		Object:             "preservation-services + Minio S3 client",
@@ -157,12 +157,12 @@ func NewFileFixityCheckEvent(checksumVerifiedAt time.Time, fixityAlg, digest str
 	if !util.StringListContains(constants.PreferredAlgsInOrder, fixityAlg) {
 		return nil, fmt.Errorf("Param fixityAlg '%s' is not valid.", fixityAlg)
 	}
-	if len(digest) != 32 && len(digest) != 64 {
-		return nil, fmt.Errorf("Param digest must have 32 or 64 characters. '%s' doesn't.",
+	if len(digest) != 32 && len(digest) != 64 && len(digest) != 128 {
+		return nil, fmt.Errorf("Param digest must have 32, 64, or 128 characters. '%s' doesn't.",
 			digest)
 	}
 	eventId := uuid.NewV4()
-	props := getFixityProps(fixityAlg, true)
+	props := getFixityProps(fixityAlg, fixityMatched)
 	return &PremisEvent{
 		Identifier:         eventId.String(),
 		EventType:          constants.EventFixityCheck,
