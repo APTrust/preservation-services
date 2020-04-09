@@ -338,18 +338,85 @@ func (f *IngestFile) NeedsSaveAt(provider, bucket string) bool {
 // we will be sending new events with new UUIDs each time we retry
 // the ingest recording process, and we'll have lots of duplicate
 // events in our registry.
-func (f *IngestFile) GetIngestEvents() []*registry.PremisEvent {
+func (f *IngestFile) GetIngestEvents() ([]*registry.PremisEvent, error) {
 	if f.PremisEvents == nil {
 		f.PremisEvents = make([]*registry.PremisEvent, 0)
 	}
+	var err error
 	if len(f.PremisEvents) == 0 {
-		f.initIngestEvents()
+		err = f.initIngestEvents()
 	}
-	return f.PremisEvents
+	return f.PremisEvents, err
 }
 
-func (f *IngestFile) initIngestEvents() {
-	// TODO: implement this
+func (f *IngestFile) initIngestEvents() error {
+	var firstStorageRecord *StorageRecord
+	if f.StorageRecords != nil && len(f.StorageRecords) > 0 {
+		firstStorageRecord = f.StorageRecords[0]
+	}
+	if firstStorageRecord == nil {
+		return fmt.Errorf("This file has no StorageRecords")
+	}
+	md5Checksum := f.GetChecksum(constants.SourceIngest, constants.AlgMd5)
+	if md5Checksum == nil {
+		return fmt.Errorf("This file has no md5 checksum")
+	}
+	ingestEvent, err := registry.NewFileIngestEvent(firstStorageRecord.StoredAt, md5Checksum.Digest, f.UUID)
+	if err != nil {
+		return err
+	}
+
+	var fixityCheckEvents = make([]*registry.PremisEvent, 0)
+	for _, cs := range f.Checksums {
+		if cs.Source == constants.SourceManifest {
+			event, err := registry.NewFileFixityCheckEvent(cs.DateTime, cs.Algorithm, cs.Digest, true)
+			if err != nil {
+				return err
+			}
+			fixityCheckEvents = append(fixityCheckEvents, event)
+		}
+	}
+
+	var digestEvents = make([]*registry.PremisEvent, 0)
+	for _, cs := range f.Checksums {
+		if cs.Source == constants.SourceIngest {
+			event, err := registry.NewFileDigestEvent(cs.DateTime, cs.Algorithm, cs.Digest)
+			if err != nil {
+				return err
+			}
+			digestEvents = append(digestEvents, event)
+		}
+	}
+
+	idEvent, err := registry.NewFileIdentifierEvent(time.Now().UTC(), constants.IdTypeBagAndPath, f.Identifier())
+	if err != nil {
+		return err
+	}
+
+	urlEvent, err := registry.NewFileIdentifierEvent(time.Now().UTC(), constants.IdTypeStorageURL, f.URI())
+	if err != nil {
+		return err
+	}
+
+	var replicationEvent *registry.PremisEvent
+	if f.StorageRecords != nil && len(f.StorageRecords) > 1 {
+		r := f.StorageRecords[1]
+		replicationEvent, err = registry.NewFileReplicationEvent(r.StoredAt, r.URL)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Add events only after we know we've created them all successfully.
+	// This prevents us having a partial event list. It's all or nothing.
+	f.PremisEvents = append(f.PremisEvents, fixityCheckEvents...)
+	f.PremisEvents = append(f.PremisEvents, digestEvents...)
+	f.PremisEvents = append(f.PremisEvents, idEvent, urlEvent, ingestEvent)
+	if replicationEvent != nil {
+		f.PremisEvents = append(f.PremisEvents, replicationEvent)
+	}
+
+	return nil
 }
 
 // URI returns the URL of this file's first storage record.
@@ -371,8 +438,19 @@ func (f *IngestFile) URI() string {
 	return uri
 }
 
-func (f *IngestFile) ToGenericFile() *registry.GenericFile {
+func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
+	ingestEvents, err := f.GetIngestEvents()
+	if err != nil {
+		return nil, err
+	}
+	checksums := make([]*registry.Checksum, 0)
+	for _, cs := range f.Checksums {
+		if cs.Source == constants.SourceIngest {
+			checksums = append(checksums, cs.ToRegistryChecksum(f.ID))
+		}
+	}
 	return &registry.GenericFile{
+		Checksums:                    checksums,
 		FileFormat:                   f.FileFormat,
 		FileModified:                 f.FileModified,
 		ID:                           f.ID,
@@ -380,9 +458,10 @@ func (f *IngestFile) ToGenericFile() *registry.GenericFile {
 		InstitutionID:                f.InstitutionID,
 		IntellectualObjectID:         f.IntellectualObjectID,
 		IntellectualObjectIdentifier: f.ObjectIdentifier,
+		PremisEvents:                 ingestEvents,
 		Size:                         f.Size,
 		State:                        constants.StateActive,
 		StorageOption:                f.StorageOption,
 		URI:                          f.URI(),
-	}
+	}, nil
 }

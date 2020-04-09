@@ -25,7 +25,7 @@ class TestRunner
         # because Minio signed URLs use hostname, not IP.
         name: "minio",
         cmd: "#{bin}/minio server --quiet --address=localhost:9899 ~/tmp/minio",
-        msg: "Minio is running on locaohost:9899. User/Pwd: minioadmin/minioadmin"
+        msg: "Minio is running on localhost:9899. User/Pwd: minioadmin/minioadmin"
       }
     ]
     @integration_services = [

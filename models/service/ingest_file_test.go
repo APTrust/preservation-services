@@ -7,6 +7,7 @@ import (
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -285,7 +286,35 @@ func TestURI(t *testing.T) {
 
 func TestToGenericFile(t *testing.T) {
 	f := testutil.GetIngestFile(true, true)
-	gf := f.ToGenericFile()
+	f.Checksums = []*service.IngestChecksum{
+		&service.IngestChecksum{
+			Algorithm: constants.AlgMd5,
+			DateTime:  testutil.Bloomsday,
+			Digest:    testutil.EmptyMd5,
+			Source:    constants.SourceManifest,
+		},
+		&service.IngestChecksum{
+			Algorithm: constants.AlgMd5,
+			DateTime:  testutil.Bloomsday,
+			Digest:    "*000000000000000000000000000000*",
+			Source:    constants.SourceIngest,
+		},
+		&service.IngestChecksum{
+			Algorithm: constants.AlgSha256,
+			DateTime:  testutil.Bloomsday,
+			Digest:    testutil.EmptySha256,
+			Source:    constants.SourceManifest,
+		},
+		&service.IngestChecksum{
+			Algorithm: constants.AlgSha256,
+			DateTime:  testutil.Bloomsday,
+			Digest:    "*00000000000000000000000000000000000000000000000000000000000000*",
+			Source:    constants.SourceIngest,
+		},
+	}
+
+	gf, err := f.ToGenericFile()
+	require.Nil(t, err)
 
 	assert.Equal(t, "text/javascript", gf.FileFormat)
 	assert.Equal(t, testutil.Bloomsday, gf.FileModified)
@@ -298,6 +327,37 @@ func TestToGenericFile(t *testing.T) {
 	assert.Equal(t, constants.StateActive, gf.State)
 	assert.Equal(t, constants.StorageStandard, gf.StorageOption)
 	assert.Equal(t, "https://example.com/storage/record/1", gf.URI)
+
+	require.Equal(t, 2, len(gf.Checksums))
+	assert.Equal(t, constants.AlgMd5, gf.Checksums[0].Algorithm)
+	assert.Equal(t, testutil.Bloomsday, gf.Checksums[0].DateTime)
+	assert.Equal(t, "*000000000000000000000000000000*", gf.Checksums[0].Digest)
+	assert.Equal(t, constants.AlgSha256, gf.Checksums[1].Algorithm)
+	assert.Equal(t, testutil.Bloomsday, gf.Checksums[1].DateTime)
+	assert.Equal(t, "*00000000000000000000000000000000000000000000000000000000000000*", gf.Checksums[1].Digest)
+
+	require.Equal(t, 8, len(gf.PremisEvents))
+	eventTypeCounts := make(map[string]int)
+	for _, event := range gf.PremisEvents {
+		if _, ok := eventTypeCounts[event.EventType]; !ok {
+			eventTypeCounts[event.EventType] = 0
+		}
+		eventTypeCounts[event.EventType]++
+		assert.True(t, util.LooksLikeUUID(event.Identifier))
+		assert.NotEmpty(t, event.EventType)
+		assert.False(t, event.DateTime.IsZero())
+		assert.NotEmpty(t, event.Detail)
+		assert.NotEmpty(t, event.Outcome)
+		assert.NotEmpty(t, event.OutcomeDetail)
+		assert.NotEmpty(t, event.Object)
+		assert.NotEmpty(t, event.Agent)
+		assert.NotEmpty(t, event.OutcomeInformation)
+	}
+	assert.Equal(t, 1, eventTypeCounts[constants.EventIngestion])
+	assert.Equal(t, 2, eventTypeCounts[constants.EventFixityCheck])
+	assert.Equal(t, 2, eventTypeCounts[constants.EventDigestCalculation])
+	assert.Equal(t, 2, eventTypeCounts[constants.EventIdentifierAssignment])
+	assert.Equal(t, 1, eventTypeCounts[constants.EventReplication])
 }
 
 func TestHasPreservatbleName(t *testing.T) {

@@ -66,20 +66,20 @@ func PutBagMetadataInPharos(t *testing.T, obj *service.IngestObject) {
 		ingestFile.InstitutionID = inst.ID
 		ingestFile.IntellectualObjectID = obj.ID
 
-		genericFile := ingestFile.ToGenericFile()
-		genericFile.URI = fmt.Sprintf("http://localhost/fake-url/%s", ingestFile.UUID)
+		ingestFile.StorageRecords = []*service.StorageRecord{
+			&service.StorageRecord{
+				URL:      "https://example.com/" + ingestFile.UUID,
+				StoredAt: testutil.Bloomsday,
+			},
+		}
+
+		genericFile, err := ingestFile.ToGenericFile()
+		require.Nil(t, err)
 		resp = context.PharosClient.GenericFileSave(genericFile)
 		require.Nil(t, resp.Error)
 		gf := resp.GenericFile()
 		require.NotNil(t, gf)
 		require.NotEqual(t, 0, gf.ID)
-
-		for _, cs := range ingestFile.Checksums {
-			resp = context.PharosClient.ChecksumSave(
-				cs.ToRegistryChecksum(gf.ID),
-				gf.Identifier)
-			require.Nil(t, resp.Error)
-		}
 	}
 }
 
