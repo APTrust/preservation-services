@@ -923,14 +923,15 @@ func (client *PharosClient) DoRequest(resp *PharosResponse, method, absoluteURL 
 	// Build the request
 	request, err := client.NewJSONRequest(method, absoluteURL, requestData)
 	resp.Request = request
-	resp.Error = err
-	if resp.Error != nil {
+	if err != nil {
+		resp.Error = fmt.Errorf("%s %s: %s", method, absoluteURL, err.Error())
 		return
 	}
 
 	// Issue the HTTP request
 	resp.Response, resp.Error = client.httpClient.Do(request)
 	if resp.Error != nil {
+		resp.Error = fmt.Errorf("%s %s: %s", method, request.URL.String(), resp.Error.Error())
 		return
 	}
 
@@ -944,8 +945,9 @@ func (client *PharosClient) DoRequest(resp *PharosResponse, method, absoluteURL 
 
 	if resp.Error == nil && resp.Response.StatusCode >= 400 {
 		body, _ := resp.RawResponseData()
-		resp.Error = fmt.Errorf("Server returned status code %d. Body: %s",
-			resp.Response.StatusCode, string(body))
+		resp.Error = fmt.Errorf("Server returned status code %d. "+
+			"%s %s - Body: %s",
+			resp.Response.StatusCode, method, request.URL.String(), string(body))
 	}
 }
 
