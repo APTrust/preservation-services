@@ -29,6 +29,7 @@ type IngestFile struct {
 	ObjectIdentifier     string                  `json:"object_identifier"`
 	PathInBag            string                  `json:"path_in_bag"`
 	PremisEvents         []*registry.PremisEvent `json:"premis_events,omitempty"`
+	SavedToRegistryAt    time.Time               `json:"saved_to_registry_at,omitempty"`
 	Size                 int64                   `json:"size"`
 	StorageOption        string                  `json:"storage_option"`
 	StorageRecords       []*StorageRecord        `json:"storage_records"`

@@ -29,6 +29,7 @@ type IngestObject struct {
 	PremisEvents           []*registry.PremisEvent `json:"premis_events,omitempty"`
 	S3Bucket               string                  `json:"s3_bucket,omitempty"`
 	S3Key                  string                  `json:"s3_key,omitempty"`
+	SavedToRegistryAt      time.Time               `json:"saved_to_registry_at,omitempty"`
 	Serialization          string                  `json:"serialization,omitempty"`
 	Size                   int64                   `json:"size,omitempty"`
 	StorageOption          string                  `json:"storage_option"`

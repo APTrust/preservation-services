@@ -27,17 +27,20 @@ func NewRecorder(context *common.Context, workItemID int, ingestObject *service.
 	}
 }
 
-func (r *Recorder) RecordAll() (errors []*service.ProcessingError) {
+// RecordAll saves all object, file, checksum, and event data to Pharos.
+// This returns the number of files saved, and a list of any errors that
+// occurred.
+func (r *Recorder) RecordAll() (fileCount int, errors []*service.ProcessingError) {
 	errors = r.recordObject()
 	if len(errors) > 0 {
-		return errors
+		return 0, errors
 	}
 	errors = r.recordObjectEvents()
 	if len(errors) > 0 {
-		return errors
+		return 0, errors
 	}
-
-	return errors
+	fileCount, errors = r.recordFiles()
+	return fileCount, errors
 }
 
 // recordObject records the IntellectualObject record in Pharos,
@@ -45,16 +48,20 @@ func (r *Recorder) RecordAll() (errors []*service.ProcessingError) {
 // The IntellectualObject comes from this worker's IngestObject.
 // This method is public so we can test it. Call RecordAll() instead.
 func (r *Recorder) recordObject() (errors []*service.ProcessingError) {
-	obj := r.IngestObject.ToIntellectualObject()
-	resp := r.Context.PharosClient.IntellectualObjectSave(obj)
-	if resp.Error != nil {
-		errors = append(errors, r.Error(r.IngestObject.Identifier(), resp.Error, true))
-	} else {
-		r.IngestObject.ID = resp.IntellectualObject().ID
-	}
-	err := r.IngestObjectSave()
-	if err != nil {
-		errors = append(errors, r.Error(r.IngestObject.Identifier(), err, false))
+	if r.IngestObject.SavedToRegistryAt.IsZero() {
+		obj := r.IngestObject.ToIntellectualObject()
+		resp := r.Context.PharosClient.IntellectualObjectSave(obj)
+		if resp.Error != nil {
+			errors = append(errors, r.Error(r.IngestObject.Identifier(), resp.Error, true))
+		} else {
+			savedObject := resp.IntellectualObject()
+			r.IngestObject.ID = savedObject.ID
+			r.IngestObject.SavedToRegistryAt = savedObject.UpdatedAt
+		}
+		err := r.IngestObjectSave()
+		if err != nil {
+			errors = append(errors, r.Error(r.IngestObject.Identifier(), err, false))
+		}
 	}
 	return errors
 }
@@ -63,6 +70,11 @@ func (r *Recorder) recordObject() (errors []*service.ProcessingError) {
 // ingest. File-level events are recorded separately in RecordFileEvents().
 func (r *Recorder) recordObjectEvents() (errors []*service.ProcessingError) {
 	for _, event := range r.IngestObject.GetIngestEvents() {
+		// If event has non-zero ID, it's already been saved.
+		// Attempting to re-save will cause an error.
+		if event.ID > 0 {
+			continue
+		}
 		resp := r.Context.PharosClient.PremisEventSave(event)
 		if resp.Error != nil {
 			errors = append(errors, r.Error(r.IngestObject.Identifier(), resp.Error, false))
@@ -77,10 +89,44 @@ func (r *Recorder) recordObjectEvents() (errors []*service.ProcessingError) {
 	return errors
 }
 
-// RecordFiles records all of this objects files, checksums, and premis
-// events in Pharos. This method is public so we can test it.
-// Call RecordAll() instead.
-func (r *Recorder) RecordFiles() (errors []*service.ProcessingError) {
+// RecordFiles records all of this object's files, checksums, and file-level
+// Premis events in Pharos.
+func (r *Recorder) recordFiles() (fileCount int, errors []*service.ProcessingError) {
+	// Be sure to save changes back to Redis, so that if recording fails
+	// we can retry later without re-inserting already-saved files.
+	// That will prevent "identifier already exists" errors from Premis events.
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   3,
+		MaxRetries:  1,
+		RetryMs:     1000,
+		SaveChanges: true,
+		WorkItemID:  r.WorkItemID,
+	}
+	saveFn := r.getFileSaveFn()
+	return r.Context.RedisClient.IngestFilesApply(saveFn, options)
+}
 
-	return errors
+// Save function saves a GenericFile to Pharos. The file is saved with its
+// checksums and premis events. The PharosClient figures out whether the save
+// should be a post/create or a put/update based on whether the GenericFile
+// has a non-zero ID.
+func (r *Recorder) getFileSaveFn() service.IngestFileApplyFn {
+	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
+		// We save "preservable" files to Pharos, not bagit.txt, manifests, etc.
+		if ingestFile.HasPreservableName() && !ingestFile.SavedToRegistryAt.IsZero() {
+			gf, err := ingestFile.ToGenericFile()
+			if err != nil {
+				errors = append(errors, r.Error(ingestFile.Identifier(), err, true))
+			}
+			resp := r.Context.PharosClient.GenericFileSave(gf)
+			if resp.Error != nil {
+				errors = append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
+			} else {
+				savedFile := resp.GenericFile()
+				ingestFile.ID = savedFile.ID
+				ingestFile.SavedToRegistryAt = savedFile.UpdatedAt
+			}
+		}
+		return errors
+	}
 }

@@ -50,7 +50,7 @@ func (uploader *PreservationUploader) UploadAll() (int, []*service.ProcessingErr
 	return uploader.Context.RedisClient.IngestFilesApply(uploadFn, options)
 }
 
-func (uploader *PreservationUploader) getUploadFunction() func(*service.IngestFile) []*service.ProcessingError {
+func (uploader *PreservationUploader) getUploadFunction() service.IngestFileApplyFn {
 	uploadTargets := uploader.Context.Config.UploadTargetsFor(uploader.IngestObject.StorageOption)
 
 	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
