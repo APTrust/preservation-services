@@ -47,7 +47,7 @@ func TestNewStagingUploader(t *testing.T) {
 
 func TestCopyFilesToStaging(t *testing.T) {
 	context := common.NewContext()
-	uploader := prepareForCopyToStaging(t, context)
+	uploader := prepareForCopyToStaging(t, pathToGoodBag, context)
 
 	testIdentifierGetFileAndPutOptions(t, uploader)
 

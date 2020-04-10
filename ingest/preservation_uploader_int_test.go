@@ -25,7 +25,7 @@ func TestNewPreservationUploader(t *testing.T) {
 
 func TestPreservationUploadAll(t *testing.T) {
 	context := common.NewContext()
-	uploader := prepareForPreservationUpload(t, context)
+	uploader := prepareForPreservationUpload(t, pathToGoodBag, context)
 	filesUploaded, errors := uploader.UploadAll()
 	require.Empty(t, errors, errors)
 

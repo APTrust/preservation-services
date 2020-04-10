@@ -37,7 +37,7 @@ func TestIdentifyFormat(t *testing.T) {
 	// We have to run the staging uploader first to ensure the files
 	// we want to identify have been uploaded to our local S3 instance.
 	context := common.NewContext()
-	stagingUploader := prepareForCopyToStaging(t, context)
+	stagingUploader := prepareForCopyToStaging(t, pathToGoodBag, context)
 	err := stagingUploader.CopyFilesToStaging()
 	require.Nil(t, err)
 

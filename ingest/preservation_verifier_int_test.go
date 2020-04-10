@@ -25,7 +25,7 @@ func TestNewPreservationVerifier(t *testing.T) {
 
 func TestVerifyAll(t *testing.T) {
 	context := common.NewContext()
-	verifier := prepareForPreservationVerify(t, context)
+	verifier := prepareForPreservationVerify(t, pathToGoodBag, context)
 
 	testFn := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		for _, record := range ingestFile.StorageRecords {

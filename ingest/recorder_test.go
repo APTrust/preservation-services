@@ -22,3 +22,12 @@ func TestNewRecorder(t *testing.T) {
 	assert.Equal(t, obj, recorder.IngestObject)
 	assert.Equal(t, testWorkItemId, recorder.WorkItemID)
 }
+
+// func TestRecordAll(t *testing.T) {
+// 	context := common.NewContext()
+// 	recorder := prepareForRecord(t, pathToGoodBag, context)
+// 	require.NotNil(t, recorder)
+// 	fileCount, errors := recorder.RecordAll()
+// 	require.Empty(t, errors, errors)
+// 	require.True(t, fileCount > 0)
+// }

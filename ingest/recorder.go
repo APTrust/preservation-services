@@ -75,11 +75,18 @@ func (r *Recorder) recordObjectEvents() (errors []*service.ProcessingError) {
 		if event.ID > 0 {
 			continue
 		}
+
 		resp := r.Context.PharosClient.PremisEventSave(event)
 		if resp.Error != nil {
 			errors = append(errors, r.Error(r.IngestObject.Identifier(), resp.Error, false))
 		} else {
-			event.ID = resp.PremisEvent().ID
+			savedEvent := resp.PremisEvent()
+			event.ID = savedEvent.ID
+			event.GenericFileID = savedEvent.GenericFileID
+			event.InstitutionID = savedEvent.InstitutionID
+			event.IntellectualObjectID = savedEvent.IntellectualObjectID
+			event.CreatedAt = savedEvent.CreatedAt
+			event.UpdatedAt = savedEvent.UpdatedAt
 		}
 	}
 	err := r.IngestObjectSave()
