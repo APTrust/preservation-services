@@ -245,3 +245,10 @@ func prepareForPreservationVerify(t *testing.T, context *common.Context) *ingest
 	require.Empty(t, errors, errors)
 	return ingest.NewPreservationVerifier(context, uploader.WorkItemID, uploader.IngestObject)
 }
+
+func prepareForRecord(t *testing.T, context *common.Context) *ingest.Recorder {
+	verifier := prepareForPreservationVerify(t, context)
+	_, errors := verifier.VerifyAll()
+	require.Empty(t, errors, errors)
+	return ingest.NewRecorder(context, verifier.WorkItemID, verifier.IngestObject)
+}
