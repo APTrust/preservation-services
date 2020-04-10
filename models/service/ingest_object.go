@@ -247,7 +247,7 @@ func (obj *IngestObject) initIngestEvents() {
 	// on first ingest.
 	if !obj.IsReingest {
 		obj.PremisEvents = append(obj.PremisEvents,
-			registry.NewObjectCreationEvent())
+			registry.NewObjectCreationEvent(obj.Identifier()))
 		obj.PremisEvents = append(obj.PremisEvents,
 			registry.NewObjectIdentifierEvent(obj.Identifier()))
 	}
@@ -255,7 +255,7 @@ func (obj *IngestObject) initIngestEvents() {
 	// and rights assignment is updated on each ingest,
 	// the usually it doesn't change.
 	obj.PremisEvents = append(obj.PremisEvents,
-		registry.NewObjectIngestEvent(obj.FileCount))
+		registry.NewObjectIngestEvent(obj.Identifier(), obj.FileCount))
 	obj.PremisEvents = append(obj.PremisEvents,
-		registry.NewObjectRightsEvent(obj.Access()))
+		registry.NewObjectRightsEvent(obj.Identifier(), obj.Access()))
 }
