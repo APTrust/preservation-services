@@ -138,13 +138,13 @@ func getProfile(name string) (*bagit.Profile, error) {
 	return bagit.ProfileLoad(filename)
 }
 
-func getMetadataValidator(t *testing.T, profileName, pathToBag, bagMd5 string) *ingest.MetadataValidator {
+func getMetadataValidator(t *testing.T, profileName, pathToBag, bagMd5 string, workItemId int) *ingest.MetadataValidator {
 	context := common.NewContext()
 	profile, err := getProfile(profileName)
 	require.Nil(t, err)
 	require.NotNil(t, profile)
 	obj := getIngestObject(pathToBag, bagMd5)
-	validator := ingest.NewMetadataValidator(context, profile, obj, 9999)
+	validator := ingest.NewMetadataValidator(context, profile, obj, workItemId)
 	require.NotNil(t, validator)
 	return validator
 }
@@ -152,9 +152,9 @@ func getMetadataValidator(t *testing.T, profileName, pathToBag, bagMd5 string) *
 // This function prepares a bag for validation by running it through
 // the MetadataGatherer. It returns a MetadataValidator that is ready
 // to be tested.
-func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string, testForScanError bool) *ingest.MetadataValidator {
+func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string, workItemId int, testForScanError bool) *ingest.MetadataValidator {
 	// Create a validator
-	validator := getMetadataValidator(t, profileName, pathToBag, bagMd5)
+	validator := getMetadataValidator(t, profileName, pathToBag, bagMd5, workItemId)
 	context := validator.Context
 
 	// Get rid of any stray S3 files from prior test runs
@@ -164,13 +164,13 @@ func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string
 	setupS3(t, context, key, pathToBag)
 
 	// Get rid of old redis records related to this bag / work item
-	_, err := context.RedisClient.WorkItemDelete(9999)
+	_, err := context.RedisClient.WorkItemDelete(workItemId)
 	require.Nil(t, err)
 	//require.EqualValues(t, 1, keysDeleted)
 
 	// Scan the bag, so that Redis contains the records that the
 	// validator needs to read.
-	g := ingest.NewMetadataGatherer(context, 9999, validator.IngestObject)
+	g := ingest.NewMetadataGatherer(context, workItemId, validator.IngestObject)
 	err = g.ScanBag()
 
 	// Most tests do no produce a bag scanning error, but one does:
@@ -191,12 +191,12 @@ func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string
 // staging upload. Note that this ensures proper S3 setup and deletes
 // Redis records related to our WorkItem so that we start with a fresh
 // slate each time.
-func prepareForCopyToStaging(t *testing.T, pathToBag string, context *common.Context) *ingest.StagingUploader {
+func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.StagingUploader {
 	// Put tagsample_good in S3 receiving bucket.
 	setupS3(t, context, keyToGoodBag, pathToBag)
 
 	// Get rid of old redis records related to this bag / work item
-	_, err := context.RedisClient.WorkItemDelete(testWorkItemId)
+	_, err := context.RedisClient.WorkItemDelete(workItemId)
 	require.Nil(t, err)
 
 	// Set up an ingest object, and assign the correct institution id.
@@ -207,11 +207,11 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, context *common.Con
 	require.NotNil(t, inst)
 	obj.InstitutionID = inst.ID
 
-	err = context.RedisClient.IngestObjectSave(testWorkItemId, obj)
+	err = context.RedisClient.IngestObjectSave(workItemId, obj)
 	require.Nil(t, err)
 
 	// Scan and validate the bag, so Redis has all the expected data.
-	gatherer := ingest.NewMetadataGatherer(context, testWorkItemId, obj)
+	gatherer := ingest.NewMetadataGatherer(context, workItemId, obj)
 	err = gatherer.ScanBag()
 	require.Nil(t, err)
 
@@ -219,16 +219,16 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, context *common.Con
 	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
 	profile, err := bagit.ProfileLoad(filename)
 	require.Nil(t, err)
-	validator := ingest.NewMetadataValidator(context, profile, obj, testWorkItemId)
+	validator := ingest.NewMetadataValidator(context, profile, obj, workItemId)
 	require.True(t, validator.IsValid())
 
-	return ingest.NewStagingUploader(context, testWorkItemId, obj)
+	return ingest.NewStagingUploader(context, workItemId, obj)
 }
 
 // This lays the groundwork to test the PreservationUploader. It pushes our
 // test bag through all phases of ingest prior to preservation upload.
-func prepareForPreservationUpload(t *testing.T, pathToBag string, context *common.Context) *ingest.PreservationUploader {
-	uploader := prepareForCopyToStaging(t, pathToBag, context)
+func prepareForPreservationUpload(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.PreservationUploader {
+	uploader := prepareForCopyToStaging(t, pathToBag, workItemId, context)
 	err := uploader.CopyFilesToStaging()
 	require.Nil(t, err)
 
@@ -236,18 +236,18 @@ func prepareForPreservationUpload(t *testing.T, pathToBag string, context *commo
 	numberIdentified, errors := fi.IdentifyFormats()
 	require.Empty(t, errors)
 	assert.Equal(t, 16, numberIdentified)
-	return ingest.NewPreservationUploader(context, testWorkItemId, uploader.IngestObject)
+	return ingest.NewPreservationUploader(context, workItemId, uploader.IngestObject)
 }
 
-func prepareForPreservationVerify(t *testing.T, pathToBag string, context *common.Context) *ingest.PreservationVerifier {
-	uploader := prepareForPreservationUpload(t, pathToBag, context)
+func prepareForPreservationVerify(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.PreservationVerifier {
+	uploader := prepareForPreservationUpload(t, pathToBag, workItemId, context)
 	_, errors := uploader.UploadAll()
 	require.Empty(t, errors, errors)
 	return ingest.NewPreservationVerifier(context, uploader.WorkItemID, uploader.IngestObject)
 }
 
-func prepareForRecord(t *testing.T, pathToBag string, context *common.Context) *ingest.Recorder {
-	verifier := prepareForPreservationVerify(t, pathToBag, context)
+func prepareForRecord(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.Recorder {
+	verifier := prepareForPreservationVerify(t, pathToBag, workItemId, context)
 	_, errors := verifier.VerifyAll()
 	require.Empty(t, errors, errors)
 	return ingest.NewRecorder(context, verifier.WorkItemID, verifier.IngestObject)

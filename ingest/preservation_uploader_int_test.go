@@ -13,19 +13,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const uploaderItemID = 33209
+
 func TestNewPreservationUploader(t *testing.T) {
 	context := common.NewContext()
 	obj := getIngestObject(pathToGoodBag, goodbagMd5)
-	uploader := ingest.NewPreservationUploader(context, testWorkItemId, obj)
+	uploader := ingest.NewPreservationUploader(context, uploaderItemID, obj)
 	require.NotNil(t, uploader)
 	assert.Equal(t, context, uploader.Context)
 	assert.Equal(t, obj, uploader.IngestObject)
-	assert.Equal(t, testWorkItemId, uploader.WorkItemID)
+	assert.Equal(t, uploaderItemID, uploader.WorkItemID)
 }
 
 func TestPreservationUploadAll(t *testing.T) {
 	context := common.NewContext()
-	uploader := prepareForPreservationUpload(t, pathToGoodBag, context)
+	uploader := prepareForPreservationUpload(t, pathToGoodBag, uploaderItemID, context)
 	filesUploaded, errors := uploader.UploadAll()
 	require.Empty(t, errors, errors)
 

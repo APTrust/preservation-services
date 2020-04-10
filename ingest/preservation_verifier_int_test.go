@@ -13,19 +13,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const verifierItemID = 8944
+
 func TestNewPreservationVerifier(t *testing.T) {
 	context := common.NewContext()
 	obj := getIngestObject(pathToGoodBag, goodbagMd5)
-	verifier := ingest.NewPreservationVerifier(context, testWorkItemId, obj)
+	verifier := ingest.NewPreservationVerifier(context, verifierItemID, obj)
 	require.NotNil(t, verifier)
 	assert.Equal(t, context, verifier.Context)
 	assert.Equal(t, obj, verifier.IngestObject)
-	assert.Equal(t, testWorkItemId, verifier.WorkItemID)
+	assert.Equal(t, verifierItemID, verifier.WorkItemID)
 }
 
 func TestVerifyAll(t *testing.T) {
 	context := common.NewContext()
-	verifier := prepareForPreservationVerify(t, pathToGoodBag, context)
+	verifier := prepareForPreservationVerify(t, pathToGoodBag, verifierItemID, context)
 
 	testFn := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		for _, record := range ingestFile.StorageRecords {

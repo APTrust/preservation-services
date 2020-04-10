@@ -17,14 +17,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const fmtWorkItemID = 9877
+
 func getFormatIdentifier(t *testing.T) *ingest.FormatIdentifier {
 	context := common.NewContext()
 	obj := getIngestObject(pathToGoodBag, goodbagMd5)
-	f := ingest.NewFormatIdentifier(context, testWorkItemId, obj)
+	f := ingest.NewFormatIdentifier(context, fmtWorkItemID, obj)
 	require.NotNil(t, f)
 	assert.Equal(t, context, f.Context)
 	assert.Equal(t, obj, f.IngestObject)
-	assert.Equal(t, testWorkItemId, f.WorkItemID)
+	assert.Equal(t, fmtWorkItemID, f.WorkItemID)
 	assert.NotNil(t, f.FmtIdentifier)
 	return f
 }
@@ -37,7 +39,7 @@ func TestIdentifyFormat(t *testing.T) {
 	// We have to run the staging uploader first to ensure the files
 	// we want to identify have been uploaded to our local S3 instance.
 	context := common.NewContext()
-	stagingUploader := prepareForCopyToStaging(t, pathToGoodBag, context)
+	stagingUploader := prepareForCopyToStaging(t, pathToGoodBag, fmtWorkItemID, context)
 	err := stagingUploader.CopyFilesToStaging()
 	require.Nil(t, err)
 

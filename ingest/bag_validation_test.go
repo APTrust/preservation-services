@@ -15,10 +15,12 @@ import (
 // an ingest bucket. The bag md5 is irrelevant in this context
 // and can be anything.
 
+const validationID = 54321
+
 func TestBag_WithFetchTxt(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.fetchtxt.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	assert.Equal(t, 1, len(validator.Errors))
 	assert.Equal(t, "Bag has fetch.txt file which profile does not allow", validator.Errors[0])
@@ -27,7 +29,7 @@ func TestBag_WithFetchTxt(t *testing.T) {
 func TestBag_MultiPart_1(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.multipart.b01.of02.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.True(t, validator.IsValid())
 	assert.Equal(t, 0, len(validator.Errors))
 }
@@ -35,7 +37,7 @@ func TestBag_MultiPart_1(t *testing.T) {
 func TestBag_MultiPart_2(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.multipart.b02.of02.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.True(t, validator.IsValid())
 	assert.Equal(t, 0, len(validator.Errors))
 }
@@ -43,7 +45,7 @@ func TestBag_MultiPart_2(t *testing.T) {
 func TestBag_BadAccess(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_bad_access.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	assert.Equal(t, 1, len(validator.Errors))
 	assert.Equal(t,
@@ -54,7 +56,7 @@ func TestBag_BadAccess(t *testing.T) {
 func TestBag_BadChecksums(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_bad_checksums.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	assert.Equal(t, 1, len(validator.Errors))
 }
@@ -62,7 +64,7 @@ func TestBag_BadChecksums(t *testing.T) {
 func TestBag_GlacierOH(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_glacier_oh.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.True(t, validator.IsValid())
 	assert.Equal(t, 0, len(validator.Errors))
 }
@@ -70,7 +72,7 @@ func TestBag_GlacierOH(t *testing.T) {
 func TestBag_GlacierOR(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_glacier_or.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.True(t, validator.IsValid())
 	assert.Equal(t, 0, len(validator.Errors))
 }
@@ -78,7 +80,7 @@ func TestBag_GlacierOR(t *testing.T) {
 func TestBag_GlacierVA(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_glacier_va.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.True(t, validator.IsValid())
 	assert.Equal(t, 0, len(validator.Errors))
 }
@@ -86,7 +88,7 @@ func TestBag_GlacierVA(t *testing.T) {
 func TestBag_SampleGood(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_good.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.True(t, validator.IsValid())
 	assert.Equal(t, 0, len(validator.Errors))
 }
@@ -94,7 +96,7 @@ func TestBag_SampleGood(t *testing.T) {
 func TestBag_SampleMissingDataFile(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_missing_data_file.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	require.Equal(t, 1, len(validator.Errors))
 	assert.Equal(t, "File example.edu/example.edu.sample_missing_data_file/data/datastream-DC in manifest-md5.txt is missing from bag", validator.Errors[0])
@@ -103,7 +105,7 @@ func TestBag_SampleMissingDataFile(t *testing.T) {
 func TestBag_NoAPTrustInfo(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_no_aptrust_info.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	assert.Equal(t, 2, len(validator.Errors))
 
@@ -119,7 +121,7 @@ func TestBag_NoAPTrustInfo(t *testing.T) {
 func TestBag_SampleNoBagInfo(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_no_bag_info.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	assert.Equal(t, 2, len(validator.Errors))
 	assert.Equal(t,
@@ -133,7 +135,7 @@ func TestBag_SampleNoBagInfo(t *testing.T) {
 func TestBag_SampleNoBagIt(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_no_bagit.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	assert.Equal(t, 1, len(validator.Errors))
 	assert.Equal(t, "Missing required tag bagit.txt/BagIt-Version.", validator.Errors[0])
@@ -142,7 +144,7 @@ func TestBag_SampleNoBagIt(t *testing.T) {
 func TestBag_SampleNoDataDir(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_no_data_dir.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	assert.Equal(t, 4, len(validator.Errors))
 
@@ -161,7 +163,7 @@ func TestBag_SampleNoDataDir(t *testing.T) {
 func TestBag_SampleNoMd5Manifest(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_no_md5_manifest.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	require.Equal(t, 1, len(validator.Errors))
 	assert.Equal(t, "Bag is missing required manifest 'md5'", validator.Errors[0])
@@ -170,7 +172,7 @@ func TestBag_SampleNoMd5Manifest(t *testing.T) {
 func TestBag_SampleNoTitle(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_no_title.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	assert.Equal(t, 1, len(validator.Errors))
 	assert.Equal(t, "In file aptrust-info.txt, required tag Title has no value", validator.Errors[0])
@@ -179,7 +181,7 @@ func TestBag_SampleNoTitle(t *testing.T) {
 func TestBag_TagSampleBad(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.tagsample_bad.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	assert.Equal(t, 3, len(validator.Errors))
 	assert.Equal(t,
@@ -196,7 +198,7 @@ func TestBag_TagSampleBad(t *testing.T) {
 func TestBag_TagSampleGood(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.tagsample_good.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, goodbagMd5, true)
+		constants.BagItProfileDefault, pathToBag, goodbagMd5, validationID, true)
 	assert.True(t, validator.IsValid())
 	assert.Equal(t, 0, len(validator.Errors))
 }
@@ -204,7 +206,7 @@ func TestBag_TagSampleGood(t *testing.T) {
 func TestBag_SampleIllegalControl(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("test.edu.sample_illegal_control.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", true)
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	assert.Equal(t, 1, len(validator.Errors))
 
@@ -222,7 +224,7 @@ func TestBag_SampleIllegalControl(t *testing.T) {
 func TestBag_BTR_Good256(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("btr_good_sha256.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileBTR, pathToBag, "", true)
+		constants.BagItProfileBTR, pathToBag, "", validationID, true)
 	assert.True(t, validator.IsValid())
 	assert.Equal(t, 0, len(validator.Errors))
 }
@@ -230,7 +232,7 @@ func TestBag_BTR_Good256(t *testing.T) {
 func TestBag_BTR_Good512(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("btr_good_sha512.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileBTR, pathToBag, "", true)
+		constants.BagItProfileBTR, pathToBag, "", validationID, true)
 	assert.True(t, validator.IsValid())
 	assert.Equal(t, 0, len(validator.Errors))
 }
@@ -238,7 +240,7 @@ func TestBag_BTR_Good512(t *testing.T) {
 func TestBag_BTR_BadChecksums(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("btr_bad_checksums.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileBTR, pathToBag, "", true)
+		constants.BagItProfileBTR, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	expected := []string{
 		"File example.edu/btr_bad_checksums/manifest-sha512.txt: ingest sha512 checksum fc9a6f7dfac6ab9edf60858391d90131671fc18f1ca6c15fe7bd652a5a0059e76c023cfdf325305d659f2d9719a12c3c97b6d9ead8d4bff3177ab5afdfdf7483 doesn't match manifest checksum aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -253,7 +255,7 @@ func TestBag_BTR_BadChecksums(t *testing.T) {
 func TestBag_BTR_BadExtraFile(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("btr_bad_extraneous_file.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileBTR, pathToBag, "", true)
+		constants.BagItProfileBTR, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	require.Equal(t, 1, len(validator.Errors))
 	assert.Equal(t, "File example.edu/btr_bad_extraneous_file/data/nsqd.dat is not in manifest manifest-sha512.txt", validator.Errors[0])
@@ -262,7 +264,7 @@ func TestBag_BTR_BadExtraFile(t *testing.T) {
 func TestBag_BTR_MissingPayload(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("btr_bad_missing_payload_file.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileBTR, pathToBag, "", true)
+		constants.BagItProfileBTR, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	require.Equal(t, 1, len(validator.Errors))
 	assert.Equal(t, "File example.edu/btr_bad_missing_payload_file/data/netutil/listen.go in manifest-sha512.txt is missing from bag", validator.Errors[0])
@@ -271,7 +273,7 @@ func TestBag_BTR_MissingPayload(t *testing.T) {
 func TestBag_BTR_MissingTags(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("btr_bad_missing_required_tags.tar")
 	validator := setupValidatorAndObject(t,
-		constants.BagItProfileBTR, pathToBag, "", true)
+		constants.BagItProfileBTR, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	expected := []string{
 		"Required tag Bagging-Date in file bag-info.txt is missing",

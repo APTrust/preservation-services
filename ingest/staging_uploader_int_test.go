@@ -11,6 +11,7 @@ import (
 	"testing"
 )
 
+const stagingItemID = 4388
 const tarHeaderName = "example.edu.tagsample_good/data/datastream-descMetadata"
 const filePathInBag = "data/datastream-descMetadata"
 const objectIdentifier = "example.edu/example.edu.tagsample_good"
@@ -38,16 +39,16 @@ var gfIdentifiers = []string{
 func TestNewStagingUploader(t *testing.T) {
 	context := common.NewContext()
 	obj := getIngestObject(pathToGoodBag, goodbagMd5)
-	uploader := ingest.NewStagingUploader(context, testWorkItemId, obj)
+	uploader := ingest.NewStagingUploader(context, stagingItemID, obj)
 	require.NotNil(t, uploader)
 	assert.Equal(t, context, uploader.Context)
-	assert.Equal(t, testWorkItemId, uploader.WorkItemID)
+	assert.Equal(t, stagingItemID, uploader.WorkItemID)
 	assert.Equal(t, obj, uploader.IngestObject)
 }
 
 func TestCopyFilesToStaging(t *testing.T) {
 	context := common.NewContext()
-	uploader := prepareForCopyToStaging(t, pathToGoodBag, context)
+	uploader := prepareForCopyToStaging(t, pathToGoodBag, stagingItemID, context)
 
 	testIdentifierGetFileAndPutOptions(t, uploader)
 
@@ -77,7 +78,7 @@ func testIdentifierGetFileAndPutOptions(t *testing.T, uploader *ingest.StagingUp
 
 func stagingPostTestS3AndRedis(t *testing.T, context *common.Context) {
 	for _, identifier := range gfIdentifiers {
-		ingestFile, err := context.RedisClient.IngestFileGet(testWorkItemId, identifier)
+		ingestFile, err := context.RedisClient.IngestFileGet(stagingItemID, identifier)
 		require.Nil(t, err)
 		require.NotNil(t, ingestFile)
 
