@@ -34,6 +34,9 @@ var event = &registry.PremisEvent{
 
 var eventJson = `{"agent":"Maxwell Smart","created_at":"1904-06-16T15:04:05Z","date_time":"1904-06-16T15:04:05Z","detail":"detail-123","event_type":"ingestion","generic_file_id":432,"generic_file_identifier":"test.edu/bag/data/file.txt","identifier":"uuid goes here","institution_id":21,"intellectual_object_id":3433,"intellectual_object_identifier":"test.edu/bag","object":"object-321","outcome_detail":"outcome detail","outcome_information":"outcome information","outcome":"outcome","updated_at":"1904-06-16T15:04:05Z"}`
 
+const eObjIdent = "test.edu/obj"
+const eFileIdent = "test.edu/obj/file.txt"
+
 func TestPremisEventFromJson(t *testing.T) {
 	premisEvent, err := registry.PremisEventFromJSON([]byte(eventJson))
 	require.Nil(t, err)
@@ -110,7 +113,7 @@ func TestNewObjectRightsEvent(t *testing.T) {
 }
 
 func TestNewFileIngestEvent(t *testing.T) {
-	event, err := registry.NewFileIngestEvent(testutil.Bloomsday, testutil.EmptyMd5, constants.EmptyUUID)
+	event, err := registry.NewFileIngestEvent(eObjIdent, eFileIdent, testutil.Bloomsday, testutil.EmptyMd5, constants.EmptyUUID)
 	require.Nil(t, err)
 	require.NotNil(t, event)
 
@@ -124,24 +127,24 @@ func TestNewFileIngestEvent(t *testing.T) {
 	assert.Equal(t, "https://github.com/minio/minio-go", event.Agent)
 	assert.Equal(t, "Put using md5 checksum", event.OutcomeInformation)
 
-	event, err = registry.NewFileIngestEvent(time.Time{}, testutil.EmptyMd5, constants.EmptyUUID)
+	event, err = registry.NewFileIngestEvent(eObjIdent, eFileIdent, time.Time{}, testutil.EmptyMd5, constants.EmptyUUID)
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.Equal(t, "Param storedAt cannot be empty.", err.Error())
 
-	event, err = registry.NewFileIngestEvent(testutil.Bloomsday, "", constants.EmptyUUID)
+	event, err = registry.NewFileIngestEvent(eObjIdent, eFileIdent, testutil.Bloomsday, "", constants.EmptyUUID)
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Param md5Digest must have 32 characters"))
 
-	event, err = registry.NewFileIngestEvent(testutil.Bloomsday, testutil.EmptyMd5, "xyz")
+	event, err = registry.NewFileIngestEvent(eObjIdent, eFileIdent, testutil.Bloomsday, testutil.EmptyMd5, "xyz")
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "doesn't look like a uuid"))
 }
 
 func TestNewFileFixityCheckEvent(t *testing.T) {
-	event, err := registry.NewFileFixityCheckEvent(testutil.Bloomsday, constants.AlgMd5, testutil.EmptyMd5, true)
+	event, err := registry.NewFileFixityCheckEvent(eObjIdent, eFileIdent, testutil.Bloomsday, constants.AlgMd5, testutil.EmptyMd5, true)
 	require.Nil(t, err)
 	require.NotNil(t, event)
 
@@ -155,7 +158,7 @@ func TestNewFileFixityCheckEvent(t *testing.T) {
 	assert.Equal(t, "http://golang.org/pkg/crypto/md5/", event.Agent)
 	assert.Equal(t, "Fixity matches", event.OutcomeInformation)
 
-	event, err = registry.NewFileFixityCheckEvent(testutil.Bloomsday, constants.AlgSha256, testutil.EmptySha256, false)
+	event, err = registry.NewFileFixityCheckEvent(eObjIdent, eFileIdent, testutil.Bloomsday, constants.AlgSha256, testutil.EmptySha256, false)
 	require.Nil(t, err)
 	require.NotNil(t, event)
 
@@ -169,17 +172,17 @@ func TestNewFileFixityCheckEvent(t *testing.T) {
 	assert.Equal(t, "http://golang.org/pkg/crypto/sha256/", event.Agent)
 	assert.Equal(t, "Fixity did not match", event.OutcomeInformation)
 
-	event, err = registry.NewFileFixityCheckEvent(time.Time{}, constants.AlgMd5, testutil.EmptyMd5, true)
+	event, err = registry.NewFileFixityCheckEvent(eObjIdent, eFileIdent, time.Time{}, constants.AlgMd5, testutil.EmptyMd5, true)
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.Equal(t, "Param checksumVerifiedAt cannot be empty.", err.Error())
 
-	event, err = registry.NewFileFixityCheckEvent(testutil.Bloomsday, "", testutil.EmptyMd5, true)
+	event, err = registry.NewFileFixityCheckEvent(eObjIdent, eFileIdent, testutil.Bloomsday, "", testutil.EmptyMd5, true)
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.Equal(t, "Param fixityAlg '' is not valid.", err.Error())
 
-	event, err = registry.NewFileFixityCheckEvent(testutil.Bloomsday, constants.AlgMd5, "xyz", true)
+	event, err = registry.NewFileFixityCheckEvent(eObjIdent, eFileIdent, testutil.Bloomsday, constants.AlgMd5, "xyz", true)
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Param digest must have 32, 64, or 128 characters"))
@@ -187,7 +190,7 @@ func TestNewFileFixityCheckEvent(t *testing.T) {
 }
 
 func TestNewFileDigestEvent(t *testing.T) {
-	event, err := registry.NewFileDigestEvent(testutil.Bloomsday, constants.AlgSha256, testutil.EmptySha256)
+	event, err := registry.NewFileDigestEvent(eObjIdent, eFileIdent, testutil.Bloomsday, constants.AlgSha256, testutil.EmptySha256)
 	require.Nil(t, err)
 	require.NotNil(t, event)
 
@@ -201,7 +204,7 @@ func TestNewFileDigestEvent(t *testing.T) {
 	assert.Equal(t, "http://golang.org/pkg/crypto/sha256/", event.Agent)
 	assert.Equal(t, "Calculated fixity value", event.OutcomeInformation)
 
-	event, err = registry.NewFileDigestEvent(testutil.Bloomsday, constants.AlgMd5, testutil.EmptyMd5)
+	event, err = registry.NewFileDigestEvent(eObjIdent, eFileIdent, testutil.Bloomsday, constants.AlgMd5, testutil.EmptyMd5)
 	require.Nil(t, err)
 	require.NotNil(t, event)
 
@@ -215,17 +218,17 @@ func TestNewFileDigestEvent(t *testing.T) {
 	assert.Equal(t, "http://golang.org/pkg/crypto/md5/", event.Agent)
 	assert.Equal(t, "Calculated fixity value", event.OutcomeInformation)
 
-	event, err = registry.NewFileDigestEvent(time.Time{}, constants.AlgMd5, testutil.EmptyMd5)
+	event, err = registry.NewFileDigestEvent(eObjIdent, eFileIdent, time.Time{}, constants.AlgMd5, testutil.EmptyMd5)
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.Equal(t, "Param checksumGeneratedAt cannot be empty.", err.Error())
 
-	event, err = registry.NewFileDigestEvent(testutil.Bloomsday, "", testutil.EmptyMd5)
+	event, err = registry.NewFileDigestEvent(eObjIdent, eFileIdent, testutil.Bloomsday, "", testutil.EmptyMd5)
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.Equal(t, "Param fixityAlg '' is not valid.", err.Error())
 
-	event, err = registry.NewFileDigestEvent(testutil.Bloomsday, constants.AlgMd5, "xyz")
+	event, err = registry.NewFileDigestEvent(eObjIdent, eFileIdent, testutil.Bloomsday, constants.AlgMd5, "xyz")
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.Equal(t, "Param digest must have 32, 64 or 128 characters. 'xyz' doesn't.", err.Error())
@@ -233,7 +236,7 @@ func TestNewFileDigestEvent(t *testing.T) {
 }
 
 func TestNewFileIdentifierEvent(t *testing.T) {
-	event, err := registry.NewFileIdentifierEvent(testutil.Bloomsday, constants.IdTypeBagAndPath, "test.edu/bag/data/file.txt")
+	event, err := registry.NewFileIdentifierEvent(eObjIdent, eFileIdent, testutil.Bloomsday, constants.IdTypeBagAndPath, "test.edu/bag/data/file.txt")
 	require.Nil(t, err)
 	require.NotNil(t, event)
 
@@ -247,7 +250,7 @@ func TestNewFileIdentifierEvent(t *testing.T) {
 	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
 	assert.Equal(t, "Assigned bag/filepath identifier", event.OutcomeInformation)
 
-	event, err = registry.NewFileIdentifierEvent(testutil.Bloomsday, constants.IdTypeStorageURL, "https://example.com/7890")
+	event, err = registry.NewFileIdentifierEvent(eObjIdent, eFileIdent, testutil.Bloomsday, constants.IdTypeStorageURL, "https://example.com/7890")
 	require.Nil(t, err)
 	require.NotNil(t, event)
 
@@ -261,24 +264,24 @@ func TestNewFileIdentifierEvent(t *testing.T) {
 	assert.Equal(t, "http://github.com/satori/go.uuid", event.Agent)
 	assert.Equal(t, "Assigned url identifier", event.OutcomeInformation)
 
-	event, err = registry.NewFileIdentifierEvent(time.Time{}, constants.IdTypeStorageURL, "https://example.com/7890")
+	event, err = registry.NewFileIdentifierEvent(eObjIdent, eFileIdent, time.Time{}, constants.IdTypeStorageURL, "https://example.com/7890")
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.Equal(t, "Param identifierGeneratedAt cannot be empty.", err.Error())
 
-	event, err = registry.NewFileIdentifierEvent(testutil.Bloomsday, "", testutil.EmptyMd5)
+	event, err = registry.NewFileIdentifierEvent(eObjIdent, eFileIdent, testutil.Bloomsday, "", testutil.EmptyMd5)
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.Equal(t, "Param identifierType '' is not valid.", err.Error())
 
-	event, err = registry.NewFileIdentifierEvent(testutil.Bloomsday, constants.IdTypeStorageURL, "")
+	event, err = registry.NewFileIdentifierEvent(eObjIdent, eFileIdent, testutil.Bloomsday, constants.IdTypeStorageURL, "")
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.Equal(t, "Param identifier cannot be empty.", err.Error())
 }
 
 func TestNewFileReplicationEvent(t *testing.T) {
-	event, err := registry.NewFileReplicationEvent(testutil.Bloomsday, "https://example.com/preservation/54321")
+	event, err := registry.NewFileReplicationEvent(eObjIdent, eFileIdent, testutil.Bloomsday, "https://example.com/preservation/54321")
 	require.Nil(t, err)
 	require.NotNil(t, event)
 
@@ -292,12 +295,12 @@ func TestNewFileReplicationEvent(t *testing.T) {
 	assert.Equal(t, "http://github.com/satori/go.uuid", event.Agent)
 	assert.Equal(t, "Replicated to secondary storage", event.OutcomeInformation)
 
-	event, err = registry.NewFileReplicationEvent(time.Time{}, "https://example.com/7890")
+	event, err = registry.NewFileReplicationEvent(eObjIdent, eFileIdent, time.Time{}, "https://example.com/7890")
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.Equal(t, "Param replicatedAt cannot be empty.", err.Error())
 
-	event, err = registry.NewFileReplicationEvent(testutil.Bloomsday, "")
+	event, err = registry.NewFileReplicationEvent(eObjIdent, eFileIdent, testutil.Bloomsday, "")
 	require.Nil(t, event)
 	require.NotNil(t, err)
 	assert.Equal(t, "Param identifier cannot be empty.", err.Error())

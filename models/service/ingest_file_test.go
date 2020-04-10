@@ -352,6 +352,8 @@ func TestToGenericFile(t *testing.T) {
 		assert.NotEmpty(t, event.Object)
 		assert.NotEmpty(t, event.Agent)
 		assert.NotEmpty(t, event.OutcomeInformation)
+		assert.Equal(t, f.ObjectIdentifier, event.IntellectualObjectIdentifier)
+		assert.Equal(t, f.Identifier(), event.GenericFileIdentifier)
 	}
 	assert.Equal(t, 1, eventTypeCounts[constants.EventIngestion])
 	assert.Equal(t, 2, eventTypeCounts[constants.EventFixityCheck])

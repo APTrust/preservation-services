@@ -362,7 +362,7 @@ func (f *IngestFile) initIngestEvents() error {
 	if md5Checksum == nil {
 		return fmt.Errorf("This file has no md5 checksum")
 	}
-	ingestEvent, err := registry.NewFileIngestEvent(firstStorageRecord.StoredAt, md5Checksum.Digest, f.UUID)
+	ingestEvent, err := registry.NewFileIngestEvent(f.ObjectIdentifier, f.Identifier(), firstStorageRecord.StoredAt, md5Checksum.Digest, f.UUID)
 	if err != nil {
 		return err
 	}
@@ -370,7 +370,7 @@ func (f *IngestFile) initIngestEvents() error {
 	var fixityCheckEvents = make([]*registry.PremisEvent, 0)
 	for _, cs := range f.Checksums {
 		if cs.Source == constants.SourceManifest {
-			event, err := registry.NewFileFixityCheckEvent(cs.DateTime, cs.Algorithm, cs.Digest, true)
+			event, err := registry.NewFileFixityCheckEvent(f.ObjectIdentifier, f.Identifier(), cs.DateTime, cs.Algorithm, cs.Digest, true)
 			if err != nil {
 				return err
 			}
@@ -381,7 +381,7 @@ func (f *IngestFile) initIngestEvents() error {
 	var digestEvents = make([]*registry.PremisEvent, 0)
 	for _, cs := range f.Checksums {
 		if cs.Source == constants.SourceIngest {
-			event, err := registry.NewFileDigestEvent(cs.DateTime, cs.Algorithm, cs.Digest)
+			event, err := registry.NewFileDigestEvent(f.ObjectIdentifier, f.Identifier(), cs.DateTime, cs.Algorithm, cs.Digest)
 			if err != nil {
 				return err
 			}
@@ -389,12 +389,12 @@ func (f *IngestFile) initIngestEvents() error {
 		}
 	}
 
-	idEvent, err := registry.NewFileIdentifierEvent(time.Now().UTC(), constants.IdTypeBagAndPath, f.Identifier())
+	idEvent, err := registry.NewFileIdentifierEvent(f.ObjectIdentifier, f.Identifier(), time.Now().UTC(), constants.IdTypeBagAndPath, f.Identifier())
 	if err != nil {
 		return err
 	}
 
-	urlEvent, err := registry.NewFileIdentifierEvent(time.Now().UTC(), constants.IdTypeStorageURL, f.URI())
+	urlEvent, err := registry.NewFileIdentifierEvent(f.ObjectIdentifier, f.Identifier(), time.Now().UTC(), constants.IdTypeStorageURL, f.URI())
 	if err != nil {
 		return err
 	}
@@ -402,7 +402,7 @@ func (f *IngestFile) initIngestEvents() error {
 	var replicationEvent *registry.PremisEvent
 	if f.StorageRecords != nil && len(f.StorageRecords) > 1 {
 		r := f.StorageRecords[1]
-		replicationEvent, err = registry.NewFileReplicationEvent(r.StoredAt, r.URL)
+		replicationEvent, err = registry.NewFileReplicationEvent(f.ObjectIdentifier, f.Identifier(), r.StoredAt, r.URL)
 		if err != nil {
 			return err
 		}
