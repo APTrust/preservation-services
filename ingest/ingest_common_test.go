@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/APTrust/preservation-services/bagit"
@@ -117,14 +118,21 @@ func deleteChecksum(list []*service.IngestChecksum, source, algorithm string) []
 	return checksums
 }
 
+func getInstFromFileName(pathToBagFile string) string {
+	base := path.Base(pathToBagFile)
+	parts := strings.Split(base, ".")
+	return strings.Join(parts[0:2], ".")
+}
+
 // Returns an IngestObject that describes the tarred bag waiting
 // in our receiving bucket.
 func getIngestObject(pathToBagFile, md5Digest string) *service.IngestObject {
+	inst := getInstFromFileName(pathToBagFile)
 	obj := service.NewIngestObject(
 		constants.TestBucketReceiving, // bucket
 		filepath.Base(pathToBagFile),  // key
 		md5Digest,                     // eTag
-		"example.edu",                 // institution
+		inst,                          // institution
 		9855,                          // institution id
 		goodbagSize,                   // size
 	)
@@ -202,8 +210,9 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int, con
 	// Set up an ingest object, and assign the correct institution id.
 	// We can't know this id ahead of time because of the way Pharos
 	// loads fixture data.
+	instIdentifier := getInstFromFileName(pathToBag)
 	obj := getIngestObject(pathToBag, goodbagMd5)
-	inst := context.PharosClient.InstitutionGet("example.edu").Institution()
+	inst := context.PharosClient.InstitutionGet(instIdentifier).Institution()
 	require.NotNil(t, inst)
 	obj.InstitutionID = inst.ID
 

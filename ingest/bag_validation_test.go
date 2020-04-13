@@ -222,7 +222,7 @@ func TestBag_SampleIllegalControl(t *testing.T) {
 // ------ BTR Bags ------
 
 func TestBag_BTR_Good256(t *testing.T) {
-	pathToBag := testutil.PathToUnitTestBag("btr_good_sha256.tar")
+	pathToBag := testutil.PathToUnitTestBag("test.edu.btr_good_sha256.tar")
 	validator := setupValidatorAndObject(t,
 		constants.BagItProfileBTR, pathToBag, "", validationID, true)
 	assert.True(t, validator.IsValid())
@@ -230,7 +230,7 @@ func TestBag_BTR_Good256(t *testing.T) {
 }
 
 func TestBag_BTR_Good512(t *testing.T) {
-	pathToBag := testutil.PathToUnitTestBag("btr_good_sha512.tar")
+	pathToBag := testutil.PathToUnitTestBag("test.edu.btr_good_sha512.tar")
 	validator := setupValidatorAndObject(t,
 		constants.BagItProfileBTR, pathToBag, "", validationID, true)
 	assert.True(t, validator.IsValid())
@@ -238,13 +238,13 @@ func TestBag_BTR_Good512(t *testing.T) {
 }
 
 func TestBag_BTR_BadChecksums(t *testing.T) {
-	pathToBag := testutil.PathToUnitTestBag("btr_bad_checksums.tar")
+	pathToBag := testutil.PathToUnitTestBag("test.edu.btr_bad_checksums.tar")
 	validator := setupValidatorAndObject(t,
 		constants.BagItProfileBTR, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	expected := []string{
-		"File example.edu/btr_bad_checksums/manifest-sha512.txt: ingest sha512 checksum fc9a6f7dfac6ab9edf60858391d90131671fc18f1ca6c15fe7bd652a5a0059e76c023cfdf325305d659f2d9719a12c3c97b6d9ead8d4bff3177ab5afdfdf7483 doesn't match manifest checksum aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-		"File example.edu/btr_bad_checksums/data/netutil/listen.go: ingest sha512 checksum b598afc318e6d06f54a162e8e43bbc9cb071fcf0ffb3766b719011d8403d01290d6f2d7a9decc504395501f28f6c452c5a4317ee7bd309d4cd597984227d176d doesn't match manifest checksum 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+		"File test.edu/test.edu.btr_bad_checksums/manifest-sha512.txt: ingest sha512 checksum fc9a6f7dfac6ab9edf60858391d90131671fc18f1ca6c15fe7bd652a5a0059e76c023cfdf325305d659f2d9719a12c3c97b6d9ead8d4bff3177ab5afdfdf7483 doesn't match manifest checksum aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		"File test.edu/test.edu.btr_bad_checksums/data/netutil/listen.go: ingest sha512 checksum b598afc318e6d06f54a162e8e43bbc9cb071fcf0ffb3766b719011d8403d01290d6f2d7a9decc504395501f28f6c452c5a4317ee7bd309d4cd597984227d176d doesn't match manifest checksum 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
 	}
 	require.Equal(t, 2, len(validator.Errors))
 	for _, msg := range expected {
@@ -253,25 +253,25 @@ func TestBag_BTR_BadChecksums(t *testing.T) {
 }
 
 func TestBag_BTR_BadExtraFile(t *testing.T) {
-	pathToBag := testutil.PathToUnitTestBag("btr_bad_extraneous_file.tar")
+	pathToBag := testutil.PathToUnitTestBag("test.edu.btr_bad_extraneous_file.tar")
 	validator := setupValidatorAndObject(t,
 		constants.BagItProfileBTR, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	require.Equal(t, 1, len(validator.Errors))
-	assert.Equal(t, "File example.edu/btr_bad_extraneous_file/data/nsqd.dat is not in manifest manifest-sha512.txt", validator.Errors[0])
+	assert.Equal(t, "File test.edu/test.edu.btr_bad_extraneous_file/data/nsqd.dat is not in manifest manifest-sha512.txt", validator.Errors[0])
 }
 
 func TestBag_BTR_MissingPayload(t *testing.T) {
-	pathToBag := testutil.PathToUnitTestBag("btr_bad_missing_payload_file.tar")
+	pathToBag := testutil.PathToUnitTestBag("test.edu.btr_bad_missing_payload_file.tar")
 	validator := setupValidatorAndObject(t,
 		constants.BagItProfileBTR, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
 	require.Equal(t, 1, len(validator.Errors))
-	assert.Equal(t, "File example.edu/btr_bad_missing_payload_file/data/netutil/listen.go in manifest-sha512.txt is missing from bag", validator.Errors[0])
+	assert.Equal(t, "File test.edu/test.edu.btr_bad_missing_payload_file/data/netutil/listen.go in manifest-sha512.txt is missing from bag", validator.Errors[0])
 }
 
 func TestBag_BTR_MissingTags(t *testing.T) {
-	pathToBag := testutil.PathToUnitTestBag("btr_bad_missing_required_tags.tar")
+	pathToBag := testutil.PathToUnitTestBag("test.edu.btr_bad_missing_required_tags.tar")
 	validator := setupValidatorAndObject(t,
 		constants.BagItProfileBTR, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())

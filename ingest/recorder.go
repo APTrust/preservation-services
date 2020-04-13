@@ -120,7 +120,7 @@ func (r *Recorder) recordFiles() (fileCount int, errors []*service.ProcessingErr
 func (r *Recorder) getFileSaveFn() service.IngestFileApplyFn {
 	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		// We save "preservable" files to Pharos, not bagit.txt, manifests, etc.
-		if ingestFile.HasPreservableName() && !ingestFile.SavedToRegistryAt.IsZero() {
+		if ingestFile.HasPreservableName() && ingestFile.SavedToRegistryAt.IsZero() {
 			gf, err := ingestFile.ToGenericFile()
 			if err != nil {
 				errors = append(errors, r.Error(ingestFile.Identifier(), err, true))
