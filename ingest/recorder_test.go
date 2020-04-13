@@ -6,12 +6,14 @@ import (
 	//"fmt"
 	"net/url"
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	//"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -77,20 +79,42 @@ func testNewObjectInPharos(t *testing.T, recorder *ingest.Recorder) {
 
 }
 
+func testObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder, objIdentifier string) {
+
+}
+
 func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
+	objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.PharosClient
 	params := url.Values{}
-	params.Add("intellectual_object_identifier", recorder.IngestObject.Identifier())
+	params.Add("intellectual_object_identifier", objIdentifier)
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 	resp := client.GenericFileList(params)
-	//data, _ := resp.RawResponseData()
-	//fmt.Println(string(data))
 	require.Nil(t, resp.Error)
 	genericFiles := resp.GenericFiles()
 	require.NotEmpty(t, genericFiles)
-	// for _, gf := range genericFiles {
-	// 	data, _ := gf.ToJSON()
-	// 	assert.Equal(t, "x", string(data))
-	// }
+	for _, gf := range genericFiles {
+		assert.False(t, gf.CreatedAt.IsZero())
+		assert.True(t, strings.Contains(gf.FileFormat, "/"), "%s - %s", gf.Identifier, gf.FileFormat)
+		assert.True(t, gf.ID > 0)
+		assert.True(t, strings.HasPrefix(gf.Identifier, objIdentifier))
+		assert.True(t, len(gf.Identifier) > len(objIdentifier))
+		assert.True(t, gf.InstitutionID > 0)
+		assert.True(t, gf.IntellectualObjectID > 0)
+		assert.Equal(t, objIdentifier, gf.IntellectualObjectIdentifier)
+		assert.False(t, gf.LastFixityCheck.IsZero())
+		assert.True(t, gf.Size > 0)
+		assert.Equal(t, "A", gf.State)
+		assert.Equal(t, constants.StorageStandard, gf.StorageOption)
+		assert.True(t, strings.HasPrefix(gf.URI, "https://"))
+		uriParts := strings.Split(gf.URI, "/")
+		endOfURI := uriParts[len(uriParts)-1]
+		assert.True(t, util.LooksLikeUUID(endOfURI))
+		assert.False(t, gf.UpdatedAt.IsZero())
+	}
+}
+
+func testFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentifier string) {
+
 }

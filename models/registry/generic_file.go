@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+// GenericFile represents a Pharos GenericFile object.
+// Note that FileModified is currently not being stored in Pharos.
 type GenericFile struct {
 	Checksums                    []*Checksum    `json:"checksums,omitempty"`
 	CreatedAt                    time.Time      `json:"created_at,omitempty"`

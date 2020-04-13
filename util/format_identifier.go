@@ -72,7 +72,7 @@ func (f *FormatIdentifier) ParseOutput(output string) *IDRecord {
 		MatchType: record[2],
 		MimeType:  record[1],
 	}
-	if record[0] == "OK" {
+	if record[0] == "OK" && record[1] != "None" {
 		idRecord.Succeeded = true
 	} else {
 		idRecord.Succeeded = false
