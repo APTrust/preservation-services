@@ -77,10 +77,46 @@ func testNewObjectInPharos(t *testing.T, recorder *ingest.Recorder) {
 	assert.Equal(t, intelObj.Title, "APTrust Test Bag 001")
 	assert.False(t, intelObj.UpdatedAt.IsZero())
 
+	testObjectEventsInPharos(t, recorder)
 }
 
-func testObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder, objIdentifier string) {
+func testObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder) {
+	objIdentifier := recorder.IngestObject.Identifier()
+	client := recorder.Context.PharosClient
+	params := url.Values{}
+	params.Add("object_identifier", objIdentifier)
+	params.Add("per_page", "100")
+	params.Add("page", "1")
 
+	resp := client.PremisEventList(params)
+	require.Nil(t, resp.Error)
+	events := resp.PremisEvents()
+	require.NotEmpty(t, events)
+
+	eventTypes := make(map[string]int)
+	for _, event := range events {
+		if _, ok := eventTypes[event.EventType]; !ok {
+			eventTypes[event.EventType] = 0
+		}
+		eventTypes[event.EventType]++
+		assert.NotEmpty(t, event.Agent)
+		assert.NotEmpty(t, event.DateTime)
+		assert.NotEmpty(t, event.Detail)
+		assert.NotEmpty(t, event.EventType)
+
+		// No Generic File for object-level events
+		assert.Equal(t, 0, event.GenericFileID)
+		assert.Empty(t, event.GenericFileIdentifier)
+
+		assert.NotEmpty(t, event.Identifier)
+		assert.NotEmpty(t, event.InstitutionID)
+		assert.NotEmpty(t, event.IntellectualObjectID)
+		assert.NotEmpty(t, event.IntellectualObjectIdentifier)
+		assert.NotEmpty(t, event.Object)
+		assert.NotEmpty(t, event.OutcomeDetail)
+		assert.NotEmpty(t, event.OutcomeInformation)
+		assert.NotEmpty(t, event.Outcome)
+	}
 }
 
 func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
@@ -94,6 +130,9 @@ func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
 	require.Nil(t, resp.Error)
 	genericFiles := resp.GenericFiles()
 	require.NotEmpty(t, genericFiles)
+
+	// TODO: Save FileModified and StorageRecords
+
 	for _, gf := range genericFiles {
 		assert.False(t, gf.CreatedAt.IsZero())
 		assert.True(t, strings.Contains(gf.FileFormat, "/"), "%s - %s", gf.Identifier, gf.FileFormat)
