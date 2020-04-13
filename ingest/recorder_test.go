@@ -31,16 +31,12 @@ func TestNewRecorder(t *testing.T) {
 	assert.Equal(t, 333, recorder.WorkItemID)
 }
 
-//
-// START HERE
-//
-
-// func TestRecordAll(t *testing.T) {
-// 	context := common.NewContext()
-// 	bagPath := getBagPath("original", "test.edu.apt-001.tar")
-// 	recorder := prepareForRecord(t, bagPath, recorderItemID_01, context)
-// 	require.NotNil(t, recorder)
-// 	fileCount, errors := recorder.RecordAll()
-// 	require.Empty(t, errors, errors)
-// 	require.True(t, fileCount > 0)
-// }
+func TestRecordAll(t *testing.T) {
+	context := common.NewContext()
+	bagPath := getBagPath("original", "test.edu.apt-001.tar")
+	recorder := prepareForRecord(t, bagPath, recorderItemID_01, context)
+	require.NotNil(t, recorder)
+	fileCount, errors := recorder.RecordAll()
+	require.Empty(t, errors, errors)
+	require.True(t, fileCount > 0)
+}
