@@ -124,6 +124,7 @@ func TestNewFileIngestEvent(t *testing.T) {
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "md5:00000000000000000000000000000000", event.OutcomeDetail)
 	assert.Equal(t, "preservation-services + Minio S3 client", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "https://github.com/minio/minio-go", event.Agent)
 	assert.Equal(t, "Put using md5 checksum", event.OutcomeInformation)
 
@@ -155,6 +156,7 @@ func TestNewFileFixityCheckEvent(t *testing.T) {
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "md5:00000000000000000000000000000000", event.OutcomeDetail)
 	assert.Equal(t, "Go language crypto/md5", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "http://golang.org/pkg/crypto/md5/", event.Agent)
 	assert.Equal(t, "Fixity matches", event.OutcomeInformation)
 
@@ -169,6 +171,7 @@ func TestNewFileFixityCheckEvent(t *testing.T) {
 	assert.Equal(t, constants.StatusFailed, event.Outcome)
 	assert.Equal(t, "sha256:0000000000000000000000000000000000000000000000000000000000000000", event.OutcomeDetail)
 	assert.Equal(t, "Go language crypto/sha256", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "http://golang.org/pkg/crypto/sha256/", event.Agent)
 	assert.Equal(t, "Fixity did not match", event.OutcomeInformation)
 
@@ -201,6 +204,7 @@ func TestNewFileDigestEvent(t *testing.T) {
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "sha256:0000000000000000000000000000000000000000000000000000000000000000", event.OutcomeDetail)
 	assert.Equal(t, "Go language crypto/sha256", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "http://golang.org/pkg/crypto/sha256/", event.Agent)
 	assert.Equal(t, "Calculated fixity value", event.OutcomeInformation)
 
@@ -215,6 +219,7 @@ func TestNewFileDigestEvent(t *testing.T) {
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "md5:00000000000000000000000000000000", event.OutcomeDetail)
 	assert.Equal(t, "Go language crypto/md5", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "http://golang.org/pkg/crypto/md5/", event.Agent)
 	assert.Equal(t, "Calculated fixity value", event.OutcomeInformation)
 
@@ -247,6 +252,7 @@ func TestNewFileIdentifierEvent(t *testing.T) {
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "test.edu/bag/data/file.txt", event.OutcomeDetail)
 	assert.Equal(t, "APTrust exchange/ingest processor", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
 	assert.Equal(t, "Assigned bag/filepath identifier", event.OutcomeInformation)
 
@@ -261,6 +267,7 @@ func TestNewFileIdentifierEvent(t *testing.T) {
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "https://example.com/7890", event.OutcomeDetail)
 	assert.Equal(t, "Go uuid library + Minio S3 library", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "http://github.com/satori/go.uuid", event.Agent)
 	assert.Equal(t, "Assigned url identifier", event.OutcomeInformation)
 
@@ -292,6 +299,7 @@ func TestNewFileReplicationEvent(t *testing.T) {
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "https://example.com/preservation/54321", event.OutcomeDetail)
 	assert.Equal(t, "Go uuid library + Minio S3 library", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "http://github.com/satori/go.uuid", event.Agent)
 	assert.Equal(t, "Replicated to secondary storage", event.OutcomeInformation)
 
