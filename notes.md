@@ -161,6 +161,31 @@ suited to NSQ's hard-coded timeout limits.)
 
 See [RMQ](https://github.com/adjust/rmq)
 
+## Rails as NSQ Replacement?
+
+Consider also adding an endpoint to the WorkItems controller to get WorkItems
+ready for processing. Because NSQ may deliver the same message to multiple
+consumers when it thinks a message has timed out, we've always had to
+double-check every NSQ message against the WorkItem it refers to, with the
+Pharos WorkItem being the authoritative record. If we have to check this item
+every time, no matter what, consider checking only the WorkItem and cutting
+NSQ from the mix.
+
+Unlike NSQ, Redis/RMQ does guarantee it won't deliver the same message to
+multiple consumers, but it does not have a simple requeue feature nor does it
+detect timeouts. That means unprocessed messages can fall through the cracks,
+necessitating a scan of all WorkItems to requeue those that were lost. That
+requeuing would inevitably lead to duplicates in the queue, again
+necessitating double-checking every queued item against the Pharos WorkItem
+record to ensure it hasn't already been given to another worker.
+
+So again, why not make Pharos the queue and implement a pull model where
+workers ask for a batch of items at a time? This could also allow us to
+query for specific items so that, for example, one worker could focus on
+ingesting large bags while others could work on smaller bags. Each worker
+could ask Pharos for WorkItems that pertain to bags matching specific
+criteria, such as as size, age, etc.
+
 # JSON Data
 
 Each WorkItem will have a redis entry for the following:
