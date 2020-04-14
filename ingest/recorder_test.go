@@ -12,6 +12,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
+	"github.com/APTrust/preservation-services/models/registry"
 	//"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
@@ -159,14 +160,8 @@ func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
 		assert.True(t, util.LooksLikeUUID(endOfURI))
 		assert.False(t, gf.UpdatedAt.IsZero())
 
-		//
-		// Start Here...
-		//
-		// TODO: Fix these tests and the File Event creation methods
-		// in models/registry/premis_event.go. Pharos should probably
-		// assign fields like InstitutionID, CreatedAt and UpdatedAt.
-
 		testFileEventsInPharos(t, recorder, gf.Identifier)
+		testChecksumsInPharos(t, recorder, gf)
 	}
 }
 
@@ -213,4 +208,26 @@ func testFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentif
 
 	assert.Equal(t, 1, eventTypes[constants.EventIngestion])
 	assert.Equal(t, 1, eventTypes[constants.EventReplication])
+}
+
+func testChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
+	params := url.Values{}
+	params.Add("generic_file_identifier", gf.Identifier)
+	params.Add("per_page", "100")
+	params.Add("page", "1")
+
+	resp := recorder.Context.PharosClient.ChecksumList(params)
+	require.Nil(t, resp.Error)
+	checksums := resp.Checksums()
+	assert.Equal(t, 3, len(checksums))
+
+	for _, gfChecksum := range gf.Checksums {
+		found := false
+		for _, cs := range checksums {
+			if cs.Digest == gfChecksum.Digest {
+				found = true
+			}
+		}
+		assert.True(t, found, gfChecksum.Algorithm)
+	}
 }
