@@ -159,6 +159,8 @@ Redis may be able to replace NSQ as the queue service. (No sense in running both
 services if redis can handle all the work. Also, our long-running tasks are not
 suited to NSQ's hard-coded timeout limits.)
 
+See [RMQ](https://github.com/adjust/rmq)
+
 # JSON Data
 
 Each WorkItem will have a redis entry for the following:
