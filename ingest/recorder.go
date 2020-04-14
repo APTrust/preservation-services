@@ -109,7 +109,7 @@ func (r *Recorder) recordFiles() (fileCount int, errors []*service.ProcessingErr
 		SaveChanges: true,
 		WorkItemID:  r.WorkItemID,
 	}
-	saveFn := r.getFileSaveFn()
+	saveFn := r.getFileSaveFn(r.IngestObject)
 	return r.Context.RedisClient.IngestFilesApply(saveFn, options)
 }
 
@@ -117,8 +117,11 @@ func (r *Recorder) recordFiles() (fileCount int, errors []*service.ProcessingErr
 // checksums and premis events. The PharosClient figures out whether the save
 // should be a post/create or a put/update based on whether the GenericFile
 // has a non-zero ID.
-func (r *Recorder) getFileSaveFn() service.IngestFileApplyFn {
+func (r *Recorder) getFileSaveFn(obj *service.IngestObject) service.IngestFileApplyFn {
 	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
+		ingestFile.InstitutionID = obj.InstitutionID
+		ingestFile.IntellectualObjectID = obj.ID
+		ingestFile.ObjectIdentifier = obj.Identifier()
 		// We save "preservable" files to Pharos, not bagit.txt, manifests, etc.
 		if ingestFile.HasPreservableName() && ingestFile.SavedToRegistryAt.IsZero() {
 			gf, err := ingestFile.ToGenericFile()

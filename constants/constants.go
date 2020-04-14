@@ -135,14 +135,14 @@ var StorageOptions = []string{
 	StorageWasabiVA,
 }
 
-var BaseURIFor = map[string]string{
-	StorageGlacierDeepOH: "https://s3.amazonaws.com/aptrust.preservation.glacier-deep.oh/",
-	StorageGlacierDeepOR: "https://s3.amazonaws.com/aptrust.preservation.glacier-deep.or/",
-	StorageGlacierDeepVA: "https://s3.amazonaws.com/aptrust.preservation.glacier-deep.va/",
-	StorageGlacierOH:     "https://s3.amazonaws.com/aptrust.preservation.glacier.oh/",
-	StorageGlacierOR:     "https://s3.amazonaws.com/aptrust.preservation.glacier.or/",
-	StorageGlacierVA:     "https://s3.amazonaws.com/aptrust.preservation.glacier.va/",
-	StorageStandard:      "https://s3.amazonaws.com/aptrust.preservation.storage/",
-	StorageWasabiOR:      "https://s3.us-west-1.wasabisys.com/aptrust.wasabi.or/",
-	StorageWasabiVA:      "https://s3.us-east-1.wasabisys.com/aptrust.wasabi.va/",
-}
+// var BaseURIFor = map[string]string{
+// 	StorageGlacierDeepOH: "https://s3.amazonaws.com/aptrust.preservation.glacier-deep.oh/",
+// 	StorageGlacierDeepOR: "https://s3.amazonaws.com/aptrust.preservation.glacier-deep.or/",
+// 	StorageGlacierDeepVA: "https://s3.amazonaws.com/aptrust.preservation.glacier-deep.va/",
+// 	StorageGlacierOH:     "https://s3.amazonaws.com/aptrust.preservation.glacier.oh/",
+// 	StorageGlacierOR:     "https://s3.amazonaws.com/aptrust.preservation.glacier.or/",
+// 	StorageGlacierVA:     "https://s3.amazonaws.com/aptrust.preservation.glacier.va/",
+// 	StorageStandard:      "https://s3.amazonaws.com/aptrust.preservation.storage/",
+// 	StorageWasabiOR:      "https://s3.us-west-1.wasabisys.com/aptrust.wasabi.or/",
+// 	StorageWasabiVA:      "https://s3.us-east-1.wasabisys.com/aptrust.wasabi.va/",
+// }

@@ -68,8 +68,9 @@ func PutBagMetadataInPharos(t *testing.T, obj *service.IngestObject) {
 
 		ingestFile.StorageRecords = []*service.StorageRecord{
 			&service.StorageRecord{
-				URL:      "https://example.com/" + ingestFile.UUID,
-				StoredAt: testutil.Bloomsday,
+				URL:        "https://example.com/" + ingestFile.UUID,
+				StoredAt:   testutil.Bloomsday,
+				VerifiedAt: testutil.Bloomsday,
 			},
 		}
 

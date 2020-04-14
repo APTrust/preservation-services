@@ -390,15 +390,6 @@ func (config *Config) makeDirs() error {
 func (config *Config) initUploadTargets() {
 	config.UploadTargets = []*UploadTarget{
 		&UploadTarget{
-			Bucket:       config.BucketStandardOR,
-			Description:  "AWS Oregon Glacier bucket for Standard storage repilication",
-			Host:         config.S3AWSHost,
-			OptionName:   constants.StorageStandard,
-			Provider:     constants.StorageProviderAWS,
-			Region:       constants.RegionAWSUSWest2,
-			StorageClass: constants.StorageClassGlacier,
-		},
-		&UploadTarget{
 			Bucket:       config.BucketStandardVA,
 			Description:  "AWS Virginia S3 bucket for Standard primary preservation",
 			Host:         config.S3AWSHost,
@@ -406,6 +397,15 @@ func (config *Config) initUploadTargets() {
 			Provider:     constants.StorageProviderAWS,
 			Region:       constants.RegionAWSUSEast1,
 			StorageClass: constants.StorageClassStandard,
+		},
+		&UploadTarget{
+			Bucket:       config.BucketStandardOR,
+			Description:  "AWS Oregon Glacier bucket for Standard storage repilication",
+			Host:         config.S3AWSHost,
+			OptionName:   constants.StorageStandard,
+			Provider:     constants.StorageProviderAWS,
+			Region:       constants.RegionAWSUSWest2,
+			StorageClass: constants.StorageClassGlacier,
 		},
 		&UploadTarget{
 			Bucket:       config.BucketGlacierOH,

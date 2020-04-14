@@ -95,6 +95,9 @@ func testObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder) {
 
 	eventTypes := make(map[string]int)
 	for _, event := range events {
+		if event.GenericFileID > 0 {
+			continue // this is a file-level event
+		}
 		if _, ok := eventTypes[event.EventType]; !ok {
 			eventTypes[event.EventType] = 0
 		}
@@ -163,51 +166,51 @@ func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
 		// in models/registry/premis_event.go. Pharos should probably
 		// assign fields like InstitutionID, CreatedAt and UpdatedAt.
 
-		// testFileEventsInPharos(t, recorder, gf.Identifier)
+		testFileEventsInPharos(t, recorder, gf.Identifier)
 	}
 }
 
-// func testFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentifier string) {
-// 	objIdentifier := recorder.IngestObject.Identifier()
-// 	client := recorder.Context.PharosClient
-// 	params := url.Values{}
-// 	params.Add("file_identifier", fileIdentifier)
-// 	params.Add("per_page", "100")
-// 	params.Add("page", "1")
+func testFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentifier string) {
+	objIdentifier := recorder.IngestObject.Identifier()
+	client := recorder.Context.PharosClient
+	params := url.Values{}
+	params.Add("file_identifier", fileIdentifier)
+	params.Add("per_page", "100")
+	params.Add("page", "1")
 
-// 	resp := client.PremisEventList(params)
-// 	require.Nil(t, resp.Error)
-// 	events := resp.PremisEvents()
-// 	require.NotEmpty(t, events)
+	resp := client.PremisEventList(params)
+	require.Nil(t, resp.Error)
+	events := resp.PremisEvents()
+	require.NotEmpty(t, events)
 
-// 	eventTypes := make(map[string]int)
-// 	for _, event := range events {
-// 		if _, ok := eventTypes[event.EventType]; !ok {
-// 			eventTypes[event.EventType] = 0
-// 		}
-// 		eventTypes[event.EventType]++
-// 		assert.NotEmpty(t, event.Agent)
-// 		assert.NotEmpty(t, event.DateTime)
-// 		assert.NotEmpty(t, event.Detail)
-// 		assert.NotEmpty(t, event.EventType)
-// 		assert.NotEqual(t, 0, event.GenericFileID)
-// 		assert.Equal(t, fileIdentifier, event.GenericFileIdentifier)
-// 		assert.NotEmpty(t, event.Identifier)
-// 		assert.NotEmpty(t, event.InstitutionID)
-// 		assert.NotEmpty(t, event.IntellectualObjectID, event)
-// 		assert.Equal(t, objIdentifier, event.IntellectualObjectIdentifier)
-// 		assert.NotEmpty(t, event.Object)
-// 		assert.NotEmpty(t, event.OutcomeDetail)
-// 		assert.NotEmpty(t, event.OutcomeInformation)
-// 		assert.NotEmpty(t, event.Outcome)
-// 	}
+	eventTypes := make(map[string]int)
+	for _, event := range events {
+		if _, ok := eventTypes[event.EventType]; !ok {
+			eventTypes[event.EventType] = 0
+		}
+		eventTypes[event.EventType]++
+		assert.NotEmpty(t, event.Agent)
+		assert.NotEmpty(t, event.DateTime)
+		assert.NotEmpty(t, event.Detail)
+		assert.NotEmpty(t, event.EventType)
+		assert.NotEqual(t, 0, event.GenericFileID)
+		assert.Equal(t, fileIdentifier, event.GenericFileIdentifier)
+		assert.NotEmpty(t, event.Identifier)
+		assert.NotEmpty(t, event.InstitutionID)
+		assert.NotEmpty(t, event.IntellectualObjectID, event)
+		assert.Equal(t, objIdentifier, event.IntellectualObjectIdentifier)
+		assert.NotEmpty(t, event.Object)
+		assert.NotEmpty(t, event.OutcomeDetail)
+		assert.NotEmpty(t, event.OutcomeInformation)
+		assert.NotEmpty(t, event.Outcome)
+	}
 
-// 	// md5, sha256, sha512
-// 	assert.Equal(t, 3, eventTypes[constants.EventDigestCalculation])
+	// md5, sha256, sha512
+	assert.Equal(t, 3, eventTypes[constants.EventDigestCalculation])
 
-// 	// 1) semantic identifier assignment, 2) URL identifier assignment
-// 	assert.Equal(t, 2, eventTypes[constants.EventIdentifierAssignment])
+	// 1) semantic identifier assignment, 2) URL identifier assignment
+	assert.Equal(t, 2, eventTypes[constants.EventIdentifierAssignment])
 
-// 	assert.Equal(t, 1, eventTypes[constants.EventIngestion])
-// 	assert.Equal(t, 1, eventTypes[constants.EventReplication])
-// }
+	assert.Equal(t, 1, eventTypes[constants.EventIngestion])
+	assert.Equal(t, 1, eventTypes[constants.EventReplication])
+}

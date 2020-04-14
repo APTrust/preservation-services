@@ -11,6 +11,7 @@ import (
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/minio/minio-go/v6"
+	uuid "github.com/satori/go.uuid"
 )
 
 type IngestFile struct {
@@ -351,18 +352,7 @@ func (f *IngestFile) GetIngestEvents() ([]*registry.PremisEvent, error) {
 }
 
 func (f *IngestFile) initIngestEvents() error {
-	var firstStorageRecord *StorageRecord
-	if f.StorageRecords != nil && len(f.StorageRecords) > 0 {
-		firstStorageRecord = f.StorageRecords[0]
-	}
-	if firstStorageRecord == nil {
-		return fmt.Errorf("This file has no StorageRecords")
-	}
-	md5Checksum := f.GetChecksum(constants.SourceIngest, constants.AlgMd5)
-	if md5Checksum == nil {
-		return fmt.Errorf("This file has no md5 checksum")
-	}
-	ingestEvent, err := registry.NewFileIngestEvent(f.ObjectIdentifier, f.Identifier(), firstStorageRecord.StoredAt, md5Checksum.Digest, f.UUID)
+	ingestEvent, err := f.NewFileIngestEvent()
 	if err != nil {
 		return err
 	}
@@ -370,39 +360,30 @@ func (f *IngestFile) initIngestEvents() error {
 	var fixityCheckEvents = make([]*registry.PremisEvent, 0)
 	for _, cs := range f.Checksums {
 		if cs.Source == constants.SourceManifest {
-			event, err := registry.NewFileFixityCheckEvent(f.ObjectIdentifier, f.Identifier(), cs.DateTime, cs.Algorithm, cs.Digest, true)
-			if err != nil {
-				return err
-			}
-			fixityCheckEvents = append(fixityCheckEvents, event)
+			fixityCheckEvents = append(fixityCheckEvents, f.NewFileFixityCheckEvent(cs))
 		}
 	}
 
 	var digestEvents = make([]*registry.PremisEvent, 0)
 	for _, cs := range f.Checksums {
 		if cs.Source == constants.SourceIngest {
-			event, err := registry.NewFileDigestEvent(f.ObjectIdentifier, f.Identifier(), cs.DateTime, cs.Algorithm, cs.Digest)
-			if err != nil {
-				return err
-			}
-			digestEvents = append(digestEvents, event)
+			digestEvents = append(digestEvents, f.NewFileDigestEvent(cs))
 		}
 	}
 
-	idEvent, err := registry.NewFileIdentifierEvent(f.ObjectIdentifier, f.Identifier(), time.Now().UTC(), constants.IdTypeBagAndPath, f.Identifier())
+	idEvent, err := f.NewFileIdentifierEvent(f.Identifier(), constants.IdTypeBagAndPath)
 	if err != nil {
 		return err
 	}
 
-	urlEvent, err := registry.NewFileIdentifierEvent(f.ObjectIdentifier, f.Identifier(), time.Now().UTC(), constants.IdTypeStorageURL, f.URI())
+	urlEvent, err := f.NewFileIdentifierEvent(f.URI(), constants.IdTypeStorageURL)
 	if err != nil {
 		return err
 	}
 
 	var replicationEvent *registry.PremisEvent
 	if f.StorageRecords != nil && len(f.StorageRecords) > 1 {
-		r := f.StorageRecords[1]
-		replicationEvent, err = registry.NewFileReplicationEvent(f.ObjectIdentifier, f.Identifier(), r.StoredAt, r.URL)
+		replicationEvent, err = f.NewFileReplicationEvent(f.StorageRecords[1])
 		if err != nil {
 			return err
 		}
@@ -465,4 +446,167 @@ func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 		StorageOption:                f.StorageOption,
 		URI:                          f.URI(),
 	}, nil
+}
+
+// NewFileIngestEvent returns a PremisEvent describing a file ingest.
+// Param storedAt should come from the IngestFile's primary StorageRecord.
+// Param md5Digest should come from the IngestFiles md5 Checksum record.
+// Param _uuid should come from IngestFile.UUID.
+func (f *IngestFile) NewFileIngestEvent() (*registry.PremisEvent, error) {
+	var firstStorageRecord *StorageRecord
+	if f.StorageRecords != nil && len(f.StorageRecords) > 0 {
+		firstStorageRecord = f.StorageRecords[0]
+	}
+	if firstStorageRecord == nil {
+		return nil, fmt.Errorf("This file has no StorageRecords")
+	}
+	md5Checksum := f.GetChecksum(constants.SourceIngest, constants.AlgMd5)
+	if md5Checksum == nil {
+		return nil, fmt.Errorf("This file has no md5 checksum")
+	}
+	if firstStorageRecord.VerifiedAt.IsZero() {
+		return nil, fmt.Errorf("Storage record has not been verified.")
+	}
+	eventId := uuid.NewV4()
+	return &registry.PremisEvent{
+		Identifier:                   eventId.String(),
+		EventType:                    constants.EventIngestion,
+		DateTime:                     firstStorageRecord.StoredAt,
+		Detail:                       fmt.Sprintf("Completed copy to preservation storage (%s)", f.UUID),
+		Outcome:                      constants.StatusSuccess,
+		OutcomeDetail:                fmt.Sprintf("md5:%s", md5Checksum.Digest),
+		Object:                       "preservation-services + Minio S3 client",
+		Agent:                        "https://github.com/minio/minio-go",
+		OutcomeInformation:           "Put using md5 checksum",
+		IntellectualObjectIdentifier: f.ObjectIdentifier,
+		GenericFileIdentifier:        f.Identifier(),
+		InstitutionID:                f.InstitutionID,
+		IntellectualObjectID:         f.IntellectualObjectID,
+	}, nil
+}
+
+// NewFileDigestEvent returns a PremisEvent describing the outcome of a
+// fixity check. The check may occur at ingest or on a specified schedule against
+// a file in preservation storage.
+//
+// If this event is being generated on ingest, all params should come from
+// the IngestFile's Checksum record. When this event is generated by a scheduled
+// fixity check, the params will come from the outcome of the check.
+func (f *IngestFile) NewFileFixityCheckEvent(manifestChecksum *IngestChecksum) *registry.PremisEvent {
+	eventId := uuid.NewV4()
+	props := getFixityProps(manifestChecksum.Algorithm, true)
+	return &registry.PremisEvent{
+		Identifier:                   eventId.String(),
+		EventType:                    constants.EventFixityCheck,
+		DateTime:                     manifestChecksum.DateTime,
+		Detail:                       "Fixity check against registered hash",
+		Outcome:                      props["outcome"],
+		OutcomeDetail:                fmt.Sprintf("%s:%s", manifestChecksum.Algorithm, manifestChecksum.Digest),
+		Object:                       props["object"],
+		Agent:                        props["agent"],
+		OutcomeInformation:           props["outcomeInformation"],
+		IntellectualObjectIdentifier: f.ObjectIdentifier,
+		GenericFileIdentifier:        f.Identifier(),
+		InstitutionID:                f.InstitutionID,
+		IntellectualObjectID:         f.IntellectualObjectID,
+	}
+}
+
+// NewFileDigestEvent returns a PremisEvent saying that we calculated a new
+// checksum digest on this file during ingest.
+func (f *IngestFile) NewFileDigestEvent(ingestChecksum *IngestChecksum) *registry.PremisEvent {
+	eventId := uuid.NewV4()
+	props := getFixityProps(ingestChecksum.Algorithm, true)
+	return &registry.PremisEvent{
+		Identifier:                   eventId.String(),
+		EventType:                    constants.EventDigestCalculation,
+		DateTime:                     ingestChecksum.DateTime,
+		Detail:                       "Calculated fixity value",
+		Outcome:                      props["outcome"],
+		OutcomeDetail:                fmt.Sprintf("%s:%s", ingestChecksum.Algorithm, ingestChecksum.Digest),
+		Object:                       props["object"],
+		Agent:                        props["agent"],
+		OutcomeInformation:           "Calculated fixity value",
+		IntellectualObjectIdentifier: f.ObjectIdentifier,
+		GenericFileIdentifier:        f.Identifier(),
+		InstitutionID:                f.InstitutionID,
+		IntellectualObjectID:         f.IntellectualObjectID,
+	}
+}
+
+// NewFileIdentifierEvent returns a PremisEvent describing the identifier
+// that was assigned to a file on ingest.
+func (f *IngestFile) NewFileIdentifierEvent(identifier, identifierType string) (*registry.PremisEvent, error) {
+	if identifier == "" {
+		return nil, fmt.Errorf("Param identifier cannot be empty.")
+	}
+	eventId := uuid.NewV4()
+	object := "APTrust exchange/ingest processor"
+	agent := "https://github.com/APTrust/preservation-services"
+	detail := "Assigned new institution.bag/path identifier"
+	if identifierType == constants.IdTypeStorageURL {
+		object = "Go uuid library + Minio S3 library"
+		agent = "http://github.com/satori/go.uuid"
+		detail = "Assigned new storage URL identifier"
+	}
+	return &registry.PremisEvent{
+		Identifier:                   eventId.String(),
+		EventType:                    constants.EventIdentifierAssignment,
+		DateTime:                     time.Now().UTC(),
+		Detail:                       detail,
+		Outcome:                      string(constants.StatusSuccess),
+		OutcomeDetail:                identifier,
+		Object:                       object,
+		Agent:                        agent,
+		OutcomeInformation:           fmt.Sprintf("Assigned %s identifier", identifierType),
+		IntellectualObjectIdentifier: f.ObjectIdentifier,
+		GenericFileIdentifier:        f.Identifier(),
+		InstitutionID:                f.InstitutionID,
+		IntellectualObjectID:         f.IntellectualObjectID,
+	}, nil
+}
+
+// NewFileReplicationEvent returns a PremisEvent describing when a file
+// was copied to replication storage. Params should come from the IngestFile's
+// StorageRecord that describes where and when the replication copy was stored.
+func (f *IngestFile) NewFileReplicationEvent(replicationRecord *StorageRecord) (*registry.PremisEvent, error) {
+	if replicationRecord.StoredAt.IsZero() {
+		return nil, fmt.Errorf("Replication record StoredAt cannot be empty")
+	}
+	if replicationRecord.VerifiedAt.IsZero() {
+		return nil, fmt.Errorf("Replication record VerifiedAt cannot be empty")
+	}
+	eventId := uuid.NewV4()
+	return &registry.PremisEvent{
+		Identifier:                   eventId.String(),
+		EventType:                    constants.EventReplication,
+		DateTime:                     replicationRecord.StoredAt,
+		Detail:                       "Copied to replication storage and assigned replication URL identifier",
+		Outcome:                      constants.StatusSuccess,
+		OutcomeDetail:                replicationRecord.URL,
+		Object:                       "Go uuid library + Minio S3 library",
+		Agent:                        "http://github.com/satori/go.uuid",
+		OutcomeInformation:           "Replicated to secondary storage",
+		IntellectualObjectIdentifier: f.ObjectIdentifier,
+		GenericFileIdentifier:        f.Identifier(),
+		InstitutionID:                f.InstitutionID,
+		IntellectualObjectID:         f.IntellectualObjectID,
+	}, nil
+}
+
+func getFixityProps(fixityAlg string, fixityMatched bool) map[string]string {
+	details := make(map[string]string)
+	details["object"] = "Go language crypto/md5"
+	details["agent"] = "http://golang.org/pkg/crypto/md5/"
+	details["outcomeInformation"] = "Fixity matches"
+	details["outcome"] = string(constants.StatusSuccess)
+	if fixityAlg == constants.AlgSha256 {
+		details["object"] = "Go language crypto/sha256"
+		details["agent"] = "http://golang.org/pkg/crypto/sha256/"
+	}
+	if fixityMatched == false {
+		details["outcome"] = string(constants.StatusFailed)
+		details["outcomeInformation"] = "Fixity did not match"
+	}
+	return details
 }

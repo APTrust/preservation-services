@@ -13,6 +13,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const eObjIdent = "test.edu/obj"
+const ePathInBag = "data/file.txt"
+const eFileIdent = "test.edu/obj/data/file.txt"
+
 func TestNewIngestFile(t *testing.T) {
 	f := service.NewIngestFile(testutil.ObjIdentifier, "data/image.jpg")
 	assert.NotNil(t, f.Checksums)
@@ -285,58 +289,31 @@ func TestURI(t *testing.T) {
 }
 
 func TestToGenericFile(t *testing.T) {
-	f := testutil.GetIngestFile(true, true)
-	f.Checksums = []*service.IngestChecksum{
-		&service.IngestChecksum{
-			Algorithm: constants.AlgMd5,
-			DateTime:  testutil.Bloomsday,
-			Digest:    testutil.EmptyMd5,
-			Source:    constants.SourceManifest,
-		},
-		&service.IngestChecksum{
-			Algorithm: constants.AlgMd5,
-			DateTime:  testutil.Bloomsday,
-			Digest:    "*000000000000000000000000000000*",
-			Source:    constants.SourceIngest,
-		},
-		&service.IngestChecksum{
-			Algorithm: constants.AlgSha256,
-			DateTime:  testutil.Bloomsday,
-			Digest:    testutil.EmptySha256,
-			Source:    constants.SourceManifest,
-		},
-		&service.IngestChecksum{
-			Algorithm: constants.AlgSha256,
-			DateTime:  testutil.Bloomsday,
-			Digest:    "*00000000000000000000000000000000000000000000000000000000000000*",
-			Source:    constants.SourceIngest,
-		},
-	}
-
+	f := getFileForEvents()
 	gf, err := f.ToGenericFile()
 	require.Nil(t, err)
 
 	assert.Equal(t, "text/javascript", gf.FileFormat)
 	assert.Equal(t, testutil.Bloomsday, gf.FileModified)
 	assert.Equal(t, f.ID, gf.ID)
-	assert.Equal(t, "test.edu/some-bag/data/text/file.txt", gf.Identifier)
-	assert.Equal(t, 9855, gf.InstitutionID)
-	assert.Equal(t, 4432, gf.IntellectualObjectID)
-	assert.Equal(t, "test.edu/some-bag", gf.IntellectualObjectIdentifier)
-	assert.Equal(t, int64(5555), gf.Size)
+	assert.Equal(t, eFileIdent, gf.Identifier)
+	assert.Equal(t, 1234, gf.InstitutionID)
+	assert.Equal(t, 5678, gf.IntellectualObjectID)
+	assert.Equal(t, eObjIdent, gf.IntellectualObjectIdentifier)
+	assert.Equal(t, int64(400), gf.Size)
 	assert.Equal(t, constants.StateActive, gf.State)
 	assert.Equal(t, constants.StorageStandard, gf.StorageOption)
-	assert.Equal(t, "https://example.com/storage/record/1", gf.URI)
+	assert.Equal(t, "https://example.com/preservation/0987", gf.URI)
 
-	require.Equal(t, 2, len(gf.Checksums))
+	require.Equal(t, 3, len(gf.Checksums))
 	assert.Equal(t, constants.AlgMd5, gf.Checksums[0].Algorithm)
 	assert.Equal(t, testutil.Bloomsday, gf.Checksums[0].DateTime)
-	assert.Equal(t, "*000000000000000000000000000000*", gf.Checksums[0].Digest)
+	assert.Equal(t, "5555", gf.Checksums[0].Digest)
 	assert.Equal(t, constants.AlgSha256, gf.Checksums[1].Algorithm)
 	assert.Equal(t, testutil.Bloomsday, gf.Checksums[1].DateTime)
-	assert.Equal(t, "*00000000000000000000000000000000000000000000000000000000000000*", gf.Checksums[1].Digest)
+	assert.Equal(t, "256256", gf.Checksums[1].Digest)
 
-	require.Equal(t, 8, len(gf.PremisEvents))
+	require.Equal(t, 9, len(gf.PremisEvents))
 	eventTypeCounts := make(map[string]int)
 	for _, event := range gf.PremisEvents {
 		if _, ok := eventTypeCounts[event.EventType]; !ok {
@@ -357,12 +334,12 @@ func TestToGenericFile(t *testing.T) {
 	}
 	assert.Equal(t, 1, eventTypeCounts[constants.EventIngestion])
 	assert.Equal(t, 2, eventTypeCounts[constants.EventFixityCheck])
-	assert.Equal(t, 2, eventTypeCounts[constants.EventDigestCalculation])
+	assert.Equal(t, 3, eventTypeCounts[constants.EventDigestCalculation])
 	assert.Equal(t, 2, eventTypeCounts[constants.EventIdentifierAssignment])
 	assert.Equal(t, 1, eventTypeCounts[constants.EventReplication])
 }
 
-func TestHasPreservatbleName(t *testing.T) {
+func TestHasPreservableName(t *testing.T) {
 	no := []string{
 		"bagit.txt",
 		"fetch.txt",
@@ -456,6 +433,204 @@ func TestGetPutOptions(t *testing.T) {
 	assert.Equal(t, "12345", opts.UserMetadata["md5"])
 	assert.Equal(t, "98765", opts.UserMetadata["sha256"])
 	assert.Equal(t, "image/jpeg", opts.ContentType)
+}
+
+func getFileForEvents() *service.IngestFile {
+	return &service.IngestFile{
+		CopiedToStagingAt:    testutil.Bloomsday,
+		FileFormat:           "text/javascript",
+		FileModified:         testutil.Bloomsday,
+		FormatIdentifiedAt:   testutil.Bloomsday,
+		FormatIdentifiedBy:   constants.FmtIdFido,
+		FormatMatchType:      constants.MatchTypeExtension,
+		InstitutionID:        1234,
+		IntellectualObjectID: 5678,
+		ObjectIdentifier:     eObjIdent,
+		PathInBag:            ePathInBag,
+		Size:                 400,
+		StorageOption:        constants.StorageStandard,
+		UUID:                 constants.EmptyUUID,
+		Checksums: []*service.IngestChecksum{
+			&service.IngestChecksum{
+				Algorithm: constants.AlgMd5,
+				DateTime:  testutil.Bloomsday,
+				Digest:    "5555",
+				Source:    constants.SourceManifest,
+			},
+			&service.IngestChecksum{
+				Algorithm: constants.AlgMd5,
+				DateTime:  testutil.Bloomsday,
+				Digest:    "5555",
+				Source:    constants.SourceIngest,
+			},
+			&service.IngestChecksum{
+				Algorithm: constants.AlgSha256,
+				DateTime:  testutil.Bloomsday,
+				Digest:    "256256",
+				Source:    constants.SourceManifest,
+			},
+			&service.IngestChecksum{
+				Algorithm: constants.AlgSha256,
+				DateTime:  testutil.Bloomsday,
+				Digest:    "256256",
+				Source:    constants.SourceIngest,
+			},
+			&service.IngestChecksum{
+				Algorithm: constants.AlgSha512,
+				DateTime:  testutil.Bloomsday,
+				Digest:    "512512",
+				Source:    constants.SourceIngest,
+			},
+		},
+		StorageRecords: []*service.StorageRecord{
+			&service.StorageRecord{
+				StoredAt:   testutil.Bloomsday,
+				URL:        "https://example.com/preservation/0987",
+				VerifiedAt: testutil.Bloomsday,
+			},
+			&service.StorageRecord{
+				StoredAt:   testutil.Bloomsday,
+				URL:        "https://example.com/replication/0987",
+				VerifiedAt: testutil.Bloomsday,
+			},
+		},
+	}
+}
+
+func TestNewFileIngestEvent(t *testing.T) {
+	f := getFileForEvents()
+	event, err := f.NewFileIngestEvent()
+	require.Nil(t, err)
+	require.NotNil(t, event)
+
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventIngestion, event.EventType)
+	assert.Equal(t, testutil.Bloomsday, event.DateTime)
+	assert.Equal(t, "Completed copy to preservation storage (00000000-0000-0000-0000-000000000000)", event.Detail)
+	assert.Equal(t, constants.StatusSuccess, event.Outcome)
+	assert.Equal(t, "md5:5555", event.OutcomeDetail)
+	assert.Equal(t, "preservation-services + Minio S3 client", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
+	assert.Equal(t, "https://github.com/minio/minio-go", event.Agent)
+	assert.Equal(t, "Put using md5 checksum", event.OutcomeInformation)
+	assert.Equal(t, 1234, event.InstitutionID)
+	assert.Equal(t, 5678, event.IntellectualObjectID)
+}
+
+func TestNewFileFixityCheckEvent(t *testing.T) {
+	f := getFileForEvents()
+	cs := f.GetChecksum(constants.SourceManifest, constants.AlgMd5)
+	event := f.NewFileFixityCheckEvent(cs)
+	require.NotNil(t, event)
+
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventFixityCheck, event.EventType)
+	assert.Equal(t, testutil.Bloomsday, event.DateTime)
+	assert.Equal(t, "Fixity check against registered hash", event.Detail)
+	assert.Equal(t, constants.StatusSuccess, event.Outcome)
+	assert.Equal(t, "md5:5555", event.OutcomeDetail)
+	assert.Equal(t, "Go language crypto/md5", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
+	assert.Equal(t, "http://golang.org/pkg/crypto/md5/", event.Agent)
+	assert.Equal(t, "Fixity matches", event.OutcomeInformation)
+	assert.Equal(t, 1234, event.InstitutionID)
+	assert.Equal(t, 5678, event.IntellectualObjectID)
+}
+
+func TestNewFileDigestEvent(t *testing.T) {
+	f := getFileForEvents()
+	cs := f.GetChecksum(constants.SourceIngest, constants.AlgSha256)
+	event := f.NewFileDigestEvent(cs)
+	require.NotNil(t, event)
+
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventDigestCalculation, event.EventType)
+	assert.Equal(t, testutil.Bloomsday, event.DateTime)
+	assert.Equal(t, "Calculated fixity value", event.Detail)
+	assert.Equal(t, constants.StatusSuccess, event.Outcome)
+	assert.Equal(t, "sha256:256256", event.OutcomeDetail)
+	assert.Equal(t, "Go language crypto/sha256", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
+	assert.Equal(t, "http://golang.org/pkg/crypto/sha256/", event.Agent)
+	assert.Equal(t, "Calculated fixity value", event.OutcomeInformation)
+	assert.Equal(t, 1234, event.InstitutionID)
+	assert.Equal(t, 5678, event.IntellectualObjectID)
+}
+
+func TestNewFileIdentifierEvent(t *testing.T) {
+	f := getFileForEvents()
+	event, err := f.NewFileIdentifierEvent(f.Identifier(), constants.IdTypeBagAndPath)
+	require.Nil(t, err)
+	require.NotNil(t, event)
+
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventIdentifierAssignment, event.EventType)
+	assert.WithinDuration(t, time.Now().UTC(), event.DateTime, 1*time.Minute)
+	assert.Equal(t, "Assigned new institution.bag/path identifier", event.Detail)
+	assert.Equal(t, constants.StatusSuccess, event.Outcome)
+	assert.Equal(t, f.Identifier(), event.OutcomeDetail)
+	assert.Equal(t, "APTrust exchange/ingest processor", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
+	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
+	assert.Equal(t, "Assigned bag/filepath identifier", event.OutcomeInformation)
+	assert.Equal(t, 1234, event.InstitutionID)
+	assert.Equal(t, 5678, event.IntellectualObjectID)
+
+	event, err = f.NewFileIdentifierEvent(f.StorageRecords[0].URL, constants.IdTypeStorageURL)
+	require.Nil(t, err)
+	require.NotNil(t, event)
+
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventIdentifierAssignment, event.EventType)
+	assert.WithinDuration(t, time.Now().UTC(), event.DateTime, 1*time.Minute)
+	assert.Equal(t, "Assigned new storage URL identifier", event.Detail)
+	assert.Equal(t, constants.StatusSuccess, event.Outcome)
+	assert.Equal(t, f.StorageRecords[0].URL, event.OutcomeDetail)
+	assert.Equal(t, "Go uuid library + Minio S3 library", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
+	assert.Equal(t, "http://github.com/satori/go.uuid", event.Agent)
+	assert.Equal(t, "Assigned url identifier", event.OutcomeInformation)
+	assert.Equal(t, 1234, event.InstitutionID)
+	assert.Equal(t, 5678, event.IntellectualObjectID)
+
+	event, err = f.NewFileIdentifierEvent("", constants.IdTypeStorageURL)
+	require.Nil(t, event)
+	require.NotNil(t, err)
+	assert.Equal(t, "Param identifier cannot be empty.", err.Error())
+}
+
+func TestNewFileReplicationEvent(t *testing.T) {
+	f := getFileForEvents()
+	event, err := f.NewFileReplicationEvent(f.StorageRecords[1])
+	require.Nil(t, err)
+	require.NotNil(t, event)
+
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventReplication, event.EventType)
+	assert.Equal(t, testutil.Bloomsday, event.DateTime)
+	assert.Equal(t, "Copied to replication storage and assigned replication URL identifier", event.Detail)
+	assert.Equal(t, constants.StatusSuccess, event.Outcome)
+	assert.Equal(t, f.StorageRecords[1].URL, event.OutcomeDetail)
+	assert.Equal(t, "Go uuid library + Minio S3 library", event.Object)
+	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
+	assert.Equal(t, "http://github.com/satori/go.uuid", event.Agent)
+	assert.Equal(t, "Replicated to secondary storage", event.OutcomeInformation)
+	assert.Equal(t, 1234, event.InstitutionID)
+	assert.Equal(t, 5678, event.IntellectualObjectID)
+
+	badRecord := &service.StorageRecord{
+		URL: "https://blah/blah/blah",
+	}
+	event, err = f.NewFileReplicationEvent(badRecord)
+	require.Nil(t, event)
+	require.NotNil(t, err)
+	assert.Equal(t, "Replication record StoredAt cannot be empty", err.Error())
+
+	badRecord.StoredAt = testutil.Bloomsday
+	event, err = f.NewFileReplicationEvent(badRecord)
+	require.Nil(t, event)
+	require.NotNil(t, err)
+	assert.Equal(t, "Replication record VerifiedAt cannot be empty", err.Error())
 }
 
 const IngestFileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:ingest","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:registry","source":"registry"}],"copied_to_staging_at":"0001-01-01T00:00:00Z","error_message":"no error","file_format":"text/javascript","format_identified_at":"0001-01-01T00:00:00Z","file_modified":"1904-06-16T15:04:05Z","id":999,"institution_id":9855,"intellectual_object_id":4432,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","saved_to_registry_at":"0001-01-01T00:00:00Z","size":5555,"storage_option":"Standard","storage_records":[{"bucket":"","error":"","etag":"","provider":"","size":0,"stored_at":"1904-06-16T15:04:05Z","url":"https://example.com/storage/record/1","verified_at":"0001-01-01T00:00:00Z"},{"bucket":"","error":"","etag":"","provider":"","size":0,"stored_at":"1904-06-16T15:04:05Z","url":"https://example.com/storage/record/2","verified_at":"0001-01-01T00:00:00Z"}],"uuid":"00000000-0000-0000-0000-000000000000"}`
