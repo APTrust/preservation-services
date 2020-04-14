@@ -6,6 +6,7 @@ import (
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -44,6 +45,7 @@ func getObjectWithTags() *service.IngestObject {
 	tags[12] = bagit.NewTag("aptrust-info.txt", "Description", description)
 
 	obj := testutil.GetIngestObject()
+	obj.FileCount = 12
 	obj.Tags = append(obj.Tags, tags...)
 	return obj
 }
@@ -263,6 +265,66 @@ func TestToIntellectualObject(t *testing.T) {
 	intDescTag.Value = ""
 	intelObj = obj.ToIntellectualObject()
 	assert.Equal(t, externalDescription, intelObj.Description)
+}
+
+func TestNewObjectCreationEvent(t *testing.T) {
+	obj := getObjectWithTags()
+	event := obj.NewObjectCreationEvent()
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventCreation, event.EventType)
+	assert.False(t, event.DateTime.IsZero())
+	assert.Equal(t, "Object created", event.Detail)
+	assert.Equal(t, constants.StatusSuccess, event.Outcome)
+	assert.Equal(t, "Intellectual object created", event.OutcomeDetail)
+	assert.Equal(t, "APTrust preservation services", event.Object)
+	assert.Equal(t, "test.edu/some-bag", event.IntellectualObjectIdentifier)
+	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
+	assert.Equal(t, "Object created, files copied to preservation storage", event.OutcomeInformation)
+}
+
+func TestNewObjectIngestEvent(t *testing.T) {
+	obj := getObjectWithTags()
+	event := obj.NewObjectIngestEvent()
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventIngestion, event.EventType)
+	assert.False(t, event.DateTime.IsZero())
+	assert.Equal(t, "Copied files to perservation storage", event.Detail)
+	assert.Equal(t, constants.StatusSuccess, event.Outcome)
+	assert.Equal(t, "12 files copied", event.OutcomeDetail)
+	assert.Equal(t, "Minio S3 client", event.Object)
+	assert.Equal(t, "test.edu/some-bag", event.IntellectualObjectIdentifier)
+	assert.Equal(t, "https://github.com/minio/minio-go", event.Agent)
+	assert.Equal(t, "Multipart put using s3 etags", event.OutcomeInformation)
+}
+
+func TestNewObjectIdentifierEvent(t *testing.T) {
+	obj := getObjectWithTags()
+	event := obj.NewObjectIdentifierEvent()
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventIdentifierAssignment, event.EventType)
+	assert.False(t, event.DateTime.IsZero())
+	assert.Equal(t, "Assigned object identifier test.edu/some-bag", event.Detail)
+	assert.Equal(t, constants.StatusSuccess, event.Outcome)
+	assert.Equal(t, "test.edu/some-bag", event.OutcomeDetail)
+	assert.Equal(t, "APTrust preservation services", event.Object)
+	assert.Equal(t, "test.edu/some-bag", event.IntellectualObjectIdentifier)
+	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
+	assert.Equal(t, "Institution domain + tar file name", event.OutcomeInformation)
+}
+
+func TestNewObjectRightsEvent(t *testing.T) {
+	obj := getObjectWithTags()
+	event := obj.NewObjectRightsEvent()
+	assert.True(t, util.LooksLikeUUID(event.Identifier))
+	assert.Equal(t, constants.EventAccessAssignment, event.EventType)
+	assert.False(t, event.DateTime.IsZero())
+	assert.Equal(t, "Assigned object access rights", event.Detail)
+	assert.Equal(t, constants.StatusSuccess, event.Outcome)
+	assert.Equal(t, "consortia", event.OutcomeDetail)
+	assert.Equal(t, "APTrust preservation services", event.Object)
+	assert.Equal(t, "test.edu/some-bag", event.IntellectualObjectIdentifier)
+	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
+	assert.Equal(t, "Set access to consortia", event.OutcomeInformation)
 }
 
 const IngestObjectJson = `{"copied_to_staging_at":"0001-01-01T00:00:00Z","deleted_from_receiving_at":"1904-06-16T15:04:05Z","etag":"12345678","error_message":"No error","file_count":0,"has_fetch_txt":false,"id":555,"institution":"test.edu","institution_id":9855,"is_reingest":false,"manifests":["manifest-md5.txt","manifest-sha256.txt"],"parsable_tag_files":["bag-info.txt","aptrust-info.txt"],"s3_bucket":"aptrust.receiving.test.edu","s3_key":"some-bag.tar","saved_to_registry_at":"0001-01-01T00:00:00Z","serialization":"application/tar","size":99999,"storage_option":"Standard","tag_files":["bag-info.txt","aptrust-info.txt","misc/custom-tag-file.txt"],"tag_manifests":["tagmanifest-md5.txt","tagmanifest-sha256.txt"],"tags":[]}`
