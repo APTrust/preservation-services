@@ -21,6 +21,7 @@ import (
 )
 
 const recorderItemID_01 = 32998
+const recorderItemID_02 = 32999
 
 func getBagPath(folder, filename string) string {
 	return path.Join(testutil.PathToTestData(), "int_test_bags", folder, filename)
@@ -47,6 +48,10 @@ func TestRecordAll(t *testing.T) {
 
 	testNewObjectInPharos(t, recorder)
 	testNewFilesInPharos(t, recorder)
+
+	// Now process an update of the same bag and make
+	// sure all info is recorded correctly.
+	testObjectUpdate(t, context)
 }
 
 func testNewObjectInPharos(t *testing.T, recorder *ingest.Recorder) {
@@ -230,4 +235,19 @@ func testChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *registry
 		}
 		assert.True(t, found, gfChecksum.Algorithm)
 	}
+}
+
+func testObjectUpdate(t *testing.T, context *common.Context) {
+	bagPath := getBagPath("updated", "test.edu.apt-001.tar")
+	recorder := prepareForRecord(t, bagPath, recorderItemID_02, context)
+	require.NotNil(t, recorder)
+	fileCount, errors := recorder.RecordAll()
+	require.Empty(t, errors)
+	assert.Equal(t, 18, fileCount)
+
+	//
+	// START HERE
+	//
+	// TODO: Test that object, files, checksums, and events were updated.
+	//
 }

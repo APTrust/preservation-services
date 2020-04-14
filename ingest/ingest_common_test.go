@@ -231,6 +231,11 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int, con
 	validator := ingest.NewMetadataValidator(context, profile, obj, workItemId)
 	require.True(t, validator.IsValid())
 
+	// Check for reingest
+	reingestManager := ingest.NewReingestManager(context, workItemId, obj)
+	_, errors := reingestManager.ProcessObject()
+	require.Empty(t, errors)
+
 	return ingest.NewStagingUploader(context, workItemId, obj)
 }
 

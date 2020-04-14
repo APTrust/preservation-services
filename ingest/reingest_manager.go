@@ -100,11 +100,18 @@ func (r *ReingestManager) GetExistingObject() (*registry.IntellectualObject, err
 func (r *ReingestManager) ProcessFiles() (int, []*service.ProcessingError) {
 	processFile := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		resp := r.Context.PharosClient.GenericFileGet(ingestFile.Identifier())
+		// Most files will be new files, so we expect lots of 404s.
+		// If we get 404, we do not need to flag changes for this file
+		// because it's new.
+		if resp.ObjectNotFound() {
+			return errors
+		}
 		if resp.Error != nil {
 			return append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
 		}
 		pharosFile := resp.GenericFile()
 		if pharosFile != nil {
+			ingestFile.ID = pharosFile.ID
 			r.FlagChanges(ingestFile, pharosFile)
 		}
 		return errors
@@ -249,5 +256,5 @@ func (r *ReingestManager) FlagUnchanged(ingestFile *service.IngestFile, pharosFi
 func (r *ReingestManager) FlagObjectAsReingest(obj *registry.IntellectualObject) error {
 	r.IngestObject.ID = obj.ID
 	r.IngestObject.IsReingest = true
-	return r.Context.RedisClient.IngestObjectSave(r.WorkItemID, r.IngestObject)
+	return r.IngestObjectSave()
 }
