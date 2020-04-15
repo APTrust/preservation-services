@@ -203,21 +203,23 @@ func (obj *IngestObject) BestAvailableDescription() string {
 
 func (obj *IngestObject) ToIntellectualObject() *registry.IntellectualObject {
 	return &registry.IntellectualObject{
-		Access:                 obj.Access(),
-		AltIdentifier:          obj.AltIdentifier(),
-		BagGroupIdentifier:     obj.BagGroupIdentifier(),
-		BagItProfileIdentifier: obj.BagItProfileIdentifier(),
-		BagName:                obj.BagName(),
-		Description:            obj.BestAvailableDescription(),
-		ETag:                   obj.ETag,
-		ID:                     obj.ID,
-		Identifier:             obj.Identifier(),
-		Institution:            obj.Institution,
-		InstitutionID:          obj.InstitutionID,
-		SourceOrganization:     obj.SourceOrganization(),
-		State:                  constants.StateActive,
-		StorageOption:          obj.StorageOption,
-		Title:                  obj.Title(),
+		Access:                    obj.Access(),
+		AltIdentifier:             obj.AltIdentifier(),
+		BagGroupIdentifier:        obj.BagGroupIdentifier(),
+		BagItProfileIdentifier:    obj.BagItProfileIdentifier(),
+		BagName:                   obj.BagName(),
+		Description:               obj.BestAvailableDescription(),
+		ETag:                      obj.ETag,
+		ID:                        obj.ID,
+		Identifier:                obj.Identifier(),
+		Institution:               obj.Institution,
+		InstitutionID:             obj.InstitutionID,
+		InternalSenderDescription: obj.InternalSenderDescription(),
+		InternalSenderIdentifier:  obj.AltIdentifier(),
+		SourceOrganization:        obj.SourceOrganization(),
+		State:                     constants.StateActive,
+		StorageOption:             obj.StorageOption,
+		Title:                     obj.Title(),
 	}
 }
 

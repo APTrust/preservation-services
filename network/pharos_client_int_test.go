@@ -206,6 +206,18 @@ func TestPharosIntellectualObjectGet(t *testing.T) {
 		intelObj := resp.IntellectualObject()
 		assert.NotNil(t, intelObj)
 		assert.Equal(t, obj.Identifier, intelObj.Identifier)
+		assert.Equal(t, obj.Title, intelObj.Title)
+		assert.Equal(t, obj.Description, intelObj.Description)
+		assert.Equal(t, obj.AltIdentifier, intelObj.AltIdentifier)
+		assert.Equal(t, obj.BagName, intelObj.BagName)
+		assert.Equal(t, obj.Access, intelObj.Access)
+		assert.Equal(t, obj.Institution, intelObj.Institution)
+		assert.Equal(t, obj.State, intelObj.State)
+		assert.Equal(t, obj.ETag, intelObj.ETag)
+		assert.Equal(t, obj.SourceOrganization, intelObj.SourceOrganization)
+		assert.Equal(t, obj.BagItProfileIdentifier, intelObj.BagItProfileIdentifier)
+		assert.Equal(t, obj.InternalSenderIdentifier, intelObj.InternalSenderIdentifier)
+		assert.Equal(t, obj.InternalSenderDescription, intelObj.InternalSenderDescription)
 	}
 }
 
@@ -263,6 +275,18 @@ func TestPharosIntellectualObjectSave_Create(t *testing.T) {
 	assert.Equal(t, intelObj.Identifier, obj.Identifier)
 	assert.NotEqual(t, 0, obj.ID)
 	assert.NotEqual(t, intelObj.UpdatedAt, obj.UpdatedAt)
+	assert.Equal(t, intelObj.Title, obj.Title)
+	assert.Equal(t, intelObj.Description, obj.Description)
+	assert.Equal(t, intelObj.AltIdentifier, obj.AltIdentifier)
+	assert.Equal(t, intelObj.BagName, obj.BagName)
+	assert.Equal(t, intelObj.Access, obj.Access)
+	assert.Equal(t, intelObj.Institution, obj.Institution)
+	assert.Equal(t, intelObj.State, obj.State)
+	assert.Equal(t, intelObj.ETag, obj.ETag)
+	assert.Equal(t, intelObj.SourceOrganization, obj.SourceOrganization)
+	assert.Equal(t, intelObj.BagItProfileIdentifier, obj.BagItProfileIdentifier)
+	assert.Equal(t, intelObj.InternalSenderIdentifier, obj.InternalSenderIdentifier)
+	assert.Equal(t, intelObj.InternalSenderDescription, obj.InternalSenderDescription)
 }
 
 func TestPharosIntellectualObjectSave_Update(t *testing.T) {
@@ -291,6 +315,19 @@ func TestPharosIntellectualObjectSave_Update(t *testing.T) {
 		assert.Equal(t, existingObj.Identifier, obj.Identifier)
 		assert.Equal(t, newDesc, obj.Description)
 		assert.NotEqual(t, existingObj.UpdatedAt, obj.UpdatedAt)
+
+		assert.Equal(t, existingObj.Title, obj.Title)
+		assert.Equal(t, existingObj.Description, obj.Description)
+		assert.Equal(t, existingObj.AltIdentifier, obj.AltIdentifier)
+		assert.Equal(t, existingObj.BagName, obj.BagName)
+		assert.Equal(t, existingObj.Access, obj.Access)
+		assert.Equal(t, existingObj.Institution, obj.Institution)
+		assert.Equal(t, existingObj.State, obj.State)
+		assert.Equal(t, existingObj.ETag, obj.ETag)
+		assert.Equal(t, existingObj.SourceOrganization, obj.SourceOrganization)
+		assert.Equal(t, existingObj.BagItProfileIdentifier, obj.BagItProfileIdentifier)
+		assert.Equal(t, existingObj.InternalSenderIdentifier, obj.InternalSenderIdentifier)
+		assert.Equal(t, existingObj.InternalSenderDescription, obj.InternalSenderDescription)
 	}
 }
 

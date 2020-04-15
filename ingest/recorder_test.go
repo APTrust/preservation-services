@@ -73,10 +73,8 @@ func testNewObjectInPharos(t *testing.T, recorder *ingest.Recorder) {
 	assert.True(t, intelObj.ID > 0)
 	assert.Equal(t, "test.edu/test.edu.apt-001", intelObj.Identifier)
 	assert.Equal(t, "test.edu", intelObj.Institution)
-
-	// Also, Internal-Sender-Identifier and Internal-Sender-Description
-	// are not being saved.
-
+	assert.Equal(t, "bag001", intelObj.InternalSenderIdentifier)
+	assert.Equal(t, "Test bag 001 for integration tests", intelObj.InternalSenderDescription)
 	assert.True(t, intelObj.InstitutionID > 0)
 	assert.Equal(t, intelObj.SourceOrganization, "Test University")
 	assert.Equal(t, intelObj.State, "A")
@@ -335,10 +333,8 @@ func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestam
 	assert.True(t, intelObj.ID > 0)
 	assert.Equal(t, "test.edu/test.edu.apt-001", intelObj.Identifier)
 	assert.Equal(t, "test.edu", intelObj.Institution)
-
-	// Also, Internal-Sender-Identifier and Internal-Sender-Description
-	// are not being saved.
-
+	assert.Equal(t, "bag-001-updated", intelObj.InternalSenderIdentifier)
+	assert.Equal(t, "Updated APTrust bag 001 - updated", intelObj.InternalSenderDescription)
 	assert.True(t, intelObj.InstitutionID > 0)
 	assert.Equal(t, intelObj.SourceOrganization, "Test University")
 	assert.Equal(t, intelObj.State, "A")
