@@ -8,6 +8,7 @@ import (
 	"path"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
@@ -61,17 +62,17 @@ func testNewObjectInPharos(t *testing.T, recorder *ingest.Recorder) {
 	intelObj := resp.IntellectualObject()
 	require.NotNil(t, intelObj)
 
-	assert.Equal(t, intelObj.Access, constants.AccessInstitution)
-	assert.Equal(t, intelObj.AltIdentifier, "bag001")
-	assert.Equal(t, intelObj.BagGroupIdentifier, "apt-001")
-	assert.Equal(t, intelObj.BagItProfileIdentifier, "https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json")
-	assert.Equal(t, intelObj.BagName, "test.edu.apt-001")
+	assert.Equal(t, constants.AccessInstitution, intelObj.Access)
+	assert.Equal(t, "bag001", intelObj.AltIdentifier)
+	assert.Equal(t, "apt-001", intelObj.BagGroupIdentifier)
+	assert.Equal(t, "https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json", intelObj.BagItProfileIdentifier)
+	assert.Equal(t, "test.edu.apt-001", intelObj.BagName)
 	assert.False(t, intelObj.CreatedAt.IsZero())
-	assert.Equal(t, intelObj.Description, "Test bag 001 for integration tests")
+	assert.Equal(t, "Test bag 001 for integration tests", intelObj.Description)
 	assert.Equal(t, 32, len(intelObj.ETag))
 	assert.True(t, intelObj.ID > 0)
-	assert.Equal(t, intelObj.Identifier, "test.edu/test.edu.apt-001")
-	assert.Equal(t, intelObj.Institution, "test.edu")
+	assert.Equal(t, "test.edu/test.edu.apt-001", intelObj.Identifier)
+	assert.Equal(t, "test.edu", intelObj.Institution)
 
 	// Also, Internal-Sender-Identifier and Internal-Sender-Description
 	// are not being saved.
@@ -238,6 +239,7 @@ func testChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *registry
 }
 
 func testObjectUpdate(t *testing.T, context *common.Context) {
+	timestamp := time.Now().UTC()
 	bagPath := getBagPath("updated", "test.edu.apt-001.tar")
 	recorder := prepareForRecord(t, bagPath, recorderItemID_02, context)
 	require.NotNil(t, recorder)
@@ -250,4 +252,84 @@ func testObjectUpdate(t *testing.T, context *common.Context) {
 	//
 	// TODO: Test that object, files, checksums, and events were updated.
 	//
+	testUpdatedObjectInPharos(t, recorder, timestamp)
+}
+
+func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
+	client := recorder.Context.PharosClient
+	resp := client.IntellectualObjectGet(recorder.IngestObject.Identifier())
+	require.Nil(t, resp.Error)
+	intelObj := resp.IntellectualObject()
+	require.NotNil(t, intelObj)
+
+	assert.Equal(t, intelObj.Access, constants.AccessInstitution)
+	assert.Equal(t, "bag-001-updated", intelObj.AltIdentifier)
+	assert.Equal(t, "apt-001-updated", intelObj.BagGroupIdentifier)
+	assert.Equal(t, "https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json", intelObj.BagItProfileIdentifier)
+	assert.Equal(t, "test.edu.apt-001", intelObj.BagName)
+	assert.False(t, intelObj.CreatedAt.IsZero())
+	assert.Equal(t, "Updated APTrust bag 001 - updated", intelObj.Description)
+	assert.Equal(t, 32, len(intelObj.ETag))
+	assert.True(t, intelObj.ID > 0)
+	assert.Equal(t, "test.edu/test.edu.apt-001", intelObj.Identifier)
+	assert.Equal(t, "test.edu", intelObj.Institution)
+
+	// Also, Internal-Sender-Identifier and Internal-Sender-Description
+	// are not being saved.
+
+	assert.True(t, intelObj.InstitutionID > 0)
+	assert.Equal(t, intelObj.SourceOrganization, "Test University")
+	assert.Equal(t, intelObj.State, "A")
+	assert.Equal(t, intelObj.StorageOption, constants.StorageClassStandard)
+	assert.Equal(t, "APTrust Bag 001 (updated)", intelObj.Title)
+
+	// This should have changed
+	assert.True(t, intelObj.UpdatedAt.After(intelObj.CreatedAt))
+
+	testUpdatedObjectEventsInPharos(t, recorder, timestamp)
+}
+
+func testUpdatedObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
+	objIdentifier := recorder.IngestObject.Identifier()
+	client := recorder.Context.PharosClient
+
+	// Because Pharos is so badly broken, we can't reliably retrieve
+	// a list of object-level events. So we have to retrieve all events
+	// created since a specified time and filter them on our own.
+	params := url.Values{}
+	params.Add("object_identifier", objIdentifier)
+	params.Add("created_after", timestamp.Format(time.RFC3339))
+	params.Add("per_page", "200")
+	params.Add("page", "1")
+
+	resp := client.PremisEventList(params)
+	//data, _ := resp.RawResponseData()
+	//fmt.Printf(string(data))
+	require.Nil(t, resp.Error)
+	events := resp.PremisEvents()
+	require.NotEmpty(t, events)
+
+	eventTypes := make(map[string]int)
+	for _, event := range events {
+		if event.GenericFileID > 0 {
+			continue // this is a file-level event
+		}
+		if _, ok := eventTypes[event.EventType]; !ok {
+			eventTypes[event.EventType] = 0
+		}
+		eventTypes[event.EventType]++
+	}
+
+	// No new creation event, because this is reingest
+	assert.Equal(t, 0, eventTypes[constants.EventCreation])
+
+	// No new identifier assignment for reingest
+	assert.Equal(t, 0, eventTypes[constants.EventIdentifierAssignment])
+
+	// Should be one new rights event, since this can be reset
+	// on each ingest.
+	assert.Equal(t, 1, eventTypes[constants.EventAccessAssignment])
+
+	// There *SHOULD* be a new ingest event for reingest.
+	assert.Equal(t, 1, eventTypes[constants.EventIngestion])
 }
