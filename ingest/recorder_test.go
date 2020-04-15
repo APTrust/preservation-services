@@ -238,18 +238,6 @@ func testChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *registry
 	}
 }
 
-func testObjectUpdate(t *testing.T, context *common.Context) {
-	timestamp := time.Now().UTC()
-	bagPath := getBagPath("updated", "test.edu.apt-001.tar")
-	recorder := prepareForRecord(t, bagPath, recorderItemID_02, context)
-	require.NotNil(t, recorder)
-	fileCount, errors := recorder.RecordAll()
-	require.Empty(t, errors)
-	assert.Equal(t, 18, fileCount)
-
-	testUpdatedObjectInPharos(t, recorder, timestamp)
-}
-
 // -------------------------------------------------------------------
 // Tests for changed/added files in updated bag
 // -------------------------------------------------------------------
@@ -315,6 +303,18 @@ func getChangedFileRecord(identifier string) ChangedFile {
 		}
 	}
 	return changedFile
+}
+
+func testObjectUpdate(t *testing.T, context *common.Context) {
+	timestamp := time.Now().UTC()
+	bagPath := getBagPath("updated", "test.edu.apt-001.tar")
+	recorder := prepareForRecord(t, bagPath, recorderItemID_02, context)
+	require.NotNil(t, recorder)
+	fileCount, errors := recorder.RecordAll()
+	require.Empty(t, errors)
+	assert.Equal(t, 18, fileCount)
+
+	testUpdatedObjectInPharos(t, recorder, timestamp)
 }
 
 func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
@@ -444,7 +444,7 @@ func testUpdatedFilesInPharos(t *testing.T, recorder *ingest.Recorder, timestamp
 		assert.True(t, gf.UpdatedAt.After(timestamp))
 
 		testUpdatedFileEventsInPharos(t, recorder, gf.Identifier, timestamp)
-		//testUpdatedChecksumsInPharos(t, recorder, gf)
+		testUpdatedChecksumsInPharos(t, recorder, gf)
 	}
 }
 
@@ -500,4 +500,36 @@ func testUpdatedFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, file
 
 	assert.Equal(t, 1, eventTypes[constants.EventIngestion], fileIdentifier)
 	assert.Equal(t, 1, eventTypes[constants.EventReplication], fileIdentifier)
+}
+
+func testUpdatedChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
+	params := url.Values{}
+	params.Add("generic_file_identifier", gf.Identifier)
+	params.Add("per_page", "100")
+	params.Add("page", "1")
+
+	resp := recorder.Context.PharosClient.ChecksumList(params)
+	require.Nil(t, resp.Error)
+	checksums := resp.Checksums()
+
+	changedFile := getChangedFileRecord(gf.Identifier)
+
+	// For reingested files, we should have an old and a new
+	// md5, sha256, and sha512 digest. For new files, we
+	// should have just one of each.
+	if changedFile.IsReingest {
+		assert.Equal(t, 6, len(checksums), gf.Identifier)
+	} else {
+		assert.Equal(t, 3, len(checksums), gf.Identifier)
+	}
+
+	for _, gfChecksum := range gf.Checksums {
+		found := false
+		for _, cs := range checksums {
+			if cs.Digest == gfChecksum.Digest {
+				found = true
+			}
+		}
+		assert.True(t, found, gfChecksum.Algorithm, "%s (%s)", gf.Identifier, gfChecksum.Algorithm)
+	}
 }
