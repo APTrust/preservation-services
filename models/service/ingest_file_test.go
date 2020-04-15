@@ -290,6 +290,7 @@ func TestURI(t *testing.T) {
 
 func TestToGenericFile(t *testing.T) {
 	f := getFileForEvents()
+	f.NeedsSave = true
 	gf, err := f.ToGenericFile()
 	require.Nil(t, err)
 

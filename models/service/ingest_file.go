@@ -345,7 +345,7 @@ func (f *IngestFile) GetIngestEvents() ([]*registry.PremisEvent, error) {
 		f.PremisEvents = make([]*registry.PremisEvent, 0)
 	}
 	var err error
-	if len(f.PremisEvents) == 0 {
+	if len(f.PremisEvents) == 0 && f.NeedsSave {
 		err = f.initIngestEvents()
 	}
 	return f.PremisEvents, err
@@ -468,6 +468,7 @@ func (f *IngestFile) NewFileIngestEvent() (*registry.PremisEvent, error) {
 		return nil, fmt.Errorf("Storage record has not been verified.")
 	}
 	eventId := uuid.NewV4()
+	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),
 		EventType:                    constants.EventIngestion,
@@ -482,6 +483,8 @@ func (f *IngestFile) NewFileIngestEvent() (*registry.PremisEvent, error) {
 		GenericFileIdentifier:        f.Identifier(),
 		InstitutionID:                f.InstitutionID,
 		IntellectualObjectID:         f.IntellectualObjectID,
+		CreatedAt:                    timestamp,
+		UpdatedAt:                    timestamp,
 	}, nil
 }
 
@@ -494,6 +497,7 @@ func (f *IngestFile) NewFileIngestEvent() (*registry.PremisEvent, error) {
 // fixity check, the params will come from the outcome of the check.
 func (f *IngestFile) NewFileFixityCheckEvent(manifestChecksum *IngestChecksum) *registry.PremisEvent {
 	eventId := uuid.NewV4()
+	timestamp := time.Now().UTC()
 	props := getFixityProps(manifestChecksum.Algorithm, true)
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),
@@ -509,6 +513,8 @@ func (f *IngestFile) NewFileFixityCheckEvent(manifestChecksum *IngestChecksum) *
 		GenericFileIdentifier:        f.Identifier(),
 		InstitutionID:                f.InstitutionID,
 		IntellectualObjectID:         f.IntellectualObjectID,
+		CreatedAt:                    timestamp,
+		UpdatedAt:                    timestamp,
 	}
 }
 
@@ -516,6 +522,7 @@ func (f *IngestFile) NewFileFixityCheckEvent(manifestChecksum *IngestChecksum) *
 // checksum digest on this file during ingest.
 func (f *IngestFile) NewFileDigestEvent(ingestChecksum *IngestChecksum) *registry.PremisEvent {
 	eventId := uuid.NewV4()
+	timestamp := time.Now().UTC()
 	props := getFixityProps(ingestChecksum.Algorithm, true)
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),
@@ -531,6 +538,8 @@ func (f *IngestFile) NewFileDigestEvent(ingestChecksum *IngestChecksum) *registr
 		GenericFileIdentifier:        f.Identifier(),
 		InstitutionID:                f.InstitutionID,
 		IntellectualObjectID:         f.IntellectualObjectID,
+		CreatedAt:                    timestamp,
+		UpdatedAt:                    timestamp,
 	}
 }
 
@@ -541,6 +550,7 @@ func (f *IngestFile) NewFileIdentifierEvent(identifier, identifierType string) (
 		return nil, fmt.Errorf("Param identifier cannot be empty.")
 	}
 	eventId := uuid.NewV4()
+	timestamp := time.Now().UTC()
 	object := "APTrust exchange/ingest processor"
 	agent := "https://github.com/APTrust/preservation-services"
 	detail := "Assigned new institution.bag/path identifier"
@@ -563,6 +573,8 @@ func (f *IngestFile) NewFileIdentifierEvent(identifier, identifierType string) (
 		GenericFileIdentifier:        f.Identifier(),
 		InstitutionID:                f.InstitutionID,
 		IntellectualObjectID:         f.IntellectualObjectID,
+		CreatedAt:                    timestamp,
+		UpdatedAt:                    timestamp,
 	}, nil
 }
 
@@ -577,6 +589,7 @@ func (f *IngestFile) NewFileReplicationEvent(replicationRecord *StorageRecord) (
 		return nil, fmt.Errorf("Replication record VerifiedAt cannot be empty")
 	}
 	eventId := uuid.NewV4()
+	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),
 		EventType:                    constants.EventReplication,
@@ -591,6 +604,8 @@ func (f *IngestFile) NewFileReplicationEvent(replicationRecord *StorageRecord) (
 		GenericFileIdentifier:        f.Identifier(),
 		InstitutionID:                f.InstitutionID,
 		IntellectualObjectID:         f.IntellectualObjectID,
+		CreatedAt:                    timestamp,
+		UpdatedAt:                    timestamp,
 	}, nil
 }
 

@@ -259,10 +259,11 @@ func (obj *IngestObject) initIngestEvents() {
 
 func (obj *IngestObject) NewObjectCreationEvent() *registry.PremisEvent {
 	eventId := uuid.NewV4()
+	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),
 		EventType:                    constants.EventCreation,
-		DateTime:                     time.Now().UTC(),
+		DateTime:                     timestamp,
 		Detail:                       "Object created",
 		Outcome:                      constants.StatusSuccess,
 		OutcomeDetail:                "Intellectual object created",
@@ -270,15 +271,18 @@ func (obj *IngestObject) NewObjectCreationEvent() *registry.PremisEvent {
 		IntellectualObjectIdentifier: obj.Identifier(),
 		Agent:                        "https://github.com/APTrust/preservation-services",
 		OutcomeInformation:           "Object created, files copied to preservation storage",
+		CreatedAt:                    timestamp,
+		UpdatedAt:                    timestamp,
 	}
 }
 
 func (obj *IngestObject) NewObjectIngestEvent() *registry.PremisEvent {
 	eventId := uuid.NewV4()
+	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),
 		EventType:                    constants.EventIngestion,
-		DateTime:                     time.Now().UTC(),
+		DateTime:                     timestamp,
 		Detail:                       "Copied files to perservation storage",
 		Outcome:                      constants.StatusSuccess,
 		OutcomeDetail:                fmt.Sprintf("%d files copied", obj.FileCount),
@@ -286,15 +290,18 @@ func (obj *IngestObject) NewObjectIngestEvent() *registry.PremisEvent {
 		IntellectualObjectIdentifier: obj.Identifier(),
 		Agent:                        "https://github.com/minio/minio-go",
 		OutcomeInformation:           "Multipart put using s3 etags",
+		CreatedAt:                    timestamp,
+		UpdatedAt:                    timestamp,
 	}
 }
 
 func (obj *IngestObject) NewObjectIdentifierEvent() *registry.PremisEvent {
 	eventId := uuid.NewV4()
+	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),
 		EventType:                    constants.EventIdentifierAssignment,
-		DateTime:                     time.Now().UTC(),
+		DateTime:                     timestamp,
 		Detail:                       "Assigned object identifier " + obj.Identifier(),
 		Outcome:                      constants.StatusSuccess,
 		OutcomeDetail:                obj.Identifier(),
@@ -302,15 +309,18 @@ func (obj *IngestObject) NewObjectIdentifierEvent() *registry.PremisEvent {
 		IntellectualObjectIdentifier: obj.Identifier(),
 		Agent:                        "https://github.com/APTrust/preservation-services",
 		OutcomeInformation:           "Institution domain + tar file name",
+		CreatedAt:                    timestamp,
+		UpdatedAt:                    timestamp,
 	}
 }
 
 func (obj *IngestObject) NewObjectRightsEvent() *registry.PremisEvent {
 	eventId := uuid.NewV4()
+	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),
 		EventType:                    constants.EventAccessAssignment,
-		DateTime:                     time.Now().UTC(),
+		DateTime:                     timestamp,
 		Detail:                       "Assigned object access rights",
 		Outcome:                      constants.StatusSuccess,
 		OutcomeDetail:                obj.Access(),
@@ -318,5 +328,7 @@ func (obj *IngestObject) NewObjectRightsEvent() *registry.PremisEvent {
 		IntellectualObjectIdentifier: obj.Identifier(),
 		Agent:                        "https://github.com/APTrust/preservation-services",
 		OutcomeInformation:           "Set access to " + obj.Access(),
+		CreatedAt:                    timestamp,
+		UpdatedAt:                    timestamp,
 	}
 }
