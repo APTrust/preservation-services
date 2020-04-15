@@ -653,7 +653,7 @@ func (client *PharosClient) PremisEventGet(identifier string) *PharosResponse {
 //   specified generic file.
 // * event_type - (string) Return events of the specified type. See the
 //   event types listed in contants/constants.go
-// * created_since - (iso 8601 datetime string) Return events created
+// * created_after - (iso 8601 datetime string) Return events created
 //   on or after the specified datetime.
 func (client *PharosClient) PremisEventList(params url.Values) *PharosResponse {
 	// Set up the response object
