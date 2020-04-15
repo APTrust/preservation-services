@@ -247,12 +247,55 @@ func testObjectUpdate(t *testing.T, context *common.Context) {
 	require.Empty(t, errors)
 	assert.Equal(t, 18, fileCount)
 
-	//
-	// START HERE
-	//
-	// TODO: Test that object, files, checksums, and events were updated.
-	//
 	testUpdatedObjectInPharos(t, recorder, timestamp)
+}
+
+// -------------------------------------------------------------------
+// Tests for changed/added files in updated bag
+// -------------------------------------------------------------------
+
+type ChangedFile struct {
+	FileFormat string
+	Size       int64
+	Identifier string
+}
+
+var changedFiles = []ChangedFile{
+	{
+		FileFormat: "image/svg+xml",
+		Size:       int64(22491),
+		Identifier: "test.edu/test.edu.apt-001/data/files/file_example_SVG_20kB.svg",
+	},
+	{
+		FileFormat: "application/xml",
+		Size:       int64(24069),
+		Identifier: "test.edu/test.edu.apt-001/data/files/data.xml",
+	},
+	{
+		FileFormat: "application/json",
+		Size:       int64(20556),
+		Identifier: "test.edu/test.edu.apt-001/data/files/data.json",
+	},
+	{
+		FileFormat: "text/csv",
+		Size:       int64(284058),
+		Identifier: "test.edu/test.edu.apt-001/data/files/data.csv",
+	},
+	{
+		FileFormat: "application/binary",
+		Size:       int64(6148),
+		Identifier: "test.edu/test.edu.apt-001/data/files/.DS_Store",
+	},
+	{
+		FileFormat: "text/plain",
+		Size:       int64(452),
+		Identifier: "test.edu/test.edu.apt-001/bag-info.txt",
+	},
+	{
+		FileFormat: "text/plain",
+		Size:       int64(125),
+		Identifier: "test.edu/test.edu.apt-001/aptrust-info.txt",
+	},
 }
 
 func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
@@ -287,6 +330,7 @@ func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestam
 	assert.True(t, intelObj.UpdatedAt.After(intelObj.CreatedAt))
 
 	testUpdatedObjectEventsInPharos(t, recorder, timestamp)
+	testUpdatedFilesInPharos(t, recorder, timestamp)
 }
 
 func testUpdatedObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
@@ -332,4 +376,55 @@ func testUpdatedObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder, ti
 
 	// There *SHOULD* be a new ingest event for reingest.
 	assert.Equal(t, 1, eventTypes[constants.EventIngestion])
+}
+
+func testUpdatedFilesInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
+	objIdentifier := recorder.IngestObject.Identifier()
+	client := recorder.Context.PharosClient
+	params := url.Values{}
+	params.Add("intellectual_object_identifier", objIdentifier)
+	params.Add("updated_after", timestamp.Format(time.RFC3339))
+	params.Add("per_page", "100")
+	params.Add("page", "1")
+	resp := client.GenericFileList(params)
+	//data, _ := resp.RawResponseData()
+	//fmt.Println(string(data))
+	require.Nil(t, resp.Error)
+	genericFiles := resp.GenericFiles()
+	require.NotEmpty(t, genericFiles)
+	assert.Equal(t, len(changedFiles), len(genericFiles))
+
+	for _, changedFile := range changedFiles {
+		found := false
+		for _, gf := range genericFiles {
+			if gf.Identifier == changedFile.Identifier {
+				found = true
+				break
+			}
+		}
+		assert.True(t, found, changedFile.Identifier)
+	}
+
+	for _, gf := range genericFiles {
+		assert.False(t, gf.CreatedAt.IsZero())
+		assert.True(t, strings.Contains(gf.FileFormat, "/"), "%s - %s", gf.Identifier, gf.FileFormat)
+		assert.True(t, gf.ID > 0)
+		assert.True(t, strings.HasPrefix(gf.Identifier, objIdentifier))
+		assert.True(t, len(gf.Identifier) > len(objIdentifier))
+		assert.True(t, gf.InstitutionID > 0)
+		assert.True(t, gf.IntellectualObjectID > 0)
+		assert.Equal(t, objIdentifier, gf.IntellectualObjectIdentifier)
+		assert.False(t, gf.LastFixityCheck.IsZero())
+		assert.True(t, gf.Size > 0)
+		assert.Equal(t, "A", gf.State)
+		assert.Equal(t, constants.StorageStandard, gf.StorageOption)
+		assert.True(t, strings.HasPrefix(gf.URI, "https://"))
+		uriParts := strings.Split(gf.URI, "/")
+		endOfURI := uriParts[len(uriParts)-1]
+		assert.True(t, util.LooksLikeUUID(endOfURI))
+		assert.True(t, gf.UpdatedAt.After(timestamp))
+
+		//testFileEventsInPharos(t, recorder, gf.Identifier)
+		//testChecksumsInPharos(t, recorder, gf)
+	}
 }
