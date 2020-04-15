@@ -26,6 +26,7 @@ type IngestFile struct {
 	ID                   int                     `json:"id,omitempty"`
 	InstitutionID        int                     `json:"institution_id,omitempty"`
 	IntellectualObjectID int                     `json:"intellectual_object_id,omitempty"`
+	IsReingest           bool                    `json:"is_reingest"`
 	NeedsSave            bool                    `json:"needs_save"`
 	ObjectIdentifier     string                  `json:"object_identifier"`
 	PathInBag            string                  `json:"path_in_bag"`
@@ -371,14 +372,20 @@ func (f *IngestFile) initIngestEvents() error {
 		}
 	}
 
-	idEvent, err := f.NewFileIdentifierEvent(f.Identifier(), constants.IdTypeBagAndPath)
-	if err != nil {
-		return err
+	var idEvent *registry.PremisEvent
+	if f.IsReingest == false {
+		idEvent, err = f.NewFileIdentifierEvent(f.Identifier(), constants.IdTypeBagAndPath)
+		if err != nil {
+			return err
+		}
 	}
 
-	urlEvent, err := f.NewFileIdentifierEvent(f.URI(), constants.IdTypeStorageURL)
-	if err != nil {
-		return err
+	var urlEvent *registry.PremisEvent
+	if f.IsReingest == false {
+		urlEvent, err = f.NewFileIdentifierEvent(f.URI(), constants.IdTypeStorageURL)
+		if err != nil {
+			return err
+		}
 	}
 
 	var replicationEvent *registry.PremisEvent
@@ -393,9 +400,15 @@ func (f *IngestFile) initIngestEvents() error {
 	// This prevents us having a partial event list. It's all or nothing.
 	f.PremisEvents = append(f.PremisEvents, fixityCheckEvents...)
 	f.PremisEvents = append(f.PremisEvents, digestEvents...)
-	f.PremisEvents = append(f.PremisEvents, idEvent, urlEvent, ingestEvent)
+	f.PremisEvents = append(f.PremisEvents, ingestEvent)
 	if replicationEvent != nil {
 		f.PremisEvents = append(f.PremisEvents, replicationEvent)
+	}
+	if idEvent != nil {
+		f.PremisEvents = append(f.PremisEvents, idEvent)
+	}
+	if urlEvent != nil {
+		f.PremisEvents = append(f.PremisEvents, urlEvent)
 	}
 
 	return nil

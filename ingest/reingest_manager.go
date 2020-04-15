@@ -242,6 +242,7 @@ func (r *ReingestManager) SetStorageOption(ingestFile *service.IngestFile, pharo
 // FlagForUpdate marks an IngestFile as needing to be saved, and sets the
 // UUID to the existing UUID in Pharos.
 func (r *ReingestManager) FlagForUpdate(ingestFile *service.IngestFile, pharosFile *registry.GenericFile) {
+	ingestFile.IsReingest = true
 	ingestFile.NeedsSave = true
 	ingestFile.UUID = pharosFile.UUID()
 }

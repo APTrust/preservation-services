@@ -258,6 +258,7 @@ type ChangedFile struct {
 	FileFormat string
 	Size       int64
 	Identifier string
+	IsReingest bool
 }
 
 var changedFiles = []ChangedFile{
@@ -265,37 +266,55 @@ var changedFiles = []ChangedFile{
 		FileFormat: "image/svg+xml",
 		Size:       int64(22491),
 		Identifier: "test.edu/test.edu.apt-001/data/files/file_example_SVG_20kB.svg",
+		IsReingest: false,
 	},
 	{
 		FileFormat: "application/xml",
 		Size:       int64(24069),
 		Identifier: "test.edu/test.edu.apt-001/data/files/data.xml",
+		IsReingest: true,
 	},
 	{
 		FileFormat: "application/json",
 		Size:       int64(20556),
 		Identifier: "test.edu/test.edu.apt-001/data/files/data.json",
+		IsReingest: true,
 	},
 	{
 		FileFormat: "text/csv",
 		Size:       int64(284058),
 		Identifier: "test.edu/test.edu.apt-001/data/files/data.csv",
+		IsReingest: true,
 	},
 	{
 		FileFormat: "application/binary",
 		Size:       int64(6148),
 		Identifier: "test.edu/test.edu.apt-001/data/files/.DS_Store",
+		IsReingest: false,
 	},
 	{
 		FileFormat: "text/plain",
 		Size:       int64(452),
 		Identifier: "test.edu/test.edu.apt-001/bag-info.txt",
+		IsReingest: true,
 	},
 	{
 		FileFormat: "text/plain",
 		Size:       int64(125),
 		Identifier: "test.edu/test.edu.apt-001/aptrust-info.txt",
+		IsReingest: true,
 	},
+}
+
+func getChangedFileRecord(identifier string) ChangedFile {
+	var changedFile ChangedFile
+	for _, f := range changedFiles {
+		if f.Identifier == identifier {
+			changedFile = f
+			break
+		}
+	}
+	return changedFile
 }
 
 func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
@@ -424,7 +443,61 @@ func testUpdatedFilesInPharos(t *testing.T, recorder *ingest.Recorder, timestamp
 		assert.True(t, util.LooksLikeUUID(endOfURI))
 		assert.True(t, gf.UpdatedAt.After(timestamp))
 
-		//testFileEventsInPharos(t, recorder, gf.Identifier)
-		//testChecksumsInPharos(t, recorder, gf)
+		testUpdatedFileEventsInPharos(t, recorder, gf.Identifier, timestamp)
+		//testUpdatedChecksumsInPharos(t, recorder, gf)
 	}
+}
+
+func testUpdatedFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentifier string, timestamp time.Time) {
+	objIdentifier := recorder.IngestObject.Identifier()
+	client := recorder.Context.PharosClient
+	params := url.Values{}
+	params.Add("file_identifier", fileIdentifier)
+	params.Add("created_after", timestamp.Format(time.RFC3339))
+	params.Add("per_page", "100")
+	params.Add("page", "1")
+
+	resp := client.PremisEventList(params)
+	require.Nil(t, resp.Error)
+	events := resp.PremisEvents()
+	require.NotEmpty(t, events)
+
+	eventTypes := make(map[string]int)
+	for _, event := range events {
+		if _, ok := eventTypes[event.EventType]; !ok {
+			eventTypes[event.EventType] = 0
+		}
+		eventTypes[event.EventType]++
+		assert.NotEmpty(t, event.Agent)
+		assert.NotEmpty(t, event.DateTime)
+		assert.NotEmpty(t, event.Detail)
+		assert.NotEmpty(t, event.EventType)
+		assert.NotEqual(t, 0, event.GenericFileID)
+		assert.Equal(t, fileIdentifier, event.GenericFileIdentifier)
+		assert.NotEmpty(t, event.Identifier)
+		assert.NotEmpty(t, event.InstitutionID)
+		assert.NotEmpty(t, event.IntellectualObjectID, event)
+		assert.Equal(t, objIdentifier, event.IntellectualObjectIdentifier)
+		assert.NotEmpty(t, event.Object)
+		assert.NotEmpty(t, event.OutcomeDetail)
+		assert.NotEmpty(t, event.OutcomeInformation)
+		assert.NotEmpty(t, event.Outcome)
+	}
+
+	changedFile := getChangedFileRecord(fileIdentifier)
+
+	// md5, sha256, sha512
+	assert.Equal(t, 3, eventTypes[constants.EventDigestCalculation], fileIdentifier)
+
+	// 1) semantic identifier assignment, 2) URL identifier assignment
+	// But if this is a reingest of an existing file, no new IDs were
+	// assigned, so there will be zero no identifier assignment events.
+	if changedFile.IsReingest {
+		assert.Equal(t, 0, eventTypes[constants.EventIdentifierAssignment], fileIdentifier)
+	} else {
+		assert.Equal(t, 2, eventTypes[constants.EventIdentifierAssignment], fileIdentifier)
+	}
+
+	assert.Equal(t, 1, eventTypes[constants.EventIngestion], fileIdentifier)
+	assert.Equal(t, 1, eventTypes[constants.EventReplication], fileIdentifier)
 }
