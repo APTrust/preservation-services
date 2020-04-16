@@ -444,6 +444,12 @@ func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 			checksums = append(checksums, cs.ToRegistryChecksum(f.ID))
 		}
 	}
+	storageRecords := make([]*registry.StorageRecord, len(f.StorageRecords))
+	for i, r := range f.StorageRecords {
+		storageRecords[i] = &registry.StorageRecord{
+			URL: r.URL,
+		}
+	}
 	return &registry.GenericFile{
 		Checksums:                    checksums,
 		FileFormat:                   f.FileFormat,
@@ -457,6 +463,7 @@ func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 		Size:                         f.Size,
 		State:                        constants.StateActive,
 		StorageOption:                f.StorageOption,
+		StorageRecords:               storageRecords,
 		URI:                          f.URI(),
 	}, nil
 }
