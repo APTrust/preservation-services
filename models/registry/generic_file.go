@@ -23,7 +23,7 @@ type GenericFile struct {
 	Size                         int64            `json:"size,omitempty"`
 	State                        string           `json:"state,omitempty"`
 	StorageOption                string           `json:"storage_option"`
-	StorageRecords               []*StorageRecord `json:"storate_records,omitempty"`
+	StorageRecords               []*StorageRecord `json:"storage_records,omitempty"`
 	URI                          string           `json:"uri,omitempty"`
 	UpdatedAt                    time.Time        `json:"updated_at,omitempty"`
 }
