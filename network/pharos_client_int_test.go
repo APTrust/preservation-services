@@ -710,6 +710,24 @@ func TestPharosPremisEventSave(t *testing.T) {
 	assert.NotEqual(t, 0, savedEvent.ID)
 }
 
+func TestPharosStorageRecordList(t *testing.T) {
+	// From fixture data
+	client := GetPharosClient(t)
+	resp := client.StorageRecordList("institution1.edu/photos/picture1")
+	require.Nil(t, resp.Error)
+	records := resp.StorageRecords()
+	require.Equal(t, 2, len(records))
+	assert.Equal(t, "https://s3.amazonaws.com/aptrust.test.preservation/25452f41-1b18-47b7-b334-751dfd5d011e", records[0].URL)
+	assert.Equal(t, "https://s3.amazonaws.com/aptrust.test.preservation-or/25452f41-1b18-47b7-b334-751dfd5d011e", records[1].URL)
+
+	resp = client.StorageRecordList("institution2.edu/chocolate/picture1")
+	require.Nil(t, resp.Error)
+	records = resp.StorageRecords()
+	require.Equal(t, 2, len(records))
+	assert.Equal(t, "https://s3.amazonaws.com/aptrust.test.preservation/3ba064ae-6a12-49e9-b9f8-cd63fbb173ce", records[0].URL)
+	assert.Equal(t, "https://s3.amazonaws.com/aptrust.test.preservation-or/3ba064ae-6a12-49e9-b9f8-cd63fbb173ce", records[1].URL)
+}
+
 func TestWorkItemGet(t *testing.T) {
 	LoadPharosFixtures(t)
 	// ETag comes from fixture data

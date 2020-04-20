@@ -716,6 +716,31 @@ func (client *PharosClient) PremisEventSave(obj *registry.PremisEvent) *PharosRe
 	return resp
 }
 
+// StorageRecordList returns a list of StorageRecords.
+// Param genericFileIdentifier is required.
+func (client *PharosClient) StorageRecordList(genericFileIdentifier string) *PharosResponse {
+	// Set up the response object
+	resp := NewPharosResponse(PharosStorageRecord)
+	resp.storageRecords = make([]*registry.StorageRecord, 0)
+
+	// Build the url and the request object
+	relativeURL := fmt.Sprintf("/api/%s/storage_records/%s",
+		client.APIVersion,
+		EscapeFileIdentifier(genericFileIdentifier))
+	absoluteURL := client.BuildURL(relativeURL)
+
+	// Run the request
+	client.DoRequest(resp, "GET", absoluteURL, nil)
+	if resp.Error != nil {
+		return resp
+	}
+
+	// Parse the JSON from the response body.
+	// If there's an error, it will be recorded in resp.Error
+	resp.UnmarshalJSONList()
+	return resp
+}
+
 // WorkItemGet returns the WorkItem with the specified ID.
 func (client *PharosClient) WorkItemGet(id int) *PharosResponse {
 	// Set up the response object

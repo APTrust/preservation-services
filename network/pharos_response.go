@@ -68,6 +68,10 @@ type PharosResponse struct {
 	// objectType is not Institution.
 	institutions []*registry.Institution
 
+	// A slice of StorageRecords, each of which describes a
+	// URL in preservation storage where a file can be found.
+	storageRecords []*registry.StorageRecord
+
 	// A slice of WorkItem pointers. Will be nil if
 	// objectType is not WorkItem.
 	workItems []*registry.WorkItem
@@ -91,6 +95,7 @@ const (
 	PharosGenericFile                         = "GenericFile"
 	PharosChecksum                            = "Checksum"
 	PharosPremisEvent                         = "PremisEvent"
+	PharosStorageRecord                       = "StorageRecord"
 	PharosWorkItem                            = "WorkItem"
 )
 
@@ -254,6 +259,22 @@ func (resp *PharosResponse) PremisEvents() []*registry.PremisEvent {
 	return resp.events
 }
 
+// Returns the StorageRecord parsed from the HTTP response body, or nil.
+func (resp *PharosResponse) StorageRecord() *registry.StorageRecord {
+	if resp.storageRecords != nil && len(resp.storageRecords) > 0 {
+		return resp.storageRecords[0]
+	}
+	return nil
+}
+
+// Returns a list of StorageRecords parsed from the HTTP response body.
+func (resp *PharosResponse) StorageRecords() []*registry.StorageRecord {
+	if resp.storageRecords == nil {
+		return make([]*registry.StorageRecord, 0)
+	}
+	return resp.storageRecords
+}
+
 // Returns the WorkItem parsed from the HTTP response body, or nil.
 func (resp *PharosResponse) WorkItem() *registry.WorkItem {
 	if resp.workItems != nil && len(resp.workItems) > 0 {
@@ -292,6 +313,8 @@ func (resp *PharosResponse) UnmarshalJSONList() error {
 		return resp.decodeAsChecksumList()
 	case PharosPremisEvent:
 		return resp.decodeAsPremisEventList()
+	case PharosStorageRecord:
+		return resp.decodeAsStorageRecordList()
 	case PharosWorkItem:
 		return resp.decodeAsWorkItemList()
 	default:
@@ -415,6 +438,30 @@ func (resp *PharosResponse) decodeAsPremisEventList() error {
 	resp.Next = temp.Next
 	resp.Previous = temp.Previous
 	resp.events = temp.Results
+	resp.listHasBeenParsed = true
+	return resp.Error
+}
+
+func (resp *PharosResponse) decodeAsStorageRecordList() error {
+	if resp.listHasBeenParsed {
+		return nil
+	}
+	temp := struct {
+		Count    int                       `json:"count"`
+		Next     *string                   `json:"next"`
+		Previous *string                   `json:"previous"`
+		Results  []*registry.StorageRecord `json:"results"`
+	}{0, nil, nil, nil}
+	data, err := resp.RawResponseData()
+	if err != nil {
+		resp.Error = err
+		return err
+	}
+	resp.Error = json.Unmarshal(data, &temp)
+	resp.Count = temp.Count
+	resp.Next = temp.Next
+	resp.Previous = temp.Previous
+	resp.storageRecords = temp.Results
 	resp.listHasBeenParsed = true
 	return resp.Error
 }

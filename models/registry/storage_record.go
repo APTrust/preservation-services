@@ -1,5 +1,7 @@
 package registry
 
 type StorageRecord struct {
-	URL string `json:"url"`
+	GenericFileID int    `json:"generic_file_id"`
+	ID            int    `json:"id"`
+	URL           string `json:"url"`
 }
