@@ -340,6 +340,28 @@ func TestToGenericFile(t *testing.T) {
 	assert.Equal(t, 1, eventTypeCounts[constants.EventReplication])
 }
 
+func TestToGenericFile_StorageRecords(t *testing.T) {
+	f := getFileForEvents()
+	f.NeedsSave = true
+	gf, err := f.ToGenericFile()
+	require.Nil(t, err)
+
+	require.Equal(t, 2, len(gf.StorageRecords))
+	assert.Equal(t, "https://example.com/preservation/0987", gf.StorageRecords[0].URL)
+	assert.Equal(t, "https://example.com/replication/0987", gf.StorageRecords[1].URL)
+
+	// Don't add URLs that the registry already knows about.
+	f.RegistryURLs = []string{
+		"https://example.com/preservation/0987",
+	}
+	gf, err = f.ToGenericFile()
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(gf.StorageRecords))
+	assert.Equal(t, "https://example.com/replication/0987", gf.StorageRecords[0].URL)
+
+}
+
 func TestHasPreservableName(t *testing.T) {
 	no := []string{
 		"bagit.txt",
@@ -365,6 +387,18 @@ func TestHasPreservableName(t *testing.T) {
 		}
 		assert.True(t, f.HasPreservableName(), pathInBag)
 	}
+}
+
+func TestHasRegistryURL(t *testing.T) {
+	ingestFile := &service.IngestFile{
+		RegistryURLs: []string{
+			"url1",
+			"url2",
+		},
+	}
+	assert.True(t, ingestFile.HasRegistryURL("url1"))
+	assert.True(t, ingestFile.HasRegistryURL("url2"))
+	assert.False(t, ingestFile.HasRegistryURL("url3"))
 }
 
 func TestNeedsSaveAt(t *testing.T) {
@@ -634,4 +668,4 @@ func TestNewFileReplicationEvent(t *testing.T) {
 	assert.Equal(t, "Replication record VerifiedAt cannot be empty", err.Error())
 }
 
-const IngestFileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:ingest","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:registry","source":"registry"}],"copied_to_staging_at":"0001-01-01T00:00:00Z","error_message":"no error","file_format":"text/javascript","format_identified_at":"0001-01-01T00:00:00Z","file_modified":"1904-06-16T15:04:05Z","id":999,"institution_id":9855,"intellectual_object_id":4432,"is_reingest":false,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","saved_to_registry_at":"0001-01-01T00:00:00Z","size":5555,"storage_option":"Standard","storage_records":[{"bucket":"","error":"","etag":"","provider":"","size":0,"stored_at":"1904-06-16T15:04:05Z","url":"https://example.com/storage/record/1","verified_at":"0001-01-01T00:00:00Z"},{"bucket":"","error":"","etag":"","provider":"","size":0,"stored_at":"1904-06-16T15:04:05Z","url":"https://example.com/storage/record/2","verified_at":"0001-01-01T00:00:00Z"}],"uuid":"00000000-0000-0000-0000-000000000000"}`
+const IngestFileJson = `{"checksums":[{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:ingest","source":"ingest"},{"algorithm":"md5","datetime":"0001-01-01T00:00:00Z","digest":"md5:registry","source":"registry"}],"copied_to_staging_at":"0001-01-01T00:00:00Z","error_message":"no error","file_format":"text/javascript","format_identified_at":"0001-01-01T00:00:00Z","file_modified":"1904-06-16T15:04:05Z","id":999,"institution_id":9855,"intellectual_object_id":4432,"is_reingest":false,"needs_save":true,"object_identifier":"test.edu/some-bag","path_in_bag":"data/text/file.txt","registry_urls":[],"saved_to_registry_at":"0001-01-01T00:00:00Z","size":5555,"storage_option":"Standard","storage_records":[{"bucket":"","error":"","etag":"","provider":"","size":0,"stored_at":"1904-06-16T15:04:05Z","url":"https://example.com/storage/record/1","verified_at":"0001-01-01T00:00:00Z"},{"bucket":"","error":"","etag":"","provider":"","size":0,"stored_at":"1904-06-16T15:04:05Z","url":"https://example.com/storage/record/2","verified_at":"0001-01-01T00:00:00Z"}],"uuid":"00000000-0000-0000-0000-000000000000"}`

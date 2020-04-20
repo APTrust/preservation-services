@@ -72,6 +72,11 @@ func PutBagMetadataInPharos(t *testing.T, obj *service.IngestObject) {
 				StoredAt:   testutil.Bloomsday,
 				VerifiedAt: testutil.Bloomsday,
 			},
+			&service.StorageRecord{
+				URL:        "https://other.example.com/" + ingestFile.UUID,
+				StoredAt:   testutil.Bloomsday,
+				VerifiedAt: testutil.Bloomsday,
+			},
 		}
 
 		genericFile, err := ingestFile.ToGenericFile()
@@ -370,6 +375,7 @@ func testIngestFile_ReingestManager(t *testing.T, f *service.IngestFile) {
 	assert.Equal(t, 36, len(f.UUID))
 	assert.True(t, util.LooksLikeUUID(f.UUID), f.PathInBag)
 	require.Equal(t, 0, len(f.StorageRecords), f.PathInBag)
+	require.Equal(t, 2, len(f.RegistryURLs), "%s: %v", f.PathInBag, f.RegistryURLs)
 }
 
 func shouldHaveManifestChecksum(f *service.IngestFile) bool {

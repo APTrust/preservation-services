@@ -31,6 +31,7 @@ type IngestFile struct {
 	ObjectIdentifier     string                  `json:"object_identifier"`
 	PathInBag            string                  `json:"path_in_bag"`
 	PremisEvents         []*registry.PremisEvent `json:"premis_events,omitempty"`
+	RegistryURLs         []string                `json:"registry_urls"`
 	SavedToRegistryAt    time.Time               `json:"saved_to_registry_at,omitempty"`
 	Size                 int64                   `json:"size"`
 	StorageOption        string                  `json:"storage_option"`
@@ -44,6 +45,7 @@ func NewIngestFile(objIdentifier, pathInBag string) *IngestFile {
 		NeedsSave:        true,
 		ObjectIdentifier: objIdentifier,
 		PathInBag:        pathInBag,
+		RegistryURLs:     make([]string, 0),
 		StorageOption:    "Standard",
 		StorageRecords:   make([]*StorageRecord, 0),
 	}
@@ -329,6 +331,12 @@ func (f *IngestFile) NeedsSaveAt(provider, bucket string) bool {
 	return storageRecord == nil || storageRecord.StoredAt.IsZero()
 }
 
+// HasRegistryURL returns true if this IngestFile's
+// RegistryURLs list contains the specified URL.
+func (f *IngestFile) HasRegistryURL(url string) bool {
+	return util.StringListContains(f.RegistryURLs, url)
+}
+
 // GetIngestEvents returns this files's list of ingest PremisEvents.
 // It generates the list if the list does not already exist.
 //
@@ -444,10 +452,14 @@ func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 			checksums = append(checksums, cs.ToRegistryChecksum(f.ID))
 		}
 	}
-	storageRecords := make([]*registry.StorageRecord, len(f.StorageRecords))
-	for i, r := range f.StorageRecords {
-		storageRecords[i] = &registry.StorageRecord{
-			URL: r.URL,
+	storageRecords := make([]*registry.StorageRecord, 0)
+	for _, r := range f.StorageRecords {
+		// Tell Pharos the file is stored at this URL only if
+		// Pharos doesn't already have a record of it.
+		if !f.HasRegistryURL(r.URL) {
+			storageRecords = append(storageRecords, &registry.StorageRecord{
+				URL: r.URL,
+			})
 		}
 	}
 	return &registry.GenericFile{

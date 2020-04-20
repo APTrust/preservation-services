@@ -130,6 +130,8 @@ func (r *Recorder) getFileSaveFn(obj *service.IngestObject) service.IngestFileAp
 			}
 			resp := r.Context.PharosClient.GenericFileSave(gf)
 			if resp.Error != nil {
+				// TODO: Pharos should return 409 on StorageRecord.URL
+				// conflict, and that should be a fatal error.
 				errors = append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
 			} else {
 				savedFile := resp.GenericFile()

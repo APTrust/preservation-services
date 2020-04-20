@@ -114,6 +114,22 @@ func (r *ReingestManager) ProcessFiles() (int, []*service.ProcessingError) {
 			ingestFile.ID = pharosFile.ID
 			r.FlagChanges(ingestFile, pharosFile)
 		}
+
+		// Get a list of preservation storage URLs for this file
+		// that Pharos already knows about. We'll need this later
+		// in the record phase. Pharos has a unique constraint on
+		// these storage URLs, and if we try to re-save a StorageRecord
+		// whose URL is already in the DB, we'll get a unique constraint
+		// error.
+		resp = r.Context.PharosClient.StorageRecordList(ingestFile.Identifier())
+		if resp.Error != nil {
+			return append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
+		}
+		for _, sr := range resp.StorageRecords() {
+			if !ingestFile.HasRegistryURL(sr.URL) {
+				ingestFile.RegistryURLs = append(ingestFile.RegistryURLs, sr.URL)
+			}
+		}
 		return errors
 	}
 	options := service.IngestFileApplyOptions{
