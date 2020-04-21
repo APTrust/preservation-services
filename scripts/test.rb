@@ -223,7 +223,20 @@ class TestRunner
     @services_stopped = true
   end
 
+  def print_nostop_message
+    puts "Services are still running because you passed command flag -n"
+    puts "Pharos is at http://localhost:9292 (system@aptrust.org/password)"
+    puts "Redis: http://localhost:6379 (no user or password required)"
+    puts "Minio: http://localhost:9899 (minioadmin/minioadmin)"
+    puts "To stop services, you'll need to kill the following processes:"
+    @pids.each do |name, pid|
+      puts "#{name} -> #{pid}"
+    end
+    puts "To stop Pharos: cd into Pharos dir and 'make integration_clean'"
+  end
+
   def print_results
+    puts "Logs are in #{File.join(ENV['HOME'], "tmp", "logs")}"
     if $?.success?
       puts "\n\n    **** 😁 PASS 😁 **** \n\n".force_encoding('utf-8')
     else
@@ -263,6 +276,9 @@ if __FILE__ == $0
     opts.on("-f", "--formats", "Run extra format identification tests") do |f|
       options[:formats] = f
     end
+    opts.on("-n", "--nostop", "Don't stop services after tests complete") do |n|
+      options[:nostop] = n
+    end
   end.parse!
 
   t = TestRunner.new(options)
@@ -271,11 +287,15 @@ if __FILE__ == $0
     t.print_help
 	exit(false)
   end
-  at_exit { t.stop_all_services }
+  unless options[:nostop]
+    at_exit { t.stop_all_services }
+  end
   if test_name == 'units'
     t.run_unit_tests(ARGV[1])
   elsif test_name == 'integration'
     t.run_integration_tests(ARGV[1])
   end
-  t.stop_all_services
+  if options[:nostop]
+    t.print_nostop_message
+  end
 end
