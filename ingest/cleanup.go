@@ -62,7 +62,7 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 				identifier = obj.Key
 			}
 			errors = append(errors, c.Error(identifier, obj.Err, false))
-			c.Context.Logger.Info("Error deleting from staging: %s - %s", identifier, obj.Err.Error())
+			c.Context.Logger.Infof("Error deleting from staging: %s - %s", identifier, obj.Err.Error())
 			if len(errors) > maxErrors {
 				return fileCount, errors
 			}
@@ -70,12 +70,12 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 		err := s3Client.RemoveObject(stagingBucket, obj.Key)
 		if err != nil {
 			errors = append(errors, c.Error(obj.Key, obj.Err, false))
-			c.Context.Logger.Info("Error deleting from staging: %s - %s", obj.Key, obj.Err.Error())
+			c.Context.Logger.Infof("Error deleting from staging: %s - %s", obj.Key, obj.Err.Error())
 			if len(errors) > maxErrors {
 				return fileCount, errors
 			}
 		}
-		c.Context.Logger.Info("Deleted from staging: %s", obj.Key)
+		c.Context.Logger.Infof("Deleted from staging: %s", obj.Key)
 		fileCount++
 	}
 	return fileCount, errors
