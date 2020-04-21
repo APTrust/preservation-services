@@ -266,3 +266,10 @@ func prepareForRecord(t *testing.T, pathToBag string, workItemId int, context *c
 	require.Empty(t, errors, errors)
 	return ingest.NewRecorder(context, verifier.WorkItemID, verifier.IngestObject)
 }
+
+func prepareForCleanup(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.Cleanup {
+	recorder := prepareForRecord(t, pathToBag, workItemId, context)
+	_, errors := recorder.RecordAll()
+	require.Empty(t, errors, errors)
+	return ingest.NewCleanup(context, recorder.WorkItemID, recorder.IngestObject)
+}

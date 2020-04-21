@@ -29,15 +29,21 @@ func NewCleanup(context *common.Context, workItemID int, ingestObject *service.I
 	}
 }
 
-func (c *Cleanup) CleanUp() (fileCount int, errors []*service.ProcessingError) {
-
-	return c.deleteFilesFromStaging()
+func (c *Cleanup) CleanAll() (fileCount int, errors []*service.ProcessingError) {
+	fileCount, errors = c.deleteFilesFromStaging()
+	if len(errors) == 0 {
+		_, err := c.Context.RedisClient.WorkItemDelete(c.WorkItemID)
+		if err != nil {
+			errors = append(errors, c.Error(c.IngestObject.Identifier(), err, false))
+		}
+	}
+	return fileCount, errors
 }
 
 func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.ProcessingError) {
 	maxErrors := 10
 	stagingBucket := c.Context.Config.StagingBucket
-	if c.BucketUnsafeForDeletion(stagingBucket) {
+	if BucketUnsafeForDeletion(stagingBucket) {
 		c.Context.Logger.Fatalf("Cleanup worker will not delete from bucket %s, only from staging", stagingBucket)
 	}
 
@@ -49,7 +55,7 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 	doneCh := make(chan struct{})
 	defer close(doneCh)
 
-	for obj := range s3Client.ListObjects(stagingBucket, prefix, true, nil) {
+	for obj := range s3Client.ListObjects(stagingBucket, prefix, true, doneCh) {
 		if obj.Err != nil {
 			identifier := c.IngestObject.Identifier()
 			if obj.Key != "" {
@@ -75,10 +81,6 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 	return fileCount, errors
 }
 
-func (c *Cleanup) deleteRedisRecords() {
-
-}
-
-func (c *Cleanup) BucketUnsafeForDeletion(bucket string) bool {
+func BucketUnsafeForDeletion(bucket string) bool {
 	return strings.Contains(bucket, "preservation") || !strings.Contains(bucket, "staging")
 }
