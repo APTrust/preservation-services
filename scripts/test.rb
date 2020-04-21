@@ -287,15 +287,14 @@ if __FILE__ == $0
     t.print_help
 	exit(false)
   end
-  unless options[:nostop]
+  if options[:nostop]
+    at_exit { t.print_nostop_message }
+  else
     at_exit { t.stop_all_services }
   end
   if test_name == 'units'
     t.run_unit_tests(ARGV[1])
   elsif test_name == 'integration'
     t.run_integration_tests(ARGV[1])
-  end
-  if options[:nostop]
-    t.print_nostop_message
   end
 end
