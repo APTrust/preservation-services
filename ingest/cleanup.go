@@ -37,6 +37,12 @@ func (c *Cleanup) CleanAll() (fileCount int, errors []*service.ProcessingError) 
 			errors = append(errors, c.Error(c.IngestObject.Identifier(), err, false))
 		}
 	}
+	if len(errors) == 0 {
+		err := c.deleteFromReceiving()
+		if err != nil {
+			errors = append(errors, c.Error(c.IngestObject.Identifier(), err, false))
+		}
+	}
 	return fileCount, errors
 }
 
@@ -81,6 +87,14 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 	return fileCount, errors
 }
 
+func (c *Cleanup) deleteFromReceiving() error {
+	if BucketUnsafeForDeletion(c.IngestObject.S3Bucket) {
+		return fmt.Errorf("Can't delete %s from receiving because bucket %s doesn't look safe", c.IngestObject.S3Key, c.IngestObject.S3Bucket)
+	}
+	s3Client := c.Context.S3Clients[constants.StorageProviderAWS]
+	return s3Client.RemoveObject(c.IngestObject.S3Bucket, c.IngestObject.S3Key)
+}
+
 func BucketUnsafeForDeletion(bucket string) bool {
-	return strings.Contains(bucket, "preservation") || !strings.Contains(bucket, "staging")
+	return !strings.Contains(bucket, "staging") && !strings.Contains(bucket, "receiving")
 }

@@ -33,6 +33,7 @@ func TestBucketUnsafeForDeletion(t *testing.T) {
 
 	assert.False(t, ingest.BucketUnsafeForDeletion("staging"))
 	assert.False(t, ingest.BucketUnsafeForDeletion("staging.test"))
+	assert.False(t, ingest.BucketUnsafeForDeletion("aptrust.receiving.test.edu"))
 }
 
 func TestCleanAll(t *testing.T) {
@@ -40,6 +41,14 @@ func TestCleanAll(t *testing.T) {
 	bagPath := getBagPath("original", "test.edu.apt-002.tar")
 	cleanup := prepareForCleanup(t, bagPath, cleanupItemID, context)
 	require.NotNil(t, cleanup)
+
+	// Make sure the object is in the receiving bucket before we
+	// call cleanup.
+	objInfo, err := context.S3StatObject(constants.StorageProviderAWS,
+		cleanup.IngestObject.S3Bucket, cleanup.IngestObject.S3Key)
+	assert.Nil(t, err)
+	assert.NotNil(t, objInfo)
+	assert.True(t, objInfo.Size > int64(0))
 
 	// Note that the S3 staging bucket will have 5 files more
 	// than Redis. This is because the staging bucket keeps an
@@ -72,6 +81,13 @@ func TestCleanAll(t *testing.T) {
 
 	items, _, _ := context.RedisClient.GetBatchOfFileKeys(cleanup.WorkItemID, 0, 100)
 	assert.Empty(t, items)
+
+	// Make sure the object is NO LONGER in the receiving bucket
+	// after we call cleanup.
+	objInfo, err = context.S3StatObject(constants.StorageProviderAWS,
+		cleanup.IngestObject.S3Bucket, cleanup.IngestObject.S3Key)
+	require.NotNil(t, err)
+	assert.Equal(t, "The specified key does not exist.", err.Error())
 }
 
 func stagingBucketFileCount(cleanup *ingest.Cleanup) int {
