@@ -125,6 +125,11 @@ func (m *MetadataGatherer) scan(scanner *TarredBagScanner) error {
 // of ingest, the validator will examine the tag files for required tags,
 // and it will compare the file checksums in the working data store with
 // the checksums in the manifests.
+//
+// We also want to keep these manifest and metadata files around for forensic
+// purposes. If ingest stalls or fails, we may be able to find forensics info
+// in these files. For example, sometimes file names, which appear in the
+// manifests, contain strange unicode characters that S3 doesn't like.
 func (m *MetadataGatherer) CopyTempFilesToS3(tempFiles []string) error {
 	bucket := m.Context.Config.StagingBucket
 	for _, filePath := range tempFiles {

@@ -41,8 +41,20 @@ func TestCleanAll(t *testing.T) {
 	cleanup := prepareForCleanup(t, bagPath, cleanupItemID, context)
 	require.NotNil(t, cleanup)
 
+	// Note that the S3 staging bucket will have 5 files more
+	// than Redis. This is because the staging bucket keeps an
+	// extra copy of manifests and tag files. The extra copy is
+	// used during bag validation, and can be used for forensics
+	// if an ingest stalls or fails. The 5 files with duplicate
+	// copies are:
+	//
+	// aptrust-info.txt
+	// bag-info.txt
+	// bagit.txt
+	// manifest-md5.txt
+	// tagmanifest-md5.txt
 	files, _, _ := context.RedisClient.GetBatchOfFileKeys(cleanup.WorkItemID, 0, 100)
-	fileCount := len(files)
+	fileCount := len(files) + 5
 	assert.True(t, fileCount > 0)
 
 	assert.Equal(t, fileCount, stagingBucketFileCount(cleanup))
