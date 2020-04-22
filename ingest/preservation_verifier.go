@@ -12,13 +12,13 @@ import (
 // PreservationVerifier verifies that all files were copied correctly
 // to preservation storage.
 type PreservationVerifier struct {
-	Worker
+	Base
 }
 
 // NewPreservationVerifier returns a new PreservationVerifier.
 func NewPreservationVerifier(context *common.Context, workItemID int, ingestObject *service.IngestObject) *PreservationVerifier {
 	return &PreservationVerifier{
-		Worker: Worker{
+		Base: Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,

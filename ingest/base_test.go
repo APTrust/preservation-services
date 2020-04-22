@@ -11,40 +11,40 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func getIngestWorker() *ingest.Worker {
+func getIngestBase() *ingest.Base {
 	context := common.NewContext()
 	obj := getIngestObject(pathToGoodBag, goodbagMd5)
-	return &ingest.Worker{
+	return &ingest.Base{
 		Context:      context,
 		WorkItemID:   3349,
 		IngestObject: obj,
 	}
 }
 
-func TestIngestWorker_ObjectSave(t *testing.T) {
-	ingestWorker := getIngestWorker()
-	err := ingestWorker.IngestObjectSave()
+func TestIngestBase_ObjectSave(t *testing.T) {
+	ingestBase := getIngestBase()
+	err := ingestBase.IngestObjectSave()
 	require.Nil(t, err)
 
-	client := ingestWorker.Context.RedisClient
-	objIdentifier := ingestWorker.IngestObject.Identifier()
-	obj, err := client.IngestObjectGet(ingestWorker.WorkItemID, objIdentifier)
+	client := ingestBase.Context.RedisClient
+	objIdentifier := ingestBase.IngestObject.Identifier()
+	obj, err := client.IngestObjectGet(ingestBase.WorkItemID, objIdentifier)
 	require.Nil(t, err)
 	require.NotNil(t, obj)
 	assert.Equal(t, objIdentifier, obj.Identifier())
 }
 
-func TestIngestWorker_FileSaveAndGet(t *testing.T) {
-	ingestWorker := getIngestWorker()
+func TestIngestBase_FileSaveAndGet(t *testing.T) {
+	ingestBase := getIngestBase()
 	ingestFile := &service.IngestFile{
-		ObjectIdentifier: ingestWorker.IngestObject.Identifier(),
+		ObjectIdentifier: ingestBase.IngestObject.Identifier(),
 		PathInBag:        "data/images/photo.jpg",
 		UUID:             constants.EmptyUUID,
 	}
-	err := ingestWorker.IngestFileSave(ingestFile)
+	err := ingestBase.IngestFileSave(ingestFile)
 	require.Nil(t, err)
 
-	savedFile, err := ingestWorker.IngestFileGet(ingestFile.Identifier())
+	savedFile, err := ingestBase.IngestFileGet(ingestFile.Identifier())
 	require.Nil(t, err)
 	require.NotNil(t, savedFile)
 	assert.Equal(t, ingestFile.ObjectIdentifier, savedFile.ObjectIdentifier)

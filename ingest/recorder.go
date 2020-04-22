@@ -13,13 +13,13 @@ import (
 // or updating all necessary records, including IntellectualObject,
 // GenericFiles, and PremisEvents.
 type Recorder struct {
-	Worker
+	Base
 }
 
 // NewRecorder returns a new Recorder.
 func NewRecorder(context *common.Context, workItemID int, ingestObject *service.IngestObject) *Recorder {
 	return &Recorder{
-		Worker: Worker{
+		Base: Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,

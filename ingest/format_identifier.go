@@ -15,7 +15,7 @@ import (
 // an external program to determine its file format. Currently, the tool
 // is FIDO, which uses the PRONOM registry to identify formats.
 type FormatIdentifier struct {
-	Worker
+	Base
 	FmtIdentifier *util.FormatIdentifier
 }
 
@@ -31,7 +31,7 @@ func NewFormatIdentifier(context *common.Context, workItemID int, ingestObject *
 			"identify_format.sh. The last should be at %s", pathToScript))
 	}
 	return &FormatIdentifier{
-		Worker: Worker{
+		Base: Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,

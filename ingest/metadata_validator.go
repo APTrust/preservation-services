@@ -12,14 +12,14 @@ import (
 )
 
 type MetadataValidator struct {
-	Worker
+	Base
 	Errors  []string
 	Profile *bagit.Profile
 }
 
 func NewMetadataValidator(context *common.Context, profile *bagit.Profile, ingestObject *service.IngestObject, workItemID int) *MetadataValidator {
 	return &MetadataValidator{
-		Worker: Worker{
+		Base: Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,

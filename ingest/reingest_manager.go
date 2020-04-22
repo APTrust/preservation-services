@@ -40,13 +40,13 @@ import (
 // the ingest process know how to process the object and files. This does not
 // alter new objects at all, only object that have been previously ingested.
 type ReingestManager struct {
-	Worker
+	Base
 }
 
 // NewReingestManager creates a new ReingestManager.
 func NewReingestManager(context *common.Context, workItemID int, ingestObject *service.IngestObject) *ReingestManager {
 	return &ReingestManager{
-		Worker{
+		Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,

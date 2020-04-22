@@ -13,7 +13,7 @@ import (
 // includes S3 files in the staging bucket and processing records in
 // Redis.
 type Cleanup struct {
-	Worker
+	Base
 }
 
 // NewCleanup creates a new Cleanup. This will panic
@@ -21,7 +21,7 @@ type Cleanup struct {
 // not present.
 func NewCleanup(context *common.Context, workItemID int, ingestObject *service.IngestObject) *Cleanup {
 	return &Cleanup{
-		Worker: Worker{
+		Base: Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,

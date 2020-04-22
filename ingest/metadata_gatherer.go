@@ -26,7 +26,7 @@ import (
 // this object to gather the metadata that subsequent workers will
 // need to perform their jobs.
 type MetadataGatherer struct {
-	Worker
+	Base
 }
 
 // NewMetadataGatherer creates a new MetadataGatherer.
@@ -34,7 +34,7 @@ type MetadataGatherer struct {
 // with S3 and our working data store (Redis).
 func NewMetadataGatherer(context *common.Context, workItemID int, ingestObject *service.IngestObject) *MetadataGatherer {
 	return &MetadataGatherer{
-		Worker{
+		Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,

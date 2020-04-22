@@ -16,13 +16,13 @@ import (
 // StagingUploader unpacks a tarfile from a receiving bucket and
 // stores each file unpacked from the tar in a staging bucket.
 type StagingUploader struct {
-	Worker
+	Base
 }
 
 // NewStagingUploader creates a new StagingUploader.
 func NewStagingUploader(context *common.Context, workItemID int, ingestObject *service.IngestObject) *StagingUploader {
 	return &StagingUploader{
-		Worker{
+		Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,

@@ -12,14 +12,14 @@ import (
 
 // PreservationUploader copies files from S3 staging to preservation storage.
 type PreservationUploader struct {
-	Worker
+	Base
 }
 
 // NewPreservationUploader returns a new PerservationUploader which can
 // all files from S3 staging to preservation storage.
 func NewPreservationUploader(context *common.Context, workItemID int, ingestObject *service.IngestObject) *PreservationUploader {
 	return &PreservationUploader{
-		Worker: Worker{
+		Base: Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,
