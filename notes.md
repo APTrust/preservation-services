@@ -148,6 +148,131 @@
    - Delete tar file from ingest bucket
    - Delete Redis metadate (or copy as JSON to S3)
 
+# Scaling Notes
+
+The shared-nothing architecture of the new preservation-services code was designed
+for horizontal scaling. However, when scaling horizontally, we don't need to add
+all nine workers to each additional server. Doing so can cause problems, because
+all of the workers make heavy use of Redis, and a few make heavy use of Pharos.
+These are noted below.
+
+99.9% of ingest bottlenecks come from the time it takes to copy files to S3. (The
+other 0.1% comes from the time it takes to record bags with tens of thousands of
+files in Pharos. Those bags are rare.)
+
+Because S3 is the source of latency, and because S3 can handle way more requests
+than a single instance of Pharos or even Redis, the workers we want to scale are
+those that have lots of S3 I/O. We can scale those across several servers
+(optimized for bandwidth) while keeping only a single instance of other workers.
+
+It may make sense to run Pharos, Redis, and a handful of non-S3-intenstive workers
+on one machine so the workers can talk to Pharos and Redis over the loopback
+interface and not use up network bandwidth.
+
+Here's a list of the ingest workers and their estimated resource usage. Workers
+with an asterisk are candidates for horizontal scaling onto additional servers
+optimized for network I/O. The Storage Worker with two asterisks is a special
+case.
+
+1. Pre-Fetch Worker
+  - S3 read (high)
+  - S3 write (low-moderate)
+  - Redis read (high)
+  - Redis write (high)
+  - Pharos read (low)
+  - Pharos write (low)
+  - CPU (moderate-high)
+  - Memory (low-moderate)
+
+2. Validation Worker
+  - S3 read (none)
+  - S3 write (none)
+  - Redis read (high)
+  - Redis write (high)
+  - Pharos read (low)
+  - Pharos write (low)
+  - CPU (moderate-high)
+  - Memory (low-moderate)
+
+3. Reingest Check Worker
+  - S3 read (none)
+  - S3 write (none)
+  - Redis read (high)
+  - Redis write (high)
+  - Pharos read (high)
+  - Pharos write (low)
+  - CPU (low)
+  - Memory (low)
+
+4. Staging Worker *
+  - S3 read (high)
+  - S3 write (high)
+  - Redis read (high)
+  - Redis write (high)
+  - Pharos read (low)
+  - Pharos write (low)
+  - CPU (moderate)
+  - Memory (low-moderate)
+
+5. File Characterization Worker *
+  - S3 read (moderate-high)
+  - S3 write (none)
+  - Redis read (high)
+  - Redis write (high)
+  - Pharos read (low)
+  - Pharos write (low)
+  - CPU (moderate)
+  - Memory (moderate)
+
+6. Storage Worker **
+  - S3 read (low when copying to AWS, high when copying outside of AWS)
+  - S3 write (low when copying to AWS, high when copying outside of AWS)
+  - Redis read (high)
+  - Redis write (high)
+  - Pharos read (low)
+  - Pharos write (low)
+  - CPU (moderate-high)
+  - Memory (low when copying to AWS, high when copying outside of AWS)
+
+7. Storage Validation Worker *
+  - S3 read (low)
+  - S3 stat (high number of HEAD/Stat calls, not much data)
+  - S3 write (none)
+  - Redis read (high)
+  - Redis write (high)
+  - Pharos read (low)
+  - Pharos write (low)
+  - CPU (low)
+  - Memory (low)
+
+8. Record Worker
+  - S3 read (none)
+  - S3 write (none)
+  - Redis read (high)
+  - Redis write (high)
+  - Pharos read (low)
+  - Pharos write (high)
+  - CPU (low-moderate)
+  - Memory (low)
+
+9. Cleanup Worker
+  - S3 read (low)
+  - S3 write (none)
+  - S3 delete (high)
+  - Redis read (high)
+  - Redis write (low)
+  - Redis delete (high)
+  - Pharos read (low)
+  - Pharos write (low)
+  - CPU (low)
+  - Memory (low)
+
+** It may make sense to run StorageWorkers that read from separate NSQ topics.
+For example, one StorageWorker can handle all objects to be preserved in the AWS
+environment, while another can handle storage in non-AWS environments like
+Wasabi. The system will know from an object's StorageOption property where
+it should be preserved.
+
 # Redis Persistence
 
 Redis must be configured to persist all data to disk, so that it remains available

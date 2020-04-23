@@ -11,6 +11,7 @@ type Base struct {
 	Context      *common.Context
 	IngestObject *service.IngestObject
 	WorkItemID   int
+	Run          func() (int, []*service.ProcessingError)
 }
 
 func (b *Base) IngestFileGet(identifier string) (*service.IngestFile, error) {

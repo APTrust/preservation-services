@@ -38,6 +38,8 @@ func (c *Cleanup) Run() (fileCount int, errors []*service.ProcessingError) {
 		}
 	}
 	if len(errors) == 0 {
+		// TODO: IngestObject should probably have a flag describing
+		// whether the original bag should be deleted from storage.
 		err := c.deleteFromReceiving()
 		if err != nil {
 			errors = append(errors, c.Error(c.IngestObject.Identifier(), err, false))
