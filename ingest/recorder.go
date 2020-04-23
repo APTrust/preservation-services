@@ -27,10 +27,10 @@ func NewRecorder(context *common.Context, workItemID int, ingestObject *service.
 	}
 }
 
-// RecordAll saves all object, file, checksum, and event data to Pharos.
+// Run saves all object, file, checksum, and event data to Pharos.
 // This returns the number of files saved, and a list of any errors that
 // occurred.
-func (r *Recorder) RecordAll() (fileCount int, errors []*service.ProcessingError) {
+func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 	errors = r.recordObject()
 	if len(errors) > 0 {
 		return 0, errors
@@ -46,7 +46,7 @@ func (r *Recorder) RecordAll() (fileCount int, errors []*service.ProcessingError
 // recordObject records the IntellectualObject record in Pharos,
 // along with the object-level events.
 // The IntellectualObject comes from this worker's IngestObject.
-// This method is public so we can test it. Call RecordAll() instead.
+// This method is public so we can test it. Call Run() instead.
 func (r *Recorder) recordObject() (errors []*service.ProcessingError) {
 	if r.IngestObject.SavedToRegistryAt.IsZero() {
 		obj := r.IngestObject.ToIntellectualObject()

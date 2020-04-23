@@ -7,6 +7,7 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"strings"
 	"testing"
 	"time"
 )
@@ -480,4 +481,38 @@ func TestValidator_IsValid(t *testing.T) {
 	validator := setupValidatorAndObject(t,
 		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5, validationID, true)
 	assert.True(t, validator.IsValid())
+}
+
+func TestValidatorRun_GoodBag(t *testing.T) {
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5, validationID, true)
+	fileCount, errors := validator.Run()
+	require.Empty(t, errors)
+	assert.Equal(t, 16, fileCount)
+}
+
+func TestValidatorRun_BadBag(t *testing.T) {
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault,
+		pathToBadBag,
+		badbagMd5,
+		validationID,
+		true)
+	_, errors := validator.Run()
+	require.Equal(t, 3, len(errors))
+	expected := []string{
+		"required tag Title has no value",
+		"tag Access has illegal value",
+		"tag Storage-Option has illegal value",
+	}
+	for _, message := range expected {
+		found := false
+		for _, err := range errors {
+			if strings.Contains(err.Message, message) {
+				found = true
+				break
+			}
+		}
+		assert.True(t, found, message)
+	}
 }

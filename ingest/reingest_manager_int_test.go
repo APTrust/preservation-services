@@ -37,8 +37,9 @@ func PutBagMetadataInRedis(t *testing.T) *service.IngestObject {
 	context := common.NewContext()
 	obj := getIngestObject(pathToGoodBag, goodbagMd5)
 	g := ingest.NewMetadataGatherer(context, TestBagWorkItemId, obj)
-	err := g.ScanBag()
-	require.Nil(t, err)
+	fileCount, errors := g.Run()
+	assert.True(t, fileCount > 0)
+	require.Empty(t, errors)
 
 	// At this point, the IngestObject has tag values
 	// parsed from the actual bag.
@@ -274,14 +275,14 @@ func TestGetNewest(t *testing.T) {
 // This one tests all of the ReingestManager's functions,
 // including the ones not explicitly covered above. Those
 // include: ProcessFiles, ProcessFile, and CompareFiles.
-func TestProcessObject(t *testing.T) {
+func TestReingestManagerRun(t *testing.T) {
 	obj := PutBagMetadataInRedis(t)
 	PutBagMetadataInPharos(t, obj)
 	manager := GetReingestManager()
 	manager.WorkItemID = TestBagWorkItemId
 
-	wasPreviouslyIngested, errors := manager.ProcessObject()
-	assert.True(t, wasPreviouslyIngested)
+	wasPreviouslyIngested, errors := manager.Run()
+	assert.Equal(t, 1, wasPreviouslyIngested)
 	assert.Empty(t, errors, errors)
 
 	// Test basic attributes on each ingest file.
@@ -328,8 +329,8 @@ func TestProcessObject(t *testing.T) {
 	// Now when we process the object again, it should mark all
 	// files as needing save, because all have checksums that
 	// do not match the Pharos checksums.
-	wasPreviouslyIngested, errors = manager.ProcessObject()
-	assert.True(t, wasPreviouslyIngested)
+	wasPreviouslyIngested, errors = manager.Run()
+	assert.Equal(t, 1, wasPreviouslyIngested)
 	assert.Empty(t, errors, errors)
 
 	// Make sure these properties were set...

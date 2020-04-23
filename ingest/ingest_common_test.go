@@ -27,6 +27,11 @@ var pathToGoodBag = testutil.PathToUnitTestBag(keyToGoodBag)
 var goodbagMd5 = "f4323e5e631834c50d077fc3e03c2fed"
 var goodbagSize = int64(40960)
 
+var keyToBadBag = "example.edu.tagsample_bad.tar"
+var pathToBadBag = testutil.PathToUnitTestBag(keyToBadBag)
+var badbagMd5 = "d3def62b6d46744eb44fedd7239752ff"
+var badbagSize = int64(32768)
+
 var goodbagS3Files = []string{
 	"aptrust-info.txt",
 	"bag-info.txt",
@@ -179,7 +184,7 @@ func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string
 	// Scan the bag, so that Redis contains the records that the
 	// validator needs to read.
 	g := ingest.NewMetadataGatherer(context, workItemId, validator.IngestObject)
-	err = g.ScanBag()
+	_, errors := g.Run()
 
 	// Most tests do no produce a bag scanning error, but one does:
 	// bag_validation_test.go / TestBag_SampleWrongFolderName.
@@ -188,7 +193,7 @@ func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string
 	// the rest of the tests from running, so we want to fail early in
 	// those cases.
 	if testForScanError {
-		require.Nil(t, err)
+		require.Empty(t, errors)
 	}
 
 	return validator
@@ -221,8 +226,8 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int, con
 
 	// Scan and validate the bag, so Redis has all the expected data.
 	gatherer := ingest.NewMetadataGatherer(context, workItemId, obj)
-	err = gatherer.ScanBag()
-	require.Nil(t, err)
+	_, errors := gatherer.Run()
+	require.Empty(t, errors)
 
 	// Validate the bag.
 	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
@@ -233,7 +238,7 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int, con
 
 	// Check for reingest
 	reingestManager := ingest.NewReingestManager(context, workItemId, obj)
-	_, errors := reingestManager.ProcessObject()
+	_, errors = reingestManager.Run()
 	require.Empty(t, errors)
 
 	return ingest.NewStagingUploader(context, workItemId, obj)
@@ -243,11 +248,11 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int, con
 // test bag through all phases of ingest prior to preservation upload.
 func prepareForPreservationUpload(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.PreservationUploader {
 	uploader := prepareForCopyToStaging(t, pathToBag, workItemId, context)
-	err := uploader.CopyFilesToStaging()
-	require.Nil(t, err)
+	_, errors := uploader.Run()
+	require.Empty(t, errors)
 
 	fi := ingest.NewFormatIdentifier(context, uploader.WorkItemID, uploader.IngestObject)
-	_, errors := fi.IdentifyFormats()
+	_, errors = fi.Run()
 	require.Empty(t, errors)
 	//assert.Equal(t, 16, numberIdentified)
 	return ingest.NewPreservationUploader(context, workItemId, uploader.IngestObject)
@@ -255,21 +260,21 @@ func prepareForPreservationUpload(t *testing.T, pathToBag string, workItemId int
 
 func prepareForPreservationVerify(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.PreservationVerifier {
 	uploader := prepareForPreservationUpload(t, pathToBag, workItemId, context)
-	_, errors := uploader.UploadAll()
+	_, errors := uploader.Run()
 	require.Empty(t, errors, errors)
 	return ingest.NewPreservationVerifier(context, uploader.WorkItemID, uploader.IngestObject)
 }
 
 func prepareForRecord(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.Recorder {
 	verifier := prepareForPreservationVerify(t, pathToBag, workItemId, context)
-	_, errors := verifier.VerifyAll()
+	_, errors := verifier.Run()
 	require.Empty(t, errors, errors)
 	return ingest.NewRecorder(context, verifier.WorkItemID, verifier.IngestObject)
 }
 
 func prepareForCleanup(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.Cleanup {
 	recorder := prepareForRecord(t, pathToBag, workItemId, context)
-	_, errors := recorder.RecordAll()
+	_, errors := recorder.Run()
 	require.Empty(t, errors, errors)
 	return ingest.NewCleanup(context, recorder.WorkItemID, recorder.IngestObject)
 }

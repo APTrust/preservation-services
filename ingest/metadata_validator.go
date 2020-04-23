@@ -29,6 +29,16 @@ func NewMetadataValidator(context *common.Context, profile *bagit.Profile, inges
 	}
 }
 
+func (v *MetadataValidator) Run() (fileCount int, errors []*service.ProcessingError) {
+	// Validation errors are fatal. We can't ingest an invalid bag.
+	if !v.IsValid() {
+		for _, err := range v.Errors {
+			errors = append(errors, v.Error(v.IngestObject.Identifier(), fmt.Errorf(err), true))
+		}
+	}
+	return v.IngestObject.FileCount, errors
+}
+
 func (v *MetadataValidator) IsValid() bool {
 	if !v.SerializationOk() {
 		return false

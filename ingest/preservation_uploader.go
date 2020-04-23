@@ -27,7 +27,7 @@ func NewPreservationUploader(context *common.Context, workItemID int, ingestObje
 	}
 }
 
-// UploadAll uploads all of a bag's files that should be preserved to each
+// Run uploads all of a bag's files that should be preserved to each
 // of the preservation buckets in which they should be preserved. It returns
 // the number of files processed and an error, if there was one.
 //
@@ -38,7 +38,7 @@ func NewPreservationUploader(context *common.Context, workItemID int, ingestObje
 //
 // The StorageRecords attached to each IngestFile record where and when each
 // file was uploaded.
-func (uploader *PreservationUploader) UploadAll() (int, []*service.ProcessingError) {
+func (uploader *PreservationUploader) Run() (int, []*service.ProcessingError) {
 	uploadFn := uploader.getUploadFunction()
 	options := service.IngestFileApplyOptions{
 		MaxErrors:   30,
@@ -88,7 +88,7 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 // Since staging bucket and upload target are both within AWS,
 // we can use CopyObject to do a bucket-to-bucket copy.
 //
-// Avoid calling this directly. Call UploadAll() instead. This is
+// Avoid calling this directly. Call Run() instead. This is
 // public so we can test it.
 func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) *service.ProcessingError {
 	client, err := uploader.getS3Client(uploadTarget.Provider)
@@ -130,7 +130,7 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 // stream data from source, through localhost, to destination. That
 // will be slow.
 //
-// Avoid calling this directly. Call UploadAll() instead. This is
+// Avoid calling this directly. Call Run() instead. This is
 // public so we can test it.
 func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) *service.ProcessingError {
 	srcClient, err := uploader.getS3Client(constants.StorageProviderAWS)

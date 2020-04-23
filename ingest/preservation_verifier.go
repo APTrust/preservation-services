@@ -26,13 +26,13 @@ func NewPreservationVerifier(context *common.Context, workItemID int, ingestObje
 	}
 }
 
-// VerifyAll verifies that all files were copied to preservation storage.
+// Run verifies that all files were copied to preservation storage.
 // Note that this relies on the StorageRecords attached to each IngestFile.
 // It does not attempt to ensure that the StorageRecords themselves are
 // valid for the StorageOption. The PerservationUploader is responsible for
 // that. This just verifies that the PreservationUploader did what it said
 // it did.
-func (v *PreservationVerifier) VerifyAll() (int, []*service.ProcessingError) {
+func (v *PreservationVerifier) Run() (int, []*service.ProcessingError) {
 	verifyFn := v.getVerifyFunction()
 	options := service.IngestFileApplyOptions{
 		MaxErrors:   30,

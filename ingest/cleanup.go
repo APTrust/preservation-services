@@ -29,7 +29,7 @@ func NewCleanup(context *common.Context, workItemID int, ingestObject *service.I
 	}
 }
 
-func (c *Cleanup) CleanAll() (fileCount int, errors []*service.ProcessingError) {
+func (c *Cleanup) Run() (fileCount int, errors []*service.ProcessingError) {
 	fileCount, errors = c.deleteFilesFromStaging()
 	if len(errors) == 0 {
 		_, err := c.Context.RedisClient.WorkItemDelete(c.WorkItemID)

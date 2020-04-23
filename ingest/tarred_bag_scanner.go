@@ -47,8 +47,8 @@ type TarredBagScanner struct {
 // (a string slice). The caller should process the temp files as it pleases,
 // and then delete them using this object's DeleteTempFiles method.
 //
-// For an example of how to use this object, see the ScanBag method in
-// https://github.com/APTrust/preservation-services/blob/master/ingest/metadata_gatherer.go
+// For an example of how to use this object, see the Run method in
+// ingest/metadata_gatherer.go
 func NewTarredBagScanner(reader io.ReadCloser, ingestObject *service.IngestObject, tempDir string) *TarredBagScanner {
 	return &TarredBagScanner{
 		IngestObject: ingestObject,

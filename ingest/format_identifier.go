@@ -40,7 +40,7 @@ func NewFormatIdentifier(context *common.Context, workItemID int, ingestObject *
 	}
 }
 
-// IdentifyFormats runs all of the files belonging to this object's IngestObject
+// Run runs all of the files belonging to this object's IngestObject
 // the format identifier script. It saves format information data within each
 // IngestFile record in Redis. If the script completes without error but is
 // unable to identify a file, the IngestFile record will keep the original
@@ -52,7 +52,7 @@ func NewFormatIdentifier(context *common.Context, workItemID int, ingestObject *
 // successful if the returned count matches the IngestObject's FileCount.
 // If not all files were identified, you re-run this function. It's intelligent
 // enough to skip files that were successfully identified on a previous run.
-func (fi *FormatIdentifier) IdentifyFormats() (int, []*service.ProcessingError) {
+func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 	identify := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		// No need to re-identify if already id'd by FIDO
 		if ingestFile.FormatIdentifiedBy == constants.FmtIdFido {

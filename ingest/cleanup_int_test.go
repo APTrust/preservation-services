@@ -36,7 +36,7 @@ func TestBucketUnsafeForDeletion(t *testing.T) {
 	assert.False(t, ingest.BucketUnsafeForDeletion("aptrust.receiving.test.edu"))
 }
 
-func TestCleanAll(t *testing.T) {
+func TestCleanupRun(t *testing.T) {
 	context := common.NewContext()
 	bagPath := getBagPath("original", "test.edu.apt-002.tar")
 	cleanup := prepareForCleanup(t, bagPath, cleanupItemID, context)
@@ -68,7 +68,7 @@ func TestCleanAll(t *testing.T) {
 
 	assert.Equal(t, fileCount, stagingBucketFileCount(cleanup))
 
-	filesDeleted, errors := cleanup.CleanAll()
+	filesDeleted, errors := cleanup.Run()
 	require.Empty(t, errors)
 	assert.Equal(t, fileCount, filesDeleted)
 
