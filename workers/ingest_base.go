@@ -9,31 +9,11 @@ import (
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
-	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/nsqio/go-nsq"
 )
-
-// IngestItem encapsulates everything that a worker will need to
-// pass from one channel to the next during procesing.
-type IngestItem struct {
-
-	// NSQMessage is the NSQ message the worker is processing.
-	NSQMessage *nsq.Message
-
-	// Processor is handles whatever phase of the ingest process
-	// this worker is responsible for (validation, storage, recording, etc.)
-	Processor *ingest.Base
-
-	// WorkResult describes the result of this worker's work.
-	WorkResult *service.WorkResult
-
-	// WorkItem is the Pharos WorkItem that describes the bag, object,
-	// of file the worker is working on.
-	WorkItem *registry.WorkItem
-}
 
 // IngestBase contains the fundamental structures common to all workers.
 type IngestBase struct {
