@@ -12,6 +12,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/nsqio/go-nsq"
 )
 
@@ -71,6 +72,41 @@ func (b *IngestBase) HandleMessage(message *nsq.Message) error {
 		b.Context.Logger.Error(procErr.Error())
 		return fmt.Errorf(procErr.Error())
 	}
+
+	// ------------------------------------------------------
+	//
+	// START HERE
+	//
+	// TODO: If workItem.Retry is false, reject with proper note.
+
+	// Note that returning nil tells NSQ that a worker is
+	// working on this item, even if it's not us. We don't
+	// want to requeue duplicates, and we don't want to return
+	// an error, because that's equivalent to FIN/failed.
+	if b.OtherWorkerIsHandlingThis(workItem) {
+		return nil
+	}
+	if b.ImAlreadyProcessingThis(workItem) {
+		return nil
+	}
+
+	// TODO: Implement this and set WorkItem.Status to "Suspended"
+	// if older version is still ingesting.
+	// if b.StillIngestingOlderVersion(workItem) {
+	// 	return nil
+	// }
+
+	// This is a tricky case. We need to be sure NOT to delete
+	// the newer item from receiving.
+	if b.ShouldAbandonForNewerVersion(workItem) {
+		b.PushToQueue(workItem, constants.IngestCleanup)
+	}
+
+	// TODO: Also check SupersededByNewerRequest
+	// TODO: Check if older version is in progress
+	//       and set status to constants.StatusSuspended
+
+	// ------------------------------------------------------
 
 	ingestItem := &IngestItem{
 		NSQMessage: message,
@@ -188,4 +224,87 @@ func (b *IngestBase) FindNewerIngestRequest(workItem *registry.WorkItem) *regist
 		}
 	}
 	return nil
+}
+
+func (b *IngestBase) SupersededByNewerRequest(workItem *registry.WorkItem) bool {
+	newerWorkItem := b.FindNewerIngestRequest(workItem)
+	if newerWorkItem != nil {
+		b.Context.Logger.Info("Skipping WorkItem %d because a newer version of this bag is waiting to be ingested in WorkItem %d", workItem.ID, newerWorkItem.ID)
+		return true
+	}
+	return false
+}
+
+// OtherWorkerIsHandlingThis returns true if some other worker is already
+// processing this message. This happens often with large ingests that
+// take longer to process than NSQ's maximum allowed timeout.
+func (b *IngestBase) OtherWorkerIsHandlingThis(workItem *registry.WorkItem) bool {
+	hostname, _ := os.Hostname()
+	if workItem.Node != hostname || workItem.Pid != os.Getpid() {
+		b.Context.Logger.Info("Skipping WorkItem %d because it's being processed by host %s, pid %d", workItem.ID, workItem.Node, workItem.Pid)
+		return true
+	}
+	return false
+}
+
+// ImAlreadyProcessingThis returns true and logs a message if this WorkItem
+// is already being processed by this worker. This happens with large bags
+// when NSQ thinks the item has timed out and tries to reassign it to a new
+// worker.
+func (b *IngestBase) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
+	if b.ItemsInProcess.Contains(strconv.Itoa(workItem.ID)) {
+		b.Context.Logger.Info("Skipping WorkItem %d because this worker is already working on it host %s, pid %d", workItem.ID, workItem.Node, workItem.Pid)
+		return true
+	}
+	return false
+}
+
+// ShouldAbandonForNewerVersion returns true and logs a message
+// if the bag in the depositor's receiving bucket was altered
+// after the WorkItem was created. In those cases, we typically want to
+// stop ingesting the current bag, cancel the WorkItem, and get to work
+// on the new bag. The exception is when we've reached the storage phase.
+// At that point, we're committed. We should complete the current ingest
+// and then process the new one as an update.
+func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) bool {
+	isLateStageOfIngest := util.StringListContains(constants.LateStagesOfIngest, b.NSQTopic)
+	if !isLateStageOfIngest {
+		objInfo, err := b.Context.S3StatObject(
+			constants.StorageProviderAWS,
+			workItem.Bucket,
+			workItem.Name)
+		if err != nil {
+			if strings.Contains(err.Error(), "key does not exist") {
+				b.Context.Logger.Info("Stopping work on WorkItem %s because bag %s was deleted from %s", workItem.ID, workItem.Name, workItem.Bucket)
+				return true
+			}
+			// This should never happen, due to checks at startup that
+			// panic if provider is missing.
+			if strings.Contains(err.Error(), "No S3 client for provider") {
+				b.Context.Logger.Error("Can't check S3 for %s/%s because there's no S3 provider for %s", workItem.Bucket, workItem.Name, constants.StorageProviderAWS)
+				return true
+			}
+		} else {
+			// No error. We should have objInfo
+			if objInfo.ETag != "" && objInfo.ETag != workItem.ETag {
+				b.Context.Logger.Info("Stopping work on WorkItem %s because a newer version of bag %s was found in %s", workItem.ID, workItem.Name, workItem.Bucket)
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Push to queue pushes the specified WorkItem to the named nsqTopic.
+func (b *IngestBase) PushToQueue(workItem *registry.WorkItem, nsqTopic string) {
+	err := b.Context.NSQClient.Enqueue(
+		nsqTopic,
+		workItem.ID)
+	if err != nil {
+		msg := fmt.Sprintf("Error adding WorkItem %d (%s/%s) to NSQ topic %s: %v",
+			workItem.ID, workItem.Bucket, workItem.Name, nsqTopic, err)
+		b.Context.Logger.Errorf(msg)
+		workItem.Note = msg
+		b.SaveWorkItem(workItem)
+	}
 }

@@ -89,6 +89,7 @@ const (
 	StatusPending              = "Pending"
 	StatusStarted              = "Started"
 	StatusSuccess              = "Success"
+	StatusSuspended            = "Suspended"
 	StorageClassStandard       = "Standard"
 	StorageClassIntelligent    = "Intelligent-Tiering"
 	StorageClassStandardIA     = "Standard IA"
@@ -157,4 +158,11 @@ var CompletedStatusValues = []string{
 var IncompleteStatusValues = []string{
 	StatusPending,
 	StatusStarted,
+}
+
+var LateStagesOfIngest = []string{
+	IngestStorage,
+	IngestStorageValidation,
+	IngestRecord,
+	IngestCleanup,
 }
