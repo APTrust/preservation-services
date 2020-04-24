@@ -1,6 +1,10 @@
 package workers
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
@@ -19,8 +23,8 @@ type IngestItem struct {
 	// this worker is responsible for (validation, storage, recording, etc.)
 	Processor *ingest.Base
 
-	// OperationResult describes the result of this worker's work.
-	OperationResult *service.OperationResult
+	// WorkResult describes the result of this worker's work.
+	WorkResult *service.WorkResult
 
 	// WorkItem is the Pharos WorkItem that describes the bag, object,
 	// of file the worker is working on.
@@ -73,4 +77,66 @@ func NewIngestBase(_context *common.Context, bufSize int, nsqTopic string) Inges
 		ProcessChannel:     make(chan *IngestItem, bufSize),
 		PostProcessChannel: make(chan *IngestItem, bufSize),
 	}
+}
+
+func (b *IngestBase) HandleMessage(message *nsq.Message) error {
+	// Get the WorkItem from Pharos. If we can't, it's fatal.
+	workItem, procErr := b.GetWorkItem(message)
+	if procErr != nil && procErr.IsFatal {
+		b.Context.Logger.Error(procErr.Error())
+		return fmt.Errorf(procErr.Error())
+	}
+
+	// Get the WorkResult from Redis, or create a new one.
+	// Errors here are not fatal, so just log them.
+	workResult, procErr := b.GetWorkResult(workItem.ID)
+	if procErr != nil {
+		b.Context.Logger.Error(procErr.Error())
+	}
+
+	ingestItem := &IngestItem{
+		NSQMessage: message,
+		WorkResult: workResult,
+		WorkItem:   workItem,
+	}
+
+	b.PreProcessChannel <- ingestItem
+
+	return nil
+}
+
+func (b *IngestBase) GetWorkItem(message *nsq.Message) (*registry.WorkItem, *service.ProcessingError) {
+	msgBody := strings.TrimSpace(string(message.Body))
+	b.Context.Logger.Info("NSQ Message body: '%s'", msgBody)
+	workItemID, err := strconv.Atoi(string(msgBody))
+	if err != nil || workItemID == 0 {
+		fullErr := fmt.Errorf("Could not get WorkItemId from NSQ message body: %v", err)
+		return nil, b.Error(0, msgBody, fullErr, false)
+	}
+	resp := b.Context.PharosClient.WorkItemGet(workItemID)
+	if resp.Error != nil {
+		fullErr := fmt.Errorf("Error getting WorkItem %d from Pharos: %v", workItemID, resp.Error)
+		return nil, b.Error(workItemID, msgBody, fullErr, false)
+	}
+	workItem := resp.WorkItem()
+	if workItem == nil {
+		fullErr := fmt.Errorf("Pharos returned nil for WorkItem %d", workItemID)
+		return nil, b.Error(workItemID, msgBody, fullErr, true)
+	}
+	return workItem, nil
+}
+
+func (b *IngestBase) Error(workItemID int, identifier string, err error, isFatal bool) *service.ProcessingError {
+	return service.NewProcessingError(
+		workItemID,
+		identifier,
+		err.Error(),
+		isFatal,
+	)
+}
+
+// GetWorkResult returns an WorkResult object for this WorkItem. If one
+// already exists in Redis, it returns that. If not, it creates a new one.
+func (b *IngestBase) GetWorkResult(workItemID int) (*service.WorkResult, *service.ProcessingError) {
+	return nil, nil
 }
