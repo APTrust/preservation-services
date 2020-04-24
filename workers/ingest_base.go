@@ -2,9 +2,13 @@ package workers
 
 import (
 	"fmt"
+	"net/url"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
@@ -67,7 +71,8 @@ type IngestBase struct {
 
 // NewIngestBase creates a new IngestBase worker. Param context is a
 // Context object with connections to S3, Redis, Pharos, and NSQ.
-// Param bufSize describes the size of the queue buffers.
+// Param bufSize describes the size of the queue buffers. The values
+// for opnames/topics are listed in constants.IngestOpNames.
 func NewIngestBase(_context *common.Context, bufSize int, nsqTopic string) IngestBase {
 	return IngestBase{
 		Context:            _context,
@@ -87,24 +92,26 @@ func (b *IngestBase) HandleMessage(message *nsq.Message) error {
 		return fmt.Errorf(procErr.Error())
 	}
 
-	// Get the WorkResult from Redis, or create a new one.
-	// Errors here are not fatal, so just log them.
-	workResult, procErr := b.GetWorkResult(workItem.ID)
-	if procErr != nil {
-		b.Context.Logger.Error(procErr.Error())
-	}
-
 	ingestItem := &IngestItem{
 		NSQMessage: message,
-		WorkResult: workResult,
+		WorkResult: b.GetWorkResult(workItem.ID),
 		WorkItem:   workItem,
 	}
+
+	// Should we automatically reject the item if it has fatal
+	// errors from the prior work attempt? If so, check before
+	// resetting.
+	ingestItem.WorkResult.Reset()
+	ingestItem.WorkResult.Attempt++
+	ingestItem.WorkResult.Host, _ = os.Hostname()
+	ingestItem.WorkResult.Pid = os.Getpid()
 
 	b.PreProcessChannel <- ingestItem
 
 	return nil
 }
 
+// GetWorkItem returns the WorkItem we should be working on.
 func (b *IngestBase) GetWorkItem(message *nsq.Message) (*registry.WorkItem, *service.ProcessingError) {
 	msgBody := strings.TrimSpace(string(message.Body))
 	b.Context.Logger.Info("NSQ Message body: '%s'", msgBody)
@@ -126,6 +133,7 @@ func (b *IngestBase) GetWorkItem(message *nsq.Message) (*registry.WorkItem, *ser
 	return workItem, nil
 }
 
+// Error creates a new ProcessingError.
 func (b *IngestBase) Error(workItemID int, identifier string, err error, isFatal bool) *service.ProcessingError {
 	return service.NewProcessingError(
 		workItemID,
@@ -137,7 +145,67 @@ func (b *IngestBase) Error(workItemID int, identifier string, err error, isFatal
 
 // GetWorkResult returns an WorkResult object for this WorkItem. If one
 // already exists in Redis, it returns that. If not, it creates a new one.
-func (b *IngestBase) GetWorkResult(workItemID int) (*service.WorkResult, *service.ProcessingError) {
-	// WorkResultGet(workItemID int, operationName string) (*service.WorkResult, error)
-	return nil, nil
+func (b *IngestBase) GetWorkResult(workItemID int) *service.WorkResult {
+	workResult, err := b.Context.RedisClient.WorkResultGet(workItemID, b.NSQTopic)
+	if err != nil {
+		b.Context.Logger.Info("No WorkResult in Redis for WorkItem %d. Creating a new one.", workItemID)
+		workResult = service.NewWorkResult(b.NSQTopic)
+	}
+	return workResult
+}
+
+// SaveWorkResult saves a WorkResult to Redis and logs an error if any occurs.
+// Will try three times, in case Redis is busy.
+func (b *IngestBase) SaveWorkResult(workItemID int, result *service.WorkResult) {
+	for i := 0; i < 3; i++ {
+		err := b.Context.RedisClient.WorkResultSave(workItemID, result)
+		if err == nil {
+			break
+		}
+		if i == 2 {
+			b.Context.Logger.Info("Error saving WorkResult for WorkItem %d: %v", workItemID, err)
+		}
+		time.Sleep(time.Duration(250) * time.Millisecond)
+	}
+}
+
+// SaveWorkItem saves a WorkItem back to Pharos.
+func (b *IngestBase) SaveWorkItem(workItem *registry.WorkItem) {
+	resp := b.Context.PharosClient.WorkItemSave(workItem)
+	if resp.Error != nil {
+		b.Context.Logger.Error("Error saving WorkItem %d to Pharos: %v",
+			workItem.ID, resp.Error)
+	}
+}
+
+// FindRelatedWorkItems finds WorkItems with the same action and bagname
+// as param WorkItem that have not completed processing.
+func (b *IngestBase) FindOtherIngestRequests(workItem *registry.WorkItem) []*registry.WorkItem {
+	v := url.Values{}
+	v.Add("per_page", "20")
+	v.Add("name", workItem.Name)
+	v.Add("item_action", constants.ActionIngest)
+	v.Add("sort", "date") // Pharos changes this to 'date desc'
+	resp := b.Context.PharosClient.WorkItemList(v)
+	if resp.Error != nil {
+		b.Context.Logger.Error("Error getting WorkItems list from Pharos: %v",
+			resp.Error)
+	}
+	return resp.WorkItems()
+}
+
+// FindNewerIngestRequest returns an ingest WorkItem newer than WorkItem
+// whose ETag differs. If this exists (and it usually doesn't), it means
+// the depositor uploaded a newer version of the bag and we should ingest
+// that version instead of the one pointed to by the older WorkItem. (In
+// fact, the newer tar file has overwritten the older one in the depositor's
+// receiving bucket.)
+func (b *IngestBase) FindNewerIngestRequest(workItem *registry.WorkItem) *registry.WorkItem {
+	items := b.FindOtherIngestRequests(workItem)
+	for _, item := range items {
+		if item.Date.After(workItem.Date) && item.ETag != workItem.ETag && !item.ProcessingHasCompleted() {
+			return item
+		}
+	}
+	return nil
 }

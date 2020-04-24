@@ -60,3 +60,18 @@ func TestWorkItemSerializeForPharos(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, itemJsonForPharos, string(actualJson))
 }
+
+func TestWorkItemProcessingHasCompleted(t *testing.T) {
+	for _, status := range constants.CompletedStatusValues {
+		item := &registry.WorkItem{
+			Status: status,
+		}
+		assert.True(t, item.ProcessingHasCompleted())
+	}
+	for _, status := range constants.IncompleteStatusValues {
+		item := &registry.WorkItem{
+			Status: status,
+		}
+		assert.False(t, item.ProcessingHasCompleted())
+	}
+}

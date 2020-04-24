@@ -3,6 +3,9 @@ package registry
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/util"
 )
 
 type WorkItem struct {
@@ -49,6 +52,10 @@ func (item *WorkItem) ToJSON() ([]byte, error) {
 		return nil, err
 	}
 	return bytes, nil
+}
+
+func (item *WorkItem) ProcessingHasCompleted() bool {
+	return util.StringListContains(constants.CompletedStatusValues, item.Status)
 }
 
 // See TODO below. This is logged in Trello as

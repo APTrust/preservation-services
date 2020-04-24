@@ -110,6 +110,20 @@ const (
 	StorageWasabiVA            = "Wasabi-VA"
 )
 
+var IngestOpNames []string = []string{
+	IngestPreFetch,
+	IngestValidation,
+	IngestReingestCheck,
+	IngestStaging,
+	IngestFormatIdentification,
+	IngestStorage,
+	IngestStorageValidation,
+	IngestRecord,
+	IngestCleanup,
+}
+
+var IngestTopicNames = IngestOpNames
+
 var PreferredAlgsInOrder []string = []string{
 	AlgSha512,
 	AlgSha256,
@@ -132,4 +146,15 @@ var StorageOptions = []string{
 	StorageStandard,
 	StorageWasabiOR,
 	StorageWasabiVA,
+}
+
+var CompletedStatusValues = []string{
+	StatusCancelled,
+	StatusFailed,
+	StatusSuccess,
+}
+
+var IncompleteStatusValues = []string{
+	StatusPending,
+	StatusStarted,
 }
