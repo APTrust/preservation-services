@@ -138,5 +138,6 @@ func (b *IngestBase) Error(workItemID int, identifier string, err error, isFatal
 // GetWorkResult returns an WorkResult object for this WorkItem. If one
 // already exists in Redis, it returns that. If not, it creates a new one.
 func (b *IngestBase) GetWorkResult(workItemID int) (*service.WorkResult, *service.ProcessingError) {
+	// WorkResultGet(workItemID int, operationName string) (*service.WorkResult, error)
 	return nil, nil
 }

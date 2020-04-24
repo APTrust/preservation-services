@@ -276,7 +276,7 @@ func TestIngestFileApply_WithError(t *testing.T) {
 func TestWorkResultSaveAndGet(t *testing.T) {
 	client := getRedisClient()
 	require.NotNil(t, client)
-	result := service.NewWorkResult(constants.OpIngestGatherMeta)
+	result := service.NewWorkResult(constants.IngestPreFetch)
 	result.AddError(fatalErr)
 	err := client.WorkResultSave(9999, result)
 	assert.Nil(t, err)
@@ -284,7 +284,7 @@ func TestWorkResultSaveAndGet(t *testing.T) {
 	retrievedResult, err := client.WorkResultGet(9999, result.Operation)
 	assert.Nil(t, err)
 	assert.NotNil(t, retrievedResult)
-	assert.Equal(t, constants.OpIngestGatherMeta, retrievedResult.Operation)
+	assert.Equal(t, constants.IngestPreFetch, retrievedResult.Operation)
 	assert.Equal(t, 1, len(retrievedResult.Errors))
 	assert.Equal(t, fatalErr, retrievedResult.Errors[0])
 	assert.True(t, retrievedResult.HasFatalErrors())
@@ -293,7 +293,7 @@ func TestWorkResultSaveAndGet(t *testing.T) {
 func TestWorkResultSaveAndDelete(t *testing.T) {
 	client := getRedisClient()
 	require.NotNil(t, client)
-	result := service.NewWorkResult(constants.OpIngestGatherMeta)
+	result := service.NewWorkResult(constants.IngestPreFetch)
 	err := client.WorkResultSave(9999, result)
 	assert.Nil(t, err)
 
@@ -301,7 +301,7 @@ func TestWorkResultSaveAndDelete(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, retrievedResult)
 
-	err = client.WorkResultDelete(9999, constants.OpIngestGatherMeta)
+	err = client.WorkResultDelete(9999, constants.IngestPreFetch)
 	require.Nil(t, err)
 
 	deletedResult, _ := client.WorkResultGet(9999, result.Operation)

@@ -155,7 +155,7 @@ func TestFatalErrors(t *testing.T) {
 }
 
 func TestWorkResultToJson(t *testing.T) {
-	result := service.NewWorkResult(constants.OpIngestGatherMeta)
+	result := service.NewWorkResult(constants.IngestPreFetch)
 	result.Attempt = 4
 	result.Host = "Bogus-Host-Name"
 	result.Pid = 1234
@@ -169,7 +169,7 @@ func TestWorkResultToJson(t *testing.T) {
 func TestWorkResultFromJson(t *testing.T) {
 	result, err := service.WorkResultFromJSON(expectedJson)
 	require.Nil(t, err)
-	assert.Equal(t, constants.OpIngestGatherMeta, result.Operation)
+	assert.Equal(t, constants.IngestPreFetch, result.Operation)
 	assert.Equal(t, "Bogus-Host-Name", result.Host)
 	assert.Equal(t, 1234, result.Pid)
 	assert.Equal(t, testutil.Bloomsday, result.StartedAt)
@@ -177,4 +177,4 @@ func TestWorkResultFromJson(t *testing.T) {
 	assert.Equal(t, 0, len(result.Errors))
 }
 
-const expectedJson = `{"attempt":4,"operation":"Ingest - Gather Metadata","host":"Bogus-Host-Name","pid":1234,"started_at":"1904-06-16T15:04:05Z","finished_at":"1904-06-16T15:04:05Z","errors":[]}`
+const expectedJson = `{"attempt":4,"operation":"ingest01_prefetch","host":"Bogus-Host-Name","pid":1234,"started_at":"1904-06-16T15:04:05Z","finished_at":"1904-06-16T15:04:05Z","errors":[]}`
