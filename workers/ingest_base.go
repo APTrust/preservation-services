@@ -80,27 +80,29 @@ func (b *IngestBase) HandleMessage(message *nsq.Message) error {
 	}
 
 	// If there's any reason to skip this, return nil to tell
-	// NSQ it's done.
+	// NSQ it's done. This function also sets some properties on
+	// the WorkItem, so admins and depositors will know the item's
+	// state. So save the WorkItem before returning.
 	if b.ShouldSkipThis(workItem) {
+		b.SaveWorkItem(workItem)
 		return nil
 	}
 
+	// Set up the IngestItem.
 	ingestItem := &IngestItem{
 		NSQMessage: message,
 		WorkResult: b.GetWorkResult(workItem.ID),
 		WorkItem:   workItem,
 	}
 
-	// Should we automatically reject the item if it has fatal
-	// errors from the prior work attempt? If so, check before
-	// resetting.
-	ingestItem.WorkResult.Reset()
-	ingestItem.WorkResult.Attempt++
-	ingestItem.WorkResult.Host, _ = os.Hostname()
-	ingestItem.WorkResult.Pid = os.Getpid()
+	// Tell Pharos and Redis we're starting work on this
+	b.MarkAsStarted(ingestItem)
 
+	// Put the item into the PreProcess channel, which
+	// will set up the Processor to handle it.
 	b.PreProcessChannel <- ingestItem
 
+	// Return nil (no error) so NSQ knows we're working on this.
 	return nil
 }
 
@@ -143,7 +145,13 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	// It's possible that another worker recently marked this as
 	// "do not retry." If that's the case, skip it.
 	if workItem.Retry == false {
-		b.Context.Logger.Info("Rejecting WorkItem %d because retry = false", workItem.ID)
+		message := fmt.Sprintf("Rejecting WorkItem %d because retry = false", workItem.ID)
+		workItem.MarkNoLongerInProgress(
+			workItem.Stage,
+			workItem.Status,
+			message,
+		)
+		b.Context.Logger.Info(message)
 		return true
 	}
 
@@ -264,7 +272,13 @@ func (b *IngestBase) StillIngestingOlderVersion(workItem *registry.WorkItem) boo
 	items := b.FindOtherIngestRequests(workItem)
 	for _, item := range items {
 		if item.Date.Before(workItem.Date) && item.Retry && !item.ProcessingHasCompleted() {
-			b.Context.Logger.Info("Skipping WorkItem %d because a prior version of this bag is still being ingested in WorkItem %d. If that item is stale, mark it as Succeeded, Failed, or Cancelled.", workItem.ID, item.ID)
+			message := fmt.Sprintf("Skipping WorkItem %d because a prior version of this bag is still being ingested in WorkItem %d.", workItem.ID, item.ID)
+			b.Context.Logger.Info(message)
+			workItem.MarkNoLongerInProgress(
+				workItem.Stage,
+				workItem.Status,
+				message,
+			)
 			return true
 		}
 	}
@@ -277,7 +291,14 @@ func (b *IngestBase) StillIngestingOlderVersion(workItem *registry.WorkItem) boo
 func (b *IngestBase) SupersededByNewerRequest(workItem *registry.WorkItem) bool {
 	newerWorkItem := b.FindNewerIngestRequest(workItem)
 	if newerWorkItem != nil && !b.IsLateStageOfIngest() {
-		b.Context.Logger.Info("Skipping WorkItem %d because a newer version of this bag is waiting to be ingested in WorkItem %d", workItem.ID, newerWorkItem.ID)
+		message := fmt.Sprintf("Skipping WorkItem %d because a newer version of this bag is waiting to be ingested in WorkItem %d", workItem.ID, newerWorkItem.ID)
+		b.Context.Logger.Info(message)
+		workItem.MarkNoLongerInProgress(
+			workItem.Stage,
+			constants.StatusCancelled,
+			message,
+		)
+		workItem.Retry = false
 		return true
 	}
 	return false
@@ -334,24 +355,59 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 			workItem.Name)
 		if err != nil {
 			if strings.Contains(err.Error(), "key does not exist") {
-				b.Context.Logger.Info("Stopping work on WorkItem %s because bag %s was deleted from %s", workItem.ID, workItem.Name, workItem.Bucket)
+				message := fmt.Sprintf("Stopping work on WorkItem %d because bag %s was deleted from %s", workItem.ID, workItem.Name, workItem.Bucket)
+				b.Context.Logger.Info(message)
+				workItem.MarkNoLongerInProgress(
+					workItem.Stage,
+					constants.StatusCancelled,
+					message,
+				)
+				workItem.Retry = false
 				return true
 			}
 			// This should never happen, due to checks at startup that
 			// panic if provider is missing.
 			if strings.Contains(err.Error(), "No S3 client for provider") {
-				b.Context.Logger.Error("Can't check S3 for %s/%s because there's no S3 provider for %s", workItem.Bucket, workItem.Name, constants.StorageProviderAWS)
+				message := fmt.Sprintf("Can't check S3 for %s/%s because there's no S3 provider for %s", workItem.Bucket, workItem.Name, constants.StorageProviderAWS)
+				b.Context.Logger.Error(message)
+				workItem.MarkNoLongerInProgress(
+					workItem.Stage,
+					workItem.Status,
+					message,
+				)
 				return true
 			}
 		} else {
 			// No error. We should have objInfo
 			if objInfo.ETag != "" && objInfo.ETag != workItem.ETag {
-				b.Context.Logger.Info("Stopping work on WorkItem %s because a newer version of bag %s was found in %s", workItem.ID, workItem.Name, workItem.Bucket)
+				message := fmt.Sprintf("Stopping work on WorkItem %d because a newer version of bag %s was found in %s", workItem.ID, workItem.Name, workItem.Bucket)
+				b.Context.Logger.Info(message)
+				workItem.MarkNoLongerInProgress(
+					workItem.Stage,
+					constants.StatusCancelled,
+					message,
+				)
+				workItem.Retry = false
 				return true
 			}
 		}
 	}
 	return false
+}
+
+func (b *IngestBase) MarkAsStarted(ingestItem *IngestItem) {
+	ingestItem.WorkResult.Reset()
+	ingestItem.WorkResult.Attempt++
+	ingestItem.WorkResult.Host, _ = os.Hostname()
+	ingestItem.WorkResult.Pid = os.Getpid()
+	b.SaveWorkResult(ingestItem.WorkItem.ID, ingestItem.WorkResult)
+
+	ingestItem.WorkItem.MarkInProgress(
+		ingestItem.WorkItem.Stage,
+		constants.StatusStarted,
+		fmt.Sprintf("Item has started stage %s", ingestItem.WorkItem.Stage),
+	)
+	b.SaveWorkItem(ingestItem.WorkItem)
 }
 
 // PushToQueue pushes the specified WorkItem to the named nsqTopic.
