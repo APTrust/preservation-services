@@ -65,6 +65,12 @@ func NewIngestBase(_context *common.Context, bufSize int, nsqTopic string) Inges
 	}
 }
 
+// HandleMessage checks to see whether we should process this message at
+// all. If so, it packages up an IngestItem with everything except the
+// Processor object (an instance of ingest.Base). It puts the IngestItem
+// in the the PreProcessChannel. From there, the worker should instantiate
+// and assign the right IngestItem.Processor type and push the item into
+// the ProcessChannel.
 func (b *IngestBase) HandleMessage(message *nsq.Message) error {
 	// Get the WorkItem from Pharos. If we can't, it's fatal.
 	workItem, procErr := b.GetWorkItem(message)
@@ -73,40 +79,11 @@ func (b *IngestBase) HandleMessage(message *nsq.Message) error {
 		return fmt.Errorf(procErr.Error())
 	}
 
-	// ------------------------------------------------------
-	//
-	// START HERE
-	//
-	// TODO: If workItem.Retry is false, reject with proper note.
-
-	// Note that returning nil tells NSQ that a worker is
-	// working on this item, even if it's not us. We don't
-	// want to requeue duplicates, and we don't want to return
-	// an error, because that's equivalent to FIN/failed.
-	if b.OtherWorkerIsHandlingThis(workItem) {
+	// If there's any reason to skip this, return nil to tell
+	// NSQ it's done.
+	if b.ShouldSkipThis(workItem) {
 		return nil
 	}
-	if b.ImAlreadyProcessingThis(workItem) {
-		return nil
-	}
-
-	// TODO: Implement this and set WorkItem.Status to "Suspended"
-	// if older version is still ingesting.
-	// if b.StillIngestingOlderVersion(workItem) {
-	// 	return nil
-	// }
-
-	// This is a tricky case. We need to be sure NOT to delete
-	// the newer item from receiving.
-	if b.ShouldAbandonForNewerVersion(workItem) {
-		b.PushToQueue(workItem, constants.IngestCleanup)
-	}
-
-	// TODO: Also check SupersededByNewerRequest
-	// TODO: Check if older version is in progress
-	//       and set status to constants.StatusSuspended
-
-	// ------------------------------------------------------
 
 	ingestItem := &IngestItem{
 		NSQMessage: message,
@@ -157,6 +134,61 @@ func (b *IngestBase) Error(workItemID int, identifier string, err error, isFatal
 		err.Error(),
 		isFatal,
 	)
+}
+
+// ShouldSkipThis returns true if there are any reasons not process this
+// WorkItem.
+func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
+
+	// It's possible that another worker recently marked this as
+	// "do not retry." If that's the case, skip it.
+	if workItem.Retry == false {
+		b.Context.Logger.Info("Rejecting WorkItem %d because retry = false", workItem.ID)
+		return true
+	}
+
+	// Note that returning nil tells NSQ that a worker is
+	// working on this item, even if it's not us. We don't
+	// want to requeue duplicates, and we don't want to return
+	// an error, because that's equivalent to FIN/failed.
+	if b.OtherWorkerIsHandlingThis(workItem) {
+		return true
+	}
+
+	// See if this worker is already processing this item.
+	// This happens sometimes when NSQ thinks the item has
+	// timed out while a worker is validating or storing
+	// an object.
+	if b.ImAlreadyProcessingThis(workItem) {
+		return true
+	}
+
+	// TODO: Implement this and set WorkItem.Status to "Suspended"
+	// if older version is still ingesting.
+	if b.StillIngestingOlderVersion(workItem) {
+		return true
+	}
+
+	// There's a newer ingest request in Pharos' WorkItems list,
+	// and we're not too far along to abandon this.
+	if b.SupersededByNewerRequest(workItem) {
+		b.PushToQueue(workItem, constants.IngestCleanup)
+		return true
+	}
+
+	// In this case, there's a newer version of the bag in
+	// the depositor's receiving bucket, and the Pharos WorkItems
+	// list my not have even picked it up yet.
+	//
+	// The flag IngestObject.ShouldDeleteFromReceiving stays false
+	// unless ingest is complete or the bag is in valid, so the
+	// cleanup worker should not delete the newer item from receiving.
+	if b.ShouldAbandonForNewerVersion(workItem) {
+		b.PushToQueue(workItem, constants.IngestCleanup)
+		return true
+	}
+
+	return false
 }
 
 // GetWorkResult returns an WorkResult object for this WorkItem. If one
@@ -226,9 +258,25 @@ func (b *IngestBase) FindNewerIngestRequest(workItem *registry.WorkItem) *regist
 	return nil
 }
 
+// StillIngestingOlderVersion returns true if it looks like we're still
+// processing an older ingest request for this bag.
+func (b *IngestBase) StillIngestingOlderVersion(workItem *registry.WorkItem) bool {
+	items := b.FindOtherIngestRequests(workItem)
+	for _, item := range items {
+		if item.Date.Before(workItem.Date) && item.Retry && !item.ProcessingHasCompleted() {
+			b.Context.Logger.Info("Skipping WorkItem %d because a prior version of this bag is still being ingested in WorkItem %d. If that item is stale, mark it as Succeeded, Failed, or Cancelled.", workItem.ID, item.ID)
+			return true
+		}
+	}
+	return false
+}
+
+// SupersededByNewerRequest returns true if Pharos has an ingest request
+// for this same item that's newer than the one we're processing AND we're
+// not already in a late stage of ingest.
 func (b *IngestBase) SupersededByNewerRequest(workItem *registry.WorkItem) bool {
 	newerWorkItem := b.FindNewerIngestRequest(workItem)
-	if newerWorkItem != nil {
+	if newerWorkItem != nil && !b.IsLateStageOfIngest() {
 		b.Context.Logger.Info("Skipping WorkItem %d because a newer version of this bag is waiting to be ingested in WorkItem %d", workItem.ID, newerWorkItem.ID)
 		return true
 	}
@@ -259,6 +307,18 @@ func (b *IngestBase) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
 	return false
 }
 
+// IsLateStageOfIngest returns true if we're at or beyound a point in the
+// ingest process where all of an object's files have been copied to the
+// staging area. At this point most of the heavy work has been done, and
+// the ingest workers no longer need to reference the object in the depositor's
+// receiving bucket, so it's best to finish the ingest process, even if a newer
+// ingest request is pending. If we have to complete this request and the
+// newer one, the newer one will simply count as an update/reingest of the
+// current object.
+func (b *IngestBase) IsLateStageOfIngest() bool {
+	return util.StringListContains(constants.LateStagesOfIngest, b.NSQTopic)
+}
+
 // ShouldAbandonForNewerVersion returns true and logs a message
 // if the bag in the depositor's receiving bucket was altered
 // after the WorkItem was created. In those cases, we typically want to
@@ -267,8 +327,7 @@ func (b *IngestBase) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
 // At that point, we're committed. We should complete the current ingest
 // and then process the new one as an update.
 func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) bool {
-	isLateStageOfIngest := util.StringListContains(constants.LateStagesOfIngest, b.NSQTopic)
-	if !isLateStageOfIngest {
+	if !b.IsLateStageOfIngest() {
 		objInfo, err := b.Context.S3StatObject(
 			constants.StorageProviderAWS,
 			workItem.Bucket,
@@ -295,7 +354,7 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 	return false
 }
 
-// Push to queue pushes the specified WorkItem to the named nsqTopic.
+// PushToQueue pushes the specified WorkItem to the named nsqTopic.
 func (b *IngestBase) PushToQueue(workItem *registry.WorkItem, nsqTopic string) {
 	err := b.Context.NSQClient.Enqueue(
 		nsqTopic,

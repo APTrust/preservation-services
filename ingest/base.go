@@ -7,6 +7,7 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 )
 
+// Base is the base type for workers in the ingest namespace.
 type Base struct {
 	Context      *common.Context
 	IngestObject *service.IngestObject
@@ -14,6 +15,7 @@ type Base struct {
 	Run          func() (int, []*service.ProcessingError)
 }
 
+// IngestFileGet returns an IngestFile record from Redis.
 func (b *Base) IngestFileGet(identifier string) (*service.IngestFile, error) {
 	ingestFile, err := b.Context.RedisClient.IngestFileGet(b.WorkItemID, identifier)
 	if err != nil {
@@ -24,6 +26,7 @@ func (b *Base) IngestFileGet(identifier string) (*service.IngestFile, error) {
 	return ingestFile, err
 }
 
+// IngestFileSave saves an IngestFile to Redis.
 func (b *Base) IngestFileSave(ingestFile *service.IngestFile) error {
 	err := b.Context.RedisClient.IngestFileSave(b.WorkItemID, ingestFile)
 	if err != nil {
@@ -34,6 +37,7 @@ func (b *Base) IngestFileSave(ingestFile *service.IngestFile) error {
 	return err
 }
 
+// IngestObjectSave saves an IngestObject record to Redis.
 func (b *Base) IngestObjectSave() error {
 	err := b.Context.RedisClient.IngestObjectSave(b.WorkItemID, b.IngestObject)
 	if err != nil {
@@ -44,10 +48,17 @@ func (b *Base) IngestObjectSave() error {
 	return err
 }
 
+// S3KeyFor returns the S3 key for an ingest file in the staging bucket.
+// Note that the staging bucket uses UUID keys, not file identifiers.
 func (b *Base) S3KeyFor(ingestFile *service.IngestFile) string {
 	return fmt.Sprintf("%d/%s", b.WorkItemID, ingestFile.UUID)
 }
 
+// Error returns a ProcessingError describing something that went wrong
+// during the ingest process for this object. Identifier can be either
+// an IntellectualObect identifier, a GenericFile identifier, or in rare
+// cases a WorkItem ID. Since each has a different format, you can discern
+// the identifier type by looking at it.
 func (b *Base) Error(identifier string, err error, isFatal bool) *service.ProcessingError {
 	return service.NewProcessingError(
 		b.WorkItemID,

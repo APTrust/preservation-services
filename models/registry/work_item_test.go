@@ -75,3 +75,57 @@ func TestWorkItemProcessingHasCompleted(t *testing.T) {
 		assert.False(t, item.ProcessingHasCompleted())
 	}
 }
+
+func TestWorkItemSetNodeAndPid(t *testing.T) {
+	item := &registry.WorkItem{}
+	assert.Equal(t, "", item.Node)
+	assert.Equal(t, 0, item.Pid)
+	item.SetNodeAndPid()
+	assert.NotEqual(t, "", item.Node)
+	assert.NotEqual(t, 0, item.Pid)
+}
+
+func TestWorkItemClearNodeAndPid(t *testing.T) {
+	item := &registry.WorkItem{
+		Node: "worker.aptrust.org",
+		Pid:  1234,
+	}
+	assert.Equal(t, "worker.aptrust.org", item.Node)
+	assert.Equal(t, 1234, item.Pid)
+	item.ClearNodeAndPid()
+	assert.Equal(t, "", item.Node)
+	assert.Equal(t, 0, item.Pid)
+}
+
+func TestWorkItemMarkInProgress(t *testing.T) {
+	item := &registry.WorkItem{}
+	item.MarkInProgress(
+		constants.StageRecord,
+		constants.StatusStarted,
+		"Recording ingest metadata in Pharos",
+	)
+	// Not this also sets node and pid
+	assert.NotEqual(t, "", item.Node)
+	assert.NotEqual(t, 0, item.Pid)
+	assert.Equal(t, constants.StageRecord, item.Stage)
+	assert.Equal(t, constants.StatusStarted, item.Status)
+	assert.Equal(t, "Recording ingest metadata in Pharos", item.Note)
+	assert.False(t, item.StageStartedAt.IsZero())
+}
+
+func TestWorkItemMarkNoLongerInProgress(t *testing.T) {
+	item := &registry.WorkItem{
+		Node: "worker.aptrust.org",
+		Pid:  1234,
+	}
+	item.MarkNoLongerInProgress(
+		constants.StageCleanup,
+		constants.StatusPending,
+		"Recorded ingest metadata in Pharos, awaiting cleanup",
+	)
+	assert.Equal(t, "", item.Node)
+	assert.Equal(t, 0, item.Pid)
+	assert.Equal(t, constants.StageCleanup, item.Stage)
+	assert.Equal(t, constants.StatusPending, item.Status)
+	assert.Equal(t, "Recorded ingest metadata in Pharos, awaiting cleanup", item.Note)
+}

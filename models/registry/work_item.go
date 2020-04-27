@@ -2,12 +2,15 @@ package registry
 
 import (
 	"encoding/json"
+	"os"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/util"
 )
 
+// WorkItem is a Pharos WorkItem that describes a task to be completed
+// and its current stage and status.
 type WorkItem struct {
 	APTrustApprover       string    `json:"aptrust_approver"`
 	Action                string    `json:"action"`
@@ -37,6 +40,8 @@ type WorkItem struct {
 	User                  string    `json:"user"`
 }
 
+// WorkItemFromJSON converts a JSON representation of a WorkItem to
+// a WorkItem object.
 func WorkItemFromJSON(jsonData []byte) (*WorkItem, error) {
 	item := &WorkItem{}
 	err := json.Unmarshal(jsonData, item)
@@ -46,6 +51,7 @@ func WorkItemFromJSON(jsonData []byte) (*WorkItem, error) {
 	return item, nil
 }
 
+// ToJSON converts a WorkItem to its JSON representation.
 func (item *WorkItem) ToJSON() ([]byte, error) {
 	bytes, err := json.Marshal(item)
 	if err != nil {
@@ -54,16 +60,26 @@ func (item *WorkItem) ToJSON() ([]byte, error) {
 	return bytes, nil
 }
 
+// ProcessingHasCompleted returns true if this WorkItem in an of
+// the final states of "Succeeded", "Failed", or "Cancelled." Those
+// states indicate that no further processing should occur on this
+// WorkItem.
 func (item *WorkItem) ProcessingHasCompleted() bool {
 	return util.StringListContains(constants.CompletedStatusValues, item.Status)
 }
 
+// SerializeForPharos serializes this WorkItem to be PUT or POSTed
+// to Pharos.
+//
 // See TODO below. This is logged in Trello as
 // https://trello.com/c/ZBBxFWid
 func (item *WorkItem) SerializeForPharos() ([]byte, error) {
 	return json.Marshal(NewWorkItemForPharos(item))
 }
 
+// WorkItemForPharos is a struct that boils down a WorkItem object
+// to the fields that Pharos will accept for PUT and POST requests.
+//
 // TODO: This needs to be fixed in Pharos.
 // While other controllers want JSON in the format
 // { "item_name": <object> }, the WorkItems controller
@@ -95,6 +111,8 @@ type WorkItemForPharos struct {
 	User                  string    `json:"user"`
 }
 
+// NewWorkItemForPharos converts WorkItem to a struct that Pharos will
+// accept in PUT and POST requests.
 func NewWorkItemForPharos(item *WorkItem) *WorkItemForPharos {
 	return &WorkItemForPharos{
 		APTrustApprover:       item.APTrustApprover,
@@ -121,4 +139,39 @@ func NewWorkItemForPharos(item *WorkItem) *WorkItemForPharos {
 		Status:                item.Status,
 		User:                  item.User,
 	}
+}
+
+// SetNodeAndPid sets the Node and Pid properties of this WorkItem to
+// the hostname and pid of the current worker/process.
+func (item *WorkItem) SetNodeAndPid() {
+	hostname, _ := os.Hostname()
+	item.Node = hostname
+	item.Pid = os.Getpid()
+}
+
+// ClearNodeAndPid sets this WorkItem's Node to an empty string and its
+// Pid to zero.
+func (item *WorkItem) ClearNodeAndPid() {
+	item.Node = ""
+	item.Pid = 0
+}
+
+// MarkInProgress sets this WorkItem's Node and Pid, as well as the
+// Stage, Status, and Note.
+func (item *WorkItem) MarkInProgress(stage, status, note string) {
+	item.SetNodeAndPid()
+	item.Stage = stage
+	item.Status = status
+	item.Note = note
+	item.StageStartedAt = time.Now().UTC()
+}
+
+// MarkNoLongerInProgress clears this WorkItem's Node and Pid, and sets
+// the Stage, Status, and Note. The caller should also set Retry and
+// NeedsAdminReview if necessary.
+func (item *WorkItem) MarkNoLongerInProgress(stage, status, note string) {
+	item.ClearNodeAndPid()
+	item.Stage = stage
+	item.Status = status
+	item.Note = note
 }
