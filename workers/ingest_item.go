@@ -28,6 +28,12 @@ type IngestItem struct {
 	WorkItem *registry.WorkItem
 
 	nsqStopChannel chan bool
+
+	// For testing
+	nsqStartCalled bool
+
+	// For testing
+	tickerStopped bool
 }
 
 // NSQStart creates a timer that touches the NSQ message
@@ -46,10 +52,12 @@ func (item *IngestItem) NSQStart() {
 				item.NSQMessage.Touch()
 			case <-stopChannel:
 				ticker.Stop()
+				item.tickerStopped = true
 				return
 			}
 		}
 	}()
+	item.nsqStartCalled = true
 	item.nsqStopChannel = stopChannel
 }
 
@@ -64,4 +72,16 @@ func (item *IngestItem) NSQRequeue(delay time.Duration) {
 func (item *IngestItem) NSQFinish(delay time.Duration) {
 	item.nsqStopChannel <- true
 	item.NSQMessage.Finish()
+}
+
+// StartCalled returns true if NSQStart() has been called on this object.
+// This method exist for testing purposes.
+func (item *IngestItem) StartCalled() bool {
+	return item.nsqStartCalled
+}
+
+// TickerStopped returns true if either NSQFinish() or NSQRequeue()
+// has been called. This method exist for testing purposes.
+func (item *IngestItem) TickerStopped() bool {
+	return item.tickerStopped
 }

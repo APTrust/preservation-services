@@ -395,19 +395,27 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 	return false
 }
 
+// MarkAsStarted tells Pharos, Redis, and NSQ that work on this
+// item has started.
 func (b *IngestBase) MarkAsStarted(ingestItem *IngestItem) {
+	// Redis...
 	ingestItem.WorkResult.Reset()
 	ingestItem.WorkResult.Attempt++
 	ingestItem.WorkResult.Host, _ = os.Hostname()
 	ingestItem.WorkResult.Pid = os.Getpid()
 	b.SaveWorkResult(ingestItem.WorkItem.ID, ingestItem.WorkResult)
 
+	// Pharos...
 	ingestItem.WorkItem.MarkInProgress(
 		ingestItem.WorkItem.Stage,
 		constants.StatusStarted,
 		fmt.Sprintf("Item has started stage %s", ingestItem.WorkItem.Stage),
 	)
 	b.SaveWorkItem(ingestItem.WorkItem)
+
+	// NSQ. Note that this disables NSQ autoresponse, and pings
+	// NSQ every few minutes to say we're still working on the item.
+	ingestItem.NSQStart()
 }
 
 // PushToQueue pushes the specified WorkItem to the named nsqTopic.
@@ -421,5 +429,8 @@ func (b *IngestBase) PushToQueue(workItem *registry.WorkItem, nsqTopic string) {
 		b.Context.Logger.Errorf(msg)
 		workItem.Note = msg
 		b.SaveWorkItem(workItem)
+	} else {
+		b.Context.Logger.Info("Pushed WorkItem %d (%s/%s) to NSQ topic %s",
+			workItem.ID, workItem.Bucket, workItem.Name, nsqTopic)
 	}
 }
