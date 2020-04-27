@@ -35,6 +35,11 @@ func (v *MetadataValidator) Run() (fileCount int, errors []*service.ProcessingEr
 		for _, err := range v.Errors {
 			errors = append(errors, v.Error(v.IngestObject.Identifier(), fmt.Errorf(err), true))
 		}
+		v.IngestObject.ShouldDeleteFromReceiving = true
+		err := v.IngestObjectSave()
+		if err != nil {
+			errors = append(errors, v.Error(v.IngestObject.Identifier(), err, false))
+		}
 	}
 	return v.IngestObject.FileCount, errors
 }

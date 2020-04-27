@@ -42,6 +42,7 @@ type Config struct {
 	LogLevel                          logging.Level
 	MaxDaysSinceFixityCheck           int
 	MaxFileSize                       int64
+	MaxWorkerAttempts                 int
 	NsqLookupd                        string
 	NsqURL                            string
 	PharosAPIKey                      string
@@ -123,6 +124,7 @@ func loadConfig() *Config {
 		LogLevel:                          getLogLevel(v.GetString("LOG_LEVEL")),
 		MaxDaysSinceFixityCheck:           v.GetInt("MAX_DAYS_SINCE_LAST_FIXITY"),
 		MaxFileSize:                       v.GetInt64("MAX_FILE_SIZE"),
+		MaxWorkerAttempts:                 v.GetInt("MAX_WORKER_ATTEMPTS"),
 		NsqLookupd:                        v.GetString("NSQ_LOOKUPD"),
 		NsqURL:                            v.GetString("NSQ_URL"),
 		PharosAPIKey:                      v.GetString("PHAROS_API_KEY"),

@@ -488,6 +488,7 @@ func TestValidatorRun_GoodBag(t *testing.T) {
 		constants.BagItProfileDefault, pathToGoodBag, goodbagMd5, validationID, true)
 	fileCount, errors := validator.Run()
 	require.Empty(t, errors)
+	assert.False(t, validator.IngestObject.ShouldDeleteFromReceiving)
 	assert.Equal(t, 16, fileCount)
 }
 
@@ -499,6 +500,7 @@ func TestValidatorRun_BadBag(t *testing.T) {
 		validationID,
 		true)
 	_, errors := validator.Run()
+	assert.True(t, validator.IngestObject.ShouldDeleteFromReceiving)
 	require.Equal(t, 3, len(errors))
 	expected := []string{
 		"required tag Title has no value",

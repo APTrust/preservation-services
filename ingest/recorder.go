@@ -40,6 +40,19 @@ func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 		return 0, errors
 	}
 	fileCount, errors = r.recordFiles()
+	if len(errors) == 0 {
+		// This tells the cleanup process that it's safe to
+		// delete the original tar file from the receiving bucket.
+		// If the save fails and the cleanup worker doesn't get
+		// the message, just log it. The tar file will eventually be
+		// deleted by the bucket policy, but we want to know the
+		// error occurred.
+		r.IngestObject.ShouldDeleteFromReceiving = true
+		err := r.IngestObjectSave()
+		if err != nil {
+			r.Context.Logger.Errorf("WorkItem %d. After marking ShouldDeletedFromReceiving = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
+		}
+	}
 	return fileCount, errors
 }
 
