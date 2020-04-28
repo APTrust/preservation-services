@@ -7,12 +7,17 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 )
 
+type BaseConstructor func(*common.Context, int, *service.IngestObject) Runnable
+
+type Runnable interface {
+	Run() (int, []*service.ProcessingError)
+}
+
 // Base is the base type for workers in the ingest namespace.
 type Base struct {
 	Context      *common.Context
 	IngestObject *service.IngestObject
 	WorkItemID   int
-	Run          func() (int, []*service.ProcessingError)
 }
 
 // IngestFileGet returns an IngestFile record from Redis.

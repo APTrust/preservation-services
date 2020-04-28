@@ -18,7 +18,7 @@ type IngestItem struct {
 
 	// Processor is handles whatever phase of the ingest process
 	// this worker is responsible for (validation, storage, recording, etc.)
-	Processor *ingest.Base
+	Processor ingest.Runnable
 
 	// WorkResult describes the result of this worker's work.
 	WorkResult *service.WorkResult

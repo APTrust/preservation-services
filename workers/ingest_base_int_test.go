@@ -6,8 +6,10 @@ import (
 	"testing"
 
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
+	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/APTrust/preservation-services/workers"
 	"github.com/minio/minio-go/v6"
@@ -72,10 +74,15 @@ func doSetup(t *testing.T, context *common.Context, key, pathToBagFile string) i
 	return workItemID
 }
 
+func createMetadataGatherer(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+	return ingest.NewMetadataGatherer(context, workItemID, ingestObject)
+}
+
 func TestNewIngestBase(t *testing.T) {
 	var bufSize = 20
 	ingestBase := workers.NewIngestBase(
 		common.NewContext(),
+		createMetadataGatherer,
 		bufSize,
 		constants.IngestPreFetch,
 	)
@@ -84,9 +91,10 @@ func TestNewIngestBase(t *testing.T) {
 	assert.Equal(t, constants.IngestPreFetch+"_worker_chan", ingestBase.NSQChannel)
 	assert.Equal(t, constants.IngestPreFetch, ingestBase.NSQTopic)
 	assert.NotNil(t, ingestBase.ItemsInProcess)
-	assert.NotNil(t, ingestBase.PreProcessChannel)
 	assert.NotNil(t, ingestBase.ProcessChannel)
-	assert.NotNil(t, ingestBase.PostProcessChannel)
+	assert.NotNil(t, ingestBase.SuccessChannel)
+	assert.NotNil(t, ingestBase.ErrorChannel)
+	assert.NotNil(t, ingestBase.FatalErrorChannel)
 }
 
 func TestIngestBase_HandleMessage(t *testing.T) {

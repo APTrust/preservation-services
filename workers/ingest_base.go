@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
@@ -42,40 +43,54 @@ type IngestBase struct {
 	// constants.
 	NSQTopic string
 
-	// PreProcessChannel runs checks to ensure that IngestItem should be
-	// processed. Since NSQ does not de-dupe messages, the workers must
-	// do this themselves.
-	PreProcessChannel chan *IngestItem
-
 	// ProcessChannel is where the work actually happens: validation,
 	// storage, recording, etc., depending on the worker's responsibility.
 	ProcessChannel chan *IngestItem
 
-	// PostProcessChannel is for updating Pharos and NSQ on the status
-	// of work. Successfully completed tasks are passed on to the next
-	// NSQ topic. Unsuccessful tasks are requeued or sent straight to
-	// the cleanup topic. The WorkItem is updated in Pharos with info
-	// about its current state and stage.
-	PostProcessChannel chan *IngestItem
+	// SuccessChannel processes items that have gone through the
+	// ProcessChannel with no errors.
+	SuccessChannel chan *IngestItem
+
+	// ErrorChannel processes items that have gone through the
+	// ProcessChannel with one or more non-fatal errors. These items
+	// typically should be retried.
+	ErrorChannel chan *IngestItem
+
+	// FatalErrorChannel processes items that have gone through the
+	// ProcessChannel with one or more fatal errors. These items
+	// typically should not be retried.
+	FatalErrorChannel chan *IngestItem
+
+	// institutionCache maps institution ids to identifiers. The institution
+	// identifier is typically a domain name like "virginia.edu", "test.org",
+	// etc.
+	institutionCache map[int]string
 
 	// nsqConsumer implements HandleMessage to receive messages from NSQ.
 	nsqConsumer *nsq.Consumer
+
+	// processorConstructor is a function that returns an instance of
+	// *ingest.Base that will handle the processing for this worker.
+	processorConstructor ingest.BaseConstructor
 }
 
 // NewIngestBase creates a new IngestBase worker. Param context is a
 // Context object with connections to S3, Redis, Pharos, and NSQ.
 // Param bufSize describes the size of the queue buffers. The values
 // for opnames/topics are listed in constants.IngestOpNames.
-func NewIngestBase(context *common.Context, bufSize int, nsqTopic string) IngestBase {
+func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, bufSize int, nsqTopic string) IngestBase {
 	return IngestBase{
-		BufferSize:         bufSize,
-		Context:            context,
-		NSQChannel:         nsqTopic + "_worker_chan",
-		NSQTopic:           nsqTopic,
-		ItemsInProcess:     service.NewRingList(bufSize),
-		PreProcessChannel:  make(chan *IngestItem, bufSize),
-		ProcessChannel:     make(chan *IngestItem, bufSize),
-		PostProcessChannel: make(chan *IngestItem, bufSize),
+		BufferSize:           bufSize,
+		Context:              context,
+		NSQChannel:           nsqTopic + "_worker_chan",
+		NSQTopic:             nsqTopic,
+		ItemsInProcess:       service.NewRingList(bufSize),
+		ProcessChannel:       make(chan *IngestItem, bufSize),
+		SuccessChannel:       make(chan *IngestItem, bufSize),
+		ErrorChannel:         make(chan *IngestItem, bufSize),
+		FatalErrorChannel:    make(chan *IngestItem, bufSize),
+		processorConstructor: processorConstructor,
+		institutionCache:     make(map[int]string),
 	}
 }
 
@@ -117,11 +132,24 @@ func (b *IngestBase) HandleMessage(message *nsq.Message) error {
 		return nil
 	}
 
+	workResult := b.GetWorkResult(workItem.ID)
+	ingestObject, err := b.GetIngestObject(workItem)
+	if err != nil {
+		message := fmt.Sprintf("WorkItem %d: %v", workItem.ID, err)
+		b.Context.Logger.Error(message)
+		workItem.Note = message
+		b.SaveWorkItem(workItem)
+		workResult.Attempt++
+		b.SaveWorkResult(workItem.ID, workResult)
+		return err
+	}
+
 	// Set up the IngestItem.
 	ingestItem := &IngestItem{
 		NSQMessage: message,
-		WorkResult: b.GetWorkResult(workItem.ID),
+		WorkResult: workResult,
 		WorkItem:   workItem,
+		Processor:  b.processorConstructor(b.Context, workItem.ID, ingestObject),
 	}
 
 	// Tell Pharos and Redis we're starting work on this
@@ -129,7 +157,7 @@ func (b *IngestBase) HandleMessage(message *nsq.Message) error {
 
 	// Put the item into the PreProcess channel, which
 	// will set up the Processor to handle it.
-	b.PreProcessChannel <- ingestItem
+	b.ProcessChannel <- ingestItem
 
 	// Return nil (no error) so NSQ knows we're working on this.
 	return nil
@@ -226,6 +254,50 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	}
 
 	return false
+}
+
+// GetInstitutionIdentifier returns the identifier for the institution
+// with the specified ID.
+func (b *IngestBase) GetInstitutionIdentifier(instID int) (string, error) {
+	if _, ok := b.institutionCache[instID]; !ok {
+		v := url.Values{}
+		v.Add("order", "name")
+		v.Add("per_page", "200")
+		resp := b.Context.PharosClient.InstitutionList(v)
+		if resp.Error != nil {
+			return "", resp.Error
+		}
+		for _, inst := range resp.Institutions() {
+			b.institutionCache[inst.ID] = inst.Identifier
+		}
+	}
+	return b.institutionCache[instID], nil
+}
+
+// GetIngestObject returns the IngestObject for the specified WorkItem from
+// Redis, or it creates a new one. For the first phase of ingest (PreFetch),
+// this will almost always have to create a new IngestObject. For subsequent
+// phases, it should never have to create one.
+func (b *IngestBase) GetIngestObject(workItem *registry.WorkItem) (*service.IngestObject, error) {
+	ingestObject, err := b.Context.RedisClient.IngestObjectGet(workItem.ID, workItem.ObjectIdentifier)
+	if err == nil && ingestObject != nil {
+		return ingestObject, nil
+	}
+	if err != nil && b.NSQChannel != constants.IngestPreFetch {
+		return nil, fmt.Errorf("Ingest object not found in Redis")
+	}
+	instID, err := b.GetInstitutionIdentifier(workItem.InstitutionID)
+	if err != nil {
+		return nil, err
+	}
+	return service.NewIngestObject(
+		workItem.Bucket,
+		workItem.Name,
+		workItem.ETag,
+		instID,
+		workItem.InstitutionID,
+		workItem.Size,
+	), nil
 }
 
 // GetWorkResult returns an WorkResult object for this WorkItem. If one
@@ -408,7 +480,7 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 			}
 		} else {
 			// No error. We should have objInfo
-			if objInfo.ETag != "" && objInfo.ETag != workItem.ETag {
+			if objInfo.ETag != "" && strings.Replace(objInfo.ETag, "\"", "", -1) != workItem.ETag {
 				message := fmt.Sprintf("Stopping work on WorkItem %d because a newer version of bag %s was found in %s", workItem.ID, workItem.Name, workItem.Bucket)
 				b.Context.Logger.Info(message)
 				workItem.MarkNoLongerInProgress(
