@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/APTrust/preservation-services/bagit"
@@ -9,6 +10,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
+	"github.com/APTrust/preservation-services/util/testutil"
 )
 
 type MetadataValidator struct {
@@ -21,14 +23,21 @@ type MetadataValidator struct {
 // to set validator.Profile to a BagItProfile object before calling Run().
 // This is an unfortunate side effect of the need to conform to a common
 // constructor pattern.
-func NewMetadataValidator(context *common.Context, ingestObject *service.IngestObject, workItemID int) *MetadataValidator {
+func NewMetadataValidator(context *common.Context, workItemID int, ingestObject *service.IngestObject) *MetadataValidator {
+	profileName := ingestObject.BagItProfileFormat()
+	profile, err := getProfile(profileName)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot load BagIt profile %s", profileName))
+	}
+	context.Logger.Info("WorkItem %d: Loaded profile %s for bag %s", workItemID, profileName, ingestObject.Identifier())
 	return &MetadataValidator{
 		Base: Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,
 		},
-		Errors: make([]string, 0),
+		Profile: profile,
+		Errors:  make([]string, 0),
 	}
 }
 
@@ -373,4 +382,12 @@ func (v *MetadataValidator) RecordMissing(filetype string, requiredByProfile, pr
 		}
 	}
 	return ok
+}
+
+// TODO: Should these be pre-loaded into the executable?
+// TODO: testutil doesn't belong in non-test code.
+// Valid names are constants.BagItProfileBTR and constant.BagItProfileDefault
+func getProfile(name string) (*bagit.Profile, error) {
+	filename := path.Join(testutil.ProjectRoot(), "profiles", name)
+	return bagit.ProfileLoad(filename)
 }

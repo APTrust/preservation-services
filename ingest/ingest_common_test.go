@@ -157,7 +157,7 @@ func getMetadataValidator(t *testing.T, profileName, pathToBag, bagMd5 string, w
 	require.Nil(t, err)
 	require.NotNil(t, profile)
 	obj := getIngestObject(pathToBag, bagMd5)
-	validator := ingest.NewMetadataValidator(context, obj, workItemId)
+	validator := ingest.NewMetadataValidator(context, workItemId, obj)
 	require.NotNil(t, validator)
 	validator.Profile = profile
 	return validator
@@ -234,7 +234,7 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int, con
 	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
 	profile, err := bagit.ProfileLoad(filename)
 	require.Nil(t, err)
-	validator := ingest.NewMetadataValidator(context, obj, workItemId)
+	validator := ingest.NewMetadataValidator(context, workItemId, obj)
 	validator.Profile = profile
 	require.True(t, validator.IsValid())
 
