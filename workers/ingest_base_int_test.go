@@ -49,8 +49,9 @@ func queueWorkItem(t *testing.T, context *common.Context, workItemID int) {
 	require.Nil(t, err)
 }
 
-func doSetup(t *testing.T, context *common.Context, key, pathToBagFile string) int {
+func doSetup(t *testing.T, key, pathToBagFile string) int {
 	if workItemID == 0 {
+		context := common.NewContext()
 		putBagInS3(t, context, key, pathToBagFile)
 		inst := context.PharosClient.InstitutionGet("test.edu").Institution()
 		require.NotNil(t, inst)
@@ -63,6 +64,8 @@ func doSetup(t *testing.T, context *common.Context, key, pathToBagFile string) i
 			ETag:          goodbagMd5,
 			InstitutionID: inst.ID,
 			Name:          key,
+			Note:          "Item is awaiting ingest",
+			Outcome:       constants.StatusPending,
 			Retry:         true,
 			Size:          goodbagSize,
 			Stage:         constants.StageReceive,
@@ -98,7 +101,7 @@ func TestNewIngestBase(t *testing.T) {
 }
 
 func TestIngestBase_HandleMessage(t *testing.T) {
-
+	doSetup(t, keyToGoodBag, pathToGoodBag)
 }
 
 func TestIngestBase_GetWorkItem(t *testing.T) {

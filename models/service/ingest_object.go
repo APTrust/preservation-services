@@ -20,6 +20,7 @@ type IngestObject struct {
 	// CopiedToStagingAt describes when an object's files were
 	// copied to the S3 staging bucket.
 	CopiedToStagingAt time.Time `json:"copied_to_staging_at,omitempty"`
+
 	// DeletedFromReceivingAt describes when an object's original
 	// tar file was deleted from the depositor's receiving bucket.
 	DeletedFromReceivingAt time.Time `json:"deleted_from_receiving_at,omitempty"`
