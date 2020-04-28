@@ -87,6 +87,7 @@ func TestNewIngestBase(t *testing.T) {
 		common.NewContext(),
 		createMetadataGatherer,
 		bufSize,
+		2,
 		constants.IngestPreFetch,
 	)
 	assert.Equal(t, bufSize, ingestBase.BufferSize)

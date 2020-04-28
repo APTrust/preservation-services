@@ -78,8 +78,8 @@ type IngestBase struct {
 // Context object with connections to S3, Redis, Pharos, and NSQ.
 // Param bufSize describes the size of the queue buffers. The values
 // for opnames/topics are listed in constants.IngestOpNames.
-func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, bufSize int, nsqTopic string) IngestBase {
-	return IngestBase{
+func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, bufSize, numWorkers int, nsqTopic string) IngestBase {
+	base := IngestBase{
 		BufferSize:           bufSize,
 		Context:              context,
 		NSQChannel:           nsqTopic + "_worker_chan",
@@ -92,6 +92,19 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 		processorConstructor: processorConstructor,
 		institutionCache:     make(map[int]string),
 	}
+
+	// We typically want 2 or so workers to do the heavy,
+	// long-running processing invlolved in IngestItem.Processor.Run().
+	// Too many workers, however, can be counterproductive,
+	// maxing out cpu, memory, and/or network bandwidth. The
+	// Success/Error/FatalError channels do lightweight work that
+	// usually takes <2 seconds per item, so a single go routine
+	// will suffice for those.
+	for i := 0; i < numWorkers; i++ {
+		go base.processItem()
+	}
+
+	return base
 }
 
 // RegisterAsNsqConsumer registers this worker as an NSQ consumer on
@@ -161,6 +174,26 @@ func (b *IngestBase) HandleMessage(message *nsq.Message) error {
 
 	// Return nil (no error) so NSQ knows we're working on this.
 	return nil
+}
+
+// ProcessItem calls ingestItem.Processor.Run() and then routes the
+// ingestItem to the SuccessChannel, the ErrorChannel, or the
+// FatalErrorChannel, depending on the outcome.
+func (b *IngestBase) processItem() {
+	for ingestItem := range b.ProcessChannel {
+		count, errors := ingestItem.Processor.Run()
+		ingestItem.WorkResult.Errors = errors
+
+		b.Context.Logger.Info("WorkItem %d: count %d", ingestItem.WorkItem.ID, count)
+
+		if ingestItem.WorkResult.HasFatalErrors() {
+			b.FatalErrorChannel <- ingestItem
+		} else if ingestItem.WorkResult.HasErrors() {
+			b.ErrorChannel <- ingestItem
+		} else {
+			b.SuccessChannel <- ingestItem
+		}
+	}
 }
 
 // GetWorkItem returns the WorkItem we should be working on.
