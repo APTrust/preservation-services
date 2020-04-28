@@ -17,19 +17,27 @@ type MetadataValidator struct {
 	Profile *bagit.Profile
 }
 
-func NewMetadataValidator(context *common.Context, profile *bagit.Profile, ingestObject *service.IngestObject, workItemID int) *MetadataValidator {
+// NewMetadataValidator returns a MetadataValidator object. You'll need
+// to set validator.Profile to a BagItProfile object before calling Run().
+// This is an unfortunate side effect of the need to conform to a common
+// constructor pattern.
+func NewMetadataValidator(context *common.Context, ingestObject *service.IngestObject, workItemID int) *MetadataValidator {
 	return &MetadataValidator{
 		Base: Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,
 		},
-		Errors:  make([]string, 0),
-		Profile: profile,
+		Errors: make([]string, 0),
 	}
 }
 
+// Run validates the bag referred to by IngestObject against the BagIt profile
+// specified in validator.Profile.
 func (v *MetadataValidator) Run() (fileCount int, errors []*service.ProcessingError) {
+	if v.Profile == nil {
+		panic("Specify a BagIt profile before calling MetadataValidator.Run()")
+	}
 	// Validation errors are fatal. We can't ingest an invalid bag.
 	if !v.IsValid() {
 		for _, err := range v.Errors {
