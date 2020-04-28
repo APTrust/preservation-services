@@ -69,7 +69,7 @@ func (item *IngestItem) NSQRequeue(delay time.Duration) {
 }
 
 // NSQFinishes the message and stops sending touches.
-func (item *IngestItem) NSQFinish(delay time.Duration) {
+func (item *IngestItem) NSQFinish() {
 	item.nsqStopChannel <- true
 	item.NSQMessage.Finish()
 }
