@@ -19,6 +19,10 @@ import (
 // IngestBase contains the fundamental structures common to all workers.
 type IngestBase struct {
 
+	// BufferSize is the size of the buffer for the PreProcess, Process,
+	// and PostProcess channels.
+	BufferSize int
+
 	// Context contains info about the context in which the worker is
 	// operation, including connections to NSQ, Redis, Pharos, and S3.
 	Context *common.Context
@@ -27,6 +31,11 @@ type IngestBase struct {
 	// currently processing. We need to do this because NSQ does not
 	// dedupe messages, so the worker must.
 	ItemsInProcess *service.RingList
+
+	// NSQChannel is the name of the NSQ channel to which this worker should
+	// subscribe to receive its tasks. The channel is the topic name plus
+	// "_worker_chan" Topic names are listed in constants.
+	NSQChannel string
 
 	// NSQTopic is the name of the NSQ topic to which this worker should
 	// subscribe to receive its tasks. The topic names are listed in
@@ -48,21 +57,41 @@ type IngestBase struct {
 	// the cleanup topic. The WorkItem is updated in Pharos with info
 	// about its current state and stage.
 	PostProcessChannel chan *IngestItem
+
+	// nsqConsumer implements HandleMessage to receive messages from NSQ.
+	nsqConsumer *nsq.Consumer
 }
 
 // NewIngestBase creates a new IngestBase worker. Param context is a
 // Context object with connections to S3, Redis, Pharos, and NSQ.
 // Param bufSize describes the size of the queue buffers. The values
 // for opnames/topics are listed in constants.IngestOpNames.
-func NewIngestBase(_context *common.Context, bufSize int, nsqTopic string) IngestBase {
+func NewIngestBase(context *common.Context, bufSize int, nsqTopic string) IngestBase {
 	return IngestBase{
-		Context:            _context,
+		BufferSize:         bufSize,
+		Context:            context,
+		NSQChannel:         nsqTopic + "_worker_chan",
 		NSQTopic:           nsqTopic,
 		ItemsInProcess:     service.NewRingList(bufSize),
 		PreProcessChannel:  make(chan *IngestItem, bufSize),
 		ProcessChannel:     make(chan *IngestItem, bufSize),
 		PostProcessChannel: make(chan *IngestItem, bufSize),
 	}
+}
+
+// RegisterAsNsqConsumer registers this worker as an NSQ consumer on
+// IngestBase.NSQTopic and IngestBase.NSQChannel.
+func (b *IngestBase) RegisterAsNsqConsumer() error {
+	config := nsq.NewConfig()
+	// nsqConfig.Set("max_in_flight", 2 * )
+	consumer, err := nsq.NewConsumer(b.NSQTopic, b.NSQChannel, config)
+	if err != nil {
+		return err
+	}
+	b.nsqConsumer = consumer
+	b.nsqConsumer.AddHandler(b)
+	b.nsqConsumer.ConnectToNSQLookupd(b.Context.Config.NsqLookupd)
+	return nil
 }
 
 // HandleMessage checks to see whether we should process this message at
