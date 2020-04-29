@@ -4,6 +4,7 @@ package workers_test
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -23,7 +24,7 @@ import (
 
 var keyToGoodBag = "example.edu.tagsample_good.tar"
 var pathToGoodBag = testutil.PathToUnitTestBag(keyToGoodBag)
-var goodbagMd5 = "f4323e5e631834c50d077fc3e03c2fed"
+var goodbagETag = ""
 var goodbagSize = int64(40960)
 var objectIdentifier = "test.edu/example.edu.tagsample_good"
 var bufSize = 20
@@ -35,7 +36,8 @@ var copyOfNsqMessage *nsq.Message
 var testInstitution *registry.Institution
 
 func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string) {
-	_, err := context.S3Clients[constants.StorageProviderAWS].FPutObject(
+	client := context.S3Clients[constants.StorageProviderAWS]
+	_, err := client.FPutObject(
 		constants.TestBucketReceiving,
 		key,
 		pathToBagFile,
@@ -45,6 +47,10 @@ func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string
 		msg = err.Error()
 	}
 	require.Nil(t, err, msg)
+
+	objInfo, err := client.StatObject(constants.TestBucketReceiving, key, minio.StatObjectOptions{})
+	require.Nil(t, err)
+	goodbagETag = objInfo.ETag
 }
 
 func putWorkItemInPharos(t *testing.T, context *common.Context, workItem *registry.WorkItem) *registry.WorkItem {
@@ -130,18 +136,21 @@ func doSetup(t *testing.T, key, pathToBagFile string) int {
 		putBagInS3(t, context, key, pathToBagFile)
 		testInstitution = context.PharosClient.InstitutionGet("test.edu").Institution()
 		require.NotNil(t, testInstitution)
+		hostname, _ := os.Hostname()
 		workItem := &registry.WorkItem{
 			Action:           constants.ActionIngest,
 			BagDate:          testutil.Bloomsday,
 			Bucket:           constants.TestBucketReceiving,
 			CreatedAt:        testutil.Bloomsday,
 			Date:             testutil.Bloomsday,
-			ETag:             goodbagMd5,
+			ETag:             goodbagETag,
 			InstitutionID:    testInstitution.ID,
 			Name:             key,
+			Node:             hostname,
 			Note:             "Item is awaiting ingest",
 			ObjectIdentifier: objectIdentifier,
 			Outcome:          constants.StatusPending,
+			Pid:              os.Getpid(),
 			Retry:            true,
 			Size:             goodbagSize,
 			Stage:            constants.StageReceive,
@@ -274,27 +283,94 @@ func TestIngestBase_FindNewerIngestRequest(t *testing.T) {
 }
 
 func TestIngestBase_StillIngestingOlderVersion(t *testing.T) {
+	doSetup(t, keyToGoodBag, pathToGoodBag)
+	ingestBase := getIngestBase()
 
+	// Should be true because of WorkItem olderStillIngestingID
+	assert.True(t, ingestBase.StillIngestingOlderVersion(testWorkItem))
 }
 
 func TestIngestBase_SupersededByNewerRequest(t *testing.T) {
+	doSetup(t, keyToGoodBag, pathToGoodBag)
+	ingestBase := getIngestBase()
 
+	// Should be true because of WorkItem newerWorkItemID
+	assert.True(t, ingestBase.SupersededByNewerRequest(testWorkItem))
 }
 
 func TestIngestBase_OtherWorkerIsHandlingThis(t *testing.T) {
+	ingestBase := getIngestBase()
+	hostname, _ := os.Hostname()
 
+	// False because hostname and pid match ours
+	assert.False(t, ingestBase.OtherWorkerIsHandlingThis(testWorkItem))
+
+	// True because of pid mismatch
+	item := copyWorkItem(t, testWorkItem)
+	item.Node = hostname
+	item.Pid = 99999999
+	assert.True(t, ingestBase.OtherWorkerIsHandlingThis(item))
+
+	// True because of hostname mismatch
+	item = copyWorkItem(t, testWorkItem)
+	item.Node = "......"
+	item.Pid = os.Getpid()
+	assert.True(t, ingestBase.OtherWorkerIsHandlingThis(item))
 }
 
 func TestIngestBase_ImAlreadyProcessingThis(t *testing.T) {
+	ingestBase := getIngestBase()
 
+	// False because ItemsInProcess is empty
+	assert.False(t, ingestBase.ImAlreadyProcessingThis(testWorkItem))
+
+	// True because WorkItem.ID is now in ItemsInProcess
+	ingestBase.ItemsInProcess.Add(strconv.Itoa(testWorkItem.ID))
+	assert.True(t, ingestBase.ImAlreadyProcessingThis(testWorkItem))
 }
 
 func TestIngestBase_IsLateStageOfIngest(t *testing.T) {
-
+	ingestBase := getIngestBase()
+	earlyStages := []string{
+		constants.IngestPreFetch,
+		constants.IngestValidation,
+		constants.IngestReingestCheck,
+		constants.IngestStaging,
+		constants.IngestFormatIdentification,
+	}
+	lateStages := []string{
+		constants.IngestStorage,
+		constants.IngestStorageValidation,
+		constants.IngestRecord,
+		constants.IngestCleanup,
+	}
+	for _, stage := range earlyStages {
+		ingestBase.NSQTopic = stage
+		assert.False(t, ingestBase.IsLateStageOfIngest())
+	}
+	for _, stage := range lateStages {
+		ingestBase.NSQTopic = stage
+		assert.True(t, ingestBase.IsLateStageOfIngest())
+	}
 }
 
 func TestIngestBase_ShouldAbandonForNewerVersion(t *testing.T) {
+	doSetup(t, keyToGoodBag, pathToGoodBag)
+	ingestBase := getIngestBase()
+	item := copyWorkItem(t, testWorkItem)
 
+	// False because ETag of item in S3 receving matches
+	// ETag of WorkItem
+	assert.False(t, ingestBase.ShouldAbandonForNewerVersion(item))
+
+	// True, because ETag of S3 item no longer matches
+	item.ETag = "1234"
+	assert.True(t, ingestBase.ShouldAbandonForNewerVersion(item))
+
+	// False, because even though ETag no longer matches,
+	// we too far into the ingest process to turn back.
+	ingestBase.NSQTopic = constants.IngestStorage
+	assert.False(t, ingestBase.ShouldAbandonForNewerVersion(item))
 }
 
 func TestIngestBase_MarkAsStarted(t *testing.T) {

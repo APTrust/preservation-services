@@ -446,6 +446,9 @@ func (b *IngestBase) SupersededByNewerRequest(workItem *registry.WorkItem) bool 
 // processing this message. This happens often with large ingests that
 // take longer to process than NSQ's maximum allowed timeout.
 func (b *IngestBase) OtherWorkerIsHandlingThis(workItem *registry.WorkItem) bool {
+	if workItem.Node == "" && workItem.Pid == 0 {
+		return false
+	}
 	hostname, _ := os.Hostname()
 	if workItem.Node != hostname || workItem.Pid != os.Getpid() {
 		b.Context.Logger.Info("Skipping WorkItem %d because it's being processed by host %s, pid %d", workItem.ID, workItem.Node, workItem.Pid)
@@ -517,8 +520,9 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 			}
 		} else {
 			// No error. We should have objInfo
-			if objInfo.ETag != "" && strings.Replace(objInfo.ETag, "\"", "", -1) != workItem.ETag {
-				message := fmt.Sprintf("Stopping work on WorkItem %d because a newer version of bag %s was found in %s", workItem.ID, workItem.Name, workItem.Bucket)
+			cleanETag := strings.Replace(objInfo.ETag, "\"", "", -1)
+			if objInfo.ETag != "" && cleanETag != workItem.ETag {
+				message := fmt.Sprintf("Stopping work on WorkItem %d because a newer version of bag %s was found in %s. WorkItem etag='%s', receiving bucket etag='%s'", workItem.ID, workItem.Name, workItem.Bucket, workItem.ETag, cleanETag)
 				b.Context.Logger.Info(message)
 				workItem.MarkNoLongerInProgress(
 					workItem.Stage,
