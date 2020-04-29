@@ -224,8 +224,14 @@ func TestIngestBase_Error(t *testing.T) {
 	assert.True(t, processingErr.IsFatal)
 }
 
+// TODO: This should be broken out into true/false tests
+// for each condition.
 func TestIngestBase_ShouldSkipThis(t *testing.T) {
+	doSetup(t, keyToGoodBag, pathToGoodBag)
+	ingestBase := getIngestBase()
 
+	copyOfWorkItem := copyWorkItem(t, testWorkItem)
+	assert.True(t, ingestBase.ShouldSkipThis(copyOfWorkItem))
 }
 
 func TestIngestBase_GetInstitutionIdentifier(t *testing.T) {
@@ -374,9 +380,47 @@ func TestIngestBase_ShouldAbandonForNewerVersion(t *testing.T) {
 }
 
 func TestIngestBase_MarkAsStarted(t *testing.T) {
+	doSetup(t, keyToGoodBag, pathToGoodBag)
+	ingestBase := getIngestBase()
 
+	copyOfWorkItem := copyWorkItem(t, testWorkItem)
+	putWorkItemInPharos(t, ingestBase.Context, copyOfWorkItem)
+
+	hostname, _ := os.Hostname()
+	ingestItem := &workers.IngestItem{
+		NSQMessage: copyOfNsqMessage,
+		WorkResult: service.NewWorkResult(ingestBase.NSQTopic),
+		WorkItem:   copyOfWorkItem,
+	}
+
+	//data, _ := ingestItem.WorkItem.ToJSON()
+	//fmt.Println(string(data))
+
+	assert.NotEqual(t, constants.StatusStarted, ingestItem.WorkItem.Status)
+	assert.Equal(t, 0, ingestItem.WorkResult.Attempt)
+
+	ingestBase.MarkAsStarted(ingestItem)
+	assert.Equal(t, constants.StatusStarted, ingestItem.WorkItem.Status)
+	assert.Equal(t, "Item has started stage ingest01_prefetch", ingestItem.WorkItem.Note)
+	assert.Equal(t, 1, ingestItem.WorkResult.Attempt)
+	assert.Equal(t, hostname, ingestItem.WorkResult.Host)
+	assert.Equal(t, os.Getpid(), ingestItem.WorkResult.Pid)
 }
 
 func TestIngestBase_PushToQueue(t *testing.T) {
+	doSetup(t, keyToGoodBag, pathToGoodBag)
+	ingestBase := getIngestBase()
+	copyOfWorkItem := copyWorkItem(t, testWorkItem)
 
+	// Push one item into a topic that we create.
+	ingestBase.PushToQueue(copyOfWorkItem, "integration_test_topic")
+
+	// Now get the NSQ topic and make sure the item is there.
+	// Since we just created this topic, it should have
+	// one item in it.
+	stats, err := ingestBase.Context.NSQClient.GetStats()
+	require.Nil(t, err)
+	topic := stats.GetTopic("integration_test_topic")
+	require.NotNil(t, topic)
+	assert.EqualValues(t, 1, topic.MessageCount)
 }

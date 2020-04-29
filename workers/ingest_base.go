@@ -245,6 +245,15 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 		return true
 	}
 
+	// Occasionally, NSQ will think an item has timed out because
+	// it took a long time to record. NSQ sends it to a new worker
+	// after the original worker has completed it.
+	if workItem.ProcessingHasCompleted() {
+		message := fmt.Sprintf("Rejecting WorkItem %d because status is %s", workItem.ID, workItem.Status)
+		b.Context.Logger.Info(message)
+		return true
+	}
+
 	// Note that returning nil tells NSQ that a worker is
 	// working on this item, even if it's not us. We don't
 	// want to requeue duplicates, and we don't want to return
@@ -551,7 +560,7 @@ func (b *IngestBase) MarkAsStarted(ingestItem *IngestItem) {
 	ingestItem.WorkItem.MarkInProgress(
 		ingestItem.WorkItem.Stage,
 		constants.StatusStarted,
-		fmt.Sprintf("Item has started stage %s", ingestItem.WorkItem.Stage),
+		fmt.Sprintf("Item has started stage %s", b.NSQTopic),
 	)
 	b.SaveWorkItem(ingestItem.WorkItem)
 
