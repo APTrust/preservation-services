@@ -317,7 +317,7 @@ func (b *IngestBase) GetIngestObject(workItem *registry.WorkItem) (*service.Inge
 		return ingestObject, nil
 	}
 	if err != nil && b.NSQChannel != constants.IngestPreFetch {
-		return nil, fmt.Errorf("Ingest object not found in Redis")
+		return nil, fmt.Errorf("Ingest object not found in Redis: %v", err)
 	}
 	instID, err := b.GetInstitutionIdentifier(workItem.InstitutionID)
 	if err != nil {
