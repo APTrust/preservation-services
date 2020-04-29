@@ -3,6 +3,7 @@
 package workers_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -13,6 +14,7 @@ import (
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/APTrust/preservation-services/workers"
 	"github.com/minio/minio-go/v6"
+	"github.com/nsqio/go-nsq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +25,9 @@ var keyToGoodBag = "example.edu.tagsample_good.tar"
 var pathToGoodBag = testutil.PathToUnitTestBag(keyToGoodBag)
 var goodbagMd5 = "f4323e5e631834c50d077fc3e03c2fed"
 var goodbagSize = int64(40960)
+var bufSize = 20
 var workItemID = 0
+var copyOfNsqMessage *nsq.Message
 
 func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string) {
 	_, err := context.S3Clients[constants.StorageProviderAWS].FPutObject(
@@ -73,6 +77,10 @@ func doSetup(t *testing.T, key, pathToBagFile string) int {
 		}
 		workItemID = putWorkItemInPharos(t, context, workItem)
 		queueWorkItem(t, context, workItemID)
+		msgBody := []byte(strconv.Itoa(workItemID))
+		var msgId [16]byte
+		copy(msgId[:], []byte("9999"))
+		copyOfNsqMessage = nsq.NewMessage(msgId, msgBody)
 	}
 	return workItemID
 }
@@ -81,15 +89,18 @@ func createMetadataGatherer(context *common.Context, workItemID int, ingestObjec
 	return ingest.NewMetadataGatherer(context, workItemID, ingestObject)
 }
 
-func TestNewIngestBase(t *testing.T) {
-	var bufSize = 20
-	ingestBase := workers.NewIngestBase(
+func getIngestBase() *workers.IngestBase {
+	return workers.NewIngestBase(
 		common.NewContext(),
 		createMetadataGatherer,
 		bufSize,
 		2,
 		constants.IngestPreFetch,
 	)
+}
+
+func TestNewIngestBase(t *testing.T) {
+	ingestBase := getIngestBase()
 	assert.Equal(t, bufSize, ingestBase.BufferSize)
 	assert.NotNil(t, ingestBase.Context)
 	assert.Equal(t, constants.IngestPreFetch+"_worker_chan", ingestBase.NSQChannel)
@@ -106,7 +117,12 @@ func TestIngestBase_HandleMessage(t *testing.T) {
 }
 
 func TestIngestBase_GetWorkItem(t *testing.T) {
-
+	doSetup(t, keyToGoodBag, pathToGoodBag)
+	ingestBase := getIngestBase()
+	workItem, err := ingestBase.GetWorkItem(copyOfNsqMessage)
+	assert.Nil(t, err)
+	require.NotNil(t, workItem)
+	assert.Equal(t, workItemID, workItem.ID)
 }
 
 func TestIngestBase_Error(t *testing.T) {

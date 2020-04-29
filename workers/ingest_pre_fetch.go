@@ -12,7 +12,7 @@ import (
 )
 
 type IngestPreFetch struct {
-	IngestBase
+	*IngestBase
 }
 
 // NewIngestPreFetch creates a new IngestPreFetch worker.

@@ -78,8 +78,8 @@ type IngestBase struct {
 // Context object with connections to S3, Redis, Pharos, and NSQ.
 // Param bufSize describes the size of the queue buffers. The values
 // for opnames/topics are listed in constants.IngestOpNames.
-func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, bufSize, numWorkers int, nsqTopic string) IngestBase {
-	base := IngestBase{
+func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, bufSize, numWorkers int, nsqTopic string) *IngestBase {
+	base := &IngestBase{
 		BufferSize:           bufSize,
 		Context:              context,
 		NSQChannel:           nsqTopic + "_worker_chan",
