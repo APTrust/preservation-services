@@ -2,14 +2,36 @@ package network
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+
+	"github.com/nsqio/nsq/nsqd"
 )
 
 type NSQClient struct {
 	URL string
+}
+
+// NSQStatsData contains the important info returned by a call
+// to NSQ's /stats endpoint, including the number of items in each
+// topic and queue.
+type NSQStatsData struct {
+	Version   string             `json:"version"`
+	Health    string             `json:"status_code"`
+	StartTime uint64             `json:"start_time"`
+	Topics    []*nsqd.TopicStats `json:"topics"`
+}
+
+func (data *NSQStatsData) GetTopic(name string) *nsqd.TopicStats {
+	for _, topic := range data.Topics {
+		if topic.TopicName == name {
+			return topic
+		}
+	}
+	return nil
 }
 
 // NewNSQClient returns a new NSQ client that will connect to the NSQ
@@ -59,4 +81,35 @@ func (client *NSQClient) enqueueString(topic string, data string) error {
 			"Response body: %s", resp.StatusCode, bodyText)
 	}
 	return nil
+}
+
+// GetStats allows us to get some basic stats from NSQ. The NSQ /stats endpoint
+// returns a richer set of stats than what this fuction returns, but we only
+// need some basic data for integration tests, so that's all we're parsing.
+// The return value is a map whose key is the topic name and whose value is
+// an NSQTopicStats object. NSQ is supposed to support topic_name as a query
+// param, but this doesn't seem to be working in NSQ 0.3.0, so we're just
+// returning stats for all topics right now. Also note that requests to
+// /stats/ (with trailing slash) produce a 404.
+func (client *NSQClient) GetStats() (*NSQStatsData, error) {
+	url := fmt.Sprintf("%s/stats?format=json", client.URL)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("NSQ returned status code %d, body: %s",
+			resp.StatusCode, body)
+	}
+	stats := &NSQStatsData{}
+	err = json.Unmarshal(body, stats)
+	if err != nil {
+		return nil, err
+	}
+	return stats, nil
 }
