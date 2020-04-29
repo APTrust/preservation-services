@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
@@ -20,8 +21,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: Tests... Use mock services for this?
-
 var keyToGoodBag = "example.edu.tagsample_good.tar"
 var pathToGoodBag = testutil.PathToUnitTestBag(keyToGoodBag)
 var goodbagMd5 = "f4323e5e631834c50d077fc3e03c2fed"
@@ -29,6 +28,9 @@ var goodbagSize = int64(40960)
 var objectIdentifier = "test.edu/example.edu.tagsample_good"
 var bufSize = 20
 var workItemID = 0
+var olderWorkItemID = 0
+var olderStillIngestingID = 0
+var newerWorkItemID = 0
 var copyOfNsqMessage *nsq.Message
 var testInstitution *registry.Institution
 
@@ -48,7 +50,55 @@ func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string
 func putWorkItemInPharos(t *testing.T, context *common.Context, workItem *registry.WorkItem) int {
 	resp := context.PharosClient.WorkItemSave(workItem)
 	require.Nil(t, resp.Error)
+	require.NotNil(t, resp.WorkItem())
 	return resp.WorkItem().ID
+}
+
+func saveSimilarWorkItems(t *testing.T, context *common.Context, workItem *registry.WorkItem) {
+	// Older ingest request. Not started.
+	olderDate := workItem.BagDate.Add(time.Hour * -6)
+	olderIngestRequest := copyWorkItem(t, workItem)
+	olderIngestRequest.BagDate = olderDate
+	olderIngestRequest.Date = olderDate
+	olderIngestRequest.CreatedAt = olderDate
+	olderIngestRequest.UpdatedAt = olderDate
+	resp := context.PharosClient.WorkItemSave(olderIngestRequest)
+	require.Nil(t, resp.Error)
+	olderWorkItemID = resp.WorkItem().ID
+
+	// Older ingest request. Still in process.
+	olderDate = workItem.BagDate.Add(time.Hour * -3)
+	olderStillIngesting := copyWorkItem(t, workItem)
+	olderStillIngesting.BagDate = olderDate
+	olderStillIngesting.Date = olderDate
+	olderStillIngesting.CreatedAt = olderDate
+	olderStillIngesting.UpdatedAt = olderDate
+	olderStillIngesting.Stage = constants.StageStore
+	olderStillIngesting.Status = constants.StatusStarted
+	resp = context.PharosClient.WorkItemSave(olderStillIngesting)
+	require.Nil(t, resp.Error)
+	olderStillIngestingID = resp.WorkItem().ID
+
+	// Newer ingest request. Not started. Newer ETag.
+	newerDate := workItem.BagDate.Add(time.Hour * 6)
+	newerIngestRequest := copyWorkItem(t, workItem)
+	newerIngestRequest.BagDate = newerDate
+	newerIngestRequest.Date = newerDate
+	newerIngestRequest.CreatedAt = newerDate
+	newerIngestRequest.UpdatedAt = newerDate
+	newerIngestRequest.ETag = "12345678"
+	resp = context.PharosClient.WorkItemSave(newerIngestRequest)
+	require.Nil(t, resp.Error)
+	newerWorkItemID = resp.WorkItem().ID
+}
+
+func copyWorkItem(t *testing.T, workItem *registry.WorkItem) *registry.WorkItem {
+	data, err := workItem.ToJSON()
+	require.Nil(t, err)
+	item, err := registry.WorkItemFromJSON(data)
+	require.Nil(t, err)
+	item.ID = 0
+	return item
 }
 
 func putIngestObjectInRedis(t *testing.T, context *common.Context, workItem *registry.WorkItem) {
@@ -99,13 +149,14 @@ func doSetup(t *testing.T, key, pathToBagFile string) int {
 		}
 		workItemID = putWorkItemInPharos(t, context, workItem)
 		workItem.ID = workItemID
-		putIngestObjectInRedis(t, context, workItem)
-		putWorkResultInRedis(t, context, workItem)
-		queueWorkItem(t, context, workItemID)
 		msgBody := []byte(strconv.Itoa(workItemID))
 		var msgId [16]byte
 		copy(msgId[:], []byte("9999"))
 		copyOfNsqMessage = nsq.NewMessage(msgId, msgBody)
+		saveSimilarWorkItems(t, context, workItem)
+		putIngestObjectInRedis(t, context, workItem)
+		putWorkResultInRedis(t, context, workItem)
+		queueWorkItem(t, context, workItemID)
 	}
 	return workItemID
 }
@@ -143,6 +194,8 @@ func TestIngestBase_HandleMessage(t *testing.T) {
 
 func TestIngestBase_GetWorkItem(t *testing.T) {
 	doSetup(t, keyToGoodBag, pathToGoodBag)
+	require.NotEqual(t, 0, workItemID)
+	require.NotNil(t, copyOfNsqMessage)
 	ingestBase := getIngestBase()
 	workItem, err := ingestBase.GetWorkItem(copyOfNsqMessage)
 	assert.Nil(t, err)
@@ -209,11 +262,28 @@ func TestIngestBase_SaveWorkItem(t *testing.T) {
 }
 
 func TestIngestBase_FindOtherIngestRequests(t *testing.T) {
+	doSetup(t, keyToGoodBag, pathToGoodBag)
+	ingestBase := getIngestBase()
+	workItem, procErr := ingestBase.GetWorkItem(copyOfNsqMessage)
+	require.Nil(t, procErr)
+	require.NotNil(t, workItem)
 
+	// Should find the WorkItem itself and the other three
+	// similar WorkItems we added in doSetup
+	otherWorkItems := ingestBase.FindOtherIngestRequests(workItem)
+	require.Equal(t, 4, len(otherWorkItems))
 }
 
 func TestIngestBase_FindNewerIngestRequest(t *testing.T) {
+	doSetup(t, keyToGoodBag, pathToGoodBag)
+	ingestBase := getIngestBase()
+	workItem, procErr := ingestBase.GetWorkItem(copyOfNsqMessage)
+	require.Nil(t, procErr)
+	require.NotNil(t, workItem)
 
+	newerItem := ingestBase.FindNewerIngestRequest(workItem)
+	require.NotNil(t, newerItem)
+	assert.Equal(t, newerWorkItemID, newerItem.ID)
 }
 
 func TestIngestBase_StillIngestingOlderVersion(t *testing.T) {
