@@ -27,7 +27,7 @@ var goodbagMd5 = "f4323e5e631834c50d077fc3e03c2fed"
 var goodbagSize = int64(40960)
 var objectIdentifier = "test.edu/example.edu.tagsample_good"
 var bufSize = 20
-var workItemID = 0
+var testWorkItem *registry.WorkItem
 var olderWorkItemID = 0
 var olderStillIngestingID = 0
 var newerWorkItemID = 0
@@ -47,11 +47,11 @@ func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string
 	require.Nil(t, err, msg)
 }
 
-func putWorkItemInPharos(t *testing.T, context *common.Context, workItem *registry.WorkItem) int {
+func putWorkItemInPharos(t *testing.T, context *common.Context, workItem *registry.WorkItem) *registry.WorkItem {
 	resp := context.PharosClient.WorkItemSave(workItem)
 	require.Nil(t, resp.Error)
 	require.NotNil(t, resp.WorkItem())
-	return resp.WorkItem().ID
+	return resp.WorkItem()
 }
 
 func saveSimilarWorkItems(t *testing.T, context *common.Context, workItem *registry.WorkItem) {
@@ -125,7 +125,7 @@ func queueWorkItem(t *testing.T, context *common.Context, workItemID int) {
 }
 
 func doSetup(t *testing.T, key, pathToBagFile string) int {
-	if workItemID == 0 {
+	if testWorkItem == nil {
 		context := common.NewContext()
 		putBagInS3(t, context, key, pathToBagFile)
 		testInstitution = context.PharosClient.InstitutionGet("test.edu").Institution()
@@ -147,18 +147,17 @@ func doSetup(t *testing.T, key, pathToBagFile string) int {
 			Stage:            constants.StageReceive,
 			Status:           constants.StatusPending,
 		}
-		workItemID = putWorkItemInPharos(t, context, workItem)
-		workItem.ID = workItemID
-		msgBody := []byte(strconv.Itoa(workItemID))
+		testWorkItem = putWorkItemInPharos(t, context, workItem)
+		msgBody := []byte(strconv.Itoa(testWorkItem.ID))
 		var msgId [16]byte
 		copy(msgId[:], []byte("9999"))
 		copyOfNsqMessage = nsq.NewMessage(msgId, msgBody)
-		saveSimilarWorkItems(t, context, workItem)
-		putIngestObjectInRedis(t, context, workItem)
-		putWorkResultInRedis(t, context, workItem)
-		queueWorkItem(t, context, workItemID)
+		saveSimilarWorkItems(t, context, testWorkItem)
+		putIngestObjectInRedis(t, context, testWorkItem)
+		putWorkResultInRedis(t, context, testWorkItem)
+		queueWorkItem(t, context, testWorkItem.ID)
 	}
-	return workItemID
+	return testWorkItem.ID
 }
 
 func createMetadataGatherer(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
@@ -194,13 +193,13 @@ func TestIngestBase_HandleMessage(t *testing.T) {
 
 func TestIngestBase_GetWorkItem(t *testing.T) {
 	doSetup(t, keyToGoodBag, pathToGoodBag)
-	require.NotEqual(t, 0, workItemID)
+	require.NotNil(t, 0, testWorkItem)
 	require.NotNil(t, copyOfNsqMessage)
 	ingestBase := getIngestBase()
 	workItem, err := ingestBase.GetWorkItem(copyOfNsqMessage)
 	assert.Nil(t, err)
 	require.NotNil(t, workItem)
-	assert.Equal(t, workItemID, workItem.ID)
+	assert.Equal(t, testWorkItem.ID, workItem.ID)
 }
 
 func TestIngestBase_Error(t *testing.T) {
@@ -229,10 +228,7 @@ func TestIngestBase_GetInstitutionIdentifier(t *testing.T) {
 
 func TestIngestBase_GetIngestObject(t *testing.T) {
 	ingestBase := getIngestBase()
-	workItem, procErr := ingestBase.GetWorkItem(copyOfNsqMessage)
-	require.Nil(t, procErr)
-	require.NotNil(t, workItem)
-	ingestObj, err := ingestBase.GetIngestObject(workItem)
+	ingestObj, err := ingestBase.GetIngestObject(testWorkItem)
 	assert.Nil(t, err)
 	require.NotNil(t, ingestObj)
 	assert.Equal(t, objectIdentifier, ingestObj.Identifier())
@@ -240,48 +236,39 @@ func TestIngestBase_GetIngestObject(t *testing.T) {
 
 func TestIngestBase_GetWorkResult(t *testing.T) {
 	ingestBase := getIngestBase()
-	workResult := ingestBase.GetWorkResult(workItemID)
+	workResult := ingestBase.GetWorkResult(testWorkItem.ID)
 	assert.NotNil(t, workResult)
 }
 
 func TestIngestBase_SaveWorkResult(t *testing.T) {
 	ingestBase := getIngestBase()
-	workResult := ingestBase.GetWorkResult(workItemID)
+	workResult := ingestBase.GetWorkResult(testWorkItem.ID)
 	require.NotNil(t, workResult)
-	err := ingestBase.SaveWorkResult(workItemID, workResult)
+	err := ingestBase.SaveWorkResult(testWorkItem.ID, workResult)
 	assert.Nil(t, err)
 }
 
 func TestIngestBase_SaveWorkItem(t *testing.T) {
 	ingestBase := getIngestBase()
-	workItem, procErr := ingestBase.GetWorkItem(copyOfNsqMessage)
-	require.Nil(t, procErr)
-	require.NotNil(t, workItem)
-	err := ingestBase.SaveWorkItem(workItem)
+	err := ingestBase.SaveWorkItem(testWorkItem)
 	assert.Nil(t, err)
 }
 
 func TestIngestBase_FindOtherIngestRequests(t *testing.T) {
 	doSetup(t, keyToGoodBag, pathToGoodBag)
 	ingestBase := getIngestBase()
-	workItem, procErr := ingestBase.GetWorkItem(copyOfNsqMessage)
-	require.Nil(t, procErr)
-	require.NotNil(t, workItem)
 
 	// Should find the WorkItem itself and the other three
 	// similar WorkItems we added in doSetup
-	otherWorkItems := ingestBase.FindOtherIngestRequests(workItem)
+	otherWorkItems := ingestBase.FindOtherIngestRequests(testWorkItem)
 	require.Equal(t, 4, len(otherWorkItems))
 }
 
 func TestIngestBase_FindNewerIngestRequest(t *testing.T) {
 	doSetup(t, keyToGoodBag, pathToGoodBag)
 	ingestBase := getIngestBase()
-	workItem, procErr := ingestBase.GetWorkItem(copyOfNsqMessage)
-	require.Nil(t, procErr)
-	require.NotNil(t, workItem)
 
-	newerItem := ingestBase.FindNewerIngestRequest(workItem)
+	newerItem := ingestBase.FindNewerIngestRequest(testWorkItem)
 	require.NotNil(t, newerItem)
 	assert.Equal(t, newerWorkItemID, newerItem.ID)
 }
