@@ -64,6 +64,11 @@ func putIngestObjectInRedis(t *testing.T, context *common.Context, workItem *reg
 	require.Nil(t, err)
 }
 
+func putWorkResultInRedis(t *testing.T, context *common.Context, workItem *registry.WorkItem) {
+	workResult := service.NewWorkResult(constants.IngestPreFetch)
+	err := context.RedisClient.WorkResultSave(workItem.ID, workResult)
+	require.Nil(t, err)
+}
 func queueWorkItem(t *testing.T, context *common.Context, workItemID int) {
 	err := context.NSQClient.Enqueue(constants.IngestPreFetch, workItemID)
 	require.Nil(t, err)
@@ -95,6 +100,7 @@ func doSetup(t *testing.T, key, pathToBagFile string) int {
 		workItemID = putWorkItemInPharos(t, context, workItem)
 		workItem.ID = workItemID
 		putIngestObjectInRedis(t, context, workItem)
+		putWorkResultInRedis(t, context, workItem)
 		queueWorkItem(t, context, workItemID)
 		msgBody := []byte(strconv.Itoa(workItemID))
 		var msgId [16]byte
@@ -171,7 +177,6 @@ func TestIngestBase_GetInstitutionIdentifier(t *testing.T) {
 func TestIngestBase_GetIngestObject(t *testing.T) {
 	ingestBase := getIngestBase()
 	workItem, procErr := ingestBase.GetWorkItem(copyOfNsqMessage)
-	fmt.Println("---> WorkItemID:", workItem.ID)
 	require.Nil(t, procErr)
 	require.NotNil(t, workItem)
 	ingestObj, err := ingestBase.GetIngestObject(workItem)
@@ -181,15 +186,26 @@ func TestIngestBase_GetIngestObject(t *testing.T) {
 }
 
 func TestIngestBase_GetWorkResult(t *testing.T) {
-
+	ingestBase := getIngestBase()
+	workResult := ingestBase.GetWorkResult(workItemID)
+	assert.NotNil(t, workResult)
 }
 
 func TestIngestBase_SaveWorkResult(t *testing.T) {
-
+	ingestBase := getIngestBase()
+	workResult := ingestBase.GetWorkResult(workItemID)
+	require.NotNil(t, workResult)
+	err := ingestBase.SaveWorkResult(workItemID, workResult)
+	assert.Nil(t, err)
 }
 
 func TestIngestBase_SaveWorkItem(t *testing.T) {
-
+	ingestBase := getIngestBase()
+	workItem, procErr := ingestBase.GetWorkItem(copyOfNsqMessage)
+	require.Nil(t, procErr)
+	require.NotNil(t, workItem)
+	err := ingestBase.SaveWorkItem(workItem)
+	assert.Nil(t, err)
 }
 
 func TestIngestBase_FindOtherIngestRequests(t *testing.T) {

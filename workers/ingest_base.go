@@ -346,26 +346,30 @@ func (b *IngestBase) GetWorkResult(workItemID int) *service.WorkResult {
 
 // SaveWorkResult saves a WorkResult to Redis and logs an error if any occurs.
 // Will try three times, in case Redis is busy.
-func (b *IngestBase) SaveWorkResult(workItemID int, result *service.WorkResult) {
+func (b *IngestBase) SaveWorkResult(workItemID int, result *service.WorkResult) error {
 	for i := 0; i < 3; i++ {
 		err := b.Context.RedisClient.WorkResultSave(workItemID, result)
 		if err == nil {
 			break
 		}
-		if i == 2 {
+		if i == 2 && err != nil {
 			b.Context.Logger.Info("Error saving WorkResult for WorkItem %d: %v", workItemID, err)
+			return err
 		}
 		time.Sleep(time.Duration(250) * time.Millisecond)
 	}
+	return nil
 }
 
 // SaveWorkItem saves a WorkItem back to Pharos.
-func (b *IngestBase) SaveWorkItem(workItem *registry.WorkItem) {
+func (b *IngestBase) SaveWorkItem(workItem *registry.WorkItem) error {
 	resp := b.Context.PharosClient.WorkItemSave(workItem)
 	if resp.Error != nil {
 		b.Context.Logger.Error("Error saving WorkItem %d to Pharos: %v",
 			workItem.ID, resp.Error)
+		return resp.Error
 	}
+	return nil
 }
 
 // FindRelatedWorkItems finds WorkItems with the same action and bagname
