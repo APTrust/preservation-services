@@ -2,13 +2,12 @@ package workers
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
-	//"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
-	//"github.com/nsqio/go-nsq"
 )
 
 type IngestPreFetch struct {
@@ -42,51 +41,59 @@ func NewIngestPreFetch(bufSize, numWorkers, maxAttempts int) *IngestPreFetch {
 func (worker *IngestPreFetch) ProcessSuccessChannel() {
 	for ingestItem := range worker.SuccessChannel {
 		// Tell Pharos item succeeded.
-		// Finish NSQ message.
-		// Push item to next queue.
+		ingestItem.WorkItem.Note = "Completed pre-fetch data gathering."
+		ingestItem.WorkItem.Stage = constants.StageValidate
+		ingestItem.WorkItem.Status = constants.StatusPending
+		ingestItem.WorkItem.Retry = true
+		ingestItem.WorkItem.NeedsAdminReview = false
 
+		// Push item to next queue.
 		ingestItem.NextQueueTopic = constants.IngestValidation
 		worker.FinishItem(ingestItem)
+
+		// Tell NSQ this worker is done with this message.
+		ingestItem.NSQFinish()
 	}
 }
 
 func (worker *IngestPreFetch) ProcessErrorChannel() {
 	for ingestItem := range worker.ErrorChannel {
-		// Add non-fatal error to Pharos WorkItem.Note.
-		// Requeue in NSQ with some delay.
+		shouldRequeue := true
 
-		// If we passed max attempts, mark item as
-		// failed in Pharos and set NeedsAdminReview = true.
-		// Then mark item finished in NSQ.
-		// Do not push to next queue.
+		// Update WorkItem in Pharos
+		ingestItem.WorkItem.Note = ingestItem.WorkResult.NonFatalErrorMessage()
+		if ingestItem.WorkResult.Attempt >= worker.MaxAttempts {
+			ingestItem.WorkItem.Note += fmt.Sprintf(" Will not retry: failed %d times. Interim processing data persists.", ingestItem.WorkResult.Attempt)
+			ingestItem.WorkItem.Retry = false
+			ingestItem.WorkItem.NeedsAdminReview = true
+			shouldRequeue = false
+		}
 
 		// Clear this, so the item is not pushed to the next queue
 		ingestItem.NextQueueTopic = ""
+
 		worker.FinishItem(ingestItem)
+		if shouldRequeue {
+			ingestItem.NSQRequeue(1 * time.Minute)
+		} else {
+			ingestItem.NSQFinish()
+		}
 	}
 }
 
 func (worker *IngestPreFetch) ProcessFatalErrorChannel() {
 	for ingestItem := range worker.FatalErrorChannel {
-		// Mark Pharos WorkItem.Note with error message.
-		// Mark Pharos WorkItem as failed with Retry = false
-		// If error is not a bag validation error, set
-		// NeedsAdminReview to true.
-		// Push to Cleanup queue
-
+		// Update WorkItem for Pharos
 		ingestItem.WorkItem.Note = ingestItem.WorkResult.FatalErrorMessage()
 		ingestItem.WorkItem.Retry = false
 		ingestItem.WorkItem.NeedsAdminReview = true
 
-		// Push to cleanup queue, but don't delete the
-		// bag from the receiving bucket.
-
-		// --------FIX THIS -------------
-		//ingestItem.Processor.IngestObject.ShouldDeleteFromReceiving = false
-		// --------FIX THIS -------------
-
+		// Push into NSQ cleanup topic.
 		ingestItem.NextQueueTopic = constants.IngestCleanup
 		worker.FinishItem(ingestItem)
+
+		// Tell NSQ we're done with this message.
+		ingestItem.NSQFinish()
 	}
 }
 
