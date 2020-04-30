@@ -154,6 +154,13 @@ func TestFatalErrors(t *testing.T) {
 	}
 }
 
+func TestFatalErrorMessage(t *testing.T) {
+	result := service.NewWorkResult("op-name")
+	result.AddError(fatalErr)
+	result.AddError(fatalErr)
+	assert.Equal(t, "Fatal error | Fatal error", result.FatalErrorMessage())
+}
+
 func TestWorkResultToJson(t *testing.T) {
 	result := service.NewWorkResult(constants.IngestPreFetch)
 	result.Attempt = 4

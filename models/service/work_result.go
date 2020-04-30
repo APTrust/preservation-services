@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -122,6 +123,8 @@ func (result *WorkResult) Reset() {
 	result.ClearErrors()
 }
 
+// HasErrors returns true if this result has any errors,
+// fatal or not.
 func (result *WorkResult) HasErrors() bool {
 	result.mutex.RLock()
 	hasErrors := len(result.Errors) > 0
@@ -129,6 +132,7 @@ func (result *WorkResult) HasErrors() bool {
 	return hasErrors
 }
 
+// FatalErrors returns a list of all of this result's fatal errors.
 func (result *WorkResult) FatalErrors() (errors []*ProcessingError) {
 	result.mutex.RLock()
 	for _, err := range result.Errors {
@@ -140,8 +144,20 @@ func (result *WorkResult) FatalErrors() (errors []*ProcessingError) {
 	return errors
 }
 
+// HasFatalErrors returns true if this result has any fatal errors.
 func (result *WorkResult) HasFatalErrors() bool {
 	return len(result.FatalErrors()) > 0
+}
+
+// FatalErrorMessage returns all fatal error messages as a single
+// pipe-demilimited string.
+func (result *WorkResult) FatalErrorMessage() string {
+	errors := result.FatalErrors()
+	messages := make([]string, len(errors))
+	for i, err := range errors {
+		messages[i] = err.Message
+	}
+	return strings.Join(messages[:], " | ")
 }
 
 // WorkResultFromJSON converts the JSON representation of a WorkResult
