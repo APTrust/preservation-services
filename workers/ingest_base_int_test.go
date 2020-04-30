@@ -174,22 +174,30 @@ func createMetadataGatherer(context *common.Context, workItemID int, ingestObjec
 }
 
 func getIngestBase() *workers.IngestBase {
-	return workers.NewIngestBase(
-		common.NewContext(),
-		createMetadataGatherer,
-		bufSize,
-		2,
-		2,
-		constants.IngestPreFetch,
-	)
+	settings := &workers.IngestWorkerSettings{
+		ChannelBufferSize:                         20,
+		DeleteFromReceivingAfterFatalError:        false,
+		DeleteFromReceivingAfterMaxFailedAttempts: false,
+		MaxAttempts:                         3,
+		NSQChannel:                          constants.IngestPreFetch + "_worker_chan",
+		NSQTopic:                            constants.IngestPreFetch,
+		NextQueueTopic:                      constants.IngestValidation,
+		NextWorkItemStage:                   constants.StageValidate,
+		NumberOfWorkers:                     2,
+		PushToCleanupAfterMaxFailedAttempts: false,
+		PushToCleanupOnFatalError:           false,
+		RequeueTimeout:                      (20 * time.Second),
+		WorkItemSuccessNote:                 "Finished pre-fetch metadata gathering",
+	}
+	return workers.NewIngestBase(common.NewContext(), createMetadataGatherer, settings)
 }
 
 func TestNewIngestBase(t *testing.T) {
 	ingestBase := getIngestBase()
-	assert.Equal(t, bufSize, ingestBase.BufferSize)
+	assert.Equal(t, bufSize, ingestBase.Settings.ChannelBufferSize)
 	assert.NotNil(t, ingestBase.Context)
-	assert.Equal(t, constants.IngestPreFetch+"_worker_chan", ingestBase.NSQChannel)
-	assert.Equal(t, constants.IngestPreFetch, ingestBase.NSQTopic)
+	assert.Equal(t, constants.IngestPreFetch+"_worker_chan", ingestBase.Settings.NSQChannel)
+	assert.Equal(t, constants.IngestPreFetch, ingestBase.Settings.NSQTopic)
 	assert.NotNil(t, ingestBase.ItemsInProcess)
 	assert.NotNil(t, ingestBase.ProcessChannel)
 	assert.NotNil(t, ingestBase.SuccessChannel)
@@ -365,11 +373,11 @@ func TestIngestBase_IsLateStageOfIngest(t *testing.T) {
 		constants.IngestCleanup,
 	}
 	for _, stage := range earlyStages {
-		ingestBase.NSQTopic = stage
+		ingestBase.Settings.NSQTopic = stage
 		assert.False(t, ingestBase.IsLateStageOfIngest())
 	}
 	for _, stage := range lateStages {
-		ingestBase.NSQTopic = stage
+		ingestBase.Settings.NSQTopic = stage
 		assert.True(t, ingestBase.IsLateStageOfIngest())
 	}
 }
@@ -389,7 +397,7 @@ func TestIngestBase_ShouldAbandonForNewerVersion(t *testing.T) {
 
 	// False, because even though ETag no longer matches,
 	// we too far into the ingest process to turn back.
-	ingestBase.NSQTopic = constants.IngestStorage
+	ingestBase.Settings.NSQTopic = constants.IngestStorage
 	assert.False(t, ingestBase.ShouldAbandonForNewerVersion(item))
 }
 
@@ -403,7 +411,7 @@ func TestIngestBase_MarkAsStarted(t *testing.T) {
 	hostname, _ := os.Hostname()
 	ingestItem := &workers.IngestItem{
 		NSQMessage: copyOfNsqMessage,
-		WorkResult: service.NewWorkResult(ingestBase.NSQTopic),
+		WorkResult: service.NewWorkResult(ingestBase.Settings.NSQTopic),
 		WorkItem:   copyOfWorkItem,
 	}
 
@@ -434,7 +442,7 @@ func TestIngestBase_FinishItem(t *testing.T) {
 
 	ingestItem := &workers.IngestItem{
 		NSQMessage: testNSQMessage,
-		WorkResult: service.NewWorkResult(ingestBase.NSQTopic),
+		WorkResult: service.NewWorkResult(ingestBase.Settings.NSQTopic),
 		WorkItem:   copyOfWorkItem,
 	}
 

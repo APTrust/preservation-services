@@ -76,6 +76,7 @@ const (
 	StagePackage               = "Package"
 	StageReceive               = "Receive"
 	StageRecord                = "Record"
+	StageReingestCheck         = "ReingestCheck"
 	StageRequested             = "Requested"
 	StageResolve               = "Resolve"
 	StageRestoring             = "Restoring"

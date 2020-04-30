@@ -20,10 +20,6 @@ import (
 // IngestBase contains the fundamental structures common to all workers.
 type IngestBase struct {
 
-	// BufferSize is the size of the buffer for the PreProcess, Process,
-	// and PostProcess channels.
-	BufferSize int
-
 	// Context contains info about the context in which the worker is
 	// operation, including connections to NSQ, Redis, Pharos, and S3.
 	Context *common.Context
@@ -32,20 +28,6 @@ type IngestBase struct {
 	// currently processing. We need to do this because NSQ does not
 	// dedupe messages, so the worker must.
 	ItemsInProcess *service.RingList
-
-	// MaxAttempts is the maximum number of attempts this worker should
-	// make to process a single item.
-	MaxAttempts int
-
-	// NSQChannel is the name of the NSQ channel to which this worker should
-	// subscribe to receive its tasks. The channel is the topic name plus
-	// "_worker_chan" Topic names are listed in constants.
-	NSQChannel string
-
-	// NSQTopic is the name of the NSQ topic to which this worker should
-	// subscribe to receive its tasks. The topic names are listed in
-	// constants.
-	NSQTopic string
 
 	// ProcessChannel is where the work actually happens: validation,
 	// storage, recording, etc., depending on the worker's responsibility.
@@ -65,6 +47,10 @@ type IngestBase struct {
 	// typically should not be retried.
 	FatalErrorChannel chan *IngestItem
 
+	// Settings contains information on what to do in post-processing
+	// in the SuccessChannel, ErrorChannel, and FatalErrorChannel.
+	Settings *IngestWorkerSettings
+
 	// institutionCache maps institution ids to identifiers. The institution
 	// identifier is typically a domain name like "virginia.edu", "test.org",
 	// etc.
@@ -82,18 +68,15 @@ type IngestBase struct {
 // Context object with connections to S3, Redis, Pharos, and NSQ.
 // Param bufSize describes the size of the queue buffers. The values
 // for opnames/topics are listed in constants.IngestOpNames.
-func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, bufSize, numWorkers, maxAttempts int, nsqTopic string) *IngestBase {
+func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, settings *IngestWorkerSettings) *IngestBase {
 	base := &IngestBase{
-		BufferSize:           bufSize,
 		Context:              context,
-		NSQChannel:           nsqTopic + "_worker_chan",
-		NSQTopic:             nsqTopic,
-		ItemsInProcess:       service.NewRingList(bufSize),
-		MaxAttempts:          maxAttempts,
-		ProcessChannel:       make(chan *IngestItem, bufSize),
-		SuccessChannel:       make(chan *IngestItem, bufSize),
-		ErrorChannel:         make(chan *IngestItem, bufSize),
-		FatalErrorChannel:    make(chan *IngestItem, bufSize),
+		Settings:             settings,
+		ItemsInProcess:       service.NewRingList(settings.ChannelBufferSize),
+		ProcessChannel:       make(chan *IngestItem, settings.ChannelBufferSize),
+		SuccessChannel:       make(chan *IngestItem, settings.ChannelBufferSize),
+		ErrorChannel:         make(chan *IngestItem, settings.ChannelBufferSize),
+		FatalErrorChannel:    make(chan *IngestItem, settings.ChannelBufferSize),
 		processorConstructor: processorConstructor,
 		institutionCache:     make(map[int]string),
 	}
@@ -105,7 +88,7 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 	// Success/Error/FatalError channels do lightweight work that
 	// usually takes <2 seconds per item, so a single go routine
 	// will suffice for those.
-	for i := 0; i < numWorkers; i++ {
+	for i := 0; i < settings.NumberOfWorkers; i++ {
 		go base.processItem()
 	}
 
@@ -113,13 +96,13 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 }
 
 // RegisterAsNsqConsumer registers this worker as an NSQ consumer on
-// IngestBase.NSQTopic and IngestBase.NSQChannel. Note that as soon as you
+// Settings.NSQTopic and Settings.NSQChannel. Note that as soon as you
 // call this, your worker will start handling messages if any are
 // available.
 func (b *IngestBase) RegisterAsNsqConsumer() error {
 	config := nsq.NewConfig()
 	// nsqConfig.Set("max_in_flight", 2 * )
-	consumer, err := nsq.NewConsumer(b.NSQTopic, b.NSQChannel, config)
+	consumer, err := nsq.NewConsumer(b.Settings.NSQTopic, b.Settings.NSQChannel, config)
 	if err != nil {
 		return err
 	}
@@ -203,6 +186,82 @@ func (b *IngestBase) processItem() {
 		} else {
 			b.SuccessChannel <- ingestItem
 		}
+	}
+}
+
+func (b *IngestBase) ProcessSuccessChannel() {
+	for ingestItem := range b.SuccessChannel {
+		// Tell Pharos item succeeded.
+		ingestItem.WorkItem.Note = b.Settings.WorkItemSuccessNote
+		ingestItem.WorkItem.Stage = b.Settings.NextWorkItemStage
+		ingestItem.WorkItem.Status = constants.StatusPending
+		ingestItem.WorkItem.Retry = true
+		ingestItem.WorkItem.NeedsAdminReview = false
+
+		// Push item to next queue.
+		ingestItem.NextQueueTopic = b.Settings.NextQueueTopic
+		b.FinishItem(ingestItem)
+
+		// Tell NSQ this b is done with this message.
+		ingestItem.NSQFinish()
+	}
+}
+
+func (b *IngestBase) ProcessErrorChannel() {
+	for ingestItem := range b.ErrorChannel {
+		shouldRequeue := true
+
+		// Update WorkItem in Pharos
+		ingestItem.WorkItem.Note = ingestItem.WorkResult.NonFatalErrorMessage()
+		if ingestItem.WorkResult.Attempt >= b.Settings.MaxAttempts {
+			ingestItem.WorkItem.Note += fmt.Sprintf(" Will not retry: failed %d times. Interim processing data persists.", ingestItem.WorkResult.Attempt)
+			ingestItem.WorkItem.Retry = false
+			ingestItem.WorkItem.NeedsAdminReview = true
+			shouldRequeue = false
+
+			// Go to NSQ cleanup or not?
+			if b.Settings.PushToCleanupAfterMaxFailedAttempts {
+				ingestItem.Processor.GetIngestObject().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterMaxFailedAttempts
+				ingestItem.NextQueueTopic = constants.IngestCleanup
+			} else {
+				ingestItem.NextQueueTopic = ""
+			}
+		} else {
+			// Processing failed due to non-fatal (transient) errors,
+			// and we haven't reached MaxAttempts. Don't push to next
+			// queue. We'll requeue below.
+			ingestItem.NextQueueTopic = ""
+		}
+
+		b.FinishItem(ingestItem)
+		if shouldRequeue {
+			ingestItem.NSQRequeue(b.Settings.RequeueTimeout)
+		} else {
+			ingestItem.NSQFinish()
+		}
+	}
+}
+
+func (b *IngestBase) ProcessFatalErrorChannel() {
+	for ingestItem := range b.FatalErrorChannel {
+		// Update WorkItem for Pharos
+		ingestItem.WorkItem.Note = ingestItem.WorkResult.FatalErrorMessage()
+		ingestItem.WorkItem.Retry = false
+		ingestItem.WorkItem.NeedsAdminReview = true
+
+		// NSQ
+		if b.Settings.PushToCleanupOnFatalError {
+			ingestItem.Processor.GetIngestObject().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterFatalError
+			ingestItem.NextQueueTopic = constants.IngestCleanup
+		} else {
+			ingestItem.NextQueueTopic = ""
+		}
+
+		// Update Pharos and Redis, and send to next queue if required.
+		b.FinishItem(ingestItem)
+
+		// Tell NSQ we're done with this message.
+		ingestItem.NSQFinish()
 	}
 }
 
@@ -335,7 +394,7 @@ func (b *IngestBase) GetIngestObject(workItem *registry.WorkItem) (*service.Inge
 	if err == nil && ingestObject != nil {
 		return ingestObject, nil
 	}
-	if err != nil && b.NSQChannel != constants.IngestPreFetch {
+	if err != nil && b.Settings.NSQChannel != constants.IngestPreFetch {
 		return nil, fmt.Errorf("Ingest object not found in Redis: %v", err)
 	}
 	instID, err := b.GetInstitutionIdentifier(workItem.InstitutionID)
@@ -355,10 +414,10 @@ func (b *IngestBase) GetIngestObject(workItem *registry.WorkItem) (*service.Inge
 // GetWorkResult returns an WorkResult object for this WorkItem. If one
 // already exists in Redis, it returns that. If not, it creates a new one.
 func (b *IngestBase) GetWorkResult(workItemID int) *service.WorkResult {
-	workResult, err := b.Context.RedisClient.WorkResultGet(workItemID, b.NSQTopic)
+	workResult, err := b.Context.RedisClient.WorkResultGet(workItemID, b.Settings.NSQTopic)
 	if err != nil {
 		b.Context.Logger.Info("No WorkResult in Redis for WorkItem %d. Creating a new one.", workItemID)
-		workResult = service.NewWorkResult(b.NSQTopic)
+		workResult = service.NewWorkResult(b.Settings.NSQTopic)
 	}
 	return workResult
 }
@@ -508,7 +567,7 @@ func (b *IngestBase) RemoveFromInProcessList(workItemID int) {
 // newer one, the newer one will simply count as an update/reingest of the
 // current object.
 func (b *IngestBase) IsLateStageOfIngest() bool {
-	return util.StringListContains(constants.LateStagesOfIngest, b.NSQTopic)
+	return util.StringListContains(constants.LateStagesOfIngest, b.Settings.NSQTopic)
 }
 
 // ShouldAbandonForNewerVersion returns true and logs a message
@@ -581,7 +640,7 @@ func (b *IngestBase) MarkAsStarted(ingestItem *IngestItem) {
 	ingestItem.WorkItem.MarkInProgress(
 		ingestItem.WorkItem.Stage,
 		constants.StatusStarted,
-		fmt.Sprintf("Item has started stage %s", b.NSQTopic),
+		fmt.Sprintf("Item has started stage %s", b.Settings.NSQTopic),
 	)
 	b.SaveWorkItem(ingestItem.WorkItem)
 
