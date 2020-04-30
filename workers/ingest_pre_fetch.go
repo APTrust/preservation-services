@@ -44,7 +44,9 @@ func (worker *IngestPreFetch) ProcessSuccessChannel() {
 		// Tell Pharos item succeeded.
 		// Finish NSQ message.
 		// Push item to next queue.
-		worker.Context.Logger.Info(ingestItem.WorkItem.ID)
+
+		ingestItem.NextQueueTopic = constants.IngestValidation
+		worker.FinishItem(ingestItem)
 	}
 }
 
@@ -57,7 +59,10 @@ func (worker *IngestPreFetch) ProcessErrorChannel() {
 		// failed in Pharos and set NeedsAdminReview = true.
 		// Then mark item finished in NSQ.
 		// Do not push to next queue.
-		worker.Context.Logger.Info(ingestItem.WorkItem.ID)
+
+		// Clear this, so the item is not pushed to the next queue
+		ingestItem.NextQueueTopic = ""
+		worker.FinishItem(ingestItem)
 	}
 }
 
@@ -68,15 +73,21 @@ func (worker *IngestPreFetch) ProcessFatalErrorChannel() {
 		// If error is not a bag validation error, set
 		// NeedsAdminReview to true.
 		// Push to Cleanup queue
-		worker.Context.Logger.Info(ingestItem.WorkItem.ID)
+
+		ingestItem.WorkItem.Note = ingestItem.WorkResult.FatalErrorMessage()
+		ingestItem.WorkItem.Retry = false
+		ingestItem.WorkItem.NeedsAdminReview = true
+
+		// Push to cleanup queue, but don't delete the
+		// bag from the receiving bucket.
+
+		// --------FIX THIS -------------
+		//ingestItem.Processor.IngestObject.ShouldDeleteFromReceiving = false
+		// --------FIX THIS -------------
+
+		ingestItem.NextQueueTopic = constants.IngestCleanup
+		worker.FinishItem(ingestItem)
 	}
-}
-
-// FinishItem updates NSQ and Pharos, and removes this item from the
-// ItemsInProcess list.
-func (worker *IngestPreFetch) FinishItem(ingestItem *IngestItem) {
-
-	worker.RemoveFromInProcessList(ingestItem.WorkItem.ID)
 }
 
 func createMetadataGatherer(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {

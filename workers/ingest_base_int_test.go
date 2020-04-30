@@ -421,6 +421,56 @@ func TestIngestBase_MarkAsStarted(t *testing.T) {
 	assert.Equal(t, os.Getpid(), ingestItem.WorkResult.Pid)
 }
 
+func TestIngestBase_FinishItem(t *testing.T) {
+	doSetup(t, keyToGoodBag, pathToGoodBag)
+	ingestBase := getIngestBase()
+
+	copyOfWorkItem := putWorkItemInPharos(t, ingestBase.Context, copyWorkItem(t, testWorkItem))
+
+	msgBody := []byte(strconv.Itoa(copyOfWorkItem.ID))
+	var msgId [16]byte
+	copy(msgId[:], []byte("3333"))
+	testNSQMessage := nsq.NewMessage(msgId, msgBody)
+
+	ingestItem := &workers.IngestItem{
+		NSQMessage: testNSQMessage,
+		WorkResult: service.NewWorkResult(ingestBase.NSQTopic),
+		WorkItem:   copyOfWorkItem,
+	}
+
+	ingestBase.MarkAsStarted(ingestItem)
+	ingestBase.AddToInProcessList(ingestItem.WorkItem.ID)
+
+	ingestItem.WorkItem.Status = constants.StatusCancelled
+	ingestItem.WorkItem.Note = "Cancelled for testing purposes"
+	ingestItem.NextQueueTopic = "finish_test_topic"
+	ingestBase.FinishItem(ingestItem)
+
+	// Fetch and test WorkItem
+	retrievedWorkItem, err := ingestBase.GetWorkItem(testNSQMessage)
+	require.Nil(t, err)
+	require.NotNil(t, retrievedWorkItem)
+	assert.Equal(t, "Cancelled for testing purposes", retrievedWorkItem.Note)
+	assert.Equal(t, constants.StatusCancelled, retrievedWorkItem.Status)
+	assert.Equal(t, "", retrievedWorkItem.Node)
+	assert.Equal(t, 0, retrievedWorkItem.Pid)
+
+	// Fetch and test WorkResult
+	retrievedWorkResult := ingestBase.GetWorkResult(ingestItem.WorkItem.ID)
+	assert.True(t, retrievedWorkResult.Finished())
+	assert.Equal(t, 1, retrievedWorkResult.Attempt)
+
+	// Make sure item was removed from ItemsInProcess
+	assert.False(t, ingestBase.ItemsInProcess.Contains(strconv.Itoa(ingestItem.WorkItem.ID)))
+
+	// Make sure item was pushed to queue
+	stats, procErr := ingestBase.Context.NSQClient.GetStats()
+	require.Nil(t, procErr)
+	topic := stats.GetTopic("finish_test_topic")
+	require.NotNil(t, topic)
+	assert.EqualValues(t, 1, topic.MessageCount)
+}
+
 func TestIngestBase_PushToQueue(t *testing.T) {
 	doSetup(t, keyToGoodBag, pathToGoodBag)
 	ingestBase := getIngestBase()

@@ -590,6 +590,20 @@ func (b *IngestBase) MarkAsStarted(ingestItem *IngestItem) {
 	ingestItem.NSQStart()
 }
 
+// FinishItem updates NSQ and Pharos, finishes and saves the WorkResult,
+// and removes this item from the ItemsInProcess list.
+func (b *IngestBase) FinishItem(ingestItem *IngestItem) {
+	ingestItem.WorkItem.Node = ""
+	ingestItem.WorkItem.Pid = 0
+	b.SaveWorkItem(ingestItem.WorkItem)
+	ingestItem.WorkResult.Finish()
+	b.SaveWorkResult(ingestItem.WorkItem.ID, ingestItem.WorkResult)
+	if ingestItem.NextQueueTopic != "" {
+		b.PushToQueue(ingestItem.WorkItem, ingestItem.NextQueueTopic)
+	}
+	b.RemoveFromInProcessList(ingestItem.WorkItem.ID)
+}
+
 // PushToQueue pushes the specified WorkItem to the named nsqTopic.
 func (b *IngestBase) PushToQueue(workItem *registry.WorkItem, nsqTopic string) {
 	err := b.Context.NSQClient.Enqueue(
