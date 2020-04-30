@@ -11,6 +11,7 @@ type BaseConstructor func(*common.Context, int, *service.IngestObject) Runnable
 
 type Runnable interface {
 	Run() (int, []*service.ProcessingError)
+	GetIngestObject() *service.IngestObject
 }
 
 // Base is the base type for workers in the ingest namespace.
@@ -18,6 +19,12 @@ type Base struct {
 	Context      *common.Context
 	IngestObject *service.IngestObject
 	WorkItemID   int
+}
+
+// GetIngestObject resturns this struct's IngestObject. This satisfies part
+// of the Runnable interface.
+func (b *Base) GetIngestObject() *service.IngestObject {
+	return b.IngestObject
 }
 
 // IngestFileGet returns an IngestFile record from Redis.
