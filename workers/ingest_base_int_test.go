@@ -179,6 +179,7 @@ func getIngestBase() *workers.IngestBase {
 		createMetadataGatherer,
 		bufSize,
 		2,
+		2,
 		constants.IngestPreFetch,
 	)
 }
@@ -196,8 +197,11 @@ func TestNewIngestBase(t *testing.T) {
 	assert.NotNil(t, ingestBase.FatalErrorChannel)
 }
 
+// TODO: Test this for different logic cases.
+// All the methods it calls are already tested.
 func TestIngestBase_HandleMessage(t *testing.T) {
-	doSetup(t, keyToGoodBag, pathToGoodBag)
+	//doSetup(t, keyToGoodBag, pathToGoodBag)
+	//ingestBase := getIngestBase()
 }
 
 func TestIngestBase_GetWorkItem(t *testing.T) {
@@ -333,6 +337,16 @@ func TestIngestBase_ImAlreadyProcessingThis(t *testing.T) {
 	// True because WorkItem.ID is now in ItemsInProcess
 	ingestBase.ItemsInProcess.Add(strconv.Itoa(testWorkItem.ID))
 	assert.True(t, ingestBase.ImAlreadyProcessingThis(testWorkItem))
+}
+
+func TestIngestBase_Add_Remove_InProcessList(t *testing.T) {
+	ingestBase := getIngestBase()
+
+	ingestBase.AddToInProcessList(1234)
+	assert.True(t, ingestBase.ItemsInProcess.Contains("1234"))
+
+	ingestBase.RemoveFromInProcessList(1234)
+	assert.False(t, ingestBase.ItemsInProcess.Contains("1234"))
 }
 
 func TestIngestBase_IsLateStageOfIngest(t *testing.T) {

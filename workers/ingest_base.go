@@ -33,6 +33,10 @@ type IngestBase struct {
 	// dedupe messages, so the worker must.
 	ItemsInProcess *service.RingList
 
+	// MaxAttempts is the maximum number of attempts this worker should
+	// make to process a single item.
+	MaxAttempts int
+
 	// NSQChannel is the name of the NSQ channel to which this worker should
 	// subscribe to receive its tasks. The channel is the topic name plus
 	// "_worker_chan" Topic names are listed in constants.
@@ -78,13 +82,14 @@ type IngestBase struct {
 // Context object with connections to S3, Redis, Pharos, and NSQ.
 // Param bufSize describes the size of the queue buffers. The values
 // for opnames/topics are listed in constants.IngestOpNames.
-func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, bufSize, numWorkers int, nsqTopic string) *IngestBase {
+func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, bufSize, numWorkers, maxAttempts int, nsqTopic string) *IngestBase {
 	base := &IngestBase{
 		BufferSize:           bufSize,
 		Context:              context,
 		NSQChannel:           nsqTopic + "_worker_chan",
 		NSQTopic:             nsqTopic,
 		ItemsInProcess:       service.NewRingList(bufSize),
+		MaxAttempts:          maxAttempts,
 		ProcessChannel:       make(chan *IngestItem, bufSize),
 		SuccessChannel:       make(chan *IngestItem, bufSize),
 		ErrorChannel:         make(chan *IngestItem, bufSize),
@@ -108,7 +113,9 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 }
 
 // RegisterAsNsqConsumer registers this worker as an NSQ consumer on
-// IngestBase.NSQTopic and IngestBase.NSQChannel.
+// IngestBase.NSQTopic and IngestBase.NSQChannel. Note that as soon as you
+// call this, your worker will start handling messages if any are
+// available.
 func (b *IngestBase) RegisterAsNsqConsumer() error {
 	config := nsq.NewConfig()
 	// nsqConfig.Set("max_in_flight", 2 * )
@@ -167,6 +174,9 @@ func (b *IngestBase) HandleMessage(message *nsq.Message) error {
 
 	// Tell Pharos and Redis we're starting work on this
 	b.MarkAsStarted(ingestItem)
+
+	// Make a note that we're processing this.
+	b.AddToInProcessList(workItem.ID)
 
 	// Put the item into the PreProcess channel, which
 	// will set up the Processor to handle it.
@@ -476,6 +486,17 @@ func (b *IngestBase) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
 		return true
 	}
 	return false
+}
+
+// AddToInProcessList adds workItemID to this worker's ItemsInProcess list.
+func (b *IngestBase) AddToInProcessList(workItemID int) {
+	b.ItemsInProcess.Add(strconv.Itoa(workItemID))
+}
+
+// RemoveFromInProcessList removes workItemID from this worker's
+// ItemsInProcess list.
+func (b *IngestBase) RemoveFromInProcessList(workItemID int) {
+	b.ItemsInProcess.Del(strconv.Itoa(workItemID))
 }
 
 // IsLateStageOfIngest returns true if we're at or beyound a point in the

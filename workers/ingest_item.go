@@ -13,6 +13,23 @@ import (
 // pass from one channel to the next during procesing.
 type IngestItem struct {
 
+	// NextQueueTopic is the name of the next NSQ topic to which
+	// this item should be pushed. Valid values are:
+	//
+	// constants.IngestPreFetch,
+	// constants.IngestValidation,
+	// constants.IngestReingestCheck,
+	// constants.IngestStaging,
+	// constants.IngestFormatIdentification,
+	// constants.IngestStorage,
+	// constants.IngestStorageValidation,
+	// constants.IngestRecord,
+	// constants.IngestCleanup.
+	//
+	// An empty string is also valid, indicating that this item
+	// should not be pushed into any NSQ topic.
+	NextQueueTopic string
+
 	// NSQMessage is the NSQ message the worker is processing.
 	NSQMessage *nsq.Message
 

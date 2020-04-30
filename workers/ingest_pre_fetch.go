@@ -16,17 +16,22 @@ type IngestPreFetch struct {
 }
 
 // NewIngestPreFetch creates a new IngestPreFetch worker.
-func NewIngestPreFetch(bufSize, numWorkers int) *IngestPreFetch {
+func NewIngestPreFetch(bufSize, numWorkers, maxAttempts int) *IngestPreFetch {
 	worker := &IngestPreFetch{
 		IngestBase: NewIngestBase(
 			common.NewContext(),
 			createMetadataGatherer,
 			bufSize,
 			numWorkers,
+			maxAttempts,
 			constants.IngestPreFetch,
 		),
 	}
 
+	// The underlying IngestBase worker will start handling messages
+	// as soon as you call this. IngestBase pushes items into the
+	// ProcessChannel, and from there to SuccessChannel, ErrorChannel,
+	// or FatalErrorChannel.
 	err := worker.IngestBase.RegisterAsNsqConsumer()
 	if err != nil {
 		panic(fmt.Sprintf("Cannot register NSQ consumer: %v", err))
@@ -65,6 +70,13 @@ func (worker *IngestPreFetch) ProcessFatalErrorChannel() {
 		// Push to Cleanup queue
 		worker.Context.Logger.Info(ingestItem.WorkItem.ID)
 	}
+}
+
+// FinishItem updates NSQ and Pharos, and removes this item from the
+// ItemsInProcess list.
+func (worker *IngestPreFetch) FinishItem(ingestItem *IngestItem) {
+
+	worker.RemoveFromInProcessList(ingestItem.WorkItem.ID)
 }
 
 func createMetadataGatherer(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
