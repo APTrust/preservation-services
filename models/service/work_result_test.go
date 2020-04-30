@@ -158,7 +158,18 @@ func TestFatalErrorMessage(t *testing.T) {
 	result := service.NewWorkResult("op-name")
 	result.AddError(fatalErr)
 	result.AddError(fatalErr)
+	result.AddError(nonFatalErr)
+	result.AddError(nonFatalErr)
 	assert.Equal(t, "Fatal error | Fatal error", result.FatalErrorMessage())
+}
+
+func TestNonFatalErrorMessage(t *testing.T) {
+	result := service.NewWorkResult("op-name")
+	result.AddError(fatalErr)
+	result.AddError(fatalErr)
+	result.AddError(nonFatalErr)
+	result.AddError(nonFatalErr)
+	assert.Equal(t, "Non-fatal error | Non-fatal error", result.NonFatalErrorMessage())
 }
 
 func TestWorkResultToJson(t *testing.T) {

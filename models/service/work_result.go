@@ -160,6 +160,20 @@ func (result *WorkResult) FatalErrorMessage() string {
 	return strings.Join(messages[:], " | ")
 }
 
+// NonFatalErrorMessage returns all non-fatal error messages as
+// a single pipe-demilimited string.
+func (result *WorkResult) NonFatalErrorMessage() string {
+	messages := make([]string, 0)
+	result.mutex.RLock()
+	for _, err := range result.Errors {
+		if !err.IsFatal {
+			messages = append(messages, err.Message)
+		}
+	}
+	result.mutex.RUnlock()
+	return strings.Join(messages[:], " | ")
+}
+
 // WorkResultFromJSON converts the JSON representation of a WorkResult
 // into a full-fledged object. Note that this involves not only deserializing
 // the JSON, but also initializing an internal mutex. If you deserialize
