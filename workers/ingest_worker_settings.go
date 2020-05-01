@@ -1,6 +1,7 @@
 package workers
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -85,4 +86,9 @@ type IngestWorkerSettings struct {
 	// WorkItemSuccessNote is the text to set on the WorkItem.Note
 	// after an item has been successfully processed.
 	WorkItemSuccessNote string
+}
+
+func (settings *IngestWorkerSettings) ToJSON() string {
+	data, _ := json.Marshal(settings)
+	return string(data)
 }

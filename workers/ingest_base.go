@@ -81,6 +81,8 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 		institutionCache:     make(map[int]string),
 	}
 
+	context.Logger.Info(settings.ToJSON())
+
 	// We typically want 2 or so workers to do the heavy,
 	// long-running processing invlolved in IngestItem.Processor.Run().
 	// Too many workers, however, can be counterproductive,
