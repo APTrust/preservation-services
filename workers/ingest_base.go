@@ -56,8 +56,8 @@ type IngestBase struct {
 	// etc.
 	institutionCache map[int]string
 
-	// nsqConsumer implements HandleMessage to receive messages from NSQ.
-	nsqConsumer *nsq.Consumer
+	// NSQConsumer implements HandleMessage to receive messages from NSQ.
+	NSQConsumer *nsq.Consumer
 
 	// processorConstructor is a function that returns an instance of
 	// *ingest.Base that will handle the processing for this worker.
@@ -111,9 +111,9 @@ func (b *IngestBase) RegisterAsNsqConsumer() error {
 	if err != nil {
 		return err
 	}
-	b.nsqConsumer = consumer
-	b.nsqConsumer.AddHandler(b)
-	b.nsqConsumer.ConnectToNSQLookupd(b.Context.Config.NsqLookupd)
+	b.NSQConsumer = consumer
+	b.NSQConsumer.AddHandler(b)
+	b.NSQConsumer.ConnectToNSQLookupd(b.Context.Config.NsqLookupd)
 	return nil
 }
 
