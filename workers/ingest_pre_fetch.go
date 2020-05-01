@@ -14,7 +14,8 @@ type IngestPreFetch struct {
 	*IngestBase
 }
 
-// NewIngestPreFetch creates a new IngestPreFetch worker.
+// NewIngestPreFetch creates a new IngestPreFetch worker. The worker starts
+// handling NSQ messages as soon as it's instantiated.
 func NewIngestPreFetch(bufSize, numWorkers, maxAttempts int) *IngestPreFetch {
 	settings := &IngestWorkerSettings{
 		ChannelBufferSize:                         bufSize,
