@@ -17,56 +17,47 @@ import (
 )
 
 type Config struct {
-	BaseWorkingDir                    string
-	BucketStandardOR                  string
-	BucketStandardVA                  string
-	BucketGlacierOH                   string
-	BucketGlacierOR                   string
-	BucketGlacierVA                   string
-	BucketGlacierDeepOH               string
-	BucketGlacierDeepOR               string
-	BucketGlacierDeepVA               string
-	BucketWasabiOR                    string
-	BucketWasabiVA                    string
-	ConfigName                        string
-	IngestTempDir                     string
-	IngestPreFetchWorkers             int
-	IngestValidationWorkers           int
-	IngestReingestCheckWorkers        int
-	IngestStagingWorkers              int
-	IngestFormatIdentificationWorkers int
-	IngestStorageWorkers              int
-	IngestStorageValidationWorkers    int
-	IngestRecordWorkers               int
-	IngestCleanupWorkers              int
-	LogDir                            string
-	LogLevel                          logging.Level
-	MaxDaysSinceFixityCheck           int
-	MaxFileSize                       int64
-	MaxWorkerAttempts                 int
-	NsqLookupd                        string
-	NsqURL                            string
-	PharosAPIKey                      string `json:"-"`
-	PharosAPIUser                     string `json:"-"`
-	PharosAPIVersion                  string
-	PharosURL                         string
-	RedisDefaultDB                    int
-	RedisPassword                     string `json:"-"`
-	RedisRetries                      int
-	RedisRetryMs                      time.Duration
-	RedisURL                          string
-	RedisUser                         string `json:"-"`
-	RestoreDir                        string
-	S3AWSHost                         string
-	S3Credentials                     map[string]S3Credentials `json:"-"`
-	S3LocalHost                       string
-	S3WasabiHost                      string
-	ScriptDir                         string
-	StagingBucket                     string
-	StagingUploadRetries              int
-	StagingUploadRetryMs              time.Duration
-	UploadTargets                     []*UploadTarget
-	VolumeServiceURL                  string
+	BaseWorkingDir          string
+	BucketStandardOR        string
+	BucketStandardVA        string
+	BucketGlacierOH         string
+	BucketGlacierOR         string
+	BucketGlacierVA         string
+	BucketGlacierDeepOH     string
+	BucketGlacierDeepOR     string
+	BucketGlacierDeepVA     string
+	BucketWasabiOR          string
+	BucketWasabiVA          string
+	ConfigName              string
+	IngestTempDir           string
+	LogDir                  string
+	LogLevel                logging.Level
+	MaxDaysSinceFixityCheck int
+	MaxFileSize             int64
+	MaxWorkerAttempts       int
+	NsqLookupd              string
+	NsqURL                  string
+	PharosAPIKey            string `json:"-"`
+	PharosAPIUser           string `json:"-"`
+	PharosAPIVersion        string
+	PharosURL               string
+	RedisDefaultDB          int
+	RedisPassword           string `json:"-"`
+	RedisRetries            int
+	RedisRetryMs            time.Duration
+	RedisURL                string
+	RedisUser               string `json:"-"`
+	RestoreDir              string
+	S3AWSHost               string
+	S3Credentials           map[string]S3Credentials `json:"-"`
+	S3LocalHost             string
+	S3WasabiHost            string
+	ScriptDir               string
+	StagingBucket           string
+	StagingUploadRetries    int
+	StagingUploadRetryMs    time.Duration
+	UploadTargets           []*UploadTarget
+	VolumeServiceURL        string
 }
 
 var logLevels = map[string]logging.Level{
@@ -99,47 +90,38 @@ func loadConfig() *Config {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 	return &Config{
-		BaseWorkingDir:                    v.GetString("BASE_WORKING_DIR"),
-		BucketStandardOR:                  v.GetString("BUCKET_STANDARD_OR"),
-		BucketStandardVA:                  v.GetString("BUCKET_STANDARD_VA"),
-		BucketGlacierOH:                   v.GetString("BUCKET_GLACIER_OH"),
-		BucketGlacierOR:                   v.GetString("BUCKET_GLACIER_OR"),
-		BucketGlacierVA:                   v.GetString("BUCKET_GLACIER_VA"),
-		BucketGlacierDeepOH:               v.GetString("BUCKET_GLACIER_DEEP_OH"),
-		BucketGlacierDeepOR:               v.GetString("BUCKET_GLACIER_DEEP_OR"),
-		BucketGlacierDeepVA:               v.GetString("BUCKET_GLACIER_DEEP_VA"),
-		BucketWasabiOR:                    v.GetString("BUCKET_WASABI_OR"),
-		BucketWasabiVA:                    v.GetString("BUCKET_WASABI_VA"),
-		ConfigName:                        envName,
-		IngestTempDir:                     v.GetString("INGEST_TEMP_DIR"),
-		IngestPreFetchWorkers:             v.GetInt("INGEST_PRE_FETCH_WORKERS"),
-		IngestValidationWorkers:           v.GetInt("INGEST_VALIDATION_WORKERS"),
-		IngestReingestCheckWorkers:        v.GetInt("INGEST_REINGEST_CHECK_WORKERS"),
-		IngestStagingWorkers:              v.GetInt("INGEST_STAGING_WORKERS"),
-		IngestFormatIdentificationWorkers: v.GetInt("INGEST_FORMAT_IDENTIFICATION_WORKERS"),
-		IngestStorageWorkers:              v.GetInt("INGEST_STORAGE_WORKERS"),
-		IngestStorageValidationWorkers:    v.GetInt("INGEST_STORAGE_VALIDATION_WORKERS"),
-		IngestRecordWorkers:               v.GetInt("INGEST_RECORD_WORKERS"),
-		IngestCleanupWorkers:              v.GetInt("INGEST_CLEANUP_WORKERS"),
-		LogDir:                            v.GetString("LOG_DIR"),
-		LogLevel:                          getLogLevel(v.GetString("LOG_LEVEL")),
-		MaxDaysSinceFixityCheck:           v.GetInt("MAX_DAYS_SINCE_LAST_FIXITY"),
-		MaxFileSize:                       v.GetInt64("MAX_FILE_SIZE"),
-		MaxWorkerAttempts:                 v.GetInt("MAX_WORKER_ATTEMPTS"),
-		NsqLookupd:                        v.GetString("NSQ_LOOKUPD"),
-		NsqURL:                            v.GetString("NSQ_URL"),
-		PharosAPIKey:                      v.GetString("PHAROS_API_KEY"),
-		PharosAPIUser:                     v.GetString("PHAROS_API_USER"),
-		PharosAPIVersion:                  v.GetString("PHAROS_API_VERSION"),
-		PharosURL:                         v.GetString("PHAROS_URL"),
-		RedisDefaultDB:                    v.GetInt("REDIS_DEFAULT_DB"),
-		RedisPassword:                     v.GetString("REDIS_PASSWORD"),
-		RedisRetries:                      v.GetInt("REDIS_RETRIES"),
-		RedisRetryMs:                      v.GetDuration("REDIS_RETRY_MS"),
-		RedisURL:                          v.GetString("REDIS_URL"),
-		RedisUser:                         v.GetString("REDIS_USER"),
-		RestoreDir:                        v.GetString("RESTORE_DIR"),
-		S3AWSHost:                         v.GetString("S3_AWS_HOST"),
+		BaseWorkingDir:          v.GetString("BASE_WORKING_DIR"),
+		BucketStandardOR:        v.GetString("BUCKET_STANDARD_OR"),
+		BucketStandardVA:        v.GetString("BUCKET_STANDARD_VA"),
+		BucketGlacierOH:         v.GetString("BUCKET_GLACIER_OH"),
+		BucketGlacierOR:         v.GetString("BUCKET_GLACIER_OR"),
+		BucketGlacierVA:         v.GetString("BUCKET_GLACIER_VA"),
+		BucketGlacierDeepOH:     v.GetString("BUCKET_GLACIER_DEEP_OH"),
+		BucketGlacierDeepOR:     v.GetString("BUCKET_GLACIER_DEEP_OR"),
+		BucketGlacierDeepVA:     v.GetString("BUCKET_GLACIER_DEEP_VA"),
+		BucketWasabiOR:          v.GetString("BUCKET_WASABI_OR"),
+		BucketWasabiVA:          v.GetString("BUCKET_WASABI_VA"),
+		ConfigName:              envName,
+		IngestTempDir:           v.GetString("INGEST_TEMP_DIR"),
+		LogDir:                  v.GetString("LOG_DIR"),
+		LogLevel:                getLogLevel(v.GetString("LOG_LEVEL")),
+		MaxDaysSinceFixityCheck: v.GetInt("MAX_DAYS_SINCE_LAST_FIXITY"),
+		MaxFileSize:             v.GetInt64("MAX_FILE_SIZE"),
+		MaxWorkerAttempts:       v.GetInt("MAX_WORKER_ATTEMPTS"),
+		NsqLookupd:              v.GetString("NSQ_LOOKUPD"),
+		NsqURL:                  v.GetString("NSQ_URL"),
+		PharosAPIKey:            v.GetString("PHAROS_API_KEY"),
+		PharosAPIUser:           v.GetString("PHAROS_API_USER"),
+		PharosAPIVersion:        v.GetString("PHAROS_API_VERSION"),
+		PharosURL:               v.GetString("PHAROS_URL"),
+		RedisDefaultDB:          v.GetInt("REDIS_DEFAULT_DB"),
+		RedisPassword:           v.GetString("REDIS_PASSWORD"),
+		RedisRetries:            v.GetInt("REDIS_RETRIES"),
+		RedisRetryMs:            v.GetDuration("REDIS_RETRY_MS"),
+		RedisURL:                v.GetString("REDIS_URL"),
+		RedisUser:               v.GetString("REDIS_USER"),
+		RestoreDir:              v.GetString("RESTORE_DIR"),
+		S3AWSHost:               v.GetString("S3_AWS_HOST"),
 		S3Credentials: map[string]S3Credentials{
 			constants.StorageProviderAWS: S3Credentials{
 				Host:      v.GetString("S3_AWS_HOST"),
