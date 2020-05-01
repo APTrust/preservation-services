@@ -8,6 +8,7 @@ BRANCH = $(subst /,_,$(shell git rev-parse --abbrev-ref HEAD))
 PUSHBRANCH = $(subst /,_,$(TRAVIS_BRANCH))
 TAG=$(name):$(REVISION)
 APT_SERVICES_CONFIG:='test'
+APT_SERVICES_CONFIG_DIR:=./
 
 DOCKERAPPS := redis nsqlookup nsqd nsqadmin minio
 DOCKER_TAG_NAME=${REVISION}-${BRANCH}
