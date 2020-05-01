@@ -81,7 +81,10 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 		institutionCache:     make(map[int]string),
 	}
 
+	context.Logger.Infof("%s started with the following settings:", settings.NSQTopic)
 	context.Logger.Info(settings.ToJSON())
+	context.Logger.Info("Config settings (omitting sensitive credentials):")
+	context.Logger.Info(context.Config.ToJSON())
 
 	// We typically want 2 or so workers to do the heavy,
 	// long-running processing invlolved in IngestItem.Processor.Run().
@@ -270,7 +273,7 @@ func (b *IngestBase) ProcessFatalErrorChannel() {
 // GetWorkItem returns the WorkItem we should be working on.
 func (b *IngestBase) GetWorkItem(message *nsq.Message) (*registry.WorkItem, *service.ProcessingError) {
 	msgBody := strings.TrimSpace(string(message.Body))
-	b.Context.Logger.Info("NSQ Message body: '%s'", msgBody)
+	b.Context.Logger.Info("NSQ Message body: ", msgBody)
 	workItemID, err := strconv.Atoi(string(msgBody))
 	if err != nil || workItemID == 0 {
 		fullErr := fmt.Errorf("Could not get WorkItemId from NSQ message body: %v", err)
