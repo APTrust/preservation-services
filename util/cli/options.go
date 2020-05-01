@@ -22,6 +22,16 @@ var defaultBufSize = 20
 var defaultWorkers = 2
 var defaultTimeout = 1 * time.Minute
 
+var EnvMessage = `If you don't set -config-dir and -config-name on the command line,
+this requires the following environtment vars:
+
+APT_CONFIG_DIR - Path to the directory containing the .env settings file.
+
+APT_SERVICES_CONFIG - Name of the configuration to load. For example:
+    test - Loads .env.test from APT_CONFIG_DIR
+    demo - Loads .env.demo from APT_CONFIG_DIR
+`
+
 func Init() {
 	flag.IntVar(&opts.ChannelBufferSize, "bufsize", defaultBufSize, "Channel buffer size for go workers")
 	flag.StringVar(&opts.ConfigDir, "config-dir", "", "The directory in which to find the APTrust services config file")

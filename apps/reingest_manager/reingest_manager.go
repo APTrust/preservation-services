@@ -19,7 +19,7 @@ func main() {
 
 	// If anything goes wrong, this panics.
 	// Otherwise, it starts handling NSQ messages immediately.
-	worker := workers.NewIngestPreFetch(
+	worker := workers.NewReingestManager(
 		opts.ChannelBufferSize,
 		opts.NumWorkers,
 		opts.MaxAttempts,
@@ -33,9 +33,12 @@ func main() {
 
 func printHelp() {
 	message := `
-ingest_pre_fetch handles the first step of the ingest process, gathering
-metadata from a tarred bag in a depositor's receiving bucket and saving
-the metadata to Redis for subsequent workers.`
+reingest_manager checks to see if a bag has been previously ingested. If so,
+it sets the preservation UUID on each file to match the already-preserved
+file UUID, so we don't wind up with two copies. It also determines which files
+need to be preserved. Those include new files and updated files. Files whose
+checksums match the checksums of already preserved versions will not be copied
+to preservation because they don't need to be updated.`
 	fmt.Println(message)
 	fmt.Println(cli.EnvMessage)
 }

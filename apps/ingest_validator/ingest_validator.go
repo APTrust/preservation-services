@@ -19,7 +19,7 @@ func main() {
 
 	// If anything goes wrong, this panics.
 	// Otherwise, it starts handling NSQ messages immediately.
-	worker := workers.NewIngestPreFetch(
+	worker := workers.NewIngestValidator(
 		opts.ChannelBufferSize,
 		opts.NumWorkers,
 		opts.MaxAttempts,
@@ -33,9 +33,8 @@ func main() {
 
 func printHelp() {
 	message := `
-ingest_pre_fetch handles the first step of the ingest process, gathering
-metadata from a tarred bag in a depositor's receiving bucket and saving
-the metadata to Redis for subsequent workers.`
+ingest_validator validates a bag by checking the metadata that the
+ingest_pre_fetch worker stored in Redis agains a specific BagIt profile.`
 	fmt.Println(message)
 	fmt.Println(cli.EnvMessage)
 }

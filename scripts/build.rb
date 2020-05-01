@@ -9,6 +9,8 @@ class Build
     @output_dir = File.expand_path(File.join(__dir__, "..", "bin", "go-bin"))
     @sources = [
       "ingest_pre_fetch/ingest_pre_fetch.go",
+      "ingest_validator/ingest_validator.go",
+      "reingest_manager/reingest_manager.go",
     ]
   end
 
@@ -22,8 +24,6 @@ class Build
     Process.wait pid
     if $?.exitstatus != 0
       raise "Build failed for #{app.name}"
-    else
-      puts "Built #{exe_name}"
     end
   end
 
