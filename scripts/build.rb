@@ -11,6 +11,12 @@ class Build
       "ingest_pre_fetch/ingest_pre_fetch.go",
       "ingest_validator/ingest_validator.go",
       "reingest_manager/reingest_manager.go",
+      "ingest_staging_uploader/ingest_staging_uploader.go",
+      "ingest_format_identifier/ingest_format_identifier.go",
+      "ingest_preservation_uploader/ingest_preservation_uploader.go",
+      "ingest_preservation_verifier/ingest_preservation_verifier.go",
+      "ingest_recorder/ingest_recorder.go",
+      "ingest_cleanup/ingest_cleanup.go",
     ]
   end
 
@@ -23,7 +29,7 @@ class Build
     pid = Process.spawn(cmd, chdir: source_dir)
     Process.wait pid
     if $?.exitstatus != 0
-      raise "Build failed for #{app.name}"
+      raise "Build failed for #{file_name}"
     end
   end
 

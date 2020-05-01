@@ -14,8 +14,10 @@ type PreservationVerifier struct {
 	*IngestBase
 }
 
-// NewPreservationVerifier creates a new PreservationVerifier worker.
-func NewPreservationVerifier(bufSize, numWorkers, maxAttempts int) *PreservationVerifier {
+// NewIngestPreservationVerifier creates a new PreservationVerifier worker
+// to verify that files have been correctly copied to preservation
+// (and replication) storage.
+func NewIngestPreservationVerifier(bufSize, numWorkers, maxAttempts int) *PreservationVerifier {
 	settings := &IngestWorkerSettings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
