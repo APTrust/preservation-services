@@ -6,6 +6,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"strings"
+	"testing"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
@@ -13,9 +17,6 @@ import (
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net/url"
-	"strings"
-	"testing"
 )
 
 // Pharos rules say we can't restore an item that's being deleted
@@ -406,9 +407,14 @@ func TestGenericFileGet(t *testing.T) {
 func TestGenericFileList(t *testing.T) {
 	LoadPharosFixtures(t)
 	client := GetPharosClient(t)
+
+	// Note that setting institution_identifier to aptrust.org
+	// returns all file for all institutions. If integration
+	// tests continue to grow, we may have to increase per_page
+	// below to get all files.
 	v := url.Values{}
 	v.Add("order", "identifier")
-	v.Add("per_page", "50")
+	v.Add("per_page", "100")
 	v.Add("institution_identifier", "aptrust.org")
 	resp := client.GenericFileList(v)
 	assert.NotNil(t, resp)

@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/bagit"
@@ -26,7 +27,7 @@ import (
 // this object to gather the metadata that subsequent workers will
 // need to perform their jobs.
 type MetadataGatherer struct {
-	Worker
+	Base
 }
 
 // NewMetadataGatherer creates a new MetadataGatherer.
@@ -34,7 +35,7 @@ type MetadataGatherer struct {
 // with S3 and our working data store (Redis).
 func NewMetadataGatherer(context *common.Context, workItemID int, ingestObject *service.IngestObject) *MetadataGatherer {
 	return &MetadataGatherer{
-		Worker{
+		Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,
@@ -42,7 +43,7 @@ func NewMetadataGatherer(context *common.Context, workItemID int, ingestObject *
 	}
 }
 
-// ScanBag scans a tarred bag for metadata. This function can take
+// Run scans a tarred bag for metadata. This function can take
 // less than a second or more than 24 hours to run, depending on the
 // size of the bag we're scanning. (100kb takes less than a second,
 // while multi-TB bags take more than 24 hours.) While it runs, it saves
@@ -51,14 +52,18 @@ func NewMetadataGatherer(context *common.Context, workItemID int, ingestObject *
 // After scanning all files, it copies a handful of text files to our
 // S3 staging bucket. The text files include manifests, tag manifests,
 // and selected tag files.
-func (m *MetadataGatherer) ScanBag() error {
+func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingError) {
 	tarredBag, err := m.Context.S3GetObject(
 		constants.StorageProviderAWS,
 		m.IngestObject.S3Bucket,
 		m.IngestObject.S3Key,
 	)
 	if err != nil {
-		return err
+		isFatal := false
+		if strings.Contains(err.Error(), "key does not exist") {
+			isFatal = true
+		}
+		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, isFatal))
 	}
 
 	defer tarredBag.Close()
@@ -70,22 +75,27 @@ func (m *MetadataGatherer) ScanBag() error {
 
 	err = m.scan(scanner)
 	if err != nil {
-		return err
+		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, false))
 	}
 
 	err = m.CopyTempFilesToS3(scanner.TempFiles)
 	if err != nil {
-		return err
+		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, false))
 	}
 
 	err = m.parseTempFiles(scanner.TempFiles)
 	if err != nil {
-		return err
+		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, false))
 	}
 
 	m.setMissingDefaultTags()
 
-	return m.IngestObjectSave()
+	err = m.IngestObjectSave()
+	if err != nil {
+		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, false))
+	}
+
+	return m.IngestObject.FileCount, errors
 }
 
 func (m *MetadataGatherer) scan(scanner *TarredBagScanner) error {
@@ -125,6 +135,11 @@ func (m *MetadataGatherer) scan(scanner *TarredBagScanner) error {
 // of ingest, the validator will examine the tag files for required tags,
 // and it will compare the file checksums in the working data store with
 // the checksums in the manifests.
+//
+// We also want to keep these manifest and metadata files around for forensic
+// purposes. If ingest stalls or fails, we may be able to find forensics info
+// in these files. For example, sometimes file names, which appear in the
+// manifests, contain strange unicode characters that S3 doesn't like.
 func (m *MetadataGatherer) CopyTempFilesToS3(tempFiles []string) error {
 	bucket := m.Context.Config.StagingBucket
 	for _, filePath := range tempFiles {

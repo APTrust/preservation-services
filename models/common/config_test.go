@@ -88,4 +88,45 @@ func TestUploadTargetsFor(t *testing.T) {
 	assert.Equal(t, constants.StorageWasabiVA, targets[0].OptionName)
 }
 
+func TestToJson(t *testing.T) {
+	config := common.NewConfig()
+	jsonString := config.ToJSON()
+
+	// It's impossible to test for an exact output, since it will
+	// differ on every user's machine. Just make sure a few expected
+	// keys are present, and the sensitive ones are not.
+	expectedKeys := []string{
+		"BaseWorkingDir",
+		"BucketStandardOR",
+		"BucketStandardVA",
+		"BucketGlacierOH",
+		"BucketGlacierOR",
+		"BucketGlacierVA",
+		"BucketGlacierDeepOH",
+		"BucketGlacierDeepOR",
+		"BucketGlacierDeepVA",
+		"BucketWasabiOR",
+		"BucketWasabiVA",
+		"ConfigName",
+		"IngestTempDir",
+		"PharosAPIVersion",
+		"PharosURL",
+		"RedisDefaultDB",
+	}
+	for _, key := range expectedKeys {
+		assert.True(t, strings.Contains(jsonString, key))
+	}
+
+	sensitiveKeys := []string{
+		"PharosAPIKey",
+		"PharosAPIUser",
+		"RedisPassword",
+		"RedisUser",
+		"S3Credentials",
+	}
+	for _, key := range sensitiveKeys {
+		assert.False(t, strings.Contains(jsonString, key))
+	}
+}
+
 // TODO: Test that different configs get the right settings.

@@ -40,13 +40,13 @@ import (
 // the ingest process know how to process the object and files. This does not
 // alter new objects at all, only object that have been previously ingested.
 type ReingestManager struct {
-	Worker
+	Base
 }
 
 // NewReingestManager creates a new ReingestManager.
 func NewReingestManager(context *common.Context, workItemID int, ingestObject *service.IngestObject) *ReingestManager {
 	return &ReingestManager{
-		Worker{
+		Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,
@@ -54,21 +54,22 @@ func NewReingestManager(context *common.Context, workItemID int, ingestObject *s
 	}
 }
 
-// ProcessObject checks to see whether we've ingested a version of this
+// Run checks to see whether we've ingested a version of this
 // object in the past. If so, it checks the files in the new version against
 // the files in the registry to see what has changed.
 //
-// Returns true if this object has been previously ingested. Returns an error
-// if any part of the processing failed.
-func (r *ReingestManager) ProcessObject() (isReingest bool, errors []*service.ProcessingError) {
+// Returns 1 if this object has been previously ingested, zero if not.
+// Returns errors if any part of the processing failed.
+func (r *ReingestManager) Run() (isReingest int, errors []*service.ProcessingError) {
+	isReingest = 0
 	obj, err := r.GetExistingObject()
 	if err == nil {
 		if obj != nil {
-			isReingest = true
+			isReingest = 1
 			saveErr := r.FlagObjectAsReingest(obj)
 			if saveErr != nil {
 				errors = append(errors, r.Error(r.IngestObject.Identifier(), saveErr, true))
-				return true, errors
+				return isReingest, errors
 			}
 		}
 		_, errors := r.ProcessFiles()

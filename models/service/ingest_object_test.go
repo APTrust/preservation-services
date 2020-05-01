@@ -62,6 +62,7 @@ func TestNewIngestObject(t *testing.T) {
 	assert.EqualValues(t, 500, obj.Size)
 	assert.NotNil(t, obj.TagManifests)
 	assert.NotNil(t, obj.Tags)
+	assert.False(t, obj.ShouldDeleteFromReceiving)
 }
 
 func TestIngestObjectBagName(t *testing.T) {
@@ -327,4 +328,4 @@ func TestNewObjectRightsEvent(t *testing.T) {
 	assert.Equal(t, "Set access to consortia", event.OutcomeInformation)
 }
 
-const IngestObjectJson = `{"copied_to_staging_at":"0001-01-01T00:00:00Z","deleted_from_receiving_at":"1904-06-16T15:04:05Z","etag":"12345678","error_message":"No error","file_count":0,"has_fetch_txt":false,"id":555,"institution":"test.edu","institution_id":9855,"is_reingest":false,"manifests":["manifest-md5.txt","manifest-sha256.txt"],"parsable_tag_files":["bag-info.txt","aptrust-info.txt"],"s3_bucket":"aptrust.receiving.test.edu","s3_key":"some-bag.tar","saved_to_registry_at":"0001-01-01T00:00:00Z","serialization":"application/tar","size":99999,"storage_option":"Standard","tag_files":["bag-info.txt","aptrust-info.txt","misc/custom-tag-file.txt"],"tag_manifests":["tagmanifest-md5.txt","tagmanifest-sha256.txt"],"tags":[]}`
+const IngestObjectJson = `{"copied_to_staging_at":"0001-01-01T00:00:00Z","deleted_from_receiving_at":"1904-06-16T15:04:05Z","etag":"12345678","error_message":"No error","file_count":0,"has_fetch_txt":false,"id":555,"institution":"test.edu","institution_id":9855,"is_reingest":false,"manifests":["manifest-md5.txt","manifest-sha256.txt"],"parsable_tag_files":["bag-info.txt","aptrust-info.txt"],"s3_bucket":"aptrust.receiving.test.edu","s3_key":"some-bag.tar","saved_to_registry_at":"0001-01-01T00:00:00Z","serialization":"application/tar","should_delete_from_receiving":false,"size":99999,"storage_option":"Standard","tag_files":["bag-info.txt","aptrust-info.txt","misc/custom-tag-file.txt"],"tag_manifests":["tagmanifest-md5.txt","tagmanifest-sha256.txt"],"tags":[]}`

@@ -29,14 +29,15 @@ func TestNewMetadataGatherer(t *testing.T) {
 	assert.Equal(t, obj, g.IngestObject)
 }
 
-func TestScanBag(t *testing.T) {
+func TestMetadataGathererRun(t *testing.T) {
 	context := common.NewContext()
 	setupS3(t, context, keyToGoodBag, pathToGoodBag)
 	obj := getIngestObject(pathToGoodBag, goodbagMd5)
 	g := ingest.NewMetadataGatherer(context, 9999, obj)
 
-	err := g.ScanBag()
-	require.Nil(t, err)
+	fileCount, errors := g.Run()
+	require.Empty(t, errors)
+	assert.True(t, fileCount > 0)
 
 	testS3Files(t, context)
 	testRedisRecords(t, context, obj.Identifier())

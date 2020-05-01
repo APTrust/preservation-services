@@ -38,14 +38,19 @@ func TestNewRecorder(t *testing.T) {
 	assert.Equal(t, 333, recorder.WorkItemID)
 }
 
-func TestRecordAll(t *testing.T) {
+func TestRecorderRun(t *testing.T) {
 	context := common.NewContext()
 	bagPath := getBagPath("original", "test.edu.apt-001.tar")
 	recorder := prepareForRecord(t, bagPath, recorderItemID_01, context)
 	require.NotNil(t, recorder)
-	fileCount, errors := recorder.RecordAll()
+	fileCount, errors := recorder.Run()
 	require.Empty(t, errors)
 	assert.Equal(t, 18, fileCount)
+
+	// Since the last step of ingest succeeded, the original
+	// tar file in the receiving bucket should be marked for
+	// deletion.
+	assert.True(t, recorder.IngestObject.ShouldDeleteFromReceiving)
 
 	testNewObjectInPharos(t, recorder)
 	testNewFilesInPharos(t, recorder)
@@ -308,9 +313,14 @@ func testObjectUpdate(t *testing.T, context *common.Context) {
 	bagPath := getBagPath("updated", "test.edu.apt-001.tar")
 	recorder := prepareForRecord(t, bagPath, recorderItemID_02, context)
 	require.NotNil(t, recorder)
-	fileCount, errors := recorder.RecordAll()
+	fileCount, errors := recorder.Run()
 	require.Empty(t, errors)
 	assert.Equal(t, 18, fileCount)
+
+	// Since the last step of ingest succeeded, the original
+	// tar file in the receiving bucket should be marked for
+	// deletion.
+	assert.True(t, recorder.IngestObject.ShouldDeleteFromReceiving)
 
 	testUpdatedObjectInPharos(t, recorder, timestamp)
 }

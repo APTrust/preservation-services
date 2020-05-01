@@ -1,6 +1,7 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -33,21 +34,22 @@ type Config struct {
 	LogLevel                logging.Level
 	MaxDaysSinceFixityCheck int
 	MaxFileSize             int64
+	MaxWorkerAttempts       int
 	NsqLookupd              string
 	NsqURL                  string
-	PharosAPIKey            string
-	PharosAPIUser           string
+	PharosAPIKey            string `json:"-"`
+	PharosAPIUser           string `json:"-"`
 	PharosAPIVersion        string
 	PharosURL               string
 	RedisDefaultDB          int
-	RedisPassword           string
+	RedisPassword           string `json:"-"`
 	RedisRetries            int
 	RedisRetryMs            time.Duration
 	RedisURL                string
-	RedisUser               string
+	RedisUser               string `json:"-"`
 	RestoreDir              string
 	S3AWSHost               string
-	S3Credentials           map[string]S3Credentials
+	S3Credentials           map[string]S3Credentials `json:"-"`
 	S3LocalHost             string
 	S3WasabiHost            string
 	ScriptDir               string
@@ -105,6 +107,7 @@ func loadConfig() *Config {
 		LogLevel:                getLogLevel(v.GetString("LOG_LEVEL")),
 		MaxDaysSinceFixityCheck: v.GetInt("MAX_DAYS_SINCE_LAST_FIXITY"),
 		MaxFileSize:             v.GetInt64("MAX_FILE_SIZE"),
+		MaxWorkerAttempts:       v.GetInt("MAX_WORKER_ATTEMPTS"),
 		NsqLookupd:              v.GetString("NSQ_LOOKUPD"),
 		NsqURL:                  v.GetString("NSQ_URL"),
 		PharosAPIKey:            v.GetString("PHAROS_API_KEY"),
@@ -480,4 +483,12 @@ func (config *Config) initUploadTargets() {
 			StorageClass: constants.StorageClassWasabi,
 		},
 	}
+}
+
+// ToJSON serializes the config to JSON for logging purposes.
+// It omits some sensitive data, such as the Pharos API key and
+// AWS credentials.
+func (config *Config) ToJSON() string {
+	data, _ := json.Marshal(config)
+	return string(data)
 }

@@ -35,13 +35,13 @@ func TestNewFormatIdentifier(t *testing.T) {
 	getFormatIdentifier(t)
 }
 
-func TestIdentifyFormat(t *testing.T) {
+func TestFormatIdentifierRun(t *testing.T) {
 	// We have to run the staging uploader first to ensure the files
 	// we want to identify have been uploaded to our local S3 instance.
 	context := common.NewContext()
 	stagingUploader := prepareForCopyToStaging(t, pathToGoodBag, fmtWorkItemID, context)
-	err := stagingUploader.CopyFilesToStaging()
-	require.Nil(t, err)
+	_, errors := stagingUploader.Run()
+	require.Empty(t, errors)
 
 	fi := ingest.NewFormatIdentifier(context,
 		stagingUploader.WorkItemID, stagingUploader.IngestObject)
@@ -49,7 +49,7 @@ func TestIdentifyFormat(t *testing.T) {
 	testGetPresignedURL(t, fi)
 	clearFileFormats(t, fi)
 
-	numberIdentified, errors := fi.IdentifyFormats()
+	numberIdentified, errors := fi.Run()
 	assert.Empty(t, errors, errors)
 	assert.Equal(t, 16, numberIdentified)
 

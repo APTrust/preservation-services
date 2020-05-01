@@ -13,13 +13,13 @@ import (
 // or updating all necessary records, including IntellectualObject,
 // GenericFiles, and PremisEvents.
 type Recorder struct {
-	Worker
+	Base
 }
 
 // NewRecorder returns a new Recorder.
 func NewRecorder(context *common.Context, workItemID int, ingestObject *service.IngestObject) *Recorder {
 	return &Recorder{
-		Worker: Worker{
+		Base: Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,
@@ -27,10 +27,10 @@ func NewRecorder(context *common.Context, workItemID int, ingestObject *service.
 	}
 }
 
-// RecordAll saves all object, file, checksum, and event data to Pharos.
+// Run saves all object, file, checksum, and event data to Pharos.
 // This returns the number of files saved, and a list of any errors that
 // occurred.
-func (r *Recorder) RecordAll() (fileCount int, errors []*service.ProcessingError) {
+func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 	errors = r.recordObject()
 	if len(errors) > 0 {
 		return 0, errors
@@ -40,13 +40,26 @@ func (r *Recorder) RecordAll() (fileCount int, errors []*service.ProcessingError
 		return 0, errors
 	}
 	fileCount, errors = r.recordFiles()
+	if len(errors) == 0 {
+		// This tells the cleanup process that it's safe to
+		// delete the original tar file from the receiving bucket.
+		// If the save fails and the cleanup worker doesn't get
+		// the message, just log it. The tar file will eventually be
+		// deleted by the bucket policy, but we want to know the
+		// error occurred.
+		r.IngestObject.ShouldDeleteFromReceiving = true
+		err := r.IngestObjectSave()
+		if err != nil {
+			r.Context.Logger.Errorf("WorkItem %d. After marking ShouldDeletedFromReceiving = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
+		}
+	}
 	return fileCount, errors
 }
 
 // recordObject records the IntellectualObject record in Pharos,
 // along with the object-level events.
 // The IntellectualObject comes from this worker's IngestObject.
-// This method is public so we can test it. Call RecordAll() instead.
+// This method is public so we can test it. Call Run() instead.
 func (r *Recorder) recordObject() (errors []*service.ProcessingError) {
 	if r.IngestObject.SavedToRegistryAt.IsZero() {
 		obj := r.IngestObject.ToIntellectualObject()

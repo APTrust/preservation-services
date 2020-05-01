@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -16,13 +17,13 @@ import (
 // StagingUploader unpacks a tarfile from a receiving bucket and
 // stores each file unpacked from the tar in a staging bucket.
 type StagingUploader struct {
-	Worker
+	Base
 }
 
 // NewStagingUploader creates a new StagingUploader.
 func NewStagingUploader(context *common.Context, workItemID int, ingestObject *service.IngestObject) *StagingUploader {
 	return &StagingUploader{
-		Worker{
+		Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,
@@ -30,7 +31,7 @@ func NewStagingUploader(context *common.Context, workItemID int, ingestObject *s
 	}
 }
 
-// CopyFilesToStaging does all of the work, including:
+// Run does all of the work, including:
 //
 // 1. Retrieving the tarred bag from the depositor's receiving bucket.
 //
@@ -40,29 +41,35 @@ func NewStagingUploader(context *common.Context, workItemID int, ingestObject *s
 // 3. Telling Redis that each file has been copied.
 //
 // This is the only method external callers need to call.
-func (s *StagingUploader) CopyFilesToStaging() error {
+func (s *StagingUploader) Run() (filesCopied int, errors []*service.ProcessingError) {
 	tarredBag, err := s.Context.S3GetObject(
 		constants.StorageProviderAWS,
 		s.IngestObject.S3Bucket,
 		s.IngestObject.S3Key,
 	)
 	if err != nil {
-		return err
+		isFatal := strings.Contains(err.Error(), "key does not exist")
+		return 0, append(errors, s.Error(s.IngestObject.Identifier(), err, isFatal))
 	}
 	defer tarredBag.Close()
-	err = s.CopyFiles(tarredBag)
+	filesCopied, err = s.CopyFiles(tarredBag)
 	if err != nil {
-		return err
+		return filesCopied, append(errors, s.Error(s.IngestObject.Identifier(), err, false))
 	}
 	s.IngestObject.CopiedToStagingAt = time.Now().UTC()
-	return s.IngestObjectSave()
+	err = s.IngestObjectSave()
+	if err != nil {
+		errors = append(errors, s.Error(s.IngestObject.Identifier(), err, false))
+	}
+	return filesCopied, errors
 }
 
 // CopyFiles unpacks files from a tarball copies each individual
 // file to an S3 staging bucket so we can work with individual files
-// later. There is no need to call this directly. Use CopyFilesToStaging()
+// later. There is no need to call this directly. Use Run()
 // instead.
-func (s *StagingUploader) CopyFiles(tarredBag *minio.Object) error {
+func (s *StagingUploader) CopyFiles(tarredBag *minio.Object) (int, error) {
+	filesCopied := 0
 	errCount := 0
 	tarReader := tar.NewReader(tarredBag)
 	for {
@@ -71,12 +78,12 @@ func (s *StagingUploader) CopyFiles(tarredBag *minio.Object) error {
 			break
 		}
 		if err != nil {
-			return err
+			return filesCopied, err
 		}
 		if header.Typeflag == tar.TypeReg {
 			ingestFile, err := s.GetIngestFile(header.Name)
 			if err != nil {
-				return err
+				return filesCopied, err
 			}
 			if ingestFile.CopiedToStagingAt.IsZero() {
 				err := s.CopyFileToStaging(tarReader, ingestFile)
@@ -85,16 +92,17 @@ func (s *StagingUploader) CopyFiles(tarredBag *minio.Object) error {
 					// as a warning, and we can retry later.
 					s.Context.Logger.Warning(err.Error())
 					errCount++
+				} else {
+					s.Context.Logger.Infof("Copied %s to staging", ingestFile.Identifier())
+					filesCopied++
 				}
-			} else {
-				s.Context.Logger.Infof("Copied %s to staging", ingestFile.Identifier())
 			}
 		}
 	}
 	if errCount > 0 {
-		return fmt.Errorf("%d files were not copied", errCount)
+		return filesCopied, fmt.Errorf("%d files were not copied", errCount)
 	}
-	return nil
+	return filesCopied, nil
 }
 
 // CopyFileToStaging copies a single file from the tarball to the staging

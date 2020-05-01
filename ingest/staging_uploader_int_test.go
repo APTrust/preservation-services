@@ -46,14 +46,19 @@ func TestNewStagingUploader(t *testing.T) {
 	assert.Equal(t, obj, uploader.IngestObject)
 }
 
-func TestCopyFilesToStaging(t *testing.T) {
+func TestStagingUploaderRun(t *testing.T) {
 	context := common.NewContext()
 	uploader := prepareForCopyToStaging(t, pathToGoodBag, stagingItemID, context)
 
 	testIdentifierGetFileAndPutOptions(t, uploader)
 
-	err := uploader.CopyFilesToStaging()
-	require.Nil(t, err)
+	fileCount, errors := uploader.Run()
+	require.Empty(t, errors)
+
+	// All 16 files from this bag will go to staging,
+	// though some, like the manifests and bagit.txt,
+	// may not subsequently go to preservation.
+	assert.Equal(t, 16, fileCount)
 }
 
 // There's a lot of setup required to get to these functions,

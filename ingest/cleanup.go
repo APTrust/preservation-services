@@ -13,7 +13,7 @@ import (
 // includes S3 files in the staging bucket and processing records in
 // Redis.
 type Cleanup struct {
-	Worker
+	Base
 }
 
 // NewCleanup creates a new Cleanup. This will panic
@@ -21,7 +21,7 @@ type Cleanup struct {
 // not present.
 func NewCleanup(context *common.Context, workItemID int, ingestObject *service.IngestObject) *Cleanup {
 	return &Cleanup{
-		Worker: Worker{
+		Base: Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,
@@ -29,12 +29,22 @@ func NewCleanup(context *common.Context, workItemID int, ingestObject *service.I
 	}
 }
 
-func (c *Cleanup) CleanAll() (fileCount int, errors []*service.ProcessingError) {
+func (c *Cleanup) Run() (fileCount int, errors []*service.ProcessingError) {
 	fileCount, errors = c.deleteFilesFromStaging()
 	if len(errors) == 0 {
 		_, err := c.Context.RedisClient.WorkItemDelete(c.WorkItemID)
 		if err != nil {
 			errors = append(errors, c.Error(c.IngestObject.Identifier(), err, false))
+		}
+	}
+	if len(errors) == 0 {
+		if c.IngestObject.ShouldDeleteFromReceiving {
+			err := c.deleteFromReceiving()
+			if err != nil {
+				errors = append(errors, c.Error(c.IngestObject.Identifier(), err, false))
+			}
+		} else {
+			c.Context.Logger.Warning("WorkItem %d: Not deleting %s/%s from receiving bucket because ShouldDeleteFromReceiving = false", c.WorkItemID, c.IngestObject.S3Bucket, c.IngestObject.S3Key)
 		}
 	}
 	return fileCount, errors
@@ -81,6 +91,14 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 	return fileCount, errors
 }
 
+func (c *Cleanup) deleteFromReceiving() error {
+	if BucketUnsafeForDeletion(c.IngestObject.S3Bucket) {
+		return fmt.Errorf("Can't delete %s from receiving because bucket %s doesn't look safe", c.IngestObject.S3Key, c.IngestObject.S3Bucket)
+	}
+	s3Client := c.Context.S3Clients[constants.StorageProviderAWS]
+	return s3Client.RemoveObject(c.IngestObject.S3Bucket, c.IngestObject.S3Key)
+}
+
 func BucketUnsafeForDeletion(bucket string) bool {
-	return strings.Contains(bucket, "preservation") || !strings.Contains(bucket, "staging")
+	return !strings.Contains(bucket, "staging") && !strings.Contains(bucket, "receiving")
 }

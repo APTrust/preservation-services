@@ -25,10 +25,10 @@ func TestNewPreservationUploader(t *testing.T) {
 	assert.Equal(t, uploaderItemID, uploader.WorkItemID)
 }
 
-func TestPreservationUploadAll(t *testing.T) {
+func TestPreservationUploaderRun(t *testing.T) {
 	context := common.NewContext()
 	uploader := prepareForPreservationUpload(t, pathToGoodBag, uploaderItemID, context)
-	filesUploaded, errors := uploader.UploadAll()
+	filesUploaded, errors := uploader.Run()
 	require.Empty(t, errors, errors)
 
 	// Bag has 16 files, all of which should have been

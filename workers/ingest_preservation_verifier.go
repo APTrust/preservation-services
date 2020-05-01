@@ -1,0 +1,51 @@
+package workers
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/ingest"
+	"github.com/APTrust/preservation-services/models/common"
+	"github.com/APTrust/preservation-services/models/service"
+)
+
+type PreservationVerifier struct {
+	*IngestBase
+}
+
+// NewPreservationVerifier creates a new PreservationVerifier worker.
+func NewPreservationVerifier(bufSize, numWorkers, maxAttempts int) *PreservationVerifier {
+	settings := &IngestWorkerSettings{
+		ChannelBufferSize:                         bufSize,
+		DeleteFromReceivingAfterFatalError:        false,
+		DeleteFromReceivingAfterMaxFailedAttempts: false,
+		MaxAttempts:                         maxAttempts,
+		NSQChannel:                          constants.IngestStorageValidation + "_worker_chan",
+		NSQTopic:                            constants.IngestStorageValidation,
+		NextQueueTopic:                      constants.IngestRecord,
+		NextWorkItemStage:                   constants.StageRecord,
+		NumberOfWorkers:                     numWorkers,
+		PushToCleanupAfterMaxFailedAttempts: false,
+		PushToCleanupOnFatalError:           false,
+		RequeueTimeout:                      (1 * time.Minute),
+		WorkItemSuccessNote:                 "Finished verifying files in preservation storage",
+	}
+	worker := &PreservationVerifier{
+		IngestBase: NewIngestBase(
+			common.NewContext(),
+			createPreservationVerifier,
+			settings,
+		),
+	}
+
+	err := worker.IngestBase.RegisterAsNsqConsumer()
+	if err != nil {
+		panic(fmt.Sprintf("Cannot register NSQ consumer: %v", err))
+	}
+	return worker
+}
+
+func createPreservationVerifier(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+	return ingest.NewPreservationVerifier(context, workItemID, ingestObject)
+}

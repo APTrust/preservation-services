@@ -25,7 +25,7 @@ func TestNewPreservationVerifier(t *testing.T) {
 	assert.Equal(t, verifierItemID, verifier.WorkItemID)
 }
 
-func TestVerifyAll(t *testing.T) {
+func TestPreservationVerifierRun(t *testing.T) {
 	context := common.NewContext()
 	verifier := prepareForPreservationVerify(t, pathToGoodBag, verifierItemID, context)
 
@@ -44,7 +44,7 @@ func TestVerifyAll(t *testing.T) {
 	// Only 8 files from the bag should be stored in
 	// preservation (no manifests or bagit.txt).
 	// Count should be 8 files * 2 storage records each = 16.
-	count, errors := verifier.VerifyAll()
+	count, errors := verifier.Run()
 	assert.Equal(t, 16, count)
 	assert.Empty(t, errors)
 

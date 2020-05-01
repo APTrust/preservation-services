@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/APTrust/preservation-services/bagit"
@@ -9,24 +10,55 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
+	"github.com/APTrust/preservation-services/util/testutil"
 )
 
 type MetadataValidator struct {
-	Worker
+	Base
 	Errors  []string
 	Profile *bagit.Profile
 }
 
-func NewMetadataValidator(context *common.Context, profile *bagit.Profile, ingestObject *service.IngestObject, workItemID int) *MetadataValidator {
+// NewMetadataValidator returns a MetadataValidator object. You'll need
+// to set validator.Profile to a BagItProfile object before calling Run().
+// This is an unfortunate side effect of the need to conform to a common
+// constructor pattern.
+func NewMetadataValidator(context *common.Context, workItemID int, ingestObject *service.IngestObject) *MetadataValidator {
+	profileName := ingestObject.BagItProfileFormat()
+	profile, err := getProfile(profileName)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot load BagIt profile %s", profileName))
+	}
+	context.Logger.Info("WorkItem %d: Loaded profile %s for bag %s", workItemID, profileName, ingestObject.Identifier())
 	return &MetadataValidator{
-		Worker: Worker{
+		Base: Base{
 			Context:      context,
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,
 		},
-		Errors:  make([]string, 0),
 		Profile: profile,
+		Errors:  make([]string, 0),
 	}
+}
+
+// Run validates the bag referred to by IngestObject against the BagIt profile
+// specified in validator.Profile.
+func (v *MetadataValidator) Run() (fileCount int, errors []*service.ProcessingError) {
+	if v.Profile == nil {
+		panic("Specify a BagIt profile before calling MetadataValidator.Run()")
+	}
+	// Validation errors are fatal. We can't ingest an invalid bag.
+	if !v.IsValid() {
+		for _, err := range v.Errors {
+			errors = append(errors, v.Error(v.IngestObject.Identifier(), fmt.Errorf(err), true))
+		}
+		v.IngestObject.ShouldDeleteFromReceiving = true
+		err := v.IngestObjectSave()
+		if err != nil {
+			errors = append(errors, v.Error(v.IngestObject.Identifier(), err, false))
+		}
+	}
+	return v.IngestObject.FileCount, errors
 }
 
 func (v *MetadataValidator) IsValid() bool {
@@ -350,4 +382,12 @@ func (v *MetadataValidator) RecordMissing(filetype string, requiredByProfile, pr
 		}
 	}
 	return ok
+}
+
+// TODO: Should these be pre-loaded into the executable?
+// TODO: testutil doesn't belong in non-test code.
+// Valid names are constants.BagItProfileBTR and constant.BagItProfileDefault
+func getProfile(name string) (*bagit.Profile, error) {
+	filename := path.Join(testutil.ProjectRoot(), "profiles", name)
+	return bagit.ProfileLoad(filename)
 }
