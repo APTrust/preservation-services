@@ -10,31 +10,31 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 )
 
-type IngestValidator struct {
+type PreservationVerifier struct {
 	*IngestBase
 }
 
-// NewIngestValidator creates a new IngestValidator worker.
-func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
+// NewPreservationVerifier creates a new PreservationVerifier worker.
+func NewPreservationVerifier(bufSize, numWorkers, maxAttempts int) *PreservationVerifier {
 	settings := &IngestWorkerSettings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,
 		MaxAttempts:                         maxAttempts,
-		NSQChannel:                          constants.IngestValidation + "_worker_chan",
-		NSQTopic:                            constants.IngestValidation,
-		NextQueueTopic:                      constants.IngestValidation,
-		NextWorkItemStage:                   constants.StageReingestCheck,
+		NSQChannel:                          constants.IngestStorageValidation + "_worker_chan",
+		NSQTopic:                            constants.IngestStorageValidation,
+		NextQueueTopic:                      constants.IngestRecord,
+		NextWorkItemStage:                   constants.StageRecord,
 		NumberOfWorkers:                     numWorkers,
 		PushToCleanupAfterMaxFailedAttempts: false,
 		PushToCleanupOnFatalError:           false,
 		RequeueTimeout:                      (1 * time.Minute),
-		WorkItemSuccessNote:                 "Bag is valid",
+		WorkItemSuccessNote:                 "Finished verifying files in preservation storage",
 	}
-	worker := &IngestValidator{
+	worker := &PreservationVerifier{
 		IngestBase: NewIngestBase(
 			common.NewContext(),
-			createMetadataValidator,
+			createPreservationVerifier,
 			settings,
 		),
 	}
@@ -46,6 +46,6 @@ func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
 	return worker
 }
 
-func createMetadataValidator(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
-	return ingest.NewMetadataValidator(context, workItemID, ingestObject)
+func createPreservationVerifier(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+	return ingest.NewPreservationVerifier(context, workItemID, ingestObject)
 }

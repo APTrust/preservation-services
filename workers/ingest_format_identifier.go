@@ -10,31 +10,31 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 )
 
-type IngestValidator struct {
+type FormatIdentifier struct {
 	*IngestBase
 }
 
-// NewIngestValidator creates a new IngestValidator worker.
-func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
+// NewFormatIdentifier creates a new FormatIdentifier worker.
+func NewFormatIdentifier(bufSize, numWorkers, maxAttempts int) *FormatIdentifier {
 	settings := &IngestWorkerSettings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,
 		MaxAttempts:                         maxAttempts,
-		NSQChannel:                          constants.IngestValidation + "_worker_chan",
-		NSQTopic:                            constants.IngestValidation,
-		NextQueueTopic:                      constants.IngestValidation,
-		NextWorkItemStage:                   constants.StageReingestCheck,
+		NSQChannel:                          constants.IngestFormatIdentification + "_worker_chan",
+		NSQTopic:                            constants.IngestFormatIdentification,
+		NextQueueTopic:                      constants.IngestStorage,
+		NextWorkItemStage:                   constants.StageStore,
 		NumberOfWorkers:                     numWorkers,
 		PushToCleanupAfterMaxFailedAttempts: false,
 		PushToCleanupOnFatalError:           false,
 		RequeueTimeout:                      (1 * time.Minute),
-		WorkItemSuccessNote:                 "Bag is valid",
+		WorkItemSuccessNote:                 "Finished file format identification",
 	}
-	worker := &IngestValidator{
+	worker := &FormatIdentifier{
 		IngestBase: NewIngestBase(
 			common.NewContext(),
-			createMetadataValidator,
+			createFormatIdentifier,
 			settings,
 		),
 	}
@@ -46,6 +46,6 @@ func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
 	return worker
 }
 
-func createMetadataValidator(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
-	return ingest.NewMetadataValidator(context, workItemID, ingestObject)
+func createFormatIdentifier(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+	return ingest.NewFormatIdentifier(context, workItemID, ingestObject)
 }

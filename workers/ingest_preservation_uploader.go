@@ -10,31 +10,31 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 )
 
-type IngestValidator struct {
+type PreservationUploader struct {
 	*IngestBase
 }
 
-// NewIngestValidator creates a new IngestValidator worker.
-func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
+// NewPreservationUploader creates a new PreservationUploader worker.
+func NewPreservationUploader(bufSize, numWorkers, maxAttempts int) *PreservationUploader {
 	settings := &IngestWorkerSettings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,
 		MaxAttempts:                         maxAttempts,
-		NSQChannel:                          constants.IngestValidation + "_worker_chan",
-		NSQTopic:                            constants.IngestValidation,
-		NextQueueTopic:                      constants.IngestValidation,
-		NextWorkItemStage:                   constants.StageReingestCheck,
+		NSQChannel:                          constants.IngestStorage + "_worker_chan",
+		NSQTopic:                            constants.IngestStorage,
+		NextQueueTopic:                      constants.IngestStorageValidation,
+		NextWorkItemStage:                   constants.StageStorageValidation,
 		NumberOfWorkers:                     numWorkers,
 		PushToCleanupAfterMaxFailedAttempts: false,
 		PushToCleanupOnFatalError:           false,
 		RequeueTimeout:                      (1 * time.Minute),
-		WorkItemSuccessNote:                 "Bag is valid",
+		WorkItemSuccessNote:                 "Finished copying files to preservation storage",
 	}
-	worker := &IngestValidator{
+	worker := &PreservationUploader{
 		IngestBase: NewIngestBase(
 			common.NewContext(),
-			createMetadataValidator,
+			createPreservationUploader,
 			settings,
 		),
 	}
@@ -46,6 +46,6 @@ func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
 	return worker
 }
 
-func createMetadataValidator(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
-	return ingest.NewMetadataValidator(context, workItemID, ingestObject)
+func createPreservationUploader(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+	return ingest.NewPreservationUploader(context, workItemID, ingestObject)
 }

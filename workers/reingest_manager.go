@@ -10,31 +10,31 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 )
 
-type IngestValidator struct {
+type ReingestManager struct {
 	*IngestBase
 }
 
-// NewIngestValidator creates a new IngestValidator worker.
-func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
+// NewReingestManager creates a new ReingestManager worker.
+func NewReingestManager(bufSize, numWorkers, maxAttempts int) *ReingestManager {
 	settings := &IngestWorkerSettings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,
 		MaxAttempts:                         maxAttempts,
-		NSQChannel:                          constants.IngestValidation + "_worker_chan",
-		NSQTopic:                            constants.IngestValidation,
-		NextQueueTopic:                      constants.IngestValidation,
-		NextWorkItemStage:                   constants.StageReingestCheck,
+		NSQChannel:                          constants.IngestReingestCheck + "_worker_chan",
+		NSQTopic:                            constants.IngestReingestCheck,
+		NextQueueTopic:                      constants.IngestStaging,
+		NextWorkItemStage:                   constants.StageCopyToStaging,
 		NumberOfWorkers:                     numWorkers,
 		PushToCleanupAfterMaxFailedAttempts: false,
 		PushToCleanupOnFatalError:           false,
 		RequeueTimeout:                      (1 * time.Minute),
-		WorkItemSuccessNote:                 "Bag is valid",
+		WorkItemSuccessNote:                 "Finished reingest check",
 	}
-	worker := &IngestValidator{
+	worker := &ReingestManager{
 		IngestBase: NewIngestBase(
 			common.NewContext(),
-			createMetadataValidator,
+			createReingestManager,
 			settings,
 		),
 	}
@@ -46,6 +46,6 @@ func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
 	return worker
 }
 
-func createMetadataValidator(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
-	return ingest.NewMetadataValidator(context, workItemID, ingestObject)
+func createReingestManager(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+	return ingest.NewReingestManager(context, workItemID, ingestObject)
 }

@@ -10,31 +10,31 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 )
 
-type IngestValidator struct {
+type IngestRecorder struct {
 	*IngestBase
 }
 
-// NewIngestValidator creates a new IngestValidator worker.
-func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
+// NewIngestRecorder creates a new IngestRecorder worker.
+func NewIngestRecorder(bufSize, numWorkers, maxAttempts int) *IngestRecorder {
 	settings := &IngestWorkerSettings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,
 		MaxAttempts:                         maxAttempts,
-		NSQChannel:                          constants.IngestValidation + "_worker_chan",
-		NSQTopic:                            constants.IngestValidation,
-		NextQueueTopic:                      constants.IngestValidation,
-		NextWorkItemStage:                   constants.StageReingestCheck,
+		NSQChannel:                          constants.IngestRecord + "_worker_chan",
+		NSQTopic:                            constants.IngestRecord,
+		NextQueueTopic:                      constants.IngestCleanup,
+		NextWorkItemStage:                   constants.StageCleanup,
 		NumberOfWorkers:                     numWorkers,
 		PushToCleanupAfterMaxFailedAttempts: false,
 		PushToCleanupOnFatalError:           false,
 		RequeueTimeout:                      (1 * time.Minute),
-		WorkItemSuccessNote:                 "Bag is valid",
+		WorkItemSuccessNote:                 "Finished recording ingest data in Pharos",
 	}
-	worker := &IngestValidator{
+	worker := &IngestRecorder{
 		IngestBase: NewIngestBase(
 			common.NewContext(),
-			createMetadataValidator,
+			createIngestRecorder,
 			settings,
 		),
 	}
@@ -46,6 +46,6 @@ func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
 	return worker
 }
 
-func createMetadataValidator(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
-	return ingest.NewMetadataValidator(context, workItemID, ingestObject)
+func createIngestRecorder(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+	return ingest.NewRecorder(context, workItemID, ingestObject)
 }

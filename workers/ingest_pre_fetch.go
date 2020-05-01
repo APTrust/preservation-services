@@ -21,7 +21,7 @@ func NewIngestPreFetch(bufSize, numWorkers, maxAttempts int) *IngestPreFetch {
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,
 		MaxAttempts:                         maxAttempts,
-		NSQChannel:                          constants.IngestPreFetch + "_chan",
+		NSQChannel:                          constants.IngestPreFetch + "_worker_chan",
 		NSQTopic:                            constants.IngestPreFetch,
 		NextQueueTopic:                      constants.IngestValidation,
 		NextWorkItemStage:                   constants.StageValidate,
