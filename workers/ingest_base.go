@@ -182,7 +182,7 @@ func (b *IngestBase) processItem() {
 		count, errors := ingestItem.Processor.Run()
 		ingestItem.WorkResult.Errors = errors
 
-		b.Context.Logger.Info("WorkItem %d: count %d", ingestItem.WorkItem.ID, count)
+		b.Context.Logger.Infof("WorkItem %d: count %d", ingestItem.WorkItem.ID, count)
 
 		if ingestItem.WorkResult.HasFatalErrors() {
 			b.FatalErrorChannel <- ingestItem
@@ -196,6 +196,8 @@ func (b *IngestBase) processItem() {
 
 func (b *IngestBase) ProcessSuccessChannel() {
 	for ingestItem := range b.SuccessChannel {
+		b.Context.Logger.Infof("WorkItem %d (%s) is in success channel",
+			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name)
 		// Tell Pharos item succeeded.
 		ingestItem.WorkItem.Note = b.Settings.WorkItemSuccessNote
 		ingestItem.WorkItem.Stage = b.Settings.NextWorkItemStage
@@ -215,6 +217,8 @@ func (b *IngestBase) ProcessSuccessChannel() {
 func (b *IngestBase) ProcessErrorChannel() {
 	for ingestItem := range b.ErrorChannel {
 		shouldRequeue := true
+		b.Context.Logger.Infof("WorkItem %d (%s) is in error channel",
+			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name)
 
 		// Update WorkItem in Pharos
 		ingestItem.WorkItem.Note = ingestItem.WorkResult.NonFatalErrorMessage()
@@ -249,6 +253,9 @@ func (b *IngestBase) ProcessErrorChannel() {
 
 func (b *IngestBase) ProcessFatalErrorChannel() {
 	for ingestItem := range b.FatalErrorChannel {
+		b.Context.Logger.Infof("WorkItem %d (%s) is in fatal error channel",
+			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name)
+
 		// Update WorkItem for Pharos
 		ingestItem.WorkItem.Note = ingestItem.WorkResult.FatalErrorMessage()
 		ingestItem.WorkItem.Retry = false
@@ -399,7 +406,7 @@ func (b *IngestBase) GetIngestObject(workItem *registry.WorkItem) (*service.Inge
 	if err == nil && ingestObject != nil {
 		return ingestObject, nil
 	}
-	if err != nil && b.Settings.NSQChannel != constants.IngestPreFetch {
+	if err != nil && b.Settings.NSQTopic != constants.IngestPreFetch {
 		return nil, fmt.Errorf("Ingest object not found in Redis: %v", err)
 	}
 	instID, err := b.GetInstitutionIdentifier(workItem.InstitutionID)
@@ -421,7 +428,7 @@ func (b *IngestBase) GetIngestObject(workItem *registry.WorkItem) (*service.Inge
 func (b *IngestBase) GetWorkResult(workItemID int) *service.WorkResult {
 	workResult, err := b.Context.RedisClient.WorkResultGet(workItemID, b.Settings.NSQTopic)
 	if err != nil {
-		b.Context.Logger.Info("No WorkResult in Redis for WorkItem %d. Creating a new one.", workItemID)
+		b.Context.Logger.Infof("No WorkResult in Redis for WorkItem %d. Creating a new one.", workItemID)
 		workResult = service.NewWorkResult(b.Settings.NSQTopic)
 	}
 	return workResult
@@ -436,7 +443,7 @@ func (b *IngestBase) SaveWorkResult(workItemID int, result *service.WorkResult) 
 			break
 		}
 		if i == 2 && err != nil {
-			b.Context.Logger.Info("Error saving WorkResult for WorkItem %d: %v", workItemID, err)
+			b.Context.Logger.Infof("Error saving WorkResult for WorkItem %d: %v", workItemID, err)
 			return err
 		}
 		time.Sleep(time.Duration(250) * time.Millisecond)
@@ -534,7 +541,7 @@ func (b *IngestBase) OtherWorkerIsHandlingThis(workItem *registry.WorkItem) bool
 	}
 	hostname, _ := os.Hostname()
 	if workItem.Node != hostname || workItem.Pid != os.Getpid() {
-		b.Context.Logger.Info("Skipping WorkItem %d because it's being processed by host %s, pid %d", workItem.ID, workItem.Node, workItem.Pid)
+		b.Context.Logger.Infof("Skipping WorkItem %d because it's being processed by host %s, pid %d", workItem.ID, workItem.Node, workItem.Pid)
 		return true
 	}
 	return false
@@ -546,7 +553,7 @@ func (b *IngestBase) OtherWorkerIsHandlingThis(workItem *registry.WorkItem) bool
 // worker.
 func (b *IngestBase) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
 	if b.ItemsInProcess.Contains(strconv.Itoa(workItem.ID)) {
-		b.Context.Logger.Info("Skipping WorkItem %d because this worker is already working on it host %s, pid %d", workItem.ID, workItem.Node, workItem.Pid)
+		b.Context.Logger.Infof("Skipping WorkItem %d because this worker is already working on it host %s, pid %d", workItem.ID, workItem.Node, workItem.Pid)
 		return true
 	}
 	return false
@@ -680,7 +687,7 @@ func (b *IngestBase) PushToQueue(workItem *registry.WorkItem, nsqTopic string) {
 		workItem.Note = msg
 		b.SaveWorkItem(workItem)
 	} else {
-		b.Context.Logger.Info("Pushed WorkItem %d (%s/%s) to NSQ topic %s",
+		b.Context.Logger.Infof("Pushed WorkItem %d (%s/%s) to NSQ topic %s",
 			workItem.ID, workItem.Bucket, workItem.Name, nsqTopic)
 	}
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
@@ -29,7 +28,7 @@ func main() {
 	reader.Run()
 }
 
-func checkPidFile(pidFile string) error {
+func checkPidFile() error {
 	pidFile := "/var/tmp/ingest_bucket_reader.pid"
 	otherPid := util.ReadPidFile(pidFile)
 	if otherPid != 0 {

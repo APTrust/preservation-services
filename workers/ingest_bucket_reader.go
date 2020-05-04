@@ -52,7 +52,7 @@ func (r *IngestBucketReader) ScanBucket(institution *registry.Institution) {
 			continue
 		}
 		if !strings.HasSuffix(obj.Key, ".tar") {
-			r.Context.Logger.Info("Skipping %s: not a tar file", obj.Key)
+			r.Context.Logger.Infof("Skipping %s: not a tar file", obj.Key)
 		}
 		r.ProcessItem(institution, obj)
 	}
@@ -65,7 +65,7 @@ func (r *IngestBucketReader) ProcessItem(institution *registry.Institution, obj 
 		return
 	}
 	if exists {
-		r.Context.Logger.Info("Skipping %s: WorkItem already exists", obj.Key)
+		r.Context.Logger.Infof("Skipping %s: WorkItem already exists", obj.Key)
 		return
 	}
 	r.CreateAndQueueItem(institution, obj)

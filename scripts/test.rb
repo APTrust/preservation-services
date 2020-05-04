@@ -55,6 +55,28 @@ class TestRunner
     File.delete('dump.rdb') if File.exists?('dump.rdb')
   end
 
+  def ingest_service_commands
+    ingest_services = []
+    names = [
+      "ingest_pre_fetch",
+      "ingest_validator",
+      "reingest_manager",
+      "ingest_staging_uploader",
+      "ingest_format_identifier",
+      "ingest_preservation_uploader",
+      "ingest_preservation_verifier",
+      "ingest_recorder",
+      "ingest_cleanup",
+    ]
+    names.each do |name|
+      ingest_services.push({
+        name: name,
+        cmd: "#{self.ingest_bin_dir}/#{name}",
+        msg: "Started #{name}"})
+    end
+    ingest_services
+  end
+
   def run_unit_tests(arg)
     clean_test_cache
     make_test_dirs
@@ -105,11 +127,19 @@ class TestRunner
 
     clean_test_cache
     make_test_dirs
+
+    # Start NSQ, Minio, Redis, and Docker/Pharos
     @all_services.each do |svc|
       start_service(svc)
     end
     self.pharos_start
-    sleep(10)
+    sleep(5)
+
+    # Start all the ingest services
+    self.ingest_service_commands.each do |svc|
+      puts "Starting #{svc['name']}"
+      self.start_service(svc)
+    end
 
     # Open NSQ admin in a browser
     Process.spawn("open 'http://localhost:4171'")
@@ -122,6 +152,10 @@ class TestRunner
     Process.spawn("open 'http://localhost:9292'")
     puts "Pharos login/pwd -> system@aptrust.org"
 
+    puts "Push some bags to aptrust.receiving.test.test.edu"
+    puts "on the local minio server, then run the bucket reader"
+    puts "with this command:\n"
+    puts "./bin/go-bin/ingest_bucket_reader -config-name=test -config-dir=#{project_root}\n"
     puts "Use Control-C to shut it all down."
     while true
       sleep(1)
@@ -212,6 +246,10 @@ class TestRunner
 
   def project_root
     File.expand_path(File.join(File.dirname(__FILE__), ".."))
+  end
+
+  def ingest_bin_dir
+    File.join(project_root, "bin", "go-bin")
   end
 
   def bin_dir
