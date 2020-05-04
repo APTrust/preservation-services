@@ -171,6 +171,8 @@ class TestRunner
       "wasabi-va",
       "receiving",
       "staging",
+      "aptrust.receiving.test.test.edu",
+      "aptrust.restore.test.test.edu",
     ]
     buckets.each do |bucket|
       full_bucket = File.join(base, "minio", bucket)

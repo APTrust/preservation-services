@@ -51,6 +51,9 @@ func (r *IngestBucketReader) ScanBucket(institution *registry.Institution) {
 			r.Context.Logger.Errorf("Error reading %s: %v", institution.ReceivingBucket, obj.Err)
 			continue
 		}
+		if !strings.HasSuffix(obj.Key, ".tar") {
+			r.Context.Logger.Info("Skipping %s: not a tar file", obj.Key)
+		}
 		r.ProcessItem(institution, obj)
 	}
 }

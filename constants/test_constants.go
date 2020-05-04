@@ -1,7 +1,9 @@
 package constants
 
 const (
-	TestBucketReceiving = "receiving"
+	TestBucketReceiving    = "receiving"
+	TestEduReceivingBucket = "aptrust.receiving.test.test.edu"
+	TestEduRestoreBucket   = "aptrust.restore.test.test.edu"
 	// TestBucketStaging      = "staging"
 	// TestMinioServerURL     = "127.0.0.1:9899"
 	// TestMinioUser          = "minioadmin"
