@@ -99,6 +99,35 @@ class TestRunner
     self.print_results
   end
 
+  def run_interactive(arg)
+    build_pid = Process.spawn('ruby scripts/build.rb', chdir: project_root)
+    Process.wait build_pid
+
+    clean_test_cache
+    make_test_dirs
+    @all_services.each do |svc|
+      start_service(svc)
+    end
+    self.pharos_start
+    sleep(10)
+
+    # Open NSQ admin in a browser
+    Process.spawn("open 'http://localhost:4171'")
+
+    # Open Minio in a browser
+    Process.spawn("open 'http://localhost:9899'")
+    puts "Pharos login/pwd -> minioadmin/minioadmin"
+
+    # Open Pharos in a browser
+    Process.spawn("open 'http://localhost:9292'")
+    puts "Pharos login/pwd -> system@aptrust.org"
+
+    puts "Use Control-C to shut it all down."
+    while true
+      sleep(1)
+    end
+  end
+
   def start_service(svc)
     log_file = File.join(ENV['HOME'], "tmp", "logs", "#{svc[:name]}.log")
     pid = Process.spawn(env_hash, svc[:cmd], out: log_file, err: log_file)
@@ -285,7 +314,7 @@ if __FILE__ == $0
 
   t = TestRunner.new(options)
   test_name = ARGV[0]
-  if !['units', 'integration'].include?(test_name)
+  if !['units', 'integration', 'interactive'].include?(test_name)
     t.print_help
 	exit(false)
   end
@@ -294,9 +323,12 @@ if __FILE__ == $0
   else
     at_exit { t.stop_all_services }
   end
-  if test_name == 'units'
+  case test_name
+  when 'units'
     t.run_unit_tests(ARGV[1])
-  elsif test_name == 'integration'
+  when 'integration'
     t.run_integration_tests(ARGV[1])
+  when 'interactive'
+    t.run_interactive(ARGV[1])
   end
 end
