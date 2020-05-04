@@ -17,6 +17,7 @@ class Build
       "ingest_preservation_verifier/ingest_preservation_verifier.go",
       "ingest_recorder/ingest_recorder.go",
       "ingest_cleanup/ingest_cleanup.go",
+      "ingest_bucket_reader/ingest_bucket_reader.go",
     ]
   end
 

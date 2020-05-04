@@ -18,9 +18,9 @@ type IngestBucketReader struct {
 	Context *common.Context
 }
 
-func NewIngestBucketReader(context *common.Context) *IngestBucketReader {
+func NewIngestBucketReader() *IngestBucketReader {
 	return &IngestBucketReader{
-		Context: context,
+		Context: common.NewContext(),
 	}
 }
 

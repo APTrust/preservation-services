@@ -25,7 +25,7 @@ func TestIngestBucketReader_Run(t *testing.T) {
 
 	// Bucket reader should add four items from int_test_bags/original
 	// to the queue.
-	reader := workers.NewIngestBucketReader(context)
+	reader := workers.NewIngestBucketReader()
 	reader.Run()
 	assertStatsCount(t, context, preTestCount+4)
 
