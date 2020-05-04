@@ -132,7 +132,3 @@ func (r *IngestBucketReader) CreateWorkItem(institution *registry.Institution, o
 		Status:        constants.StatusPending,
 	}
 }
-
-func (r *IngestBucketReader) AddToNSQ(workItemID int) {
-
-}
