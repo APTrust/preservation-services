@@ -88,6 +88,9 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 				ingestFile.FormatMatchType = idRecord.MatchType
 				ingestFile.FormatIdentifiedBy = constants.FmtIdFido
 				ingestFile.FormatIdentifiedAt = time.Now().UTC()
+				fi.Context.Logger.Infof("Identified format of %s as %s", ingestFile.Identifier(), ingestFile.FileFormat)
+			} else {
+				fi.Context.Logger.Warningf("Could not identify format of %s. Leaving as %s", ingestFile.Identifier(), ingestFile.FileFormat)
 			}
 
 			//
