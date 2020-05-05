@@ -23,7 +23,7 @@ func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
 		MaxAttempts:                         maxAttempts,
 		NSQChannel:                          constants.IngestValidation + "_worker_chan",
 		NSQTopic:                            constants.IngestValidation,
-		NextQueueTopic:                      constants.IngestValidation,
+		NextQueueTopic:                      constants.IngestReingestCheck,
 		NextWorkItemStage:                   constants.StageReingestCheck,
 		NumberOfWorkers:                     numWorkers,
 		PushToCleanupAfterMaxFailedAttempts: false,

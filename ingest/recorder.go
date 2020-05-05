@@ -1,10 +1,6 @@
 package ingest
 
 import (
-	// "fmt"
-	// "strings"
-	// "time"
-
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 )

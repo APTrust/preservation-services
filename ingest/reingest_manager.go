@@ -79,6 +79,11 @@ func (r *ReingestManager) Run() (isReingest int, errors []*service.ProcessingErr
 	} else {
 		errors = append(errors, r.Error(r.IngestObject.Identifier(), err, false))
 	}
+	if isReingest == 1 {
+		r.Context.Logger.Infof("WorkItem %d (%s) is a reingest", r.WorkItemID, r.IngestObject.Identifier())
+	} else {
+		r.Context.Logger.Infof("WorkItem %d (%s) is not a reingest", r.WorkItemID, r.IngestObject.Identifier())
+	}
 	return isReingest, errors
 }
 

@@ -109,7 +109,7 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 // available.
 func (b *IngestBase) RegisterAsNsqConsumer() error {
 	config := nsq.NewConfig()
-	// nsqConfig.Set("max_in_flight", 2 * )
+	//config.Set("msg_timeout", "600m")
 	consumer, err := nsq.NewConsumer(b.Settings.NSQTopic, b.Settings.NSQChannel, config)
 	if err != nil {
 		return err
@@ -220,8 +220,11 @@ func (b *IngestBase) ProcessSuccessChannel() {
 func (b *IngestBase) ProcessErrorChannel() {
 	for ingestItem := range b.ErrorChannel {
 		shouldRequeue := true
-		b.Context.Logger.Infof("WorkItem %d (%s) is in error channel",
+		b.Context.Logger.Warningf("WorkItem %d (%s) is in error channel",
 			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name)
+		b.Context.Logger.Warningf("Non-fatal errors for WorkItem %d (%s): %s",
+			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name,
+			ingestItem.WorkResult.NonFatalErrorMessage())
 
 		// Update WorkItem in Pharos
 		ingestItem.WorkItem.Note = ingestItem.WorkResult.NonFatalErrorMessage()
@@ -256,8 +259,11 @@ func (b *IngestBase) ProcessErrorChannel() {
 
 func (b *IngestBase) ProcessFatalErrorChannel() {
 	for ingestItem := range b.FatalErrorChannel {
-		b.Context.Logger.Infof("WorkItem %d (%s) is in fatal error channel",
+		b.Context.Logger.Errorf("WorkItem %d (%s) is in fatal error channel",
 			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name)
+		b.Context.Logger.Errorf("Fatal errors for WorkItem %d (%s): %s",
+			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name,
+			ingestItem.WorkResult.FatalErrorMessage())
 
 		// Update WorkItem for Pharos
 		ingestItem.WorkItem.Note = ingestItem.WorkResult.FatalErrorMessage()

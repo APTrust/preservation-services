@@ -20,7 +20,7 @@ type GenericFile struct {
 	IntellectualObjectIdentifier string           `json:"intellectual_object_identifier,omitempty"`
 	LastFixityCheck              time.Time        `json:"last_fixity_check,omitempty"`
 	PremisEvents                 []*PremisEvent   `json:"premis_events,omitempty"`
-	Size                         int64            `json:"size,omitempty"`
+	Size                         int64            `json:"size"`
 	State                        string           `json:"state,omitempty"`
 	StorageOption                string           `json:"storage_option"`
 	StorageRecords               []*StorageRecord `json:"storage_records,omitempty"`
