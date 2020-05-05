@@ -13,7 +13,7 @@ import (
 
 var bucket = "" // set below in uploadTestBag
 var key = "institutions.json"
-var size = 1129
+var size = 1161
 
 func uploadTestBag(t *testing.T, context *common.Context) {
 	bucket = context.Config.StagingBucket
