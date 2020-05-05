@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"unicode"
@@ -125,7 +126,16 @@ func PathTo(program string) (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
+// StringIsShellSafe returns true if string looks safe to pass
+// to shell.
 func StringIsShellSafe(s string) bool {
 	unsafeChars := "\"';{}|$` \t\r\n<>"
 	return !strings.ContainsAny(s, unsafeChars)
+}
+
+// StripFileExtension returns filename, minus the extension.
+// For example, "my_bag.tar" returns "my_bag".
+func StripFileExtension(filename string) string {
+	ext := filepath.Ext(filename)
+	return filename[0 : len(filename)-len(ext)]
 }

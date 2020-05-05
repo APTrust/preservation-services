@@ -56,6 +56,10 @@ func (b *Base) IngestObjectSave() error {
 		b.Context.Logger.Errorf(
 			"Failed to save IngestObject to redis: WorkItem %d, %s: %s",
 			b.WorkItemID, b.IngestObject.Identifier(), err.Error())
+	} else {
+		b.Context.Logger.Errorf(
+			"Saved IngestObject to redis: WorkItem %d, %s",
+			b.WorkItemID, b.IngestObject.Identifier())
 	}
 	return err
 }

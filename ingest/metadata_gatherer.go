@@ -207,6 +207,7 @@ func (m *MetadataGatherer) addMetafilePathToObject(filename string) {
 }
 
 func (m *MetadataGatherer) parseManifest(filename string) error {
+	m.Context.Logger.Infof("Parsing manifest %s", filename)
 	file, err := os.Open(filename)
 	if err != nil {
 		return err
@@ -282,6 +283,7 @@ func (m *MetadataGatherer) newIngestFile(relFilePath string) *service.IngestFile
 }
 
 func (m *MetadataGatherer) parseTagFile(filename string) error {
+	m.Context.Logger.Infof("Parsing tag file %s", filename)
 	file, err := os.Open(filename)
 	if err != nil {
 		return err

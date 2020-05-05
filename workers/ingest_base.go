@@ -96,6 +96,9 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 	for i := 0; i < settings.NumberOfWorkers; i++ {
 		go base.processItem()
 	}
+	go base.ProcessErrorChannel()
+	go base.ProcessFatalErrorChannel()
+	go base.ProcessSuccessChannel()
 
 	return base
 }
@@ -402,7 +405,13 @@ func (b *IngestBase) GetInstitutionIdentifier(instID int) (string, error) {
 // this will almost always have to create a new IngestObject. For subsequent
 // phases, it should never have to create one.
 func (b *IngestBase) GetIngestObject(workItem *registry.WorkItem) (*service.IngestObject, error) {
-	ingestObject, err := b.Context.RedisClient.IngestObjectGet(workItem.ID, workItem.ObjectIdentifier)
+	instIdentifier, err := b.GetInstitutionIdentifier(workItem.InstitutionID)
+	if err != nil {
+		return nil, b.Error(workItem.ID, "", err, true)
+	}
+	objName := util.StripFileExtension(workItem.Name)
+	objIdentifier := fmt.Sprintf("%s/%s", instIdentifier, objName)
+	ingestObject, err := b.Context.RedisClient.IngestObjectGet(workItem.ID, objIdentifier)
 	if err == nil && ingestObject != nil {
 		return ingestObject, nil
 	}
