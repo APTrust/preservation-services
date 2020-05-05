@@ -4,14 +4,16 @@ REGISTRY=registry.gitlab.com/aptrust
 REPOSITORY=container-registry
 NAME=preservation-services
 REVISION:=$(shell git rev-parse --short=7 HEAD)
-BRANCH = $(subst /,_,$(shell git rev-parse --abbrev-ref HEAD))
+BRANCH:= $(subst /,_,$(shell git rev-parse --abbrev-ref HEAD))
 PUSHBRANCH = $(subst /,_,$(TRAVIS_BRANCH))
 TAG=$(name):$(REVISION)
 APT_SERVICES_CONFIG:='test'
 APT_SERVICES_CONFIG_DIR:=./
 
+OUTPUT_DIR:=go-bin
+
 DOCKERAPPS := redis nsqlookup nsqd nsqadmin minio
-DOCKER_TAG_NAME=${REVISION}-${BRANCH}
+DOCKER_TAG_NAME:=${REVISION}-${BRANCH}
 
 ifdef TRAVIS
 override BRANCH=$(PUSHBRANCH)
@@ -49,13 +51,23 @@ revision: ## Show me the git hash
 	@echo "Revision: ${REVISION}"
 	@echo "Branch: ${BRANCH}"
 
-build: ## Build the Exchange containers
-	@echo "Branch: ${BRANCH}"
-#	@for app in $(APP_LIST:apps/%=%); do \
-		echo $$app; \
-/		docker build --build-arg EX_SERVICE=$$app -t aptrust/$(NAME)_$$app -t $(NAME)_$$app:$(REVISION) -t $(REGISTRY)/$(REPOSITORY)/$(NAME)_$$app:$(REVISION)-$(BRANCH) -f Dockerfile-build .; \
+build-bin: ## Build the Preservation-Services binaries
+	@for app in $$(find ./apps -name *.go); do \
+		APP_NAME=$$(basename $$app .go); \
+		echo "Building $$APP_NAME" binary; \
+		$$(CGO_ENABLED=0 go build -ldflags '-w' -o ${OUTPUT_DIR}/$$APP_NAME $$app); \
 	done
 
+build: ## Build the Preservation-Services containers
+	@echo "Branch: ${BRANCH}"
+	@echo "Building identify_format (FIDO) container"
+	@cd scripts && docker build -t aptrust/identify_format -t aptrust/identify_format:${DOCKER_TAG_NAME} . && cd ..;
+	@mkdir -p ${OUTPUT_DIR};
+	@for app in $$(find ./apps -name *.go); do \
+		APP_NAME=$$(basename $$app .go); \
+		echo "Building $$APP_NAME" Docker container ${DOCKER_TAG_NAME}; \
+		docker build --build-arg PSERVICE=$$APP_NAME --build-arg OUTPUT_DIR=${OUTPUT_DIR} -t aptrust/$$APP_NAME:${DOCKER_TAG_NAME} -t aptrust/$$APP_NAME -f Dockerfile.build . ; \
+	done
 up: ## Start Preservation service containers
 	docker-compose up
 
