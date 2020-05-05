@@ -110,6 +110,7 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 func (b *IngestBase) RegisterAsNsqConsumer() error {
 	config := nsq.NewConfig()
 	//config.Set("msg_timeout", "600m")
+	config.Set("heartbeat_interval", "10s")
 	consumer, err := nsq.NewConsumer(b.Settings.NSQTopic, b.Settings.NSQChannel, config)
 	if err != nil {
 		return err
@@ -207,6 +208,13 @@ func (b *IngestBase) ProcessSuccessChannel() {
 		ingestItem.WorkItem.Status = constants.StatusPending
 		ingestItem.WorkItem.Retry = true
 		ingestItem.WorkItem.NeedsAdminReview = false
+
+		// When cleaup succeeds, we need to mark the item as succeeded.
+		if b.Settings.NSQTopic == constants.IngestCleanup {
+			ingestItem.WorkItem.Status = constants.StatusSuccess
+			ingestItem.WorkItem.Outcome = "Ingest complete"
+			ingestItem.WorkItem.ObjectIdentifier = ingestItem.Processor.GetIngestObject().Identifier()
+		}
 
 		// Push item to next queue.
 		ingestItem.NextQueueTopic = b.Settings.NextQueueTopic
@@ -443,7 +451,7 @@ func (b *IngestBase) GetIngestObject(workItem *registry.WorkItem) (*service.Inge
 func (b *IngestBase) GetWorkResult(workItemID int) *service.WorkResult {
 	workResult, err := b.Context.RedisClient.WorkResultGet(workItemID, b.Settings.NSQTopic)
 	if err != nil {
-		b.Context.Logger.Infof("No WorkResult in Redis for WorkItem %d. Creating a new one.", workItemID)
+		b.Context.Logger.Infof("No WorkResult in Redis for WorkItem %d. No problem. Creating a new one.", workItemID)
 		workResult = service.NewWorkResult(b.Settings.NSQTopic)
 	}
 	return workResult

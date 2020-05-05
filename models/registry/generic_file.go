@@ -62,13 +62,13 @@ func (gf *GenericFile) UUID() string {
 
 type GenericFileForPharos struct {
 	Checksums            []*Checksum      `json:"checksums_attributes,omitempty"`
-	FileFormat           string           `json:"file_format,omitempty"`
+	FileFormat           string           `json:"file_format"`
 	ID                   int              `json:"id,omitempty"`
 	Identifier           string           `json:"identifier,omitempty"`
 	InstitutionID        int              `json:"institution_id"`
 	IntellectualObjectID int              `json:"intellectual_object_id"`
 	PremisEvents         []*PremisEvent   `json:"premis_events_attributes,omitempty"`
-	Size                 int64            `json:"size,omitempty"`
+	Size                 int64            `json:"size"`
 	StorageOption        string           `json:"storage_option"`
 	StorageRecords       []*StorageRecord `json:"storage_records_attributes,omitempty"`
 	URI                  string           `json:"uri,omitempty"`

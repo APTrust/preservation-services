@@ -71,8 +71,11 @@ func (r *ReingestManager) Run() (isReingest int, errors []*service.ProcessingErr
 				errors = append(errors, r.Error(r.IngestObject.Identifier(), saveErr, true))
 				return isReingest, errors
 			}
+
+			// ProcessFiles can really hammer Pharos if we have
+			// a lot of files. Call this only if it really is a reingest.
+			_, errors = r.ProcessFiles()
 		}
-		_, errors := r.ProcessFiles()
 		if len(errors) > 0 {
 			return isReingest, errors
 		}
