@@ -64,6 +64,12 @@
        - Delete data from redis
 
 5. File Format Identification
+   - **UPDATE** FIDO is very slow for large bags because each identification
+     request starts a new Python process. Consider using Siegfried, which also
+     does PRONOM identification and can run in server mode. See
+     https://github.com/richardlehane/siegfried/blob/master/cmd/sf/serve.go
+     The README at https://github.com/richardlehane/siegfried/blob/master/README.md
+     says we can start the server with this command: `sf -serve hostname:port`
    - We'll be using [FIDO](https://github.com/openpreserve/fido) for file
      identification. After reviewing a number of tools including JHOVE,
      DROID, FITS, and Apache Tika, this was by far the simplest to set up,
