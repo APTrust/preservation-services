@@ -432,15 +432,11 @@ func (b *IngestBase) GetIngestObject(workItem *registry.WorkItem) (*service.Inge
 	if err != nil && b.Settings.NSQTopic != constants.IngestPreFetch {
 		return nil, fmt.Errorf("Ingest object not found in Redis: %v", err)
 	}
-	instID, err := b.GetInstitutionIdentifier(workItem.InstitutionID)
-	if err != nil {
-		return nil, err
-	}
 	return service.NewIngestObject(
 		workItem.Bucket,
 		workItem.Name,
 		workItem.ETag,
-		instID,
+		instIdentifier,
 		workItem.InstitutionID,
 		workItem.Size,
 	), nil
