@@ -1,0 +1,56 @@
+ARG ALPINE_VERSION=3.11
+ARG OUTPUT_DIR=${OUTPUT_DIR}
+
+FROM golang:1.13.10-alpine${ALPINE_VERSION} as builder
+# This image provides binaries for Exchange microservices.
+# A CI/CD service will distribute and build/deploy each microservice. TBD
+# .
+
+RUN apk update && \
+    apk add --no-cache file-dev g++ make build-base bash git
+
+ENV GO111MODULE=on \
+	APP_PATH=/go \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+
+WORKDIR $APP_PATH
+
+# Copy and download dependency using go mod
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
+COPY . .
+# mod-vendor - chache go modules
+#RUN go mod vendor
+# ldflags - ignore debugging files
+#RUN go build -mod=vendor -ldflags '-w' github.com/APTrust/exchange/apps/...
+#RUN CGO_ENABLED=0 go build -ldflags '-w' github.com/APTrust/exchange/apps/...
+
+#RUN go get -v ...
+#RUN go install -a github.com/APTrust/exchange/apps/...
+
+RUN make build-bin
+
+FROM alpine:${ALPINE_VERSION}
+
+ARG PSERVICE=${PSERVICE}
+ARG ENVIRONMENT=${ENVIRONMENT:-development}
+ENV APT_CONFIG_DIR=./
+ENV APT_SERVICES_CFG=${ENVIRONMENT:-development}
+
+WORKDIR /go/bin
+
+VOLUME ["/go/bin/data"]
+VOLUME ["/go/bin/config"]
+# Note: Using main as app name because CMD doesn't support env expansion and
+# Docker images are tagged with app names already.
+COPY --from=builder /go/${OUTPUT_DIR}/${PSERVICE} /go/bin/main
+# Compress binary
+#RUN UPX /go/bin/main -1
+#COPY --from=builder /go/src/github.com/APTrust/exchange/config/${ENVIRONMENT}.json config/config.json
+#COPY --from=builder /go/src/github.com/APTrust/exchange/config/aptrust_bag_validation_config.json config/aptrust_bag_validation_config.json
+
+CMD ["/go/bin/main", "-config=/go/bin/config/config.json"]
