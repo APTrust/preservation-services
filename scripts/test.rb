@@ -55,6 +55,28 @@ class TestRunner
     File.delete('dump.rdb') if File.exists?('dump.rdb')
   end
 
+  def ingest_service_commands
+    ingest_services = []
+    names = [
+      "ingest_pre_fetch",
+      "ingest_validator",
+      "reingest_manager",
+      "ingest_staging_uploader",
+      "ingest_format_identifier",
+      "ingest_preservation_uploader",
+      "ingest_preservation_verifier",
+      "ingest_recorder",
+      "ingest_cleanup",
+    ]
+    names.each do |name|
+      ingest_services.push({
+        name: name,
+        cmd: "#{self.ingest_bin_dir}/#{name}",
+        msg: "Started #{name}"})
+    end
+    ingest_services
+  end
+
   def run_unit_tests(arg)
     clean_test_cache
     make_test_dirs
@@ -97,6 +119,47 @@ class TestRunner
     pid = Process.spawn(env_hash, cmd, chdir: project_root)
     Process.wait pid
     self.print_results
+  end
+
+  def run_interactive(arg)
+    build_pid = Process.spawn('ruby scripts/build.rb', chdir: project_root)
+    Process.wait build_pid
+
+    clean_test_cache
+    make_test_dirs
+
+    # Start NSQ, Minio, Redis, and Docker/Pharos
+    @all_services.each do |svc|
+      start_service(svc)
+    end
+    self.pharos_start
+    sleep(5)
+
+    # Start all the ingest services
+    self.ingest_service_commands.each do |svc|
+      puts "Starting #{svc['name']}"
+      self.start_service(svc)
+    end
+
+    # Open NSQ admin in a browser
+    Process.spawn("open 'http://localhost:4171'")
+
+    # Open Minio in a browser
+    Process.spawn("open 'http://localhost:9899'")
+    puts "Pharos login/pwd -> minioadmin/minioadmin"
+
+    # Open Pharos in a browser
+    Process.spawn("open 'http://localhost:9292'")
+    puts "Pharos login/pwd -> system@aptrust.org"
+
+    puts "Push some bags to aptrust.receiving.test.test.edu"
+    puts "on the local minio server, then run the bucket reader"
+    puts "with this command:\n"
+    puts "./bin/go-bin/ingest_bucket_reader -config-name=test -config-dir=#{project_root}\n"
+    puts "Use Control-C to shut it all down."
+    while true
+      sleep(1)
+    end
   end
 
   def start_service(svc)
@@ -171,6 +234,8 @@ class TestRunner
       "wasabi-va",
       "receiving",
       "staging",
+      "aptrust.receiving.test.test.edu",
+      "aptrust.restore.test.test.edu",
     ]
     buckets.each do |bucket|
       full_bucket = File.join(base, "minio", bucket)
@@ -181,6 +246,10 @@ class TestRunner
 
   def project_root
     File.expand_path(File.join(File.dirname(__FILE__), ".."))
+  end
+
+  def ingest_bin_dir
+    File.join(project_root, "bin", "go-bin")
   end
 
   def bin_dir
@@ -283,7 +352,7 @@ if __FILE__ == $0
 
   t = TestRunner.new(options)
   test_name = ARGV[0]
-  if !['units', 'integration'].include?(test_name)
+  if !['units', 'integration', 'interactive'].include?(test_name)
     t.print_help
 	exit(false)
   end
@@ -292,9 +361,12 @@ if __FILE__ == $0
   else
     at_exit { t.stop_all_services }
   end
-  if test_name == 'units'
+  case test_name
+  when 'units'
     t.run_unit_tests(ARGV[1])
-  elsif test_name == 'integration'
+  when 'integration'
     t.run_integration_tests(ARGV[1])
+  when 'interactive'
+    t.run_interactive(ARGV[1])
   end
 end

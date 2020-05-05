@@ -787,6 +787,7 @@ func (client *PharosClient) WorkItemGet(id int) *PharosResponse {
 // item_action - String enum value from constants. ActionIngest, ActionRestore, etc.
 // access - String enum value from constants.AccessRights.
 // state - "A" for active items, "D" for deleted items.
+// institution_id - Int: id of institution
 func (client *PharosClient) WorkItemList(params url.Values) *PharosResponse {
 	// Set up the response object
 	resp := NewPharosResponse(PharosWorkItem)
