@@ -27,9 +27,10 @@ var description = "Description of Object"
 var internalDescription = "Description of Object (Internal Sender Description)"
 var externalDescription = "Description of Object (External Description)"
 var externalIdentifier = "ext-identifier"
+var internalIdentifier = "int-identifier"
 
 func getObjectWithTags() *service.IngestObject {
-	tags := make([]*bagit.Tag, 13)
+	tags := make([]*bagit.Tag, 14)
 	tags[0] = bagit.NewTag("bag-info.txt", "label1", "value1")
 	tags[1] = bagit.NewTag("bag-info.txt", "label1", "value2")
 	tags[2] = bagit.NewTag("bag-info.txt", "label3", "value3")
@@ -38,11 +39,12 @@ func getObjectWithTags() *service.IngestObject {
 	tags[5] = bagit.NewTag("bag-info.txt", "Internal-Sender-Description", internalDescription)
 	tags[6] = bagit.NewTag("bag-info.txt", "External-Description", externalDescription)
 	tags[7] = bagit.NewTag("bag-info.txt", "External-Identifier", externalIdentifier)
-	tags[8] = bagit.NewTag("bag-info.txt", "Bag-Group-Identifier", bagGroupIdentifier)
-	tags[9] = bagit.NewTag("bag-info.txt", "Source-Organization", sourceOrganization)
-	tags[10] = bagit.NewTag("aptrust-info.txt", "Access", constants.AccessConsortia)
-	tags[11] = bagit.NewTag("aptrust-info.txt", "Title", title)
-	tags[12] = bagit.NewTag("aptrust-info.txt", "Description", description)
+	tags[8] = bagit.NewTag("bag-info.txt", "Internal-Identifier", internalIdentifier)
+	tags[9] = bagit.NewTag("bag-info.txt", "Bag-Group-Identifier", bagGroupIdentifier)
+	tags[10] = bagit.NewTag("bag-info.txt", "Source-Organization", sourceOrganization)
+	tags[11] = bagit.NewTag("aptrust-info.txt", "Access", constants.AccessConsortia)
+	tags[12] = bagit.NewTag("aptrust-info.txt", "Title", title)
+	tags[13] = bagit.NewTag("aptrust-info.txt", "Description", description)
 
 	obj := testutil.GetIngestObject()
 	obj.FileCount = 12
@@ -205,6 +207,11 @@ func TestExternalIdentifier(t *testing.T) {
 	assert.Equal(t, externalIdentifier, obj.ExternalIdentifier())
 }
 
+func TestInternalIdentifier(t *testing.T) {
+	obj := getObjectWithTags()
+	assert.Equal(t, internalIdentifier, obj.InternalIdentifier())
+}
+
 func TestInternalSenderDescription(t *testing.T) {
 	obj := getObjectWithTags()
 	assert.Equal(t, internalDescription, obj.InternalSenderDescription())
@@ -213,6 +220,25 @@ func TestInternalSenderDescription(t *testing.T) {
 func TestSourceOrganization(t *testing.T) {
 	obj := getObjectWithTags()
 	assert.Equal(t, sourceOrganization, obj.SourceOrganization())
+}
+
+func TestTitle(t *testing.T) {
+	obj := testutil.GetIngestObject()
+
+	// Falls back to bag name, minus extension
+	assert.Equal(t, "some-bag", obj.Title())
+
+	// Before that, tries external identifier
+	obj.Tags = append(obj.Tags, bagit.NewTag("bag-info.txt", "External-Identifier", "external-ident"))
+	assert.Equal(t, "external-ident", obj.Title())
+
+	// Before that, tries internal identifier
+	obj.Tags = append(obj.Tags, bagit.NewTag("bag-info.txt", "Internal-Identifier", "internal-ident"))
+	assert.Equal(t, "internal-ident", obj.Title())
+
+	// Before that, tries title
+	obj.Tags = append(obj.Tags, bagit.NewTag("aptrust-info.txt", "Title", "bag-title"))
+	assert.Equal(t, "bag-title", obj.Title())
 }
 
 func TestBestAvailableDescription(t *testing.T) {

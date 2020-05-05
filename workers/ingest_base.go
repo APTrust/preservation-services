@@ -96,6 +96,9 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 	for i := 0; i < settings.NumberOfWorkers; i++ {
 		go base.processItem()
 	}
+	go base.ProcessErrorChannel()
+	go base.ProcessFatalErrorChannel()
+	go base.ProcessSuccessChannel()
 
 	return base
 }
@@ -106,7 +109,8 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 // available.
 func (b *IngestBase) RegisterAsNsqConsumer() error {
 	config := nsq.NewConfig()
-	// nsqConfig.Set("max_in_flight", 2 * )
+	//config.Set("msg_timeout", "600m")
+	config.Set("heartbeat_interval", "10s")
 	consumer, err := nsq.NewConsumer(b.Settings.NSQTopic, b.Settings.NSQChannel, config)
 	if err != nil {
 		return err
@@ -205,6 +209,13 @@ func (b *IngestBase) ProcessSuccessChannel() {
 		ingestItem.WorkItem.Retry = true
 		ingestItem.WorkItem.NeedsAdminReview = false
 
+		// When cleaup succeeds, we need to mark the item as succeeded.
+		if b.Settings.NSQTopic == constants.IngestCleanup {
+			ingestItem.WorkItem.Status = constants.StatusSuccess
+			ingestItem.WorkItem.Outcome = "Ingest complete"
+			ingestItem.WorkItem.ObjectIdentifier = ingestItem.Processor.GetIngestObject().Identifier()
+		}
+
 		// Push item to next queue.
 		ingestItem.NextQueueTopic = b.Settings.NextQueueTopic
 		b.FinishItem(ingestItem)
@@ -217,8 +228,11 @@ func (b *IngestBase) ProcessSuccessChannel() {
 func (b *IngestBase) ProcessErrorChannel() {
 	for ingestItem := range b.ErrorChannel {
 		shouldRequeue := true
-		b.Context.Logger.Infof("WorkItem %d (%s) is in error channel",
+		b.Context.Logger.Warningf("WorkItem %d (%s) is in error channel",
 			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name)
+		b.Context.Logger.Warningf("Non-fatal errors for WorkItem %d (%s): %s",
+			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name,
+			ingestItem.WorkResult.NonFatalErrorMessage())
 
 		// Update WorkItem in Pharos
 		ingestItem.WorkItem.Note = ingestItem.WorkResult.NonFatalErrorMessage()
@@ -253,8 +267,11 @@ func (b *IngestBase) ProcessErrorChannel() {
 
 func (b *IngestBase) ProcessFatalErrorChannel() {
 	for ingestItem := range b.FatalErrorChannel {
-		b.Context.Logger.Infof("WorkItem %d (%s) is in fatal error channel",
+		b.Context.Logger.Errorf("WorkItem %d (%s) is in fatal error channel",
 			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name)
+		b.Context.Logger.Errorf("Fatal errors for WorkItem %d (%s): %s",
+			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name,
+			ingestItem.WorkResult.FatalErrorMessage())
 
 		// Update WorkItem for Pharos
 		ingestItem.WorkItem.Note = ingestItem.WorkResult.FatalErrorMessage()
@@ -402,22 +419,24 @@ func (b *IngestBase) GetInstitutionIdentifier(instID int) (string, error) {
 // this will almost always have to create a new IngestObject. For subsequent
 // phases, it should never have to create one.
 func (b *IngestBase) GetIngestObject(workItem *registry.WorkItem) (*service.IngestObject, error) {
-	ingestObject, err := b.Context.RedisClient.IngestObjectGet(workItem.ID, workItem.ObjectIdentifier)
+	instIdentifier, err := b.GetInstitutionIdentifier(workItem.InstitutionID)
+	if err != nil {
+		return nil, b.Error(workItem.ID, "", err, true)
+	}
+	objName := util.StripFileExtension(workItem.Name)
+	objIdentifier := fmt.Sprintf("%s/%s", instIdentifier, objName)
+	ingestObject, err := b.Context.RedisClient.IngestObjectGet(workItem.ID, objIdentifier)
 	if err == nil && ingestObject != nil {
 		return ingestObject, nil
 	}
 	if err != nil && b.Settings.NSQTopic != constants.IngestPreFetch {
 		return nil, fmt.Errorf("Ingest object not found in Redis: %v", err)
 	}
-	instID, err := b.GetInstitutionIdentifier(workItem.InstitutionID)
-	if err != nil {
-		return nil, err
-	}
 	return service.NewIngestObject(
 		workItem.Bucket,
 		workItem.Name,
 		workItem.ETag,
-		instID,
+		instIdentifier,
 		workItem.InstitutionID,
 		workItem.Size,
 	), nil
@@ -428,7 +447,7 @@ func (b *IngestBase) GetIngestObject(workItem *registry.WorkItem) (*service.Inge
 func (b *IngestBase) GetWorkResult(workItemID int) *service.WorkResult {
 	workResult, err := b.Context.RedisClient.WorkResultGet(workItemID, b.Settings.NSQTopic)
 	if err != nil {
-		b.Context.Logger.Infof("No WorkResult in Redis for WorkItem %d. Creating a new one.", workItemID)
+		b.Context.Logger.Infof("No WorkResult in Redis for WorkItem %d. No problem. Creating a new one.", workItemID)
 		workResult = service.NewWorkResult(b.Settings.NSQTopic)
 	}
 	return workResult

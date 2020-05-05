@@ -73,6 +73,7 @@ const (
 	StageAvailableInS3         = "Available in S3"
 	StageCleanup               = "Cleanup"
 	StageCopyToStaging         = "Copy To Staging"
+	StageFormatIdentification  = "Format Identification"
 	StageFetch                 = "Fetch"
 	StagePackage               = "Package"
 	StageReceive               = "Receive"

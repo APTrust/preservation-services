@@ -11,6 +11,7 @@ import (
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
+	"github.com/APTrust/preservation-services/util"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -317,6 +318,12 @@ func (obj *IngestObject) ExternalIdentifier() string {
 	return obj.GetTagValue("bag-info.txt", "External-Identifier", "")
 }
 
+// InternalIdentifier returns the Internal-Identifier from the
+// bag-info.txt file.
+func (obj *IngestObject) InternalIdentifier() string {
+	return obj.GetTagValue("bag-info.txt", "Internal-Identifier", "")
+}
+
 // InternalSenderDescription returns the Internal-Sender-Description from the
 // bag-info.txt file. See also ExternalDescription.
 func (obj *IngestObject) InternalSenderDescription() string {
@@ -332,7 +339,17 @@ func (obj *IngestObject) SourceOrganization() string {
 // Title returns the value of the Title tag from the aptrust-info.txt file.
 // This will return empty for BTR bags.
 func (obj *IngestObject) Title() string {
-	return obj.GetTagValue("aptrust-info.txt", "Title", "")
+	title := obj.GetTagValue("aptrust-info.txt", "Title", "")
+	if title == "" {
+		title = obj.InternalIdentifier()
+	}
+	if title == "" {
+		title = obj.ExternalIdentifier()
+	}
+	if title == "" {
+		title = util.StripFileExtension(obj.S3Key)
+	}
+	return title
 }
 
 // Returns the best available description, which is the first non-empty one

@@ -58,6 +58,12 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 		if ingestFile.FormatIdentifiedBy == constants.FmtIdFido {
 			return errors
 		}
+		// We cannot get zero-length files because S3 returns status code
+		// 416/Range Unsatisfiable. Zero-length files are mostly .keep
+		if ingestFile.Size == int64(0) {
+			return errors
+		}
+
 		key := fi.S3KeyFor(ingestFile)
 		signedURL, err := fi.GetPresignedURL(fi.Context.Config.StagingBucket, key)
 		if err != nil {
@@ -68,36 +74,39 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 			ingestFile.FidoSafeName())
 		if err != nil {
 			errors = append(errors, fi.Error(ingestFile.Identifier(), err, false))
+		} else {
+			// See comments above "if formatChanged" below.
+			// formatChanged := (idRecord.Succeeded && idRecord.MimeType != idRecord.MimeType)
+
+			// The TarredBagScanner did an initial file format identification
+			// when it scanned the bag, identifying by file extension. We want
+			// to change the format only if FIDO actually succeeded in
+			// identifying something. Otherwise, we stick with the original
+			// id-by-extension.
+			if idRecord.Succeeded {
+				ingestFile.FileFormat = idRecord.MimeType
+				ingestFile.FormatMatchType = idRecord.MatchType
+				ingestFile.FormatIdentifiedBy = constants.FmtIdFido
+				ingestFile.FormatIdentifiedAt = time.Now().UTC()
+				fi.Context.Logger.Infof("Identified format of %s as %s", ingestFile.Identifier(), ingestFile.FileFormat)
+			} else {
+				fi.Context.Logger.Warningf("Could not identify format of %s. Leaving as %s", ingestFile.Identifier(), ingestFile.FileFormat)
+			}
+
+			//
+			// Here, we should update the object's Content-Type in S3,
+			// but we can't. Minio supports updating user metadata using
+			// CopyObject to copy an object over itself. If the user metadata
+			// changes but the source and destination are the same, Minio
+			// simply updates the user metadata. Unfortunately, the
+			// ContentType is outside the user metadata and is not touched
+			// in the copy process. We can and will still store the correct
+			// mimetype in the GenericFile.FileFormat property in Pharos.
+			//
+			// if formatChanged {
+			// 	fi.UpdateS3Metadata(ingestFile)
+			// }
 		}
-
-		// See comments above "if formatChanged" below.
-		// formatChanged := (idRecord.Succeeded && idRecord.MimeType != idRecord.MimeType)
-
-		// The TarredBagScanner did an initial file format identification
-		// when it scanned the bag, identifying by file extension. We want
-		// to change the format only if FIDO actually succeeded in
-		// identifying something. Otherwise, we stick with the original
-		// id-by-extension.
-		if idRecord.Succeeded {
-			ingestFile.FileFormat = idRecord.MimeType
-			ingestFile.FormatMatchType = idRecord.MatchType
-			ingestFile.FormatIdentifiedBy = constants.FmtIdFido
-			ingestFile.FormatIdentifiedAt = time.Now().UTC()
-		}
-
-		//
-		// Here, we should update the object's Content-Type in S3,
-		// but we can't. Minio supports updating user metadata using
-		// CopyObject to copy an object over itself. If the user metadata
-		// changes but the source and destination are the same, Minio
-		// simply updates the user metadata. Unfortunately, the
-		// ContentType is outside the user metadata and is not touched
-		// in the copy process. We can and will still store the correct
-		// mimetype in the GenericFile.FileFormat property in Pharos.
-		//
-		// if formatChanged {
-		// 	fi.UpdateS3Metadata(ingestFile)
-		// }
 
 		return errors
 	}

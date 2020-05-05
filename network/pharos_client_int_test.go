@@ -463,6 +463,16 @@ func TestPharosGenericFileSave_Create(t *testing.T) {
 	assert.Equal(t, gf.Identifier, gfSaved.Identifier)
 	assert.NotEqual(t, 0, gfSaved.ID)
 	assert.NotEqual(t, gf.UpdatedAt, gfSaved.UpdatedAt)
+
+	// Make sure we can save zero-size file.
+	// Specific problems with this in testing, as Pharos
+	// interprets zero as blank or missing value.
+	gf = testutil.GetGenericFileForObj(obj, 1, false, false)
+	gf.Size = int64(0)
+	gf.Identifier = gf.Identifier + "002"
+	resp = client.GenericFileSave(gf)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
 }
 
 func TestPharosGenericFileSave_Update(t *testing.T) {

@@ -141,16 +141,10 @@ class TestRunner
       self.start_service(svc)
     end
 
-    # Open NSQ admin in a browser
-    Process.spawn("open 'http://localhost:4171'")
 
-    # Open Minio in a browser
-    Process.spawn("open 'http://localhost:9899'")
-    puts "Pharos login/pwd -> minioadmin/minioadmin"
-
-    # Open Pharos in a browser
-    Process.spawn("open 'http://localhost:9292'")
-    puts "Pharos login/pwd -> system@aptrust.org"
+    puts ">> NSQ: 'http://localhost:4171'"
+    puts ">> Minio: 'http://localhost:9899' login/pwd -> minioadmin/minioadmin"
+    puts ">> Pharos: 'http://localhost:9292' login/pwd -> system@aptrust.org"
 
     puts "Push some bags to aptrust.receiving.test.test.edu"
     puts "on the local minio server, then run the bucket reader"

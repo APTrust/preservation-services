@@ -66,6 +66,10 @@ func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingErr
 		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, isFatal))
 	}
 
+	// TODO: constants.MimeTypeForExtension[".tar"] is "application/x-tar"
+	// both seem to be used, so APTrust and BTR profiles should probably
+	// include both.
+	m.IngestObject.Serialization = "application/tar"
 	defer tarredBag.Close()
 	scanner := NewTarredBagScanner(
 		tarredBag,
@@ -207,6 +211,7 @@ func (m *MetadataGatherer) addMetafilePathToObject(filename string) {
 }
 
 func (m *MetadataGatherer) parseManifest(filename string) error {
+	m.Context.Logger.Infof("Parsing manifest %s", filename)
 	file, err := os.Open(filename)
 	if err != nil {
 		return err
@@ -282,6 +287,7 @@ func (m *MetadataGatherer) newIngestFile(relFilePath string) *service.IngestFile
 }
 
 func (m *MetadataGatherer) parseTagFile(filename string) error {
+	m.Context.Logger.Infof("Parsing tag file %s", filename)
 	file, err := os.Open(filename)
 	if err != nil {
 		return err

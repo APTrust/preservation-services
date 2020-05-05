@@ -2,20 +2,20 @@
    "aptrust.org": {
       "name": "APTrust",
       "identifier": "aptrust.org",
-      "receiving_bucket": "aptrust.receiving.test.test.edu",
-      "restore_bucket": "aptrust.restore.test.test.edu"
+      "receiving_bucket": "aptrust.receiving.test.aptrust.org",
+      "restore_bucket": "aptrust.restore.test.aptrust.org"
    },
    "institution1.edu": {
       "name": "Institution One",
       "identifier": "institution1.edu",
-      "receiving_bucket": "aptrust.receiving.test.test.edu",
-      "restore_bucket": "aptrust.restore.test.test.edu"
+      "receiving_bucket": "aptrust.receiving.test.institution1.edu",
+      "restore_bucket": "aptrust.restore.test.institution1.edu"
    },
    "institution2.edu": {
       "name": "Institution Two",
       "identifier": "institution2.edu",
-      "receiving_bucket": "aptrust.receiving.test.test.edu",
-      "restore_bucket": "aptrust.restore.test.test.edu"
+      "receiving_bucket": "aptrust.receiving.test.institution2.edu",
+      "restore_bucket": "aptrust.restore.test.institution2.edu"
    },
    "test.edu": {
       "name": "Test Institution (for integration tests)",

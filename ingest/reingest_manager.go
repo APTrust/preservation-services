@@ -71,13 +71,21 @@ func (r *ReingestManager) Run() (isReingest int, errors []*service.ProcessingErr
 				errors = append(errors, r.Error(r.IngestObject.Identifier(), saveErr, true))
 				return isReingest, errors
 			}
+
+			// ProcessFiles can really hammer Pharos if we have
+			// a lot of files. Call this only if it really is a reingest.
+			_, errors = r.ProcessFiles()
 		}
-		_, errors := r.ProcessFiles()
 		if len(errors) > 0 {
 			return isReingest, errors
 		}
 	} else {
 		errors = append(errors, r.Error(r.IngestObject.Identifier(), err, false))
+	}
+	if isReingest == 1 {
+		r.Context.Logger.Infof("WorkItem %d (%s) is a reingest", r.WorkItemID, r.IngestObject.Identifier())
+	} else {
+		r.Context.Logger.Infof("WorkItem %d (%s) is not a reingest", r.WorkItemID, r.IngestObject.Identifier())
 	}
 	return isReingest, errors
 }

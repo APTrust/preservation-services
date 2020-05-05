@@ -95,7 +95,7 @@ func (s *StagingUploader) CopyFiles(tarredBag *minio.Object) (int, error) {
 					s.Context.Logger.Warning(err.Error())
 					errCount++
 				} else {
-					s.Context.Logger.Infof("Copied %s to staging", ingestFile.Identifier())
+					s.Context.Logger.Infof("Copied %s to staging as %s", ingestFile.Identifier(), ingestFile.UUID)
 					filesCopied++
 				}
 			}

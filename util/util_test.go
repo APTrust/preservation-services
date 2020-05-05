@@ -275,3 +275,8 @@ func TestStringIsShellSafe(t *testing.T) {
 	assert.False(t, util.StringIsShellSafe("No<"))
 	assert.False(t, util.StringIsShellSafe("No>"))
 }
+
+func TestStripFileExtension(t *testing.T) {
+	assert.Equal(t, "somebag", util.StripFileExtension("somebag.tar"))
+	assert.Equal(t, "some_file", util.StripFileExtension("some_file.txt"))
+}
