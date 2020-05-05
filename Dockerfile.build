@@ -1,16 +1,13 @@
 ARG ALPINE_VERSION=3.11
-ARG OUTPUT_DIR=${OUTPUT_DIR}
+ARG OUTPUT_DIR=go-bin/
+ARG PSERVICE
 
-FROM golang:1.13.10-alpine${ALPINE_VERSION} as builder
-# This image provides binaries for Exchange microservices.
-# A CI/CD service will distribute and build/deploy each microservice. TBD
-# .
+FROM golang:1.13.10-alpine${ALPINE_VERSION} AS bobthebuilder
 
 RUN apk update && \
-    apk add --no-cache file-dev g++ make build-base bash git
+    apk add --no-cache upx make build-base bash git
 
-ENV GO111MODULE=on \
-	APP_PATH=/go \
+ENV APP_PATH=/build \
     CGO_ENABLED=0 \
     GOOS=linux \
     GOARCH=amd64
@@ -23,34 +20,30 @@ COPY go.sum .
 RUN go mod download
 
 COPY . .
-# mod-vendor - chache go modules
-#RUN go mod vendor
-# ldflags - ignore debugging files
-#RUN go build -mod=vendor -ldflags '-w' github.com/APTrust/exchange/apps/...
-#RUN CGO_ENABLED=0 go build -ldflags '-w' github.com/APTrust/exchange/apps/...
-
-#RUN go get -v ...
-#RUN go install -a github.com/APTrust/exchange/apps/...
 
 RUN make build-bin
 
-FROM alpine:${ALPINE_VERSION}
+# Compress binary
+RUN upx go-bin/* -1 -q
 
-ARG PSERVICE=${PSERVICE}
+
+#FROM alpine:${ALPINE_VERSION}
+FROM scratch
+
+ARG OUTPUT_DIR=go-bin/
+ARG PSERVICE
 ARG ENVIRONMENT=${ENVIRONMENT:-development}
-ENV APT_CONFIG_DIR=./
-ENV APT_SERVICES_CFG=${ENVIRONMENT:-development}
+ENV APT_CONFIG_DIR=./ \
+    APT_SERVICES_CFG=${ENVIRONMENT:-development}
 
-WORKDIR /go/bin
+WORKDIR /app
 
-VOLUME ["/go/bin/data"]
-VOLUME ["/go/bin/config"]
+VOLUME ["/app/data"]
+VOLUME ["/app/config"]
+
 # Note: Using main as app name because CMD doesn't support env expansion and
 # Docker images are tagged with app names already.
-COPY --from=builder /go/${OUTPUT_DIR}/${PSERVICE} /go/bin/main
-# Compress binary
-#RUN UPX /go/bin/main -1
-#COPY --from=builder /go/src/github.com/APTrust/exchange/config/${ENVIRONMENT}.json config/config.json
-#COPY --from=builder /go/src/github.com/APTrust/exchange/config/aptrust_bag_validation_config.json config/aptrust_bag_validation_config.json
 
-CMD ["/go/bin/main", "-config=/go/bin/config/config.json"]
+COPY --from=bobthebuilder /build/${OUTPUT_DIR}/${PSERVICE} /app/main
+
+CMD ["/app/main", "-config=/app/config/config.json"]
