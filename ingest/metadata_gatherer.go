@@ -66,6 +66,10 @@ func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingErr
 		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, isFatal))
 	}
 
+	// TODO: constants.MimeTypeForExtension[".tar"] is "application/x-tar"
+	// both seem to be used, so APTrust and BTR profiles should probably
+	// include both.
+	m.IngestObject.Serialization = "application/tar"
 	defer tarredBag.Close()
 	scanner := NewTarredBagScanner(
 		tarredBag,

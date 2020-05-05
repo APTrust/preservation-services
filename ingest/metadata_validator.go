@@ -29,7 +29,7 @@ func NewMetadataValidator(context *common.Context, workItemID int, ingestObject 
 	if err != nil {
 		panic(fmt.Sprintf("Cannot load BagIt profile %s", profileName))
 	}
-	context.Logger.Info("WorkItem %d: Loaded profile %s for bag %s", workItemID, profileName, ingestObject.Identifier())
+	context.Logger.Infof("WorkItem %d: Loaded profile %s for bag %s", workItemID, profileName, ingestObject.Identifier())
 	return &MetadataValidator{
 		Base: Base{
 			Context:      context,
