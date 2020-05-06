@@ -15,26 +15,25 @@ ENV APP_PATH=/build \
 WORKDIR $APP_PATH
 
 # Copy and download dependency using go mod
-COPY go.mod .
-COPY go.sum .
+ADD go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
+# Build binaries
 RUN make build-bin
 
-# Compress binary
+# Compress binaries
 RUN upx go-bin/* -1 -q
 
+FROM alpine:${ALPINE_VERSION}
+#FROM scratch
 
-#FROM alpine:${ALPINE_VERSION}
-FROM scratch
-
-ARG OUTPUT_DIR=go-bin/
+ARG OUTPUT_DIR=go-bin
 ARG PSERVICE
 ARG ENVIRONMENT=${ENVIRONMENT:-development}
 ENV APT_CONFIG_DIR=./ \
-    APT_SERVICES_CFG=${ENVIRONMENT:-development}
+    APT_ENV=${ENVIRONMENT:-development}
 
 WORKDIR /app
 
