@@ -141,7 +141,6 @@ class TestRunner
       self.start_service(svc)
     end
 
-
     puts ">> NSQ: 'http://localhost:4171'"
     puts ">> Minio: 'http://localhost:9899' login/pwd -> minioadmin/minioadmin"
     puts ">> Pharos: 'http://localhost:9292' login/pwd -> system@aptrust.org"
@@ -155,6 +154,55 @@ class TestRunner
       sleep(1)
     end
   end
+
+
+  # TODO: Refactor common code from other tests.
+  # TODO: Test both initial ingest and reingest.
+  # TODO: Run end-to-end tests without "sleep". Needs reliable
+  #       triggers to say when ingest is complete and when
+  #       reingest is complete. Consider writing all the code
+  #       in go with a manager that waits for WorkItems to complete.
+  def run_e2e_tests(arg)
+    build_pid = Process.spawn('ruby scripts/build.rb', chdir: project_root)
+    Process.wait build_pid
+
+    clean_test_cache
+    make_test_dirs
+
+    # Start NSQ, Minio, Redis, and Docker/Pharos
+    @all_services.each do |svc|
+      start_service(svc)
+    end
+    self.pharos_start
+
+    sleep(5)
+
+    puts "Starting bucket reader"
+    cmd = "./bin/go-bin/ingest_bucket_reader"
+    puts cmd
+    pid = Process.spawn(env_hash, cmd, chdir: project_root)
+    Process.wait pid
+
+    # Start all the ingest services after we have something
+    # in the first queue. Also, allow a few seconds between
+    # starts, so each worker's queue has time to fill.
+    self.ingest_service_commands.each do |svc|
+      puts "Starting #{svc['name']}"
+      self.start_service(svc)
+      sleep(10)
+    end
+
+    puts "Giving the workers some time to finish"
+    sleep(20)
+
+    puts "Starting end-to-end tests..."
+    cmd = "go test -p 1 -tags=e2e ./e2e/..."
+    puts cmd
+    pid = Process.spawn(env_hash, cmd, chdir: project_root)
+    Process.wait pid
+    self.print_results
+  end
+
 
   def start_service(svc)
     log_file = File.join(ENV['HOME'], "tmp", "logs", "#{svc[:name]}.log")
@@ -362,5 +410,7 @@ if __FILE__ == $0
     t.run_integration_tests(ARGV[1])
   when 'interactive'
     t.run_interactive(ARGV[1])
+  when 'e2e'
+    t.run_e2e_tests(ARGV[1])
   end
 end
