@@ -10,10 +10,6 @@ addons:
     packages:
     - docker-ce
     - curl
-    - python2.7
-    - python-pip
-install:
-    - pip install --user opf-fido
 # env:
 # - APT_ENV=test
 # script: make unittest
