@@ -2,33 +2,31 @@ package ingest
 
 import (
 	"fmt"
-	"net/url"
+	"path"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
-	"github.com/APTrust/preservation-services/util"
+	"github.com/minio/minio-go/v6"
+	"github.com/richardlehane/siegfried"
 )
 
-// FormatIdentifier streams an S3 file, or the first chunk of it, through
-// an external program to determine its file format. Currently, the tool
-// is FIDO, which uses the PRONOM registry to identify formats.
+// FormatIdentifier streams an S3 file, through Siegfried, which uses
+// the PRONOM registry to identify formats.
 type FormatIdentifier struct {
 	Base
-	FmtIdentifier *util.FormatIdentifier
+	Siegfried *siegfried.Siegfried
 }
 
 // NewFormatIdentifier creates a new FormatIdentifier. This will panic
 // if the prerequisites for running the format identifier script are
 // not present.
 func NewFormatIdentifier(context *common.Context, workItemID int, ingestObject *service.IngestObject) *FormatIdentifier {
-	pathToScript := context.Config.FormatIdentifierScript()
-	fmtIdentifier := util.NewFormatIdentifier(pathToScript)
-	if !fmtIdentifier.CanRun() {
-		panic(fmt.Sprintf("Missing prerequisites for format identifier. "+
-			"Be sure the following are installed: curl, fido, python2, and "+
-			"identify_format.sh. The last should be at %s", pathToScript))
+	signatureFile := path.Join(context.Config.ProfilesDir, "default.sig")
+	ziggy, err := siegfried.Load(signatureFile)
+	if err != nil {
+		panic(fmt.Sprintf("Siegfried cannot load signature file: %v", err))
 	}
 	return &FormatIdentifier{
 		Base: Base{
@@ -36,7 +34,7 @@ func NewFormatIdentifier(context *common.Context, workItemID int, ingestObject *
 			IngestObject: ingestObject,
 			WorkItemID:   workItemID,
 		},
-		FmtIdentifier: fmtIdentifier,
+		Siegfried: ziggy,
 	}
 }
 
@@ -54,58 +52,57 @@ func NewFormatIdentifier(context *common.Context, workItemID int, ingestObject *
 // enough to skip files that were successfully identified on a previous run.
 func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 	identify := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
-		// No need to re-identify if already id'd by FIDO
-		if ingestFile.FormatIdentifiedBy == constants.FmtIdFido {
+		// No need to re-identify if already id'd by Siegfried
+		if ingestFile.FormatIdentifiedBy == constants.FmtIdSiegfried {
 			return errors
 		}
-		// We cannot get zero-length files because S3 returns status code
-		// 416/Range Unsatisfiable. Zero-length files are mostly .keep
+		// No point in identifying these. They're mostly .keep or __init__.py
 		if ingestFile.Size == int64(0) {
 			return errors
 		}
 
 		key := fi.S3KeyFor(ingestFile)
-		signedURL, err := fi.GetPresignedURL(fi.Context.Config.StagingBucket, key)
+
+		s3Client := fi.Context.S3Clients[constants.StorageProviderAWS]
+		s3Object, err := s3Client.GetObject(
+			fi.Context.Config.StagingBucket,
+			key,
+			minio.GetObjectOptions{})
+
 		if err != nil {
-			errors = append(errors, fi.Error(ingestFile.Identifier(), err, false))
+			return append(errors, fi.Error(ingestFile.Identifier(), err, false))
 		}
-		idRecord, err := fi.FmtIdentifier.Identify(
-			signedURL.String(),
-			ingestFile.FidoSafeName())
+
+		defer s3Object.Close()
+
+		identifications, err := fi.Siegfried.Identify(s3Object, ingestFile.PathInBag, "")
+
 		if err != nil {
 			errors = append(errors, fi.Error(ingestFile.Identifier(), err, false))
 		} else {
-			// See comments above "if formatChanged" below.
-			// formatChanged := (idRecord.Succeeded && idRecord.MimeType != idRecord.MimeType)
-
+			mimeType := ""
+			basis := ""
+			for _, id := range identifications {
+				mimeType, basis = GetMimeTypeFromLabels(fi.Siegfried.Label(id))
+				if mimeType != "" {
+					break
+				}
+			}
 			// The TarredBagScanner did an initial file format identification
 			// when it scanned the bag, identifying by file extension. We want
-			// to change the format only if FIDO actually succeeded in
+			// to change the format only if Siegfried actually succeeded in
 			// identifying something. Otherwise, we stick with the original
 			// id-by-extension.
-			if idRecord.Succeeded {
-				ingestFile.FileFormat = idRecord.MimeType
-				ingestFile.FormatMatchType = idRecord.MatchType
-				ingestFile.FormatIdentifiedBy = constants.FmtIdFido
+			if mimeType != "" {
+				ingestFile.FileFormat = mimeType
+				ingestFile.FormatMatchType = basis
+				ingestFile.FormatIdentifiedBy = constants.FmtIdSiegfried
 				ingestFile.FormatIdentifiedAt = time.Now().UTC()
 				fi.Context.Logger.Infof("Identified format of %s as %s", ingestFile.Identifier(), ingestFile.FileFormat)
 			} else {
 				fi.Context.Logger.Warningf("Could not identify format of %s. Leaving as %s", ingestFile.Identifier(), ingestFile.FileFormat)
 			}
 
-			//
-			// Here, we should update the object's Content-Type in S3,
-			// but we can't. Minio supports updating user metadata using
-			// CopyObject to copy an object over itself. If the user metadata
-			// changes but the source and destination are the same, Minio
-			// simply updates the user metadata. Unfortunately, the
-			// ContentType is outside the user metadata and is not touched
-			// in the copy process. We can and will still store the correct
-			// mimetype in the GenericFile.FileFormat property in Pharos.
-			//
-			// if formatChanged {
-			// 	fi.UpdateS3Metadata(ingestFile)
-			// }
 		}
 
 		return errors
@@ -124,12 +121,15 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 	return fi.Context.RedisClient.IngestFilesApply(identify, options)
 }
 
-// GetPresignedURL returns a pre-signed S3 URL that we can pass to the
-// identify_format.sh script, so it can access the file without needing
-// an S3 library.
-func (fi *FormatIdentifier) GetPresignedURL(bucket, key string) (*url.URL, error) {
-	urlParams := url.Values{}
-	expires := time.Second * 24 * 60 * 60 * 7 // 7 days
-	client := fi.Context.S3Clients[constants.StorageProviderAWS]
-	return client.PresignedGetObject(bucket, key, expires, urlParams)
+// GetMimeTypeFromLabels returns the mime type and the basis for this match,
+// based on label pairs extracted from Siegfried's identification record.
+func GetMimeTypeFromLabels(labels [][2]string) (mimeType string, basis string) {
+	for _, pair := range labels {
+		if pair[0] == "mime" {
+			mimeType = pair[1]
+		} else if pair[0] == "basis" {
+			basis = pair[1]
+		}
+	}
+	return mimeType, basis
 }

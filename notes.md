@@ -64,17 +64,8 @@
        - Delete data from redis
 
 5. File Format Identification
-   - **UPDATE** FIDO is very slow for large bags because each identification
-     request starts a new Python process. Consider using Siegfried, which also
-     does PRONOM identification and can run in server mode. See
-     https://github.com/richardlehane/siegfried/blob/master/cmd/sf/serve.go
-     The README at https://github.com/richardlehane/siegfried/blob/master/README.md
-     says we can start the server with this command: `sf -serve hostname:port`
-   - We'll be using [FIDO](https://github.com/openpreserve/fido) for file
-     identification. After reviewing a number of tools including JHOVE,
-     DROID, FITS, and Apache Tika, this was by far the simplest to set up,
-     configure, and integrate into our workflow. It will also be the
-     easiest to maintain.
+   - We're using Siegfried, which identifies files against the PRONOM db.
+     Siegfried is embedded into the
    - File Format Id has some requirements outside the ingest workflow,
      including a long-standing open reqest to retroactively identify
      files already in preservation storage. We will likely run format
@@ -88,9 +79,8 @@
          identification. (How to do this? Add a field to GF record?)
        - For each file, get the UUID primary storage URL, and file
          extension (from the GF identifier).
-       - Create a signed URL to retrieve to scan the file using the
-         [identify_format](./scripts/identify_format.sh) script.
-         Use UUID + extension for filename.
+       - Let the format identification worker use its embedded Siegfried
+         to identify the format via PRONOM signature.
        - If possible (and it may not be), change the ContentType of the
          object in S3 and Glacier storage. Do NOT rewrite the object
          because that risks corruption. It may not be possible to update
@@ -101,7 +91,7 @@
    - Workflow for this worker when checking items in ingest staging:
        - Get the Redis record for each IngestFile.
        - If it's already been identified, skip.
-       - Run through [identify_format](./scripts/identify_format.sh) as above.
+       - Run through the format identification worker, as above.
        - Record the file format and timestamp in the IngestFile struct.
        - Update the ContentType attribute on the file in the staging bucket.
          See this [CopyObject comment](https://github.com/minio/minio/commit/69559aa101d4b3b28b9eeb09db9850e4d56f9aa7#diff-89e76f773faa587ce9a0b1ccec21c649R220) for info on how to do that. It should update the metadata without affecting the content of the object itself. That commit fixes [this bug](https://github.com/minio/minio/issues/3316) which describes our issue.

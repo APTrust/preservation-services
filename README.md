@@ -52,24 +52,3 @@ Note: Integration test files end with `_int_test.go` and include the following b
 // +build integration
 
 ```
-
-# Setting up FIDO for File Identification
-
-The script `./scripts/identify_file.sh` will identify files stored in S3 against signatures in the pronom registry.
-
-**In production, we should probably do a simple `pip install opf-fido` to have FIDO available globally.** Also note that FIDO seems to like python 2.7, and claims that python 3 support is still experimental.
-
-If you want to isolate the fido installation, install install the [virtualenv tools](https://virtualenvwrapper.readthedocs.io/en/latest/install.html) and then do the following:
-
-```
-mkdir <somedir>/fido
-cd <somedir>/fido
-mkvirtualenv fido
-pip install opf-fido
-```
-
-If that worked, your command prompt should now be prefixed with (fido) to indicate you're in the fido virtual environment. Type `fido -h` and you should see the help output from fido.
-
-If you want to update your PRONOM signatures, run `fido-update-signatures`, though you should have the latest with a fresh install.
-
-For more information, see FIDO's [GitHub Repo](https://github.com/openpreserve/fido) and [User Guide](http://wiki.opf-labs.org/display/KB/FIDO+usage+guide).

@@ -4,14 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path"
 	"runtime"
 	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/util"
-	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 )
@@ -41,6 +39,7 @@ type Config struct {
 	PharosAPIUser           string `json:"-"`
 	PharosAPIVersion        string
 	PharosURL               string
+	ProfilesDir             string
 	RedisDefaultDB          int
 	RedisPassword           string `json:"-"`
 	RedisRetries            int
@@ -52,7 +51,6 @@ type Config struct {
 	S3Credentials           map[string]S3Credentials `json:"-"`
 	S3LocalHost             string
 	S3WasabiHost            string
-	ScriptDir               string
 	StagingBucket           string
 	StagingUploadRetries    int
 	StagingUploadRetryMs    time.Duration
@@ -114,6 +112,7 @@ func loadConfig() *Config {
 		PharosAPIUser:           v.GetString("PHAROS_API_USER"),
 		PharosAPIVersion:        v.GetString("PHAROS_API_VERSION"),
 		PharosURL:               v.GetString("PHAROS_URL"),
+		ProfilesDir:             v.GetString("PROFILES_DIR"),
 		RedisDefaultDB:          v.GetInt("REDIS_DEFAULT_DB"),
 		RedisPassword:           v.GetString("REDIS_PASSWORD"),
 		RedisRetries:            v.GetInt("REDIS_RETRIES"),
@@ -141,20 +140,11 @@ func loadConfig() *Config {
 		},
 		S3LocalHost:          v.GetString("S3_LOCAL_HOST"),
 		S3WasabiHost:         v.GetString("S3_WASABI_HOST"),
-		ScriptDir:            v.GetString("SCRIPT_DIR"),
 		StagingBucket:        v.GetString("STAGING_BUCKET"),
 		StagingUploadRetries: v.GetInt("STAGING_UPLOAD_RETRIES"),
 		StagingUploadRetryMs: v.GetDuration("STAGING_UPLOAD_RETRY_MS"),
 		VolumeServiceURL:     v.GetString("VOLUME_SERVICE_URL"),
 	}
-}
-
-func (config *Config) FormatIdentifierScript() string {
-	return config.PathToScript("identify_format.sh")
-}
-
-func (config *Config) PathToScript(name string) string {
-	return path.Join(config.ScriptDir, name)
 }
 
 // UploadTargetFor returns the upload targets for the specified storage option.
@@ -201,10 +191,8 @@ func (config *Config) expandPaths() {
 	config.BaseWorkingDir = expandPath(config.BaseWorkingDir)
 	config.IngestTempDir = expandPath(config.IngestTempDir)
 	config.LogDir = expandPath(config.LogDir)
+	config.ProfilesDir = expandPath(config.ProfilesDir)
 	config.RestoreDir = expandPath(config.RestoreDir)
-
-	projectRoot := testutil.ProjectRoot()
-	config.ScriptDir = strings.Replace(config.ScriptDir, "PROJECT_ROOT", projectRoot, 1)
 }
 
 func expandPath(dirName string) string {
@@ -302,6 +290,9 @@ func (config *Config) checkBasicSettings() {
 	}
 	if config.PharosURL == "" {
 		util.PrintAndExit("Config is missing PharosURL")
+	}
+	if config.ProfilesDir == "" {
+		util.PrintAndExit("Config is missing ProfilesDir")
 	}
 	if config.RedisDefaultDB < 0 || config.RedisDefaultDB > 16 {
 		util.PrintAndExit("RedisDefaultDB must be 0 <=> 16 (usually 0)")
