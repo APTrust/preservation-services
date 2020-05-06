@@ -27,7 +27,7 @@ this requires the following environtment vars:
 
 APT_CONFIG_DIR - Path to the directory containing the .env settings file.
 
-APT_SERVICES_CONFIG - Name of the configuration to load. For example:
+APT_ENV - Name of the configuration to load. For example:
     test - Loads .env.test from APT_CONFIG_DIR
     demo - Loads .env.demo from APT_CONFIG_DIR
 `
@@ -47,8 +47,8 @@ func ParseOpts() Options {
 	if os.Getenv("APT_CONFIG_DIR") == "" {
 		os.Setenv("APT_CONFIG_DIR", opts.ConfigDir)
 	}
-	if os.Getenv("APT_SERVICES_CONFIG") == "" {
-		os.Setenv("APT_SERVICES_CONFIG", opts.ConfigName)
+	if os.Getenv("APT_ENV") == "" {
+		os.Setenv("APT_ENV", opts.ConfigName)
 	}
 	return opts
 }

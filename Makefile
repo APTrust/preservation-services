@@ -7,7 +7,7 @@ REVISION:=$(shell git rev-parse --short=7 HEAD)
 BRANCH:= $(subst /,_,$(shell git rev-parse --abbrev-ref HEAD))
 PUSHBRANCH = $(subst /,_,$(TRAVIS_BRANCH))
 TAG=$(name):$(REVISION)
-APT_SERVICES_CONFIG:='test'
+APT_ENV:='test'
 APT_SERVICES_CONFIG_DIR:=./
 
 OUTPUT_DIR:=go-bin

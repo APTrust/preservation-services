@@ -20,6 +20,14 @@ To run, you'll need the following in your environment:
 export AWS_ACCESS_KEY_ID="some key that can access aptrust buckets"
 export AWS_SECRET_ACCESS_KEY="a valid secret key"
 export GO111MODULE=on
+
+# APT_CONFIG_DIR tells the executables where to look for the config file.
+# If not set, it defaults to the current working directory.
+export APT_CONFIG_DIR=/path/to/config/dir
+
+# APT_ENV tells the apps which config file to load. The config file name
+# follows the pattern .env.<config_name>. E.g. .env.test, .env.demo, etc.
+export APT_ENV=test
 ```
 
 # Testing

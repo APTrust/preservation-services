@@ -197,7 +197,7 @@ class TestRunner
         File.dirname(__FILE__),
         ".."
       ))
-    env['APT_SERVICES_CONFIG'] = 'test'
+    env['APT_ENV'] = 'test'
 	env
   end
 

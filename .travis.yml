@@ -15,7 +15,7 @@ addons:
 install:
     - pip install --user opf-fido
 # env:
-# - APT_SERVICES_CONFIG=test
+# - APT_ENV=test
 # script: make unittest
 script: ruby scripts/test.rb units
 notifications:

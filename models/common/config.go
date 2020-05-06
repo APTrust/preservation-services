@@ -69,7 +69,7 @@ var logLevels = map[string]logging.Level{
 	"DEBUG":    logging.DEBUG,
 }
 
-// Returns a new config based on ENV var APT_SERVICES_CONFIG
+// Returns a new config based on ENV var APT_ENV
 func NewConfig() *Config {
 	config := loadConfig()
 	config.expandPaths()
@@ -87,7 +87,7 @@ func loadConfig() *Config {
 	v.SetConfigType("env")
 	err := v.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+		util.PrintAndExit(fmt.Sprintf("Fatal error config file: %v \n", err))
 	}
 	return &Config{
 		BaseWorkingDir:          v.GetString("BASE_WORKING_DIR"),
@@ -172,15 +172,19 @@ func (config *Config) UploadTargetsFor(storageOption string) []*UploadTarget {
 }
 
 func getEnvVars() (string, string) {
-	configDir := getRequiredEnvVar("APT_CONFIG_DIR")
-	envName := getRequiredEnvVar("APT_SERVICES_CONFIG")
+	cwd, _ := os.Getwd()
+	configDir := getRequiredEnvVar("APT_CONFIG_DIR", cwd)
+	envName := getRequiredEnvVar("APT_ENV", "")
 	return configDir, envName
 }
 
-func getRequiredEnvVar(varName string) string {
+func getRequiredEnvVar(varName, defaultValue string) string {
 	value := os.Getenv(varName)
 	if value == "" {
-		panic(fmt.Sprintf("Required env var %s not set", varName))
+		value = defaultValue
+	}
+	if value == "" {
+		util.PrintAndExit(fmt.Sprintf("Required env var %s not set", varName))
 	}
 	return value
 }
@@ -206,7 +210,7 @@ func (config *Config) expandPaths() {
 func expandPath(dirName string) string {
 	dir, err := util.ExpandTilde(dirName)
 	if err != nil {
-		panic(err)
+		util.PrintAndExit(err.Error())
 	}
 	return dir
 }
@@ -219,17 +223,17 @@ func isLocalHost(host string) bool {
 func (config *Config) checkHostSafety() {
 	if config.ConfigName == "dev" || config.ConfigName == "test" || runtime.GOOS == "darwin" {
 		if !isLocalHost(config.NsqURL) {
-			panic(fmt.Sprintf("Dev/Test setup cannot point to external NSQ instance %s", config.NsqURL))
+			util.PrintAndExit(fmt.Sprintf("Dev/Test setup cannot point to external NSQ instance %s", config.NsqURL))
 		}
 		if !isLocalHost(config.PharosURL) {
-			panic(fmt.Sprintf("Dev/Test setup cannot point to external Pharos instance %s", config.PharosURL))
+			util.PrintAndExit(fmt.Sprintf("Dev/Test setup cannot point to external Pharos instance %s", config.PharosURL))
 		}
 		if !isLocalHost(config.RedisURL) {
-			panic(fmt.Sprintf("Dev/Test setup cannot point to external Redis instance %s", config.RedisURL))
+			util.PrintAndExit(fmt.Sprintf("Dev/Test setup cannot point to external Redis instance %s", config.RedisURL))
 		}
 		for _, name := range constants.StorageProviders {
 			if !isLocalHost(config.S3Credentials[name].Host) {
-				panic(fmt.Sprintf("Dev/Test setup cannot point to external S3 URL %s for S3 service %s", config.S3Credentials[name].Host, name))
+				util.PrintAndExit(fmt.Sprintf("Dev/Test setup cannot point to external S3 URL %s for S3 service %s", config.S3Credentials[name].Host, name))
 			}
 		}
 	}
@@ -237,102 +241,102 @@ func (config *Config) checkHostSafety() {
 
 func (config *Config) checkBasicSettings() {
 	if config.BaseWorkingDir == "" {
-		panic("Config is missing BaseWorkingDir")
+		util.PrintAndExit("Config is missing BaseWorkingDir")
 	}
 	if config.BucketStandardOR == "" {
-		panic("Config is missing BucketStandardOR")
+		util.PrintAndExit("Config is missing BucketStandardOR")
 	}
 	if config.BucketStandardVA == "" {
-		panic("Config is missing BucketStandardVA")
+		util.PrintAndExit("Config is missing BucketStandardVA")
 	}
 	if config.BucketGlacierOH == "" {
-		panic("Config is missing BucketGlacierOH")
+		util.PrintAndExit("Config is missing BucketGlacierOH")
 	}
 	if config.BucketGlacierOR == "" {
-		panic("Config is missing BucketGlacierOR")
+		util.PrintAndExit("Config is missing BucketGlacierOR")
 	}
 	if config.BucketGlacierVA == "" {
-		panic("Config is missing BucketGlacierVA")
+		util.PrintAndExit("Config is missing BucketGlacierVA")
 	}
 	if config.BucketGlacierDeepOH == "" {
-		panic("Config is missing BucketGlacierDeepOH")
+		util.PrintAndExit("Config is missing BucketGlacierDeepOH")
 	}
 	if config.BucketGlacierDeepOR == "" {
-		panic("Config is missing BucketGlacierDeepOR")
+		util.PrintAndExit("Config is missing BucketGlacierDeepOR")
 	}
 	if config.BucketGlacierDeepVA == "" {
-		panic("Config is missing BucketGlacierDeepVA")
+		util.PrintAndExit("Config is missing BucketGlacierDeepVA")
 	}
 	if config.BucketWasabiOR == "" {
-		panic("Config is missing BucketWasabiOR")
+		util.PrintAndExit("Config is missing BucketWasabiOR")
 	}
 	if config.BucketWasabiVA == "" {
-		panic("Config is missing BucketWasabiVA")
+		util.PrintAndExit("Config is missing BucketWasabiVA")
 	}
 	if config.IngestTempDir == "" {
-		panic("Config is missing IngestTempDir")
+		util.PrintAndExit("Config is missing IngestTempDir")
 	}
 	if config.LogDir == "" {
-		panic("Config is missing LogDir")
+		util.PrintAndExit("Config is missing LogDir")
 	}
 	if config.MaxDaysSinceFixityCheck == 0 {
-		panic("Config is missing MaxDaysSinceFixityCheck")
+		util.PrintAndExit("Config is missing MaxDaysSinceFixityCheck")
 	}
 	if config.MaxFileSize == int64(0) {
-		panic("Config is missing MaxFileSize")
+		util.PrintAndExit("Config is missing MaxFileSize")
 	}
 	if config.NsqLookupd == "" {
-		panic("Config is missing NsqLookupd")
+		util.PrintAndExit("Config is missing NsqLookupd")
 	}
 	if config.NsqURL == "" {
-		panic("Config is missing NsqURL")
+		util.PrintAndExit("Config is missing NsqURL")
 	}
 	if config.PharosAPIKey == "" {
-		panic("Config is missing PharosAPIKey")
+		util.PrintAndExit("Config is missing PharosAPIKey")
 	}
 	if config.PharosAPIUser == "" {
-		panic("Config is missing PharosAPIUser")
+		util.PrintAndExit("Config is missing PharosAPIUser")
 	}
 	if config.PharosAPIVersion == "" {
-		panic("Config is missing PharosAPIVersion")
+		util.PrintAndExit("Config is missing PharosAPIVersion")
 	}
 	if config.PharosURL == "" {
-		panic("Config is missing PharosURL")
+		util.PrintAndExit("Config is missing PharosURL")
 	}
 	if config.RedisDefaultDB < 0 || config.RedisDefaultDB > 16 {
-		panic("RedisDefaultDB must be 0 <=> 16 (usually 0)")
+		util.PrintAndExit("RedisDefaultDB must be 0 <=> 16 (usually 0)")
 	}
 	// This one should be empty for dev/test
 	// if c.RedisPassword == "" {
-	// 	panic("Config is missing RedisPassword")
+	// 	util.PrintAndExit("Config is missing RedisPassword")
 	// }
 	if config.RedisRetries < 1 {
-		panic("Config is missing RedisRetries")
+		util.PrintAndExit("Config is missing RedisRetries")
 	}
 	if config.RedisRetryMs < time.Duration(1*time.Millisecond) {
-		panic("Config is missing RedisRetryMs (be sure format is like 200ms)")
+		util.PrintAndExit("Config is missing RedisRetryMs (be sure format is like 200ms)")
 	}
 	if config.RedisURL == "" {
-		panic("Config is missing RedisURL")
+		util.PrintAndExit("Config is missing RedisURL")
 	}
 	// This one should be empty for dev/test
 	// if c.RedisUser == "" {
-	// 	panic("Config is missing RedisUser")
+	// 	util.PrintAndExit("Config is missing RedisUser")
 	// }
 	if config.RestoreDir == "" {
-		panic("Config is missing RestoreDir")
+		util.PrintAndExit("Config is missing RestoreDir")
 	}
 	if config.StagingBucket == "" {
-		panic("Config is missing StagingBucket")
+		util.PrintAndExit("Config is missing StagingBucket")
 	}
 	if config.StagingUploadRetries < 1 {
-		panic("Config is missing StagingUploadRetries")
+		util.PrintAndExit("Config is missing StagingUploadRetries")
 	}
 	if config.StagingUploadRetryMs < time.Duration(1*time.Millisecond) {
-		panic("Config is missing StagingUploadRetryMs (be sure format is like 200ms)")
+		util.PrintAndExit("Config is missing StagingUploadRetryMs (be sure format is like 200ms)")
 	}
 	if config.VolumeServiceURL == "" {
-		panic("Config is missing VolumeServiceURL")
+		util.PrintAndExit("Config is missing VolumeServiceURL")
 	}
 }
 
@@ -340,13 +344,13 @@ func (config *Config) checkS3Providers() {
 	for _, name := range constants.StorageProviders {
 		provider := config.S3Credentials[name]
 		if provider.Host == "" {
-			panic(fmt.Sprintf("S3 provider %s is missing Host", name))
+			util.PrintAndExit(fmt.Sprintf("S3 provider %s is missing Host", name))
 		}
 		if provider.KeyID == "" {
-			panic(fmt.Sprintf("S3 provider %s is missing KeyId", name))
+			util.PrintAndExit(fmt.Sprintf("S3 provider %s is missing KeyId", name))
 		}
 		if provider.SecretKey == "" {
-			panic(fmt.Sprintf("S3 provider %s is missing SecretKey", name))
+			util.PrintAndExit(fmt.Sprintf("S3 provider %s is missing SecretKey", name))
 		}
 	}
 }
@@ -354,13 +358,13 @@ func (config *Config) checkS3Providers() {
 func (config *Config) checkUploadTargets() {
 	for _, target := range config.UploadTargets {
 		if target.Host == "" {
-			panic(fmt.Sprintf("S3 target %s is missing Host", target.OptionName))
+			util.PrintAndExit(fmt.Sprintf("S3 target %s is missing Host", target.OptionName))
 		}
 		if target.Bucket == "" {
-			panic(fmt.Sprintf("S3 provider %s is missing Bucket", target.OptionName))
+			util.PrintAndExit(fmt.Sprintf("S3 provider %s is missing Bucket", target.OptionName))
 		}
 		if target.Region == "" {
-			panic(fmt.Sprintf("S3 provider %s is missing Region", target.OptionName))
+			util.PrintAndExit(fmt.Sprintf("S3 provider %s is missing Region", target.OptionName))
 		}
 	}
 }
@@ -384,7 +388,7 @@ func (config *Config) makeDirs() error {
 	for _, dir := range dirs {
 		err := os.MkdirAll(dir, 0755)
 		if err != nil {
-			panic(err)
+			util.PrintAndExit(err.Error())
 		}
 	}
 	return nil

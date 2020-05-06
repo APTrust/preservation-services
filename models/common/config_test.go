@@ -128,5 +128,3 @@ func TestToJson(t *testing.T) {
 		assert.False(t, strings.Contains(jsonString, key))
 	}
 }
-
-// TODO: Test that different configs get the right settings.

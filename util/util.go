@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -138,4 +139,10 @@ func StringIsShellSafe(s string) bool {
 func StripFileExtension(filename string) string {
 	ext := filepath.Ext(filename)
 	return filename[0 : len(filename)-len(ext)]
+}
+
+// PrintAndExit prints a message to STDERR and exits
+func PrintAndExit(message string) {
+	fmt.Fprintln(os.Stderr, message)
+	os.Exit(1)
 }
