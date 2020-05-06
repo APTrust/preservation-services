@@ -12,9 +12,8 @@ import (
 	"github.com/richardlehane/siegfried"
 )
 
-// FormatIdentifier streams an S3 file, or the first chunk of it, through
-// an external program to determine its file format. Currently, the tool
-// is FIDO, which uses the PRONOM registry to identify formats.
+// FormatIdentifier streams an S3 file, through Siegfried, which uses
+// the PRONOM registry to identify formats.
 type FormatIdentifier struct {
 	Base
 	Siegfried *siegfried.Siegfried
@@ -91,7 +90,7 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 			}
 			// The TarredBagScanner did an initial file format identification
 			// when it scanned the bag, identifying by file extension. We want
-			// to change the format only if FIDO actually succeeded in
+			// to change the format only if Siegfried actually succeeded in
 			// identifying something. Otherwise, we stick with the original
 			// id-by-extension.
 			if mimeType != "" {

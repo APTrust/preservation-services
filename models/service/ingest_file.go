@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"path"
 	"strings"
 	"time"
 
@@ -243,21 +242,6 @@ func (f *IngestFile) ChecksumsMatch(manifestName string) (bool, error) {
 		}
 	}
 	return ok, err
-}
-
-// FidoSafeName returns the IngestFile's UUID + extension.
-// E.g. "209b478a-95cd-4217-b0a3-c80e3e7a2f0e.pdf"
-//
-// If FIDO can't identify the file from the first 128k of
-// data, it will identify it by file extension.
-// Since FmtIdentifier will exec an external command,
-// we want to be sure to pass a safe filename.
-// The file UUID + extension allows FIDO to see the file
-// extension, while ensuring that the file name is shell-safe.
-// We DO NOT want to pass in some of the file names we get
-// that contain backticks, curly braces, dollar signs, etc.
-func (f *IngestFile) FidoSafeName() string {
-	return f.UUID + path.Ext(f.PathInBag)
 }
 
 // GetPutOptions returns the metadata we'll need to store with a file

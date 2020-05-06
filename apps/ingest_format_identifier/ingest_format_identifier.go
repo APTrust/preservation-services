@@ -33,10 +33,10 @@ func main() {
 
 func printHelp() {
 	message := `
-ingest_format_ident identifies the format (mime type) of ingest files by
-running the first ~128kb of each file through the fido identification script.
-This program relies on the external fido script, which in turn depends on
-python.`
+ingest_format_ident uses Siegfried to identify the format (mime type) of
+ingest files. More about Siegfried, which uses PRONOM format signatures,
+is available at https://github.com/richardlehane/siegfried
+`
 	fmt.Println(message)
 	fmt.Println(cli.EnvMessage)
 }

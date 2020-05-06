@@ -432,15 +432,6 @@ func TestNeedsSaveAt(t *testing.T) {
 	assert.False(t, f.NeedsSaveAt(provider, bucket))
 }
 
-func TestFidoSafeName(t *testing.T) {
-	f := &service.IngestFile{
-		UUID:      "209b478a-95cd-4217-b0a3-c80e3e7a2f0e",
-		PathInBag: "data/docs/blah/blah/blah/somefile.pdf",
-	}
-	assert.Equal(t, "209b478a-95cd-4217-b0a3-c80e3e7a2f0e.pdf", f.FidoSafeName())
-
-}
-
 func TestGetPutOptions(t *testing.T) {
 	ingestFile := &service.IngestFile{
 		FileFormat:       "image/jpeg",
@@ -476,7 +467,7 @@ func getFileForEvents() *service.IngestFile {
 		FileFormat:           "text/javascript",
 		FileModified:         testutil.Bloomsday,
 		FormatIdentifiedAt:   testutil.Bloomsday,
-		FormatIdentifiedBy:   constants.FmtIdFido,
+		FormatIdentifiedBy:   constants.FmtIdSiegfried,
 		FormatMatchType:      constants.MatchTypeExtension,
 		InstitutionID:        1234,
 		IntellectualObjectID: 5678,
