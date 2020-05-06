@@ -42,7 +42,10 @@ VOLUME ["/app/config"]
 
 # Note: Using main as app name because CMD doesn't support env expansion and
 # Docker images are tagged with app names already.
-
 COPY --from=bobthebuilder /build/${OUTPUT_DIR}/${PSERVICE} /app/main
 
-CMD ["/app/main", "-config=/app/config/config.json"]
+RUN addgroup -S somegroup -g 1000 && adduser -S -G somegroup somebody -u 1000
+RUN chown -R somebody:somegroup /app
+USER somebody
+
+CMD ["/app/main", "-config-dir=$APT_CONFIG_DIR", "-config-name $APT_ENV"]
