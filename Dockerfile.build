@@ -15,26 +15,25 @@ ENV APP_PATH=/build \
 WORKDIR $APP_PATH
 
 # Copy and download dependency using go mod
-COPY go.mod .
-COPY go.sum .
+ADD go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
+# Build binaries
 RUN make build-bin
 
-# Compress binary
+# Compress binaries
 RUN upx go-bin/* -1 -q
 
+FROM alpine:${ALPINE_VERSION}
+#FROM scratch
 
-#FROM alpine:${ALPINE_VERSION}
-FROM scratch
-
-ARG OUTPUT_DIR=go-bin/
+ARG OUTPUT_DIR=go-bin
 ARG PSERVICE
 ARG ENVIRONMENT=${ENVIRONMENT:-development}
 ENV APT_CONFIG_DIR=./ \
-    APT_SERVICES_CFG=${ENVIRONMENT:-development}
+    APT_ENV=${APT_ENV:-development}
 
 WORKDIR /app
 
@@ -43,7 +42,12 @@ VOLUME ["/app/config"]
 
 # Note: Using main as app name because CMD doesn't support env expansion and
 # Docker images are tagged with app names already.
-
 COPY --from=bobthebuilder /build/${OUTPUT_DIR}/${PSERVICE} /app/main
+COPY --from=bobthebuilder /build/.env.test /app/.env
+COPY --from=bobthebuilder /build/profiles/ /app/profiles
 
-CMD ["/app/main", "-config=/app/config/config.json"]
+RUN addgroup -S somegroup -g 1000 && adduser -S -G somegroup somebody -u 1000
+RUN chown -R somebody:somegroup /app
+USER somebody
+
+CMD ["/app/main", "-config-name test"]
