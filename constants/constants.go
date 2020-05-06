@@ -42,6 +42,7 @@ const (
 	FileTypeTagManifest        = "tag_manifest"
 	FmtIdExtMap                = "ext map"
 	FmtIdFido                  = "fido"
+	FmtIdSiegfried             = "siegfried"
 	IdTypeStorageURL           = "url"
 	IdTypeBagAndPath           = "bag/filepath"
 	IngestPreFetch             = "ingest01_prefetch"

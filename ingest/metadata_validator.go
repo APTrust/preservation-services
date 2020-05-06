@@ -10,7 +10,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
-	"github.com/APTrust/preservation-services/util/testutil"
+	//	"github.com/APTrust/preservation-services/util/testutil"
 )
 
 type MetadataValidator struct {
@@ -25,7 +25,7 @@ type MetadataValidator struct {
 // constructor pattern.
 func NewMetadataValidator(context *common.Context, workItemID int, ingestObject *service.IngestObject) *MetadataValidator {
 	profileName := ingestObject.BagItProfileFormat()
-	profile, err := getProfile(profileName)
+	profile, err := loadProfile(context, profileName)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot load BagIt profile %s", profileName))
 	}
@@ -384,10 +384,8 @@ func (v *MetadataValidator) RecordMissing(filetype string, requiredByProfile, pr
 	return ok
 }
 
-// TODO: Should these be pre-loaded into the executable?
-// TODO: testutil doesn't belong in non-test code.
 // Valid names are constants.BagItProfileBTR and constant.BagItProfileDefault
-func getProfile(name string) (*bagit.Profile, error) {
-	filename := path.Join(testutil.ProjectRoot(), "profiles", name)
+func loadProfile(context *common.Context, name string) (*bagit.Profile, error) {
+	filename := path.Join(context.Config.ProfilesDir, name)
 	return bagit.ProfileLoad(filename)
 }
