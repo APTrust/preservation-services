@@ -12,6 +12,7 @@ import (
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/minio/minio-go/v6"
 	"github.com/stretchr/testify/assert"
@@ -147,7 +148,7 @@ func getIngestObject(pathToBagFile, md5Digest string) *service.IngestObject {
 
 // Valid names are constants.BagItProfileBTR and constant.BagItProfileDefault
 func getProfile(name string) (*bagit.Profile, error) {
-	filename := path.Join(testutil.ProjectRoot(), "profiles", name)
+	filename := path.Join(util.ProjectRoot(), "profiles", name)
 	return bagit.ProfileLoad(filename)
 }
 
@@ -231,7 +232,7 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int, con
 	require.Empty(t, errors)
 
 	// Validate the bag.
-	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
+	filename := path.Join(util.ProjectRoot(), "profiles", "aptrust-v2.2.json")
 	profile, err := bagit.ProfileLoad(filename)
 	require.Nil(t, err)
 	validator := ingest.NewMetadataValidator(context, workItemId, obj)

@@ -280,3 +280,9 @@ func TestStripFileExtension(t *testing.T) {
 	assert.Equal(t, "somebag", util.StripFileExtension("somebag.tar"))
 	assert.Equal(t, "some_file", util.StripFileExtension("some_file.txt"))
 }
+
+func TestProjectRoot(t *testing.T) {
+	projectRoot := util.ProjectRoot()
+	assert.True(t, len(projectRoot) > 2)
+	assert.True(t, strings.Contains(projectRoot, string(os.PathSeparator)))
+}

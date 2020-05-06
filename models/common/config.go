@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -193,12 +195,21 @@ func (config *Config) expandPaths() {
 	config.LogDir = expandPath(config.LogDir)
 	config.ProfilesDir = expandPath(config.ProfilesDir)
 	config.RestoreDir = expandPath(config.RestoreDir)
+
+	fmt.Println(config.ProfilesDir)
 }
 
 func expandPath(dirName string) string {
 	dir, err := util.ExpandTilde(dirName)
 	if err != nil {
 		util.PrintAndExit(err.Error())
+	}
+	if dir == dirName && strings.HasPrefix(dirName, ".") {
+		// dirName didn't change
+		absPath, err := filepath.Abs(path.Join(util.ProjectRoot(), dirName))
+		if err == nil && absPath != "" {
+			dir = absPath
+		}
 	}
 	return dir
 }

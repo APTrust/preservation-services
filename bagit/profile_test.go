@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/APTrust/preservation-services/bagit"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,7 +13,7 @@ import (
 
 // This also implicitly tests BagItProfileFromJson
 func TestBagItProfileLoad(t *testing.T) {
-	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
+	filename := path.Join(util.ProjectRoot(), "profiles", "aptrust-v2.2.json")
 	profile, err := bagit.ProfileLoad(filename)
 	assert.Nil(t, err)
 	require.NotNil(t, profile)
@@ -35,7 +36,7 @@ func TestBagItProfileLoad(t *testing.T) {
 }
 
 func TestGetTagDef(t *testing.T) {
-	filename := path.Join(testutil.ProjectRoot(), "profiles", "aptrust-v2.2.json")
+	filename := path.Join(util.ProjectRoot(), "profiles", "aptrust-v2.2.json")
 	profile, err := bagit.ProfileLoad(filename)
 	assert.Nil(t, err)
 	require.NotNil(t, profile)

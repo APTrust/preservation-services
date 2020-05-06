@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"unicode"
 )
@@ -145,4 +147,11 @@ func StripFileExtension(filename string) string {
 func PrintAndExit(message string) {
 	fmt.Fprintln(os.Stderr, message)
 	os.Exit(1)
+}
+
+// ProjectRoot returns the project root.
+func ProjectRoot() string {
+	_, thisFile, _, _ := runtime.Caller(0)
+	absPath, _ := filepath.Abs(path.Join(thisFile, "..", ".."))
+	return absPath
 }

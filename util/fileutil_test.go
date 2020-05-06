@@ -11,7 +11,7 @@ import (
 func TestFileExists(t *testing.T) {
 	f := testutil.PathToUnitTestBag("example.edu.sample_good.tar")
 	assert.True(t, util.FileExists(f))
-	assert.True(t, util.FileExists(testutil.ProjectRoot()))
+	assert.True(t, util.FileExists(util.ProjectRoot()))
 	assert.False(t, util.FileExists("NonExistentFile.xyz"))
 }
 

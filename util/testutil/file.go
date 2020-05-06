@@ -4,24 +4,18 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"path/filepath"
-	"runtime"
+
+	"github.com/APTrust/preservation-services/util"
 )
 
 var TempDir, _ = ioutil.TempDir("", "prod-serv-test")
 
-func ProjectRoot() string {
-	_, thisFile, _, _ := runtime.Caller(0)
-	absPath, _ := filepath.Abs(path.Join(thisFile, "..", "..", ".."))
-	return absPath
-}
-
 func PathToTestData() string {
-	return path.Join(ProjectRoot(), "testdata")
+	return path.Join(util.ProjectRoot(), "testdata")
 }
 
 func PathToUnitTestBags() string {
-	return path.Join(ProjectRoot(), "testdata", "unit_test_bags")
+	return path.Join(util.ProjectRoot(), "testdata", "unit_test_bags")
 }
 
 func PathToPharosFixture(filename string) string {
