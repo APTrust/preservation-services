@@ -171,7 +171,9 @@ func (r *Recorder) SaveFilesInBatches() (fileCount int, errors []*service.Proces
 	offset := uint64(0)
 	for {
 		batchNumber++
-		fileMap, offset, err := r.Context.RedisClient.GetBatchOfFileKeys(
+		var fileMap map[string]*service.IngestFile
+		var err error
+		fileMap, offset, err = r.Context.RedisClient.GetBatchOfFileKeys(
 			r.WorkItemID,
 			offset,
 			batchSize,
