@@ -17,7 +17,7 @@ class TestRunner
     @unit_services = [
       {
         name: "redis",
-        cmd: "#{bin}/redis-server",
+        cmd: "#{bin}/redis-server --dir ~/tmp/redis/",
         msg: "Redis is running on 127.0.0.1:6379"
       },
       {
@@ -112,6 +112,8 @@ class TestRunner
     self.pharos_start
     sleep(5)
 
+    create_nsq_topics
+
     puts "Starting integration tests..."
     arg = "./..." if arg.nil?
     cmd = "go test -p 1 -tags=integration #{arg}"
@@ -134,6 +136,8 @@ class TestRunner
     end
     self.pharos_start
     sleep(5)
+
+    create_nsq_topics
 
     # Start all the ingest services
     self.ingest_service_commands.each do |svc|
@@ -177,6 +181,8 @@ class TestRunner
 
     sleep(5)
 
+    create_nsq_topics
+
     puts "Starting bucket reader"
     cmd = "./bin/go-bin/ingest_bucket_reader"
     puts cmd
@@ -203,6 +209,24 @@ class TestRunner
     self.print_results
   end
 
+  # Create NSQ topics so that consumers don't wait around idly.
+  # This speeds up e2e tests by several minutes.
+  def create_nsq_topics
+    topics = [
+      "ingest01_prefetch",
+      "ingest02_bag_validation",
+      "ingest03_reingest_check",
+      "ingest04_staging",
+      "ingest05_format_identification",
+      "ingest06_storage",
+      "ingest07_storage_validation",
+      "ingest08_record",
+      "ingest09_cleanup",
+    ]
+    topics.each do |t|
+      `curl -s -X POST http://127.0.0.1:4151/topic/create?topic=#{t}`
+    end
+  end
 
   def start_service(svc)
     log_file = File.join(ENV['HOME'], "tmp", "logs", "#{svc[:name]}.log")
