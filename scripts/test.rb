@@ -104,16 +104,7 @@ class TestRunner
   end
 
   def run_integration_tests(arg)
-    clean_test_cache
-    make_test_dirs
-    @all_services.each do |svc|
-      start_service(svc)
-    end
-    self.pharos_start
-    sleep(5)
-
-    create_nsq_topics
-
+    init_for_integration
     puts "Starting integration tests..."
     arg = "./..." if arg.nil?
     cmd = "go test -p 1 -tags=integration #{arg}"
@@ -124,27 +115,9 @@ class TestRunner
   end
 
   def run_interactive(arg)
-    build_pid = Process.spawn('ruby scripts/build.rb', chdir: project_root)
-    Process.wait build_pid
-
-    clean_test_cache
-    make_test_dirs
-
-    # Start NSQ, Minio, Redis, and Docker/Pharos
-    @all_services.each do |svc|
-      start_service(svc)
-    end
-    self.pharos_start
-    sleep(5)
-
-    create_nsq_topics
-
-    # Start all the ingest services
-    self.ingest_service_commands.each do |svc|
-      puts "Starting #{svc['name']}"
-      self.start_service(svc)
-    end
-
+    build_ingest_services
+    init_for_integration
+    start_ingest_services
     puts ">> NSQ: 'http://localhost:4171'"
     puts ">> Minio: 'http://localhost:9899' login/pwd -> minioadmin/minioadmin"
     puts ">> Pharos: 'http://localhost:9292' login/pwd -> system@aptrust.org"
@@ -160,43 +133,16 @@ class TestRunner
   end
 
 
-  # TODO: Refactor common code from other tests.
   # TODO: Test both initial ingest and reingest.
   # TODO: Run end-to-end tests without "sleep". Needs reliable
   #       triggers to say when ingest is complete and when
   #       reingest is complete. Consider writing all the code
   #       in go with a manager that waits for WorkItems to complete.
   def run_e2e_tests(arg)
-    build_pid = Process.spawn('ruby scripts/build.rb', chdir: project_root)
-    Process.wait build_pid
-
-    clean_test_cache
-    make_test_dirs
-
-    # Start NSQ, Minio, Redis, and Docker/Pharos
-    @all_services.each do |svc|
-      start_service(svc)
-    end
-    self.pharos_start
-
-    sleep(5)
-
-    create_nsq_topics
-
-    puts "Starting bucket reader"
-    cmd = "./bin/go-bin/ingest_bucket_reader"
-    puts cmd
-    pid = Process.spawn(env_hash, cmd, chdir: project_root)
-    Process.wait pid
-
-    # Start all the ingest services after we have something
-    # in the first queue. Also, allow a few seconds between
-    # starts, so each worker's queue has time to fill.
-    self.ingest_service_commands.each do |svc|
-      puts "Starting #{svc['name']}"
-      self.start_service(svc)
-      sleep(10)
-    end
+    build_ingest_services
+    init_for_integration
+    start_ingest_services
+    run_bucket_reader
 
     puts "Giving the workers some time to finish"
     sleep(20)
@@ -207,6 +153,42 @@ class TestRunner
     pid = Process.spawn(env_hash, cmd, chdir: project_root)
     Process.wait pid
     self.print_results
+  end
+
+
+  # Initialize for integration, interactive tests, and
+  # end to end tests. This clears and rebuilds data directories,
+  # starts all services, and creates all NSQ topics.
+  def init_for_integration
+    clean_test_cache
+    make_test_dirs
+    # Start NSQ, Minio, Redis, and Docker/Pharos
+    @all_services.each do |svc|
+      start_service(svc)
+    end
+    self.pharos_start
+    sleep(5)
+    create_nsq_topics
+  end
+
+  def run_bucket_reader
+    puts "Starting bucket reader"
+    cmd = "./bin/go-bin/ingest_bucket_reader"
+    puts cmd
+    pid = Process.spawn(env_hash, cmd, chdir: project_root)
+    Process.wait pid
+  end
+
+  def build_ingest_services
+    build_pid = Process.spawn('ruby scripts/build.rb', chdir: project_root)
+    Process.wait build_pid
+  end
+
+  def start_ingest_services
+    self.ingest_service_commands.each do |svc|
+      puts "Starting #{svc['name']}"
+      self.start_service(svc)
+    end
   end
 
   # Create NSQ topics so that consumers don't wait around idly.
