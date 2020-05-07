@@ -30,6 +30,12 @@ help: ## This help.
 
 .DEFAULT_GOAL := help
 
+get_apps:
+	echo $(APPS)
+
+docker_login:
+	if [ ! -z "$(DOCKER_USER)" ]; then echo $(DOCKER_PWD) | docker login --username $(DOCKER_USER) --password-stdin || docker login $(REGISTRY); fi
+
 init: ## Start dependent services for integration tests and development
 	@for folder in [ "bin" "logs" "minio" "nsq" "redis" "restore" ]; do \
 		mkdir -p /tmp/$$folder; \
