@@ -108,64 +108,13 @@ func (r *Recorder) recordObjectEvents() (errors []*service.ProcessingError) {
 	return errors
 }
 
-// // RecordFiles records all of this object's files, checksums, and file-level
-// // Premis events in Pharos.
-// func (r *Recorder) recordFiles() (fileCount int, errors []*service.ProcessingError) {
-// 	// Be sure to save changes back to Redis, so that if recording fails
-// 	// we can retry later without re-inserting already-saved files.
-// 	// That will prevent "identifier already exists" errors from Premis events.
-// 	options := service.IngestFileApplyOptions{
-// 		MaxErrors:   3,
-// 		MaxRetries:  1,
-// 		RetryMs:     1000,
-// 		SaveChanges: true,
-// 		WorkItemID:  r.WorkItemID,
-// 	}
-// 	saveFn := r.getFileSaveFn(r.IngestObject)
-// 	return r.Context.RedisClient.IngestFilesApply(saveFn, options)
-// }
-
-// // Save function saves a GenericFile to Pharos. The file is saved with its
-// // checksums and premis events. The PharosClient figures out whether the save
-// // should be a post/create or a put/update based on whether the GenericFile
-// // has a non-zero ID.
-// func (r *Recorder) getFileSaveFn(obj *service.IngestObject) service.IngestFileApplyFn {
-// 	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
-// 		ingestFile.InstitutionID = obj.InstitutionID
-// 		ingestFile.IntellectualObjectID = obj.ID
-// 		ingestFile.ObjectIdentifier = obj.Identifier()
-// 		// We save "preservable" files to Pharos, not bagit.txt, manifests, etc.
-// 		if ingestFile.HasPreservableName() && ingestFile.SavedToRegistryAt.IsZero() {
-// 			gf, err := ingestFile.ToGenericFile()
-// 			if err != nil {
-// 				errors = append(errors, r.Error(ingestFile.Identifier(), err, true))
-// 			}
-// 			resp := r.Context.PharosClient.GenericFileSave(gf)
-// 			if resp.Error != nil {
-// 				// TODO: Pharos should return 409 on StorageRecord.URL
-// 				// conflict, and that should be a fatal error.
-// 				errors = append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
-// 				// -------- DEBUG --------
-// 				jsonData, _ := gf.ToJSON()
-// 				r.Context.Logger.Error(string(jsonData))
-// 				// ------ END DEBUG ------
-// 			} else {
-// 				savedFile := resp.GenericFile()
-// 				ingestFile.ID = savedFile.ID
-// 				ingestFile.SavedToRegistryAt = savedFile.UpdatedAt
-// 			}
-// 		}
-// 		return errors
-// 	}
-// }
-
+// recordFiles saves new files to Pharos in batches, and updates
+// existing (reingested) files individually. Note that when we save
+// GenericFile records, we save all associated PremisEvents, Checksums,
+// and StorageRecords with the file. Typically, each batch of files we
+// send to Pharos will have ~100 files and each of those files will have
+// 2-3 checksums, 1-2 storage records, and 8-9 premis events.
 func (r *Recorder) recordFiles() (fileCount int, errors []*service.ProcessingError) {
-	return r.SaveFilesInBatches()
-}
-
-// SaveFilesInBatches saves new files to Pharos in batches, and updates
-// existing (reingested) files individually.
-func (r *Recorder) SaveFilesInBatches() (fileCount int, errors []*service.ProcessingError) {
 	batchNumber := 0
 	batchSize := int64(100)
 	offset := uint64(0)
@@ -185,7 +134,7 @@ func (r *Recorder) SaveFilesInBatches() (fileCount int, errors []*service.Proces
 		// Pharos can save new files in batches, but cannot
 		// update existing files in batches, so we have to
 		// separate these.
-		filesToSave, filesToUpdate := r.PrepareFilesForSave(fileMap, batchNumber)
+		filesToSave, filesToUpdate := r.prepareFilesForSave(fileMap, batchNumber)
 		if len(filesToSave) > 0 {
 			_, saveErrors := r.saveBatch(filesToSave)
 			if len(saveErrors) > 0 {
@@ -210,7 +159,7 @@ func (r *Recorder) SaveFilesInBatches() (fileCount int, errors []*service.Proces
 // PrepareFilesForSave sets the institution id, object id, and object identifier
 // on each IngestFile object and divides files into a list to be saved and a
 // list to be updated.
-func (r *Recorder) PrepareFilesForSave(fileMap map[string]*service.IngestFile, batchNumber int) (filesToSave []*service.IngestFile, filesToUpdate []*service.IngestFile) {
+func (r *Recorder) prepareFilesForSave(fileMap map[string]*service.IngestFile, batchNumber int) (filesToSave []*service.IngestFile, filesToUpdate []*service.IngestFile) {
 	for _, ingestFile := range fileMap {
 		ingestFile.InstitutionID = r.IngestObject.InstitutionID
 		ingestFile.IntellectualObjectID = r.IngestObject.ID
@@ -244,7 +193,7 @@ func (r *Recorder) saveBatch(ingestFiles []*service.IngestFile) (fileCount int, 
 		errors = append(errors, r.Error(r.IngestObject.Identifier(), resp.Error, false))
 		return fileCount, errors
 	}
-	markAsSavedErrors := r.MarkFilesAsSaved(resp.GenericFiles(), ingestFiles)
+	markAsSavedErrors := r.markFilesAsSaved(resp.GenericFiles(), ingestFiles)
 	if len(markAsSavedErrors) > 0 {
 		errors = append(errors, markAsSavedErrors...)
 	}
@@ -283,7 +232,7 @@ func (r *Recorder) updateBatch(ingestFiles []*service.IngestFile) (fileCount int
 
 // MarkFilesAsSaved updates files in Redis to indicate they were saved to
 // Pharos.
-func (r *Recorder) MarkFilesAsSaved(genericFiles []*registry.GenericFile, ingestFiles []*service.IngestFile) (errors []*service.ProcessingError) {
+func (r *Recorder) markFilesAsSaved(genericFiles []*registry.GenericFile, ingestFiles []*service.IngestFile) (errors []*service.ProcessingError) {
 	itemsMarked := 0
 	ingestFileMap := make(map[string]*service.IngestFile, len(ingestFiles))
 	for _, ingestFile := range ingestFiles {
