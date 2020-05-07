@@ -66,8 +66,6 @@ build-bin: ## Build the Preservation-Services binaries
 
 build: ## Build the Preservation-Services containers
 	@echo "Branch: ${BRANCH}"
-	@echo "Building identify_format (FIDO) container"
-	@cd scripts && docker build -t aptrust/identify_format -t aptrust/identify_format:${DOCKER_TAG_NAME} . && cd ..;
 	@mkdir -p ${OUTPUT_DIR};
 	@for app in $$(find ./apps -name *.go); do \
 		APP_NAME=$$(basename $$app .go); \
