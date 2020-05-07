@@ -30,6 +30,12 @@ help: ## This help.
 
 .DEFAULT_GOAL := help
 
+get_apps:
+	echo $(APPS)
+
+docker_login:
+	if [ ! -z "$(DOCKER_USER)" ]; then echo $(DOCKER_PWD) | docker login --username $(DOCKER_USER) --password-stdin || docker login $(REGISTRY); fi
+
 init: ## Start dependent services for integration tests and development
 	@for folder in [ "bin" "logs" "minio" "nsq" "redis" "restore" ]; do \
 		mkdir -p /tmp/$$folder; \
@@ -60,8 +66,6 @@ build-bin: ## Build the Preservation-Services binaries
 
 build: ## Build the Preservation-Services containers
 	@echo "Branch: ${BRANCH}"
-	@echo "Building identify_format (FIDO) container"
-	@cd scripts && docker build -t aptrust/identify_format -t aptrust/identify_format:${DOCKER_TAG_NAME} . && cd ..;
 	@mkdir -p ${OUTPUT_DIR};
 	@for app in $$(find ./apps -name *.go); do \
 		APP_NAME=$$(basename $$app .go); \
