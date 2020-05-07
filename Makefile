@@ -1,6 +1,6 @@
 #!/bin/bash
 
-REGISTRY=registry.gitlab.com/aptrust
+REGISTRY=hub.docker.com
 REPOSITORY=container-registry
 NAME=preservation-services
 REVISION:=$(shell git rev-parse --short=7 HEAD)
@@ -9,6 +9,10 @@ PUSHBRANCH = $(subst /,_,$(TRAVIS_BRANCH))
 TAG=$(name):$(REVISION)
 APT_ENV:='test'
 APT_SERVICES_CONFIG_DIR:=./
+
+#APPS:=$(basename $(find ./apps -name *.go) .go)
+#	@for app in $$(find ./apps -name *.go); do \
+		APP_NAME=$$(basename $$app .go); \
 
 OUTPUT_DIR:=go-bin
 
@@ -72,6 +76,7 @@ build: ## Build the Preservation-Services containers
 		echo "Building $$APP_NAME" Docker container ${DOCKER_TAG_NAME}; \
 		docker build --build-arg PSERVICE=$$APP_NAME --build-arg OUTPUT_DIR=${OUTPUT_DIR} -t aptrust/$$APP_NAME:${DOCKER_TAG_NAME} -t aptrust/$$APP_NAME -f Dockerfile.build . ; \
 	done
+
 up: ## Start Preservation service containers
 	docker-compose up
 
@@ -98,28 +103,15 @@ unittest: init ## Run unit tests in non Docker setup
 test-ci: ## Run unit tests in CI
 	docker run exchange-ci-test
 
-publish:
-	docker login $(REGISTRY)
-	@for app in $(APP_LIST:apps/%=%); \
-	do \
-		echo "Publishing $$app:$(REVISION)-$(BRANCH)"; \
-		docker push $(REGISTRY)/$(REPOSITORY)/$(NAME)_$$app:$(REVISION)-$(BRANCH);\
-	done
-
-publish-ci:
-	@echo $(DOCKER_PWD) | docker login -u $(DOCKER_USER) --password-stdin $(REGISTRY)
-	@for app in $(APP_LIST:apps/%=%); \
-	do \
-	echo "Publishing $$app:$(REVISION)-$(PUSHBRANCH)"; \
-		docker push $(REGISTRY)/$(REPOSITORY)/$(NAME)_$$app:$(REVISION)-$(PUSHBRANCH);\
+publish: docker_login
+	@for app in $$(find ./apps -name *.go); do \
+		APP_NAME=$$(basename $$app .go); \
+		echo "Publishing $$APP_NAME:$(REVISION)-$(BRANCH)"; \
+		docker push aptrust/$$APP_NAME:$(REVISION)-$(BRANCH);\
 	done
 
 # Docker release - build, tag and push the container
 release: build publish ## Create a release by building and publishing tagged containers to Gitlab
-
-# Docker release - build, tag and push the container
-release-ci: build publish-ci ## Create a release by building and publishing tagged containers to Gitlab
-
 
 push: ## Push the Docker image up to the registry
 #	docker push  $(registry)/$(repository)/$(tag)
