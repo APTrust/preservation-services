@@ -1,6 +1,7 @@
 package util
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -154,4 +155,8 @@ func ProjectRoot() string {
 	_, thisFile, _, _ := runtime.Caller(0)
 	absPath, _ := filepath.Abs(path.Join(thisFile, "..", ".."))
 	return absPath
+}
+
+func TestsAreRunning() bool {
+	return flag.Lookup("test.v") != nil
 }

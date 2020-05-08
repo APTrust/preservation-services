@@ -29,6 +29,7 @@ type Config struct {
 	BucketWasabiOR          string
 	BucketWasabiVA          string
 	ConfigName              string
+	ConfigFilePath          string
 	IngestTempDir           string
 	LogDir                  string
 	LogLevel                logging.Level
@@ -79,11 +80,30 @@ func NewConfig() *Config {
 	return config
 }
 
+// This returns the default config directory and file.
+// In most cases, that will be the .env file in the
+// current working directory. When running automated tests,
+// however, go changes into the subdirectories that contain
+// the test files, so this resolves configDir to the project
+// root directory.
+func configDirAndFile() (configDir string, configFile string) {
+	configDir, _ = os.Getwd()
+	envName := os.Getenv("APT_ENV")
+	configFile = ".env"
+	if envName != "" {
+		configFile = ".env." + envName
+	}
+	if util.TestsAreRunning() {
+		configDir = util.ProjectRoot()
+	}
+	return configDir, configFile
+}
+
 func loadConfig() *Config {
-	configDir, envName := getEnvVars()
+	configDir, configFile := configDirAndFile()
 	v := viper.New()
 	v.AddConfigPath(configDir)
-	v.SetConfigName(".env." + envName)
+	v.SetConfigName(configFile)
 	v.SetConfigType("env")
 	err := v.ReadInConfig()
 	if err != nil {
@@ -101,7 +121,8 @@ func loadConfig() *Config {
 		BucketGlacierDeepVA:     v.GetString("BUCKET_GLACIER_DEEP_VA"),
 		BucketWasabiOR:          v.GetString("BUCKET_WASABI_OR"),
 		BucketWasabiVA:          v.GetString("BUCKET_WASABI_VA"),
-		ConfigName:              envName,
+		ConfigName:              strings.Replace(configFile, ".env.", "", 1),
+		ConfigFilePath:          path.Join(configDir, configFile),
 		IngestTempDir:           v.GetString("INGEST_TEMP_DIR"),
 		LogDir:                  v.GetString("LOG_DIR"),
 		LogLevel:                getLogLevel(v.GetString("LOG_LEVEL")),
@@ -161,24 +182,6 @@ func (config *Config) UploadTargetsFor(storageOption string) []*UploadTarget {
 		}
 	}
 	return targets
-}
-
-func getEnvVars() (string, string) {
-	cwd, _ := os.Getwd()
-	configDir := getRequiredEnvVar("APT_CONFIG_DIR", cwd)
-	envName := getRequiredEnvVar("APT_ENV", "")
-	return configDir, envName
-}
-
-func getRequiredEnvVar(varName, defaultValue string) string {
-	value := os.Getenv(varName)
-	if value == "" {
-		value = defaultValue
-	}
-	if value == "" {
-		util.PrintAndExit(fmt.Sprintf("Required env var %s not set", varName))
-	}
-	return value
 }
 
 func getLogLevel(level string) logging.Level {

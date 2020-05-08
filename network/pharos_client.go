@@ -3,7 +3,6 @@ package network
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/APTrust/preservation-services/models/registry"
+	"github.com/APTrust/preservation-services/util"
 )
 
 // PharosClient supports basic calls to the Pharos Admin REST API.
@@ -28,8 +28,7 @@ type PharosClient struct {
 // NewPharosClient creates a new pharos client. Param HostUrl should
 // come from the config.json file.
 func NewPharosClient(HostURL, APIVersion, APIUser, APIKey string) (*PharosClient, error) {
-	testsAreRunning := flag.Lookup("test.v") != nil
-	if !testsAreRunning && (APIUser == "" || APIKey == "") {
+	if !util.TestsAreRunning() && (APIUser == "" || APIKey == "") {
 		panic("Env vars PHAROS_API_USER and PHAROS_API_KEY cannot be empty.")
 	}
 	// see security warning on nil PublicSuffixList here:

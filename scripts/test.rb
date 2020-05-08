@@ -125,7 +125,7 @@ class TestRunner
     puts "Push some bags to aptrust.receiving.test.test.edu"
     puts "on the local minio server, then run the bucket reader"
     puts "with this command:\n"
-    puts "./bin/go-bin/ingest_bucket_reader -config-name=test -config-dir=#{project_root}\n"
+    puts "APT_ENV=test ./bin/go-bin/ingest_bucket_reader"
     puts "Use Control-C to shut it all down."
     while true
       sleep(1)
