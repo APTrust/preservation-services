@@ -14,14 +14,14 @@ APT_SERVICES_CONFIG_DIR:=./
 #	@for app in $$(find ./apps -name *.go); do \
 		APP_NAME=$$(basename $$app .go); \
 
+ifdef TRAVIS
+override BRANCH=$(PUSHBRANCH)
+endif
+
 OUTPUT_DIR:=go-bin
 
 DOCKERAPPS := redis nsqlookup nsqd nsqadmin minio
 DOCKER_TAG_NAME:=${REVISION}-${BRANCH}
-
-ifdef TRAVIS
-override BRANCH=$(PUSHBRANCH)
-endif
 
 #
 # HELP
