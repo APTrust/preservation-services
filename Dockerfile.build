@@ -32,8 +32,8 @@ FROM alpine:${ALPINE_VERSION}
 ARG OUTPUT_DIR=go-bin
 ARG PSERVICE
 ARG ENVIRONMENT=${ENVIRONMENT:-development}
-ENV APT_CONFIG_DIR=./ \
-    APT_ENV=${APT_ENV:-development}
+#ENV APT_CONFIG_DIR=./ \
+#    APT_ENV=${APT_ENV:-development}
 
 WORKDIR /app
 
@@ -50,4 +50,4 @@ RUN addgroup -S somegroup -g 1000 && adduser -S -G somegroup somebody -u 1000
 RUN chown -R somebody:somegroup /app
 USER somebody
 
-CMD ["/app/main", "-config-name test"]
+CMD ["/app/main"]
