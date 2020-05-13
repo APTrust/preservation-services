@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -500,4 +501,30 @@ func (config *Config) initUploadTargets() {
 func (config *Config) ToJSON() string {
 	data, _ := json.Marshal(config)
 	return string(data)
+}
+
+// ProviderBucketAndKeyFor returns the name of the S3 storage provider, S3 bucket,
+// and S3 key for the specified URL.
+func (config *Config) ProviderBucketAndKeyFor(urlStr string) (provider, bucket, key string, err error) {
+	_url, err := url.Parse(urlStr)
+	if err != nil {
+		return "", "", "", err
+	}
+	parts := strings.SplitN(_url.Path, "/", 3) // parts[0] contains leading slash
+	if len(parts) > 2 {
+		bucket = parts[1]
+		key = parts[2]
+	} else {
+		return "", "", "", fmt.Errorf("URL %s is missing bucket name or key", urlStr)
+	}
+	for _, target := range config.UploadTargets {
+		if target.Host == _url.Host && target.Bucket == bucket {
+			provider = target.Provider
+			break
+		}
+	}
+	if provider == "" {
+		return "", "", "", fmt.Errorf("Cannot determine provider for URL %s", urlStr)
+	}
+	return provider, bucket, key, nil
 }

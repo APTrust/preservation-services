@@ -120,3 +120,27 @@ func TestToJson(t *testing.T) {
 		assert.False(t, strings.Contains(jsonString, key))
 	}
 }
+
+func TestProviderBucketAndKeyFor(t *testing.T) {
+	config := common.NewConfig()
+
+	provider, bucket, key, err := config.ProviderBucketAndKeyFor("https://localhost:9899/wasabi-or/1234")
+	assert.Equal(t, constants.StorageProviderWasabi, provider)
+	assert.Equal(t, config.BucketWasabiOR, bucket)
+	assert.Equal(t, "1234", key)
+	assert.Nil(t, err)
+
+	provider, bucket, key, err = config.ProviderBucketAndKeyFor("https://localhost:9899/glacier-deep-va/nested/key/5678")
+	assert.Equal(t, constants.StorageProviderAWS, provider)
+	assert.Equal(t, config.BucketGlacierDeepVA, bucket)
+	assert.Equal(t, "nested/key/5678", key)
+	assert.Nil(t, err)
+
+	// Not bucket or key
+	provider, bucket, key, err = config.ProviderBucketAndKeyFor("https://localhost:9899")
+	assert.NotNil(t, err)
+
+	// Unknown provider
+	provider, bucket, key, err = config.ProviderBucketAndKeyFor("https://example.com/wont-work")
+	assert.NotNil(t, err)
+}
