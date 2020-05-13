@@ -129,6 +129,12 @@ func (m *Manager) deleteStorageRecord(provider, bucket, key string) error {
 		return nil
 	}
 
+	if err == nil {
+		// START HERE
+		// TODO: Add StorageRecordDelete method to PharosClient.
+		// TODO: Delete StorageRecord in Pharos.
+	}
+
 	// Other errors are permission denied, bucket does not exist, conflict,
 	// request limit. These need to be reported.
 	return err
