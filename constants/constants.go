@@ -113,6 +113,8 @@ const (
 	StorageStandard            = "Standard"
 	StorageWasabiOR            = "Wasabi-OR"
 	StorageWasabiVA            = "Wasabi-VA"
+	TypeFile                   = "GenericFile"
+	TypeObject                 = "IntellectualObject"
 )
 
 var IngestOpNames []string = []string{
@@ -169,4 +171,9 @@ var LateStagesOfIngest = []string{
 	IngestStorageValidation,
 	IngestRecord,
 	IngestCleanup,
+}
+
+var TypeNames = []string{
+	TypeFile,
+	TypeObject,
 }
