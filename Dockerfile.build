@@ -36,9 +36,7 @@ ARG ENVIRONMENT=${ENVIRONMENT:-development}
 #    APT_ENV=${APT_ENV:-development}
 
 WORKDIR /app
-
 VOLUME ["/app/data"]
-VOLUME ["/app/config"]
 
 # Note: Using main as app name because CMD doesn't support env expansion and
 # Docker images are tagged with app names already.
