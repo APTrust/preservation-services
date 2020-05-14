@@ -744,6 +744,35 @@ func TestPharosStorageRecordList(t *testing.T) {
 	assert.Equal(t, "https://s3.amazonaws.com/aptrust.test.preservation-or/3ba064ae-6a12-49e9-b9f8-cd63fbb173ce", records[1].URL)
 }
 
+func TestPharosStorageRecordCreate(t *testing.T) {
+	client := GetPharosClient(t)
+	sr := &registry.StorageRecord{
+		URL: "https://example.com/inserted-by-int-test-01",
+	}
+	resp := client.StorageRecordSave(sr, "institution1.edu/photos/picture2")
+	require.Nil(t, resp.Error)
+	savedRecord := resp.StorageRecord()
+	require.NotNil(t, savedRecord)
+	require.NotEqual(t, 0, savedRecord.ID)
+	require.NotEqual(t, 0, savedRecord.GenericFileID)
+	require.Equal(t, "https://example.com/inserted-by-int-test-01", savedRecord.URL)
+}
+
+func TestPharosStorageRecordDelete(t *testing.T) {
+	client := GetPharosClient(t)
+	sr := &registry.StorageRecord{
+		URL: "https://example.com/inserted-by-int-test-02",
+	}
+	resp := client.StorageRecordSave(sr, "institution1.edu/photos/picture2")
+	require.Nil(t, resp.Error)
+	savedRecord := resp.StorageRecord()
+	require.NotNil(t, savedRecord)
+
+	resp = client.StorageRecordDelete(savedRecord.ID)
+	require.Nil(t, resp.Error)
+	require.Equal(t, 204, resp.Response.StatusCode)
+}
+
 func TestWorkItemGet(t *testing.T) {
 	LoadPharosFixtures(t)
 	// ETag comes from fixture data

@@ -68,6 +68,9 @@ func (m *Manager) deleteFiles() (count int, errors []*service.ProcessingError) {
 			return count, errors
 		}
 		for _, gf := range resp.GenericFiles() {
+			if gf.State == constants.StateDeleted {
+				continue
+			}
 			errs := m.deleteFile(gf)
 			if len(errs) > 0 {
 				errors = append(errors, errs...)

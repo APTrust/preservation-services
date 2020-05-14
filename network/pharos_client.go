@@ -740,6 +740,56 @@ func (client *PharosClient) StorageRecordList(genericFileIdentifier string) *Pha
 	return resp
 }
 
+// StorageRecordSave saves a StorageRecord to Pharos. Note that
+// StorageRecords can be created but not updated.
+func (client *PharosClient) StorageRecordSave(obj *registry.StorageRecord, gfIdentifier string) *PharosResponse {
+	// Set up the response object
+	resp := NewPharosResponse(PharosStorageRecord)
+	resp.storageRecords = make([]*registry.StorageRecord, 1)
+
+	// URL and method
+	relativeURL := fmt.Sprintf("/api/%s/storage_records/%s", client.APIVersion,
+		url.QueryEscape(gfIdentifier))
+	httpMethod := "POST"
+	absoluteURL := client.BuildURL(relativeURL)
+
+	// Prepare the JSON data
+	postData, err := obj.SerializeForPharos()
+	if err != nil {
+		resp.Error = err
+	}
+
+	// Run the request
+	client.DoRequest(resp, httpMethod, absoluteURL, bytes.NewBuffer(postData))
+	if resp.Error != nil {
+		return resp
+	}
+
+	// Parse the JSON from the response body
+	cs := &registry.StorageRecord{}
+	resp.Error = json.Unmarshal(resp.data, cs)
+	if resp.Error == nil {
+		resp.storageRecords[0] = cs
+	}
+	return resp
+}
+
+// StorageRecordDelete deletes the storage record with the specified ID.
+func (client *PharosClient) StorageRecordDelete(id int) *PharosResponse {
+	// Set up the response object
+	resp := NewPharosResponse(PharosStorageRecord)
+	resp.storageRecords = make([]*registry.StorageRecord, 1)
+
+	// URL and method
+	relativeURL := fmt.Sprintf("/api/%s/storage_records/%d", client.APIVersion, id)
+	httpMethod := "DELETE"
+	absoluteURL := client.BuildURL(relativeURL)
+
+	// Run the request
+	client.DoRequest(resp, httpMethod, absoluteURL, nil)
+	return resp
+}
+
 // WorkItemGet returns the WorkItem with the specified ID.
 func (client *PharosClient) WorkItemGet(id int) *PharosResponse {
 	// Set up the response object
