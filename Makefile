@@ -101,6 +101,7 @@ runcmd: ## Run a one time command. Takes exchange service name as argument.
 unittest: init ## Run unit tests in non Docker setup
 	go clean -testcache
 	go test -p 1 ./...
+	init_clean
 
 test-ci: ## Run unit tests in CI
 	docker run exchange-ci-test
