@@ -400,16 +400,6 @@ func (client *PharosClient) GenericFileSave(obj *registry.GenericFile) *PharosRe
 	return resp
 }
 
-// ***********************************************************************
-// This may be deprecated in preservation-services. Although it
-// has excellent performance benefits, it adds a lot of complexity to the
-// failure recovery code in cases where Pharos records some files in a
-// batch but not others.
-//
-// On the other hand, a singl batch calls for 200 files translates to 1200
-// individual calls, so it may be worth keeping. We'll know more when we
-// can test.
-// ***********************************************************************
 // GenericFileSaveBatch saves a batch of Generic File records to Pharos.
 // This performs a POST to create a new records, so all of the GenericFiles
 // passed in param objList should have Ids of zero. Each record

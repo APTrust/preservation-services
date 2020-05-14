@@ -493,7 +493,7 @@ func (f *IngestFile) NewFileIngestEvent() (*registry.PremisEvent, error) {
 		Outcome:                      constants.StatusSuccess,
 		OutcomeDetail:                fmt.Sprintf("md5:%s", md5Checksum.Digest),
 		Object:                       "preservation-services + Minio S3 client",
-		Agent:                        "https://github.com/minio/minio-go",
+		Agent:                        constants.S3ClientName,
 		OutcomeInformation:           "Put using md5 checksum",
 		IntellectualObjectIdentifier: f.ObjectIdentifier,
 		GenericFileIdentifier:        f.Identifier(),

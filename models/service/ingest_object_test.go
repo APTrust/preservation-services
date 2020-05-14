@@ -320,7 +320,7 @@ func TestNewObjectIngestEvent(t *testing.T) {
 	assert.Equal(t, "12 files copied", event.OutcomeDetail)
 	assert.Equal(t, "Minio S3 client", event.Object)
 	assert.Equal(t, "test.edu/some-bag", event.IntellectualObjectIdentifier)
-	assert.Equal(t, "https://github.com/minio/minio-go", event.Agent)
+	assert.Equal(t, constants.S3ClientName, event.Agent)
 	assert.Equal(t, "Multipart put using s3 etags", event.OutcomeInformation)
 }
 

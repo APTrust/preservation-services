@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/satori/go.uuid"
 )
 
 type Manager struct {
@@ -27,6 +29,13 @@ func NewManager(context *common.Context, workItemID int, identifier, itemType st
 	}
 }
 
+// Run deletes all copies of a single file from preservation/replication storage
+// if Manager.ItemType is constants.TypeFile. If ItemType is constants.TypeObject,
+// this deletes all copies of all of the object's files. This returns the number
+// of GenericFiles deleted. The number of copies deleted my be higher. For example,
+// deleting an object with 10 files from Standard storage deletes both the S3 and
+// the Glacier copies. That's 20 stored object representing only 10 GenericFiles.
+// This will return 10, not 20.
 func (m *Manager) Run() (count int, errors []*service.ProcessingError) {
 	if m.ItemType == constants.TypeFile {
 		count, errors = m.deleteSingleFile()
@@ -75,12 +84,7 @@ func (m *Manager) deleteFiles() (count int, errors []*service.ProcessingError) {
 			if len(errs) > 0 {
 				errors = append(errors, errs...)
 			} else {
-				err := m.markFileDeleted(gf)
-				if err != nil {
-					errors = append(errors, m.Error(gf.Identifier, err, false))
-				} else {
-					count++
-				}
+				count++
 			}
 		}
 		if resp.HasNextPage() {
@@ -108,16 +112,32 @@ func (m *Manager) deleteFile(gf *registry.GenericFile) (errors []*service.Proces
 		if err != nil {
 			errors = append(errors, m.Error(gf.Identifier, err, false))
 		} else {
-			err := m.deleteStorageRecord(provider, bucket, key)
+			err := m.deleteFromPreservationStorage(provider, bucket, key)
 			if err != nil {
 				errors = append(errors, m.Error(gf.Identifier, err, false))
+			} else {
+				// Note that this deletes the StorageRecord and creates
+				// a deletion PremisEvent
+				err = m.deleteStorageRecordFromPharos(gf, sr)
+				if err != nil {
+					errors = append(errors, m.Error(gf.Identifier, err, false))
+				}
 			}
+		}
+	}
+	if len(errors) == 0 {
+		resp = m.Context.PharosClient.GenericFileFinishDelete(gf.Identifier)
+		if resp.Error != nil {
+			errors = append(errors, m.Error(gf.Identifier, resp.Error, false))
 		}
 	}
 	return errors
 }
 
-func (m *Manager) deleteStorageRecord(provider, bucket, key string) error {
+// deleteFromPreservationStroage deletes the copy of the file located
+// in this S3/Glacier bucket. Note that a file may be saved in multiple
+// buckets. This deletes from just one of those buckets.
+func (m *Manager) deleteFromPreservationStorage(provider, bucket, key string) error {
 	client := m.Context.S3Clients[provider]
 	if client == nil {
 		return fmt.Errorf("No S3 client for provider %s", provider)
@@ -132,34 +152,58 @@ func (m *Manager) deleteStorageRecord(provider, bucket, key string) error {
 		return nil
 	}
 
-	if err == nil {
-		// START HERE
-		// TODO: Add StorageRecordDelete method to PharosClient.
-		// TODO: Delete StorageRecord in Pharos.
-	}
-
 	// Other errors are permission denied, bucket does not exist, conflict,
 	// request limit. These need to be reported.
 	return err
 }
 
-func (m *Manager) markFileDeleted(gf *registry.GenericFile) error {
-	gf.State = constants.StateDeleted
-	resp := m.Context.PharosClient.GenericFileSave(gf)
-	return resp.Error
-}
-
-func (m *Manager) markObjectDeleted() error {
-	resp := m.Context.PharosClient.IntellectualObjectGet(m.Identifier)
+// deleteStorageRecordFromPharos deletes a single StorageRecord from
+// Pharos. It does not touch the GenericFile record.
+//
+// TODO: Pharos also deletes these storage records when we mark
+// the GenericFile deleted. However, it's probably better to do this
+// here, in case we wind up deleting only one of two records. The
+// PremisEvents will keep a record of what happened.
+func (m *Manager) deleteStorageRecordFromPharos(gf *registry.GenericFile, sr *registry.StorageRecord) error {
+	resp := m.Context.PharosClient.StorageRecordDelete(sr.ID)
 	if resp.Error != nil {
 		return resp.Error
 	}
-	obj := resp.IntellectualObject()
-	if obj == nil {
-		return fmt.Errorf("Pharos returned nil for object %s", m.Identifier)
+	return m.saveFileDeletionEvent(gf, sr)
+}
+
+// saveFileDeletionEvent saves a PremisEvent to Pharos saying we deleted
+// one copy of this file from one preservation bucket. Other copies may
+// exist. Note that we cannot call GenericFileFinishDelete until at least
+// of these deletion events has been record in Pharos.
+func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.StorageRecord) error {
+	eventId := uuid.NewV4()
+	now := time.Now().UTC()
+	event := &registry.PremisEvent{
+		Identifier:                   eventId.String(),
+		EventType:                    constants.EventDeletion,
+		DateTime:                     now,
+		Detail:                       fmt.Sprintf("Deleted one copy of this file from %s", sr.URL),
+		Outcome:                      constants.StatusSuccess,
+		OutcomeDetail:                fmt.Sprintf("Deleted from %s", sr.URL),
+		Object:                       "preservation-services + Minio S3 client",
+		Agent:                        constants.S3ClientName,
+		OutcomeInformation:           "Deleted one copy from preservation storage",
+		IntellectualObjectIdentifier: gf.IntellectualObjectIdentifier,
+		GenericFileIdentifier:        gf.Identifier,
+		InstitutionID:                gf.InstitutionID,
+		IntellectualObjectID:         gf.IntellectualObjectID,
+		CreatedAt:                    now,
+		UpdatedAt:                    now,
 	}
-	obj.State = constants.StateDeleted
-	resp = m.Context.PharosClient.IntellectualObjectSave(obj)
+	resp := m.Context.PharosClient.PremisEventSave(event)
+	return resp.Error
+}
+
+// markObjectDeleted tells Pharos that this object has been deleted in its
+// entirety (all files deleted).
+func (m *Manager) markObjectDeleted() error {
+	resp := m.Context.PharosClient.IntellectualObjectFinishDelete(m.Identifier)
 	return resp.Error
 }
 

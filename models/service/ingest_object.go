@@ -465,7 +465,7 @@ func (obj *IngestObject) NewObjectIngestEvent() *registry.PremisEvent {
 		OutcomeDetail:                fmt.Sprintf("%d files copied", obj.FileCount),
 		Object:                       "Minio S3 client",
 		IntellectualObjectIdentifier: obj.Identifier(),
-		Agent:                        "https://github.com/minio/minio-go",
+		Agent:                        constants.S3ClientName,
 		OutcomeInformation:           "Multipart put using s3 etags",
 		CreatedAt:                    timestamp,
 		UpdatedAt:                    timestamp,

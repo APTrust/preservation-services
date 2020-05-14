@@ -537,7 +537,7 @@ func TestNewFileIngestEvent(t *testing.T) {
 	assert.Equal(t, "md5:5555", event.OutcomeDetail)
 	assert.Equal(t, "preservation-services + Minio S3 client", event.Object)
 	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
-	assert.Equal(t, "https://github.com/minio/minio-go", event.Agent)
+	assert.Equal(t, constants.S3ClientName, event.Agent)
 	assert.Equal(t, "Put using md5 checksum", event.OutcomeInformation)
 	assert.Equal(t, 1234, event.InstitutionID)
 	assert.Equal(t, 5678, event.IntellectualObjectID)
