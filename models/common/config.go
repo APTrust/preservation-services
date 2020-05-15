@@ -516,7 +516,8 @@ func (config *Config) ProviderBucketAndKeyFor(urlStr string) (provider, bucket, 
 		return "", "", "", fmt.Errorf("URL %s is missing bucket name or key", urlStr)
 	}
 	for _, target := range config.UploadTargets {
-		if target.Host == _url.Host && target.Bucket == bucket {
+		regionAndHost := fmt.Sprintf("s3.%s.%s", target.Region, target.Host)
+		if (_url.Host == target.Host || _url.Host == regionAndHost) && target.Bucket == bucket {
 			provider = target.Provider
 			break
 		}

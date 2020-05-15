@@ -31,15 +31,31 @@ type Manager struct {
 
 	// WorkItemID is the ID of the WorkItem being processed.
 	WorkItemID int
+
+	// RequestedBy is the email address of the Pharos user who requested
+	// (initiated) this deletion.
+	RequestedBy string
+
+	// InstApprover is the email address of the institututional admin who
+	// approved this deletion.
+	InstApprover string
+
+	// APTrustApprover is the email address of the APTrust admin who
+	// approved this deletion. This will be empty unless it was a bulk
+	// deletion request. Normal deletion requests don't need APTrust approval.
+	APTrustApprover string
 }
 
 // NewManager creates a new deletion.Manager.
-func NewManager(context *common.Context, workItemID int, identifier, itemType string) *Manager {
+func NewManager(context *common.Context, workItemID int, identifier, itemType, requestedBy, instApprover, aptrustApprover string) *Manager {
 	return &Manager{
-		Context:    context,
-		Identifier: identifier,
-		ItemType:   itemType,
-		WorkItemID: workItemID,
+		Context:         context,
+		Identifier:      identifier,
+		ItemType:        itemType,
+		WorkItemID:      workItemID,
+		RequestedBy:     requestedBy,
+		InstApprover:    instApprover,
+		APTrustApprover: aptrustApprover,
 	}
 }
 
@@ -54,6 +70,9 @@ func NewManager(context *common.Context, workItemID int, identifier, itemType st
 // It's up to the caller to ensure that the WorkItem has the proper approvals
 // before calling this method.
 func (m *Manager) Run() (count int, errors []*service.ProcessingError) {
+	if m.RequestedBy == "" || m.InstApprover == "" {
+		return 0, append(errors, m.Error(m.Identifier, fmt.Errorf("Deletion requires email of requestor and institutional approver"), true))
+	}
 	if m.ItemType == constants.TypeFile {
 		count, errors = m.deleteSingleFile()
 	} else {
@@ -163,7 +182,7 @@ func (m *Manager) deleteFromPreservationStorage(provider, bucket, key string) er
 
 	// We can ignore this message because the item may have been deleted
 	// on a prior attempt.
-	if strings.Contains(err.Error(), "key does not exist") {
+	if err != nil && strings.Contains(err.Error(), "key does not exist") {
 		m.Context.Logger.Warningf("Item %s %s/%s does not exist. May have been deleted in prior run.",
 			provider, bucket, key)
 		return nil
@@ -196,16 +215,24 @@ func (m *Manager) deleteStorageRecordFromPharos(gf *registry.GenericFile, sr *re
 func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.StorageRecord) error {
 	eventId := uuid.NewV4()
 	now := time.Now().UTC()
+	outcomeDetail := m.RequestedBy
+	outcomeInfo := fmt.Sprintf("File deleted at the request of %s.", m.RequestedBy)
+	if m.InstApprover != "" {
+		outcomeInfo += fmt.Sprintf(" Institutional approver: %s.", m.InstApprover)
+	}
+	if m.APTrustApprover != "" {
+		outcomeInfo += fmt.Sprintf(" APTrust approver: %s.", m.APTrustApprover)
+	}
 	event := &registry.PremisEvent{
 		Identifier:                   eventId.String(),
 		EventType:                    constants.EventDeletion,
 		DateTime:                     now,
 		Detail:                       fmt.Sprintf("Deleted one copy of this file from %s", sr.URL),
 		Outcome:                      constants.StatusSuccess,
-		OutcomeDetail:                fmt.Sprintf("Deleted from %s", sr.URL),
+		OutcomeDetail:                outcomeDetail,
 		Object:                       "preservation-services + Minio S3 client",
 		Agent:                        constants.S3ClientName,
-		OutcomeInformation:           "Deleted one copy from preservation storage",
+		OutcomeInformation:           outcomeInfo,
 		IntellectualObjectIdentifier: gf.IntellectualObjectIdentifier,
 		GenericFileIdentifier:        gf.Identifier,
 		InstitutionID:                gf.InstitutionID,

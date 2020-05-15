@@ -136,6 +136,13 @@ func TestProviderBucketAndKeyFor(t *testing.T) {
 	assert.Equal(t, "nested/key/5678", key)
 	assert.Nil(t, err)
 
+	// With region prefix
+	provider, bucket, key, err = config.ProviderBucketAndKeyFor("https://s3.us-east-1.localhost:9899/preservation-va/nested/key/5678")
+	assert.Equal(t, constants.StorageProviderAWS, provider)
+	assert.Equal(t, config.BucketStandardVA, bucket)
+	assert.Equal(t, "nested/key/5678", key)
+	assert.Nil(t, err)
+
 	// Not bucket or key
 	provider, bucket, key, err = config.ProviderBucketAndKeyFor("https://localhost:9899")
 	assert.NotNil(t, err)

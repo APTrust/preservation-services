@@ -399,7 +399,6 @@ func TestGenericFileGet(t *testing.T) {
 		assert.Equal(t,
 			gf.IntellectualObjectIdentifier,
 			genericFile.IntellectualObjectIdentifier)
-		assert.Equal(t, gf.State, genericFile.State)
 		assert.Equal(t, constants.StorageStandard, genericFile.StorageOption)
 	}
 }
@@ -733,15 +732,15 @@ func TestPharosStorageRecordList(t *testing.T) {
 	require.Nil(t, resp.Error)
 	records := resp.StorageRecords()
 	require.Equal(t, 2, len(records))
-	assert.Equal(t, "https://s3.amazonaws.com/aptrust.test.preservation/25452f41-1b18-47b7-b334-751dfd5d011e", records[0].URL)
-	assert.Equal(t, "https://s3.amazonaws.com/aptrust.test.preservation-or/25452f41-1b18-47b7-b334-751dfd5d011e", records[1].URL)
+	assert.Equal(t, "https://localhost:9899/preservation-va/25452f41-1b18-47b7-b334-751dfd5d011e", records[0].URL)
+	assert.Equal(t, "https://localhost:9899/preservation-or/25452f41-1b18-47b7-b334-751dfd5d011e", records[1].URL)
 
 	resp = client.StorageRecordList("institution2.edu/chocolate/picture1")
 	require.Nil(t, resp.Error)
 	records = resp.StorageRecords()
 	require.Equal(t, 2, len(records))
-	assert.Equal(t, "https://s3.amazonaws.com/aptrust.test.preservation/3ba064ae-6a12-49e9-b9f8-cd63fbb173ce", records[0].URL)
-	assert.Equal(t, "https://s3.amazonaws.com/aptrust.test.preservation-or/3ba064ae-6a12-49e9-b9f8-cd63fbb173ce", records[1].URL)
+	assert.Equal(t, "https://localhost:9899/preservation-va/3ba064ae-6a12-49e9-b9f8-cd63fbb173ce", records[0].URL)
+	assert.Equal(t, "https://localhost:9899/preservation-or/3ba064ae-6a12-49e9-b9f8-cd63fbb173ce", records[1].URL)
 }
 
 func TestPharosStorageRecordCreate(t *testing.T) {
