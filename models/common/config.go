@@ -199,8 +199,6 @@ func (config *Config) expandPaths() {
 	config.LogDir = expandPath(config.LogDir)
 	config.ProfilesDir = expandPath(config.ProfilesDir)
 	config.RestoreDir = expandPath(config.RestoreDir)
-
-	fmt.Println(config.ProfilesDir)
 }
 
 func expandPath(dirName string) string {

@@ -3,11 +3,13 @@
 package deletion_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/deletion"
 	"github.com/APTrust/preservation-services/models/common"
+	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/minio/minio-go/v6"
 	"github.com/stretchr/testify/assert"
@@ -18,11 +20,11 @@ import (
 // Note the the generic file records exist in Pharos only.
 // There are no corresponding files in the Minio preservation
 // buckets until we put them there.
-var objId = "institution2.edu/chocolate"
+var objId = "institution2.edu/coal"
 var fileNames = []string{
-	"picture1",
-	"picture2",
-	"picture3",
+	"doc1",
+	"doc2",
+	"doc3",
 }
 
 func TestNewManager(t *testing.T) {
@@ -41,7 +43,8 @@ func TestNewManager(t *testing.T) {
 }
 
 func TestRun_SingleFile(t *testing.T) {
-
+	context := common.NewContext()
+	prepareForTest(t, context)
 }
 
 func TestRun_Object(t *testing.T) {
@@ -75,6 +78,7 @@ func copyFilesToLocalPreservation(t *testing.T, context *common.Context) {
 // is whether the files are deleted by the end.
 func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 	pathToFile := testutil.PathToUnitTestBag("example.edu.multipart.b01.of02.tar")
+	gfIdentifier := fmt.Sprintf("%s/%s", objId, filename)
 	for _, target := range context.Config.UploadTargets {
 		client := context.S3Clients[target.Provider]
 		_, err := client.FPutObject(
@@ -87,6 +91,10 @@ func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 
 		// TODO: Add StorageRecordSave method to PharosClient
 		// and save this record.
-		// url := target.URLFor(filename)
+		storageRecord := &registry.StorageRecord{
+			URL: target.URLFor(filename),
+		}
+		resp := context.PharosClient.StorageRecordSave(storageRecord, gfIdentifier)
+		require.Nil(t, resp.Error)
 	}
 }

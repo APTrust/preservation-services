@@ -13,13 +13,27 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+// Manager deletes files from preservation and ensures that Pharos
+// IntellectualObjects, GenericFiles, StorageRecords and PremisEvents
+// are updated to reflect the changes.
 type Manager struct {
-	Context    *common.Context
+	// Context is the context, which includes config settings and
+	// clients to access S3 and Pharos.
+	Context *common.Context
+
+	// Identifier is the identifier of the GenericFile or IntellectualObject
+	// we're deleting.
 	Identifier string
-	ItemType   string
+
+	// ItemType is the type of item we're deleting. It should be one of
+	// constants.TypeFile or constants.TypeObject.
+	ItemType string
+
+	// WorkItemID is the ID of the WorkItem being processed.
 	WorkItemID int
 }
 
+// NewManager creates a new deletion.Manager.
 func NewManager(context *common.Context, workItemID int, identifier, itemType string) *Manager {
 	return &Manager{
 		Context:    context,
@@ -36,6 +50,9 @@ func NewManager(context *common.Context, workItemID int, identifier, itemType st
 // deleting an object with 10 files from Standard storage deletes both the S3 and
 // the Glacier copies. That's 20 stored object representing only 10 GenericFiles.
 // This will return 10, not 20.
+//
+// It's up to the caller to ensure that the WorkItem has the proper approvals
+// before calling this method.
 func (m *Manager) Run() (count int, errors []*service.ProcessingError) {
 	if m.ItemType == constants.TypeFile {
 		count, errors = m.deleteSingleFile()
