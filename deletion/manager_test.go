@@ -4,6 +4,8 @@ package deletion_test
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -52,8 +54,7 @@ func TestNewManager(t *testing.T) {
 func TestRun_SingleFile(t *testing.T) {
 	context := common.NewContext()
 	prepareForTest(t, context)
-	fileIdentifier := fmt.Sprintf("institution2.edu/springfield/doc1")
-	//itemID := createDeletionWorkItem(t, context, fileIdentifier)
+	fileIdentifier := "institution2.edu/springfield/doc1"
 	manager := deletion.NewManager(
 		context,
 		9999,
@@ -67,17 +68,15 @@ func TestRun_SingleFile(t *testing.T) {
 	assert.Equal(t, 1, count)
 	assert.Empty(t, errors)
 
-	// TODO: make sure file state is 'D'
-	// make sure all storage records were removed
-	// make sure all deletion events were created with correct info
+	testItemMarkedDeleted(t, context, fileIdentifier)
+	testStorageRecordsRemoved(t, context, fileIdentifier)
+	testFileDeletionEvents(t, context, fileIdentifier)
 }
 
 func TestRun_Object(t *testing.T) {
 	context := common.NewContext()
 	prepareForTest(t, context)
 	itemID := createDeletionWorkItem(t, context, objIdentifier)
-	//_ = fmt.Sprintf("institution2.edu/springfield/doc2")
-	//_ = fmt.Sprintf("institution2.edu/springfield/doc3")
 	manager := deletion.NewManager(
 		context,
 		itemID,
@@ -95,11 +94,80 @@ func TestRun_Object(t *testing.T) {
 	assert.Equal(t, 2, count)
 	assert.Empty(t, errors)
 
-	// TODO: make sure object state is 'D'
-	// make sure all file states are 'D'
-	// make sure all storage records were removed
-	// make sure all deletion events were created with correct info
-	// at both the object and file level
+	// File 2
+	testItemMarkedDeleted(t, context, "institution2.edu/springfield/doc2")
+	testStorageRecordsRemoved(t, context, "institution2.edu/springfield/doc2")
+	testFileDeletionEvents(t, context, "institution2.edu/springfield/doc2")
+
+	// File 3
+	testItemMarkedDeleted(t, context, "institution2.edu/springfield/doc3")
+	testStorageRecordsRemoved(t, context, "institution2.edu/springfield/doc3")
+	testFileDeletionEvents(t, context, "institution2.edu/springfield/doc3")
+
+	// IntellectualObject
+	testItemMarkedDeleted(t, context, "institution2.edu/springfield")
+	testObjectDeletionEvent(t, context)
+}
+
+func testItemMarkedDeleted(t *testing.T, context *common.Context, identifier string) {
+	if identifier == objIdentifier {
+		resp := context.PharosClient.IntellectualObjectGet(identifier)
+		require.Nil(t, resp.Error)
+		assert.Equal(t, constants.StateDeleted, resp.IntellectualObject().State)
+	} else {
+		resp := context.PharosClient.GenericFileGet(identifier)
+		require.Nil(t, resp.Error)
+		assert.Equal(t, constants.StateDeleted, resp.GenericFile().State)
+	}
+}
+
+func testStorageRecordsRemoved(t *testing.T, context *common.Context, gfIdentifier string) {
+	resp := context.PharosClient.StorageRecordList(gfIdentifier)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, 0, len(resp.StorageRecords()))
+}
+
+func testFileDeletionEvents(t *testing.T, context *common.Context, gfIdentifier string) {
+	instId := getInstId(t, context)
+	values := url.Values{}
+	values.Set("file_identifier", gfIdentifier)
+	values.Set("event_type", constants.EventDeletion)
+	values.Set("page", "1")
+	values.Set("per_page", "20")
+	resp := context.PharosClient.PremisEventList(values)
+	require.Nil(t, resp.Error)
+	deletionEvents := resp.PremisEvents()
+	assert.Equal(t, 10, len(deletionEvents))
+	for _, event := range deletionEvents {
+		assert.True(t, strings.Contains(event.OutcomeInformation, "requestor@example.com"))
+		assert.True(t, strings.Contains(event.OutcomeInformation, "approver@example.com"))
+		assert.True(t, strings.Contains(event.OutcomeInformation, "some-admin@aptrust.org"))
+		assert.True(t, strings.Contains(event.Detail, "Deleted one copy of this file from"))
+		assert.True(t, strings.Contains(event.Detail, "localhost:9899"))
+		assert.Equal(t, constants.StatusSuccess, event.Outcome)
+		assert.Equal(t, objIdentifier, event.IntellectualObjectIdentifier)
+		assert.NotEqual(t, 0, event.IntellectualObjectID)
+		assert.Equal(t, instId, event.InstitutionID)
+	}
+}
+
+func testObjectDeletionEvent(t *testing.T, context *common.Context) {
+	values := url.Values{}
+	values.Set("object_identifier", objIdentifier)
+	values.Set("file_identifier", "")
+	values.Set("event_type", constants.EventDeletion)
+	values.Set("page", "1")
+	values.Set("per_page", "100")
+	resp := context.PharosClient.PremisEventList(values)
+	require.Nil(t, resp.Error)
+	// Pharos doesn't filter these results properly
+	count := 0
+	for _, event := range resp.PremisEvents() {
+		if event.GenericFileIdentifier == "" {
+			count++
+		}
+	}
+	assert.Equal(t, 1, count)
 }
 
 func prepareForTest(t *testing.T, context *common.Context) {
@@ -214,7 +282,7 @@ func createDeletionWorkItem(t *testing.T, context *common.Context, identifier st
 		Stage:                 constants.StageRequested,
 		Status:                constants.StatusPending,
 		UpdatedAt:             now,
-		User:                  "user@example.com",
+		User:                  "requestor@example.com",
 	}
 	resp := context.PharosClient.WorkItemSave(item)
 	require.Nil(t, resp.Error)
