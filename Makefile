@@ -50,14 +50,13 @@ init: ## Start dependent services for integration tests and development
 	- @docker run --name nsqd -d -p 4151 nsqio/nsq:v1.2.0 nsqd --lookupd-tcp-address=127.0.0.1:4160 --data-path /tmp/nsq
 	- @docker run --name nsqadmin -d -p 4171:4171 nsqio/nsq:v1.2.0 nsqadmin --lookupd-http-address=nslookupd:4161
 	- @docker run --name minio -d -p 9899 minio/minio minio server --quiet --address=127.0.0.1:9899 ~/tmp/minio
-
 	- @docker run --name pharos -d -e PHAROS_ROOT
+
 init_clean:
 	@for app in $(DOCKERAPPS); do \
 		docker stop $$app; \
 		docker rm $$app; \
 	done
-
 
 revision: ## Show me the git hash
 	@echo "Revision: ${REVISION}"
@@ -80,13 +79,16 @@ build: ## Build the Preservation-Services containers
 	done
 
 up: ## Start Preservation service containers
-	docker-compose up
+	docker network create --attachable gateway || true
+	docker-compose --env-file .env.docker up
 
 stop: ## Stop Exchange+NSQ containers
 	docker-compose stop
 
 down: ## Stop and remove all Exchange+NSQ containers, networks, images, and volumes
-	docker-compose down -v
+	docker-compose --env-file .env.docker down
+	# Disable for now since it would potentially remove production network
+	# docker network rm gateway
 
 run: ## Run Exchange service in foreground
 	docker run aptrust/$(NAME)_$(filter-out $@, $(MAKECMDGOALS))
