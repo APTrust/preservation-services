@@ -2,7 +2,7 @@
 version: '3.7'
 services:
    ingest_bucket_reader: &default
-      image: aptrust/ingest_bucket_readerh:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/ingest_bucket_reader:${DOCKER_TAG_NAME:-latest}
       restart: always
       volumes:
          - type: bind
@@ -12,10 +12,10 @@ services:
            source: "${DOCKER_DATA_PATH:-./docker}"
            target: /app/logs
          - type: bind
-           source: "${DOCKER_DATA_PATH:-./docker}/.env.docker"
-           target: /app/.env.docker
+           source: ".env.docker"
+           target: /app/.env
       env_file:
-         - ".env.docker"
+         - .env.docker
       networks:
          - default
          - gateway
@@ -59,6 +59,8 @@ services:
       ports:
          - "4160:4160"
          - "4161:4161"
+      env_file:
+         - .env.docker
    nsqd:
       image: nsqio/nsq:v1.2.0
       hostname: nsqd
@@ -69,7 +71,7 @@ services:
            source: "${DOCKER_DATA_PATH:-./docker}/nsq"
            target: /data
       env_file:
-         - ".env.docker"
+         - .env.docker
       networks:
          - default
          - gateway
@@ -86,7 +88,7 @@ services:
       depends_on:
          - nsqlookupd
       env_file:
-         - ".env.docker"
+         - .env.docker
       networks:
          - default
          - gateway
@@ -101,21 +103,21 @@ services:
            source: "${BASE_WORKING_DIR:-./docker}/redis"
            target: /data
       env_file:
-         - ".env.docker"
+         - .env.docker
       networks:
          - default
       ports:
          - "6479:6379"
    minio:
-      image: minio/minio
+      image: minio/minio:latest
       restart: always
-      command: server --appendonly yes
+      command: server /data
       volumes:
          - type: bind
-           source: "${BASE_WORKING_DIR:-./docker}"
+           source: "${DOCKER_DATA_PATH:-./docker}/minio"
            target: /data
       env_file:
-         - ".env.docker"
+         - .env.docker
       networks:
          - default
          - gateway
