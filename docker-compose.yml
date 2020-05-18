@@ -2,7 +2,7 @@
 version: '3.7'
 services:
    ingest_bucket_reader: &default
-      image: aptrust/ingest_bucket_readerh:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/ingest_bucket_reader:${DOCKER_TAG_NAME:-latest}
       restart: always
       volumes:
          - type: bind
