@@ -2,17 +2,16 @@ ARG ALPINE_VERSION=3.11
 ARG OUTPUT_DIR=go-bin/
 ARG PSERVICE
 
-FROM golang:1.13.10-alpine${ALPINE_VERSION} AS bobthebuilder
+FROM golang:1.13.10-alpine${ALPINE_VERSION} AS builder
 
 RUN apk update && \
     apk add --no-cache upx make build-base bash git
 
-ENV APP_PATH=/build \
-    CGO_ENABLED=0 \
+ENV CGO_ENABLED=0 \
     GOOS=linux \
     GOARCH=amd64
 
-WORKDIR $APP_PATH
+WORKDIR /app
 
 # Copy and download dependency using go mod
 ADD go.mod go.sum ./
@@ -27,22 +26,18 @@ RUN make build-bin
 RUN upx go-bin/* -1 -q
 
 FROM alpine:${ALPINE_VERSION}
-#FROM scratch
 
 ARG OUTPUT_DIR=go-bin
 ARG PSERVICE
-ARG ENVIRONMENT=${ENVIRONMENT:-development}
-#ENV APT_CONFIG_DIR=./ \
-#    APT_ENV=${APT_ENV:-development}
 
 WORKDIR /app
 VOLUME ["/app/data"]
 
 # Note: Using main as app name because CMD doesn't support env expansion and
 # Docker images are tagged with app names already.
-COPY --from=bobthebuilder /build/${OUTPUT_DIR}/${PSERVICE} /app/main
-COPY --from=bobthebuilder /build/.env.test /app/.env
-COPY --from=bobthebuilder /build/profiles/ /app/profiles
+COPY --from=builder /app/${OUTPUT_DIR}/${PSERVICE} /app/main
+COPY --from=builder /app/.env.test /app/.env
+COPY --from=builder /app/profiles/ /app/profiles
 
 RUN addgroup -S somegroup -g 1000 && adduser -S -G somegroup somebody -u 1000
 RUN chown -R somebody:somegroup /app
