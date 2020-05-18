@@ -5,6 +5,7 @@ package deletion_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/deletion"
@@ -13,21 +14,19 @@ import (
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/minio/minio-go/v6"
+	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// These objects are loaded as part of the fixture data.
-// Note the the generic file records exist in Pharos only.
-// There are no corresponding files in the Minio preservation
-// buckets until we put them there.
-var objId = "institution2.edu/coal"
+var objIdentifier = "institution2.edu/springfield"
 var fileNames = []string{
 	"doc1",
 	"doc2",
 	"doc3",
 }
 var alreadySaved = make([]string, 0)
+var objectCreated = false
 
 func TestNewManager(t *testing.T) {
 	context := common.NewContext()
@@ -53,7 +52,8 @@ func TestNewManager(t *testing.T) {
 func TestRun_SingleFile(t *testing.T) {
 	context := common.NewContext()
 	prepareForTest(t, context)
-	fileIdentifier := fmt.Sprintf("institution2.edu/coal/doc1")
+	fileIdentifier := fmt.Sprintf("institution2.edu/springfield/doc1")
+	//itemID := createDeletionWorkItem(t, context, fileIdentifier)
 	manager := deletion.NewManager(
 		context,
 		9999,
@@ -72,48 +72,78 @@ func TestRun_SingleFile(t *testing.T) {
 	// make sure all deletion events were created with correct info
 }
 
-// func TestRun_Object(t *testing.T) {
-// 	context := common.NewContext()
-// 	prepareForTest(t, context)
-// 	fileIdentifier := fmt.Sprintf("institution2.edu/coal")
-// 	manager := deletion.NewManager(
-// 		context,
-// 		9999,
-// 		fileIdentifier,
-// 		constants.TypeObject,
-// 		"requestor@example.com",
-// 		"approver@example.com",
-// 		"some-admin@aptrust.org",
-// 	)
-// 	count, errors := manager.Run()
-// 	assert.Equal(t, 0, count)
-// 	assert.Empty(t, errors)
+func TestRun_Object(t *testing.T) {
+	context := common.NewContext()
+	prepareForTest(t, context)
+	itemID := createDeletionWorkItem(t, context, objIdentifier)
+	//_ = fmt.Sprintf("institution2.edu/springfield/doc2")
+	//_ = fmt.Sprintf("institution2.edu/springfield/doc3")
+	manager := deletion.NewManager(
+		context,
+		itemID,
+		objIdentifier,
+		constants.TypeObject,
+		"requestor@example.com",
+		"approver@example.com",
+		"some-admin@aptrust.org",
+	)
 
-// 	// TODO: Create deletion workitem for this object,
-// 	// or Pharos returns this error when you call the object's
-// 	// finish_delete endpoint:
-// 	// "There is no existing deletion request for the specified object."
+	// TestRun_SingleFile deletes one of this object's file.
+	// This test deletes the other two, so we should get a
+	// count of two here.
+	count, errors := manager.Run()
+	assert.Equal(t, 2, count)
+	assert.Empty(t, errors)
 
-// 	// TODO: make sure object state is 'D'
-// 	// make sure all file states are 'D'
-// 	// make sure all storage records were removed
-// 	// make sure all deletion events were created with correct info
-// 	// at both the object and file level
-// }
+	// TODO: make sure object state is 'D'
+	// make sure all file states are 'D'
+	// make sure all storage records were removed
+	// make sure all deletion events were created with correct info
+	// at both the object and file level
+}
 
 func prepareForTest(t *testing.T, context *common.Context) {
-	markObjectActive(t, context)
+	createObjectAndFiles(t, context)
 	copyFilesToLocalPreservation(t, context)
 }
 
-func markObjectActive(t *testing.T, context *common.Context) {
-	resp := context.PharosClient.IntellectualObjectGet(objId)
-	require.Nil(t, resp.Error)
-	obj := resp.IntellectualObject()
-	require.NotNil(t, obj)
-	obj.State = constants.StateActive
-	resp = context.PharosClient.IntellectualObjectSave(obj)
-	require.Nil(t, resp.Error)
+// Create a new intellectual object that we can delete.
+// To make things simple, we copy an existing object, changing
+// the name, ID, and identifier.
+func createObjectAndFiles(t *testing.T, context *common.Context) {
+	if !objectCreated {
+		resp := context.PharosClient.IntellectualObjectGet("institution2.edu/coal")
+		require.Nil(t, resp.Error)
+		obj := resp.IntellectualObject()
+		require.NotNil(t, obj)
+		obj.ID = 0
+		obj.Identifier = objIdentifier
+		obj.BagName = "springfield.tar"
+		obj.State = constants.StateActive
+		resp = context.PharosClient.IntellectualObjectSave(obj)
+		require.Nil(t, resp.Error)
+		savedObj := resp.IntellectualObject()
+
+		for _, file := range fileNames {
+			gf := &registry.GenericFile{
+				FileFormat:                   "application/ms-word",
+				Identifier:                   fmt.Sprintf("%s/%s", objIdentifier, file),
+				InstitutionID:                savedObj.InstitutionID,
+				IntellectualObjectID:         savedObj.ID,
+				IntellectualObjectIdentifier: savedObj.Identifier,
+				Size:                         500,
+				State:                        "A",
+				StorageOption:                constants.StorageStandard,
+				URI:                          "http://localhost/fake-uri",
+			}
+			resp = context.PharosClient.GenericFileSave(gf)
+			require.Nil(t, resp.Error)
+			ingestEvent := getFileIngestEvent(gf)
+			resp = context.PharosClient.PremisEventSave(ingestEvent)
+			require.Nil(t, resp.Error)
+		}
+	}
+	objectCreated = true
 }
 
 func copyFilesToLocalPreservation(t *testing.T, context *common.Context) {
@@ -128,10 +158,10 @@ func copyFilesToLocalPreservation(t *testing.T, context *common.Context) {
 // is whether the files are deleted by the end.
 func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 	pathToFile := testutil.PathToUnitTestBag("example.edu.multipart.b01.of02.tar")
-	gfIdentifier := fmt.Sprintf("%s/%s", objId, filename)
+	gfIdentifier := fmt.Sprintf("%s/%s", objIdentifier, filename)
 	for _, target := range context.Config.UploadTargets {
 		_url := target.URLFor(filename)
-		if !util.StringListContains(alreadySaved, _url) {
+		if util.StringListContains(alreadySaved, _url) {
 			continue
 		}
 		client := context.S3Clients[target.Provider]
@@ -149,5 +179,74 @@ func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 		resp := context.PharosClient.StorageRecordSave(storageRecord, gfIdentifier)
 		require.Nil(t, resp.Error)
 		alreadySaved = append(alreadySaved, _url)
+	}
+}
+
+// We have to create a deletion WorkItem for this object,
+// or Pharos returns the following error when we call the
+// object's finish_delete endpoint:
+// "There is no existing deletion request for the specified object."
+func createDeletionWorkItem(t *testing.T, context *common.Context, identifier string) int {
+	now := time.Now().UTC()
+	gfIdentifier := ""
+	if identifier != objIdentifier {
+		gfIdentifier = identifier
+	}
+	item := &registry.WorkItem{
+		APTrustApprover:       "some-admin@aptrust.org",
+		Action:                constants.ActionDelete,
+		BagDate:               testutil.Bloomsday,
+		Bucket:                "receiving",
+		CreatedAt:             now,
+		Date:                  now,
+		ETag:                  "1234",
+		GenericFileIdentifier: gfIdentifier,
+		InstApprover:          "approver@example.com",
+		InstitutionID:         getInstId(t, context),
+		Name:                  "springfield.tar",
+		NeedsAdminReview:      false,
+		Note:                  "Deletion requested",
+		ObjectIdentifier:      objIdentifier,
+		Outcome:               "Deleteion requested",
+		QueuedAt:              now,
+		Retry:                 true,
+		Size:                  500,
+		Stage:                 constants.StageRequested,
+		Status:                constants.StatusPending,
+		UpdatedAt:             now,
+		User:                  "user@example.com",
+	}
+	resp := context.PharosClient.WorkItemSave(item)
+	require.Nil(t, resp.Error)
+	return resp.WorkItem().ID
+}
+
+func getInstId(t *testing.T, context *common.Context) int {
+	resp := context.PharosClient.InstitutionGet("institution2.edu")
+	require.Nil(t, resp.Error)
+	return resp.Institution().ID
+}
+
+// Sigh... Pharos internal logic requires that this record exist
+// before it will allow a deletion to be marked complete.
+func getFileIngestEvent(gf *registry.GenericFile) *registry.PremisEvent {
+	eventId := uuid.NewV4()
+	timestamp := time.Now().UTC().Add(-1 * time.Minute)
+	return &registry.PremisEvent{
+		Identifier:                   eventId.String(),
+		EventType:                    constants.EventIngestion,
+		DateTime:                     timestamp,
+		Detail:                       fmt.Sprintf("Item was ingested"),
+		Outcome:                      constants.StatusSuccess,
+		OutcomeDetail:                "yadda yadda yadda",
+		Object:                       "preservation-services + Minio S3 client",
+		Agent:                        constants.S3ClientName,
+		OutcomeInformation:           "blah blah blah",
+		IntellectualObjectIdentifier: gf.IntellectualObjectIdentifier,
+		GenericFileIdentifier:        gf.Identifier,
+		InstitutionID:                gf.InstitutionID,
+		IntellectualObjectID:         gf.IntellectualObjectID,
+		CreatedAt:                    timestamp,
+		UpdatedAt:                    timestamp,
 	}
 }

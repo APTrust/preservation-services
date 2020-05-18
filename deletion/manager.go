@@ -131,7 +131,9 @@ func (m *Manager) deleteFiles() (count int, errors []*service.ProcessingError) {
 	}
 	if len(errors) == 0 {
 		err := m.markObjectDeleted()
-		errors = append(errors, m.Error(m.Identifier, err, false))
+		if err != nil {
+			errors = append(errors, m.Error(m.Identifier, err, false))
+		}
 	}
 	return count, errors
 }
@@ -147,18 +149,21 @@ func (m *Manager) deleteFile(gf *registry.GenericFile) (errors []*service.Proces
 		provider, bucket, key, err := m.Context.Config.ProviderBucketAndKeyFor(sr.URL)
 		if err != nil {
 			errors = append(errors, m.Error(gf.Identifier, err, false))
-		} else {
-			err := m.deleteFromPreservationStorage(provider, bucket, key)
-			if err != nil {
-				errors = append(errors, m.Error(gf.Identifier, err, false))
-			} else {
-				// Note that this deletes the StorageRecord and creates
-				// a deletion PremisEvent
-				err = m.deleteStorageRecordFromPharos(gf, sr)
-				if err != nil {
-					errors = append(errors, m.Error(gf.Identifier, err, false))
-				}
-			}
+			continue
+		}
+		err = m.deleteFromPreservationStorage(provider, bucket, key)
+		if err != nil {
+			errors = append(errors, m.Error(gf.Identifier, err, false))
+			continue
+		}
+		err = m.deleteStorageRecordFromPharos(gf, sr)
+		if err != nil {
+			errors = append(errors, m.Error(gf.Identifier, err, false))
+			continue
+		}
+		err = m.saveFileDeletionEvent(gf, sr)
+		if err != nil {
+			errors = append(errors, m.Error(gf.Identifier, err, false))
 		}
 	}
 	if len(errors) == 0 {
@@ -202,10 +207,7 @@ func (m *Manager) deleteFromPreservationStorage(provider, bucket, key string) er
 // PremisEvents will keep a record of what happened.
 func (m *Manager) deleteStorageRecordFromPharos(gf *registry.GenericFile, sr *registry.StorageRecord) error {
 	resp := m.Context.PharosClient.StorageRecordDelete(sr.ID)
-	if resp.Error != nil {
-		return resp.Error
-	}
-	return m.saveFileDeletionEvent(gf, sr)
+	return resp.Error
 }
 
 // saveFileDeletionEvent saves a PremisEvent to Pharos saying we deleted
@@ -240,6 +242,7 @@ func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.S
 		CreatedAt:                    now,
 		UpdatedAt:                    now,
 	}
+
 	resp := m.Context.PharosClient.PremisEventSave(event)
 	return resp.Error
 }
