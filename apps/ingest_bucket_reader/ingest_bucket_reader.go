@@ -18,18 +18,19 @@ func main() {
 		os.Exit(0)
 	}
 
-	err := checkPidFile()
+	pidFile := "/var/tmp/ingest_bucket_reader.pid"
+	err := checkPidFile(pidFile)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 
+	defer util.DeletePidFile(pidFile)
 	reader := workers.NewIngestBucketReader()
 	reader.Run()
 }
 
-func checkPidFile() error {
-	pidFile := "/var/tmp/ingest_bucket_reader.pid"
+func checkPidFile(pidFile string) error {
 	otherPid := util.ReadPidFile(pidFile)
 	if otherPid != 0 {
 		if util.ProcessIsRunning(otherPid) {
