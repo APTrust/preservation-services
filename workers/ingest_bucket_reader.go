@@ -26,6 +26,7 @@ func NewIngestBucketReader() *IngestBucketReader {
 
 func (r *IngestBucketReader) Run() {
 	for _, inst := range r.LoadInstitutions() {
+		r.Context.Logger.Infof("Scanning ingest bucket for %s", inst.Identifier)
 		r.ScanBucket(inst)
 	}
 }
