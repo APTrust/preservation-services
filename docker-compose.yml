@@ -1,8 +1,8 @@
 ---
 version: '3.7'
 services:
-   ingest_bucket_reader: &default
-      image: aptrust/ingest_bucket_reader:${DOCKER_TAG_NAME:-latest}
+   ingest_cleanup: &default
+      image: aptrust/ingest_cleanup:${DOCKER_TAG_NAME:-latest}
       restart: always
       volumes:
          - type: bind
@@ -19,8 +19,8 @@ services:
       networks:
          - default
          - gateway
-   ingest_cleanup:
-      image: aptrust/ingest_cleanup:${DOCKER_TAG_NAME:-latest}
+   ingest_bucket_reader:
+      image: aptrust/ingest_bucket_reader:${DOCKER_TAG_NAME:-latest}
       restart: always
       <<: *default
    ingest_format_identifier:
@@ -107,22 +107,7 @@ services:
       networks:
          - default
       ports:
-         - "6479:6379"
-   minio:
-      image: minio/minio:latest
-      restart: always
-      command: server /data
-      volumes:
-         - type: bind
-           source: "${DOCKER_DATA_PATH:-./docker}/minio"
-           target: /data
-      env_file:
-         - .env.docker
-      networks:
-         - default
-         - gateway
-      ports:
-         - "9000:9000"
+         - 6379
 networks:
    gateway:
       external:
