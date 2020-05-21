@@ -24,7 +24,7 @@ type IngestBase struct {
 // Param bufSize describes the size of the queue buffers. The values
 // for opnames/topics are listed in constants.IngestOpNames.
 func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, settings *IngestWorkerSettings) *IngestBase {
-	base := &IngestBase{
+	ingestBase := &IngestBase{
 		Base: Base{
 			Context:              context,
 			Settings:             settings,
@@ -51,13 +51,13 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 	// usually takes <2 seconds per item, so a single go routine
 	// will suffice for those.
 	for i := 0; i < settings.NumberOfWorkers; i++ {
-		go base.ProcessItem()
+		go ingestBase.ProcessItem()
 	}
-	go base.ProcessErrorChannel()
-	go base.ProcessFatalErrorChannel()
-	go base.ProcessSuccessChannel()
+	go ingestBase.ProcessErrorChannel()
+	go ingestBase.ProcessFatalErrorChannel()
+	go ingestBase.ProcessSuccessChannel()
 
-	return base
+	return ingestBase
 }
 
 // GetTaskObject returns an object representing the task to be implemented.
