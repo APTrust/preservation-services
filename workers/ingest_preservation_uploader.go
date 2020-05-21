@@ -16,7 +16,7 @@ type PreservationUploader struct {
 
 // NewIngestPreservationUploader creates a new PreservationUploader worker.
 func NewIngestPreservationUploader(bufSize, numWorkers, maxAttempts int) *PreservationUploader {
-	settings := &IngestWorkerSettings{
+	settings := &Settings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,

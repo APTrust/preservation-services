@@ -18,7 +18,7 @@ type Deleter struct {
 
 // NewDeleter creates a new Deleter worker. Param context is a
 // Context object with connections to S3, Redis, Pharos, and NSQ.
-func NewDeleter(context *common.Context, settings *DeleteWorkerSettings) *Deleter {
+func NewDeleter(context *common.Context, settings *Settings) *Deleter {
 	deleter := &Deleter{
 		Base: Base{
 			Context:           context,

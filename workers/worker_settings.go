@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// IngestWorkerSettings contains settings for an ingest worker.
-type IngestWorkerSettings struct {
+// Settings contains settings for an ingest worker.
+type Settings struct {
 	// ChannelBufferSize is the size of the buffer for the
 	// ProcessChannel, SuccessChannel, ErrorChannel,
 	// and FatalErrorChannel.
@@ -88,7 +88,7 @@ type IngestWorkerSettings struct {
 	WorkItemSuccessNote string
 }
 
-func (settings *IngestWorkerSettings) ToJSON() string {
+func (settings *Settings) ToJSON() string {
 	data, _ := json.Marshal(settings)
 	return string(data)
 }

@@ -18,7 +18,7 @@ type PreservationVerifier struct {
 // to verify that files have been correctly copied to preservation
 // (and replication) storage.
 func NewIngestPreservationVerifier(bufSize, numWorkers, maxAttempts int) *PreservationVerifier {
-	settings := &IngestWorkerSettings{
+	settings := &Settings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,

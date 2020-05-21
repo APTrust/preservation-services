@@ -30,8 +30,6 @@ type ServiceWorker interface {
 	GetWorkResult(int) *service.WorkResult
 	SaveWorkResult(int, *service.WorkResult) error
 	SaveWorkItem(*registry.WorkItem) error
-	ShouldSkipThis(*registry.WorkItem) bool
-	GetTaskObject(*nsq.Message, *registry.WorkItem, *service.WorkResult) (*Task, error)
 	OtherWorkerIsHandlingThis(*registry.WorkItem) bool
 	ImAlreadyProcessingThis(*registry.WorkItem) bool
 	AddToInProcessList(int)
@@ -73,7 +71,17 @@ type Base struct {
 
 	// Settings contains information on what to do in post-processing
 	// in the SuccessChannel, ErrorChannel, and FatalErrorChannel.
-	Settings *IngestWorkerSettings
+	Settings *Settings
+
+	// ShouldSkipThis checks to see whether the worker should
+	// skip this WorkItem. This is not implemented in Base itself.
+	// It MUST be implemented in structs that derive from Base.
+	ShouldSkipThis func(*registry.WorkItem) bool
+
+	// GetTaskObject returns a Task object to be worked on.
+	// This is not implemented in Base itself. It MUST be implemented
+	// in structs that derive from Base.
+	GetTaskObject func(*nsq.Message, *registry.WorkItem, *service.WorkResult) (*Task, error)
 
 	// institutionCache maps institution ids to identifiers. The institution
 	// identifier is typically a domain name like "virginia.edu", "test.org",
@@ -103,6 +111,7 @@ func (b *Base) RegisterAsNsqConsumer() error {
 	b.NSQConsumer = consumer
 	b.NSQConsumer.AddHandler(b)
 	b.NSQConsumer.ConnectToNSQLookupd(b.Context.Config.NsqLookupd)
+	b.Context.Logger.Info("Registered as NSQ consumer")
 	return nil
 }
 
@@ -126,12 +135,14 @@ func (b *Base) HandleMessage(message *nsq.Message) error {
 	// state. So save the WorkItem before returning.
 	if b.ShouldSkipThis(workItem) {
 		b.SaveWorkItem(workItem)
+		b.Context.Logger.Infof("Skipping WorkItem %d (%s)", workItem.ID, workItem.Name)
 		return nil
 	}
 
 	workResult := b.GetWorkResult(workItem.ID)
 	task, err := b.GetTaskObject(message, workItem, workResult)
 	if err != nil {
+		b.Context.Logger.Errorf("Could not get Task for WorkItem %d (%s): %v", workItem.ID, workItem.Name, err)
 		return err
 	}
 
@@ -151,21 +162,22 @@ func (b *Base) HandleMessage(message *nsq.Message) error {
 
 // GetTaskObject returns an object representing the task to be implemented.
 // This object will be passed from channel to channel during processing.
-func (b *Base) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
-	return nil, fmt.Errorf("GetTaskObject must be implemented in derived class")
-}
+// func (b *Base) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
+// 	return nil, fmt.Errorf("GetTaskObject must be implemented in derived class")
+// }
 
 // ShouldSkipThis returns true if the worker should skip this item.
-func (b *Base) ShouldSkipThis(workItem *registry.WorkItem) bool {
-	// Each base class has to implement this on its own
-	return true
-}
+// func (b *Base) ShouldSkipThis(workItem *registry.WorkItem) bool {
+// 	// Each base class has to implement this on its own
+// 	return true
+// }
 
 // ProcessItem calls task.Processor.Run() and then routes the
 // task to the SuccessChannel, the ErrorChannel, or the
 // FatalErrorChannel, depending on the outcome.
 func (b *Base) ProcessItem() {
 	for task := range b.ProcessChannel {
+		b.Context.Logger.Infof("WorkItem %d (%s) is in ProcessChannel", task.WorkItem.ID, task.WorkItem.Name)
 		count, errors := task.Processor.Run()
 		task.WorkResult.Errors = errors
 
@@ -296,6 +308,7 @@ func (b *Base) GetWorkItem(message *nsq.Message) (*registry.WorkItem, *service.P
 		fullErr := fmt.Errorf("Pharos returned nil for WorkItem %d", workItemID)
 		return nil, b.Error(workItemID, msgBody, fullErr, true)
 	}
+	b.Context.Logger.Info("Got WorkItem", workItem.ID)
 	return workItem, nil
 }
 
@@ -408,6 +421,7 @@ func (b *Base) RemoveFromInProcessList(workItemID int) {
 // item has started.
 func (b *Base) MarkAsStarted(task *Task) {
 	// Redis...
+	b.Context.Logger.Infof("Starting Redis WorkResult for WorkItem %d (%s)", task.WorkItem.ID, task.WorkItem.Name)
 	task.WorkResult.Reset()
 	task.WorkResult.Attempt++
 	task.WorkResult.Host, _ = os.Hostname()
@@ -415,6 +429,7 @@ func (b *Base) MarkAsStarted(task *Task) {
 	b.SaveWorkResult(task.WorkItem.ID, task.WorkResult)
 
 	// Pharos...
+	b.Context.Logger.Infof("Telling Pharos we're starting WorkItem %d (%s)", task.WorkItem.ID, task.WorkItem.Name)
 	task.WorkItem.MarkInProgress(
 		task.WorkItem.Stage,
 		constants.StatusStarted,
@@ -424,12 +439,14 @@ func (b *Base) MarkAsStarted(task *Task) {
 
 	// NSQ. Note that this disables NSQ autoresponse, and pings
 	// NSQ every few minutes to say we're still working on the item.
+	b.Context.Logger.Infof("Telling NSQ we're starting WorkItem %d (%s)", task.WorkItem.ID, task.WorkItem.Name)
 	task.NSQStart()
 }
 
 // FinishItem updates NSQ and Pharos, finishes and saves the WorkResult,
 // and removes this item from the ItemsInProcess list.
 func (b *Base) FinishItem(task *Task) {
+	b.Context.Logger.Infof("Finishing WorkItem %d (%s)", task.WorkItem.ID, task.WorkItem.Name)
 	task.WorkItem.Node = ""
 	task.WorkItem.Pid = 0
 	b.SaveWorkItem(task.WorkItem)

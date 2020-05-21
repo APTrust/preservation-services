@@ -16,7 +16,7 @@ type StagingUploader struct {
 
 // NewStagingUploader creates a new StagingUploader worker.
 func NewStagingUploader(bufSize, numWorkers, maxAttempts int) *StagingUploader {
-	settings := &IngestWorkerSettings{
+	settings := &Settings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,

@@ -174,7 +174,7 @@ func createMetadataGatherer(context *common.Context, workItemID int, ingestObjec
 }
 
 func getIngestBase() *workers.IngestBase {
-	settings := &workers.IngestWorkerSettings{
+	settings := &workers.Settings{
 		ChannelBufferSize:                         20,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,

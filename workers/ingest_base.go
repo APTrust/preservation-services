@@ -23,7 +23,7 @@ type IngestBase struct {
 // Context object with connections to S3, Redis, Pharos, and NSQ.
 // Param bufSize describes the size of the queue buffers. The values
 // for opnames/topics are listed in constants.IngestOpNames.
-func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, settings *IngestWorkerSettings) *IngestBase {
+func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, settings *Settings) *IngestBase {
 	ingestBase := &IngestBase{
 		Base: Base{
 			Context:              context,
@@ -38,6 +38,12 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 		},
 	}
 
+	// Set these methods on base with our custom versions.
+	// These methods are not defined at all in base. Failing
+	// to set them will result in nil pointers and crashes.
+	ingestBase.Base.ShouldSkipThis = ingestBase.ShouldSkipThis
+	ingestBase.Base.GetTaskObject = ingestBase.GetTaskObject
+
 	context.Logger.Infof("%s started with the following settings:", settings.NSQTopic)
 	context.Logger.Info(settings.ToJSON())
 	context.Logger.Info("Config settings (omitting sensitive credentials):")
@@ -51,6 +57,7 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 	// usually takes <2 seconds per item, so a single go routine
 	// will suffice for those.
 	for i := 0; i < settings.NumberOfWorkers; i++ {
+		context.Logger.Infof("Starting worker #%d", i+1)
 		go ingestBase.ProcessItem()
 	}
 	go ingestBase.ProcessErrorChannel()

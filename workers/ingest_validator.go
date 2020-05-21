@@ -16,7 +16,7 @@ type IngestValidator struct {
 
 // NewIngestValidator creates a new IngestValidator worker.
 func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
-	settings := &IngestWorkerSettings{
+	settings := &Settings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,

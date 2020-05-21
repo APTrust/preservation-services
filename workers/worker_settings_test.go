@@ -10,7 +10,7 @@ import (
 )
 
 func TestToJSON(t *testing.T) {
-	settings := &workers.IngestWorkerSettings{
+	settings := &workers.Settings{
 		ChannelBufferSize:                         20,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,

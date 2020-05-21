@@ -16,7 +16,7 @@ type IngestCleanup struct {
 
 // NewIngestCleanup creates a new IngestCleanup worker.
 func NewIngestCleanup(bufSize, numWorkers, maxAttempts int) *IngestCleanup {
-	settings := &IngestWorkerSettings{
+	settings := &Settings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,

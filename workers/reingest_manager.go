@@ -16,7 +16,7 @@ type ReingestManager struct {
 
 // NewReingestManager creates a new ReingestManager worker.
 func NewReingestManager(bufSize, numWorkers, maxAttempts int) *ReingestManager {
-	settings := &IngestWorkerSettings{
+	settings := &Settings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,
