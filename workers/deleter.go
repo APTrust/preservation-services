@@ -32,21 +32,21 @@ type Deleter struct {
 	ItemsInProcess *service.RingList
 
 	// ProcessChannel is where the work actually happens.
-	ProcessChannel chan *DeletionItem
+	ProcessChannel chan *Task
 
 	// SuccessChannel processes items that have gone through the
 	// ProcessChannel with no errors.
-	SuccessChannel chan *DeletionItem
+	SuccessChannel chan *Task
 
 	// ErrorChannel processes items that have gone through the
 	// ProcessChannel with one or more non-fatal errors. These items
 	// typically should be retried.
-	ErrorChannel chan *DeletionItem
+	ErrorChannel chan *Task
 
 	// FatalErrorChannel processes items that have gone through the
 	// ProcessChannel with one or more fatal errors. These items
 	// typically should not be retried.
-	FatalErrorChannel chan *DeletionItem
+	FatalErrorChannel chan *Task
 
 	// NSQConsumer implements HandleMessage to receive messages from NSQ.
 	NSQConsumer *nsq.Consumer
@@ -61,10 +61,10 @@ func NewDeleter(context *common.Context, settings *DeleteWorkerSettings) *Delete
 	base := &Deleter{
 		Context:           context,
 		ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize),
-		ProcessChannel:    make(chan *DeletionItem, settings.ChannelBufferSize),
-		SuccessChannel:    make(chan *DeletionItem, settings.ChannelBufferSize),
-		ErrorChannel:      make(chan *DeletionItem, settings.ChannelBufferSize),
-		FatalErrorChannel: make(chan *DeletionItem, settings.ChannelBufferSize),
+		ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),
+		SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
+		ErrorChannel:      make(chan *Task, settings.ChannelBufferSize),
+		FatalErrorChannel: make(chan *Task, settings.ChannelBufferSize),
 	}
 
 	context.Logger.Info("Delete worker started with the following settings:")
@@ -146,107 +146,107 @@ func (d *Deleter) HandleMessage(message *nsq.Message) error {
 
 	// Set up the deletion item, which is packages all the info
 	// that needs to be passed from channel to channel.
-	deletionItem := &DeletionItem{
-		Manager:    deletionManager,
+	task := &Task{
+		Processor:  deletionManager,
 		NSQMessage: message,
 		WorkItem:   workItem,
 		WorkResult: workResult,
 	}
 
 	// Tell Pharos and Redis we're starting work on this
-	d.MarkAsStarted(deletionItem)
+	d.MarkAsStarted(task)
 
 	// Make a note that we're processing this.
 	d.AddToInProcessList(workItem.ID)
 
 	// Put the item into the PreProcess channel, which
 	// will set up the Processor to handle it.
-	d.ProcessChannel <- deletionItem
+	d.ProcessChannel <- task
 
 	// Return nil (no error) so NSQ knows we're working on this.
 	return nil
 }
 
 // processItem deletes files from storage and then routes the
-// deletionItem to the SuccessChannel, the ErrorChannel, or the
+// task to the SuccessChannel, the ErrorChannel, or the
 // FatalErrorChannel, depending on the outcome.
 func (d *Deleter) processItem() {
-	for deletionItem := range d.ProcessChannel {
-		count, errors := deletionItem.Manager.Run()
-		deletionItem.WorkResult.Errors = errors
+	for task := range d.ProcessChannel {
+		count, errors := task.Processor.Run()
+		task.WorkResult.Errors = errors
 
-		d.Context.Logger.Infof("WorkItem %d: deleted count %d files", deletionItem.WorkItem.ID, count)
+		d.Context.Logger.Infof("WorkItem %d: deleted count %d files", task.WorkItem.ID, count)
 
-		if deletionItem.WorkResult.HasFatalErrors() {
-			d.FatalErrorChannel <- deletionItem
-		} else if deletionItem.WorkResult.HasErrors() {
-			d.ErrorChannel <- deletionItem
+		if task.WorkResult.HasFatalErrors() {
+			d.FatalErrorChannel <- task
+		} else if task.WorkResult.HasErrors() {
+			d.ErrorChannel <- task
 		} else {
-			d.SuccessChannel <- deletionItem
+			d.SuccessChannel <- task
 		}
 	}
 }
 
 func (d *Deleter) ProcessSuccessChannel() {
-	for deletionItem := range d.SuccessChannel {
+	for task := range d.SuccessChannel {
 		d.Context.Logger.Infof("WorkItem %d (%s) is in success channel",
-			deletionItem.WorkItem.ID, deletionItem.WorkItem.Name)
+			task.WorkItem.ID, task.WorkItem.Name)
 		// Tell Pharos item succeeded.
-		deletionItem.WorkItem.Note = d.Settings.WorkItemSuccessNote
-		deletionItem.WorkItem.Stage = constants.StageResolve
-		deletionItem.WorkItem.Status = constants.StatusSuccess
-		deletionItem.WorkItem.Retry = true
-		deletionItem.WorkItem.NeedsAdminReview = false
+		task.WorkItem.Note = d.Settings.WorkItemSuccessNote
+		task.WorkItem.Stage = constants.StageResolve
+		task.WorkItem.Status = constants.StatusSuccess
+		task.WorkItem.Retry = true
+		task.WorkItem.NeedsAdminReview = false
 
 		// Tell NSQ this b is done with this message.
-		deletionItem.NSQFinish()
+		task.NSQFinish()
 	}
 }
 
 func (d *Deleter) ProcessErrorChannel() {
-	for deletionItem := range d.ErrorChannel {
+	for task := range d.ErrorChannel {
 		shouldRequeue := true
 		d.Context.Logger.Warningf("WorkItem %d (%s) is in error channel",
-			deletionItem.WorkItem.ID, deletionItem.WorkItem.Name)
+			task.WorkItem.ID, task.WorkItem.Name)
 		d.Context.Logger.Warningf("Non-fatal errors for WorkItem %d (%s): %s",
-			deletionItem.WorkItem.ID, deletionItem.WorkItem.Name,
-			deletionItem.WorkResult.NonFatalErrorMessage())
+			task.WorkItem.ID, task.WorkItem.Name,
+			task.WorkResult.NonFatalErrorMessage())
 
 		// Update WorkItem in Pharos
-		deletionItem.WorkItem.Note = deletionItem.WorkResult.NonFatalErrorMessage()
-		if deletionItem.WorkResult.Attempt >= d.Settings.MaxAttempts {
-			deletionItem.WorkItem.Note += fmt.Sprintf(" Will not retry: failed %d times. Interim processing data persists.", deletionItem.WorkResult.Attempt)
-			deletionItem.WorkItem.Retry = false
-			deletionItem.WorkItem.NeedsAdminReview = true
+		task.WorkItem.Note = task.WorkResult.NonFatalErrorMessage()
+		if task.WorkResult.Attempt >= d.Settings.MaxAttempts {
+			task.WorkItem.Note += fmt.Sprintf(" Will not retry: failed %d times. Interim processing data persists.", task.WorkResult.Attempt)
+			task.WorkItem.Retry = false
+			task.WorkItem.NeedsAdminReview = true
 			shouldRequeue = false
 		}
-		d.FinishItem(deletionItem)
+		d.FinishItem(task)
 		if shouldRequeue {
-			deletionItem.NSQRequeue(d.Settings.RequeueTimeout)
+			task.NSQRequeue(d.Settings.RequeueTimeout)
 		} else {
-			deletionItem.NSQFinish()
+			task.NSQFinish()
 		}
 	}
 }
 
 func (d *Deleter) ProcessFatalErrorChannel() {
-	for deletionItem := range d.FatalErrorChannel {
+	for task := range d.FatalErrorChannel {
 		d.Context.Logger.Errorf("WorkItem %d (%s) is in fatal error channel",
-			deletionItem.WorkItem.ID, deletionItem.WorkItem.Name)
+			task.WorkItem.ID, task.WorkItem.Name)
 		d.Context.Logger.Errorf("Fatal errors for WorkItem %d (%s): %s",
-			deletionItem.WorkItem.ID, deletionItem.WorkItem.Name,
-			deletionItem.WorkResult.FatalErrorMessage())
+			task.WorkItem.ID, task.WorkItem.Name,
+			task.WorkResult.FatalErrorMessage())
 
 		// Update WorkItem for Pharos
-		deletionItem.WorkItem.Note = deletionItem.WorkResult.FatalErrorMessage()
-		deletionItem.WorkItem.Retry = false
-		deletionItem.WorkItem.NeedsAdminReview = true
+		task.WorkItem.Note = task.WorkResult.FatalErrorMessage()
+		task.WorkItem.Retry = false
+		task.WorkItem.NeedsAdminReview = true
 
 		// Update Pharos and Redis.
-		d.FinishItem(deletionItem)
+		d.FinishItem(task)
 
 		// Tell NSQ we're done with this message.
-		deletionItem.NSQFinish()
+		task.NSQFinish()
 	}
 }
 
@@ -432,34 +432,34 @@ func (d *Deleter) RemoveFromInProcessList(workItemID int) {
 
 // MarkAsStarted tells Pharos, Redis, and NSQ that work on this
 // item has started.
-func (d *Deleter) MarkAsStarted(deletionItem *DeletionItem) {
+func (d *Deleter) MarkAsStarted(task *Task) {
 	// Redis...
-	deletionItem.WorkResult.Reset()
-	deletionItem.WorkResult.Attempt++
-	deletionItem.WorkResult.Host, _ = os.Hostname()
-	deletionItem.WorkResult.Pid = os.Getpid()
-	d.SaveWorkResult(deletionItem.WorkItem.ID, deletionItem.WorkResult)
+	task.WorkResult.Reset()
+	task.WorkResult.Attempt++
+	task.WorkResult.Host, _ = os.Hostname()
+	task.WorkResult.Pid = os.Getpid()
+	d.SaveWorkResult(task.WorkItem.ID, task.WorkResult)
 
 	// Pharos...
-	deletionItem.WorkItem.MarkInProgress(
-		deletionItem.WorkItem.Stage,
+	task.WorkItem.MarkInProgress(
+		task.WorkItem.Stage,
 		constants.StatusStarted,
 		fmt.Sprintf("Item has started stage %s", d.Settings.NSQTopic),
 	)
-	d.SaveWorkItem(deletionItem.WorkItem)
+	d.SaveWorkItem(task.WorkItem)
 
 	// NSQ. Note that this disables NSQ autoresponse, and pings
 	// NSQ every few minutes to say we're still working on the item.
-	deletionItem.NSQStart()
+	task.NSQStart()
 }
 
 // FinishItem updates NSQ and Pharos, finishes and saves the WorkResult,
 // and removes this item from the ItemsInProcess list.
-func (d *Deleter) FinishItem(deletionItem *DeletionItem) {
-	deletionItem.WorkItem.Node = ""
-	deletionItem.WorkItem.Pid = 0
-	d.SaveWorkItem(deletionItem.WorkItem)
-	deletionItem.WorkResult.Finish()
-	d.SaveWorkResult(deletionItem.WorkItem.ID, deletionItem.WorkResult)
-	d.RemoveFromInProcessList(deletionItem.WorkItem.ID)
+func (d *Deleter) FinishItem(task *Task) {
+	task.WorkItem.Node = ""
+	task.WorkItem.Pid = 0
+	d.SaveWorkItem(task.WorkItem)
+	task.WorkResult.Finish()
+	d.SaveWorkResult(task.WorkItem.ID, task.WorkResult)
+	d.RemoveFromInProcessList(task.WorkItem.ID)
 }

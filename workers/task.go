@@ -3,25 +3,39 @@ package workers
 import (
 	"time"
 
-	"github.com/APTrust/preservation-services/deletion"
+	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/nsqio/go-nsq"
 )
 
-// *********************************************************************
-// TODO: Factor out methods common to this and IngestItem
-// *********************************************************************
-
-// DeletionItem encapsulates everything that a worker will need to
+// Task encapsulates everything that a worker will need to
 // pass from one channel to the next during procesing.
-type DeletionItem struct {
+type Task struct {
 
-	// Manager does the work of deleting files from S3/Glacier.
-	Manager *deletion.Manager
+	// NextQueueTopic is the name of the next NSQ topic to which
+	// this item should be pushed. For ingest, valid values are:
+	//
+	// constants.IngestPreFetch,
+	// constants.IngestValidation,
+	// constants.IngestReingestCheck,
+	// constants.IngestStaging,
+	// constants.IngestFormatIdentification,
+	// constants.IngestStorage,
+	// constants.IngestStorageValidation,
+	// constants.IngestRecord,
+	// constants.IngestCleanup.
+	//
+	// An empty string is also valid, indicating that this item
+	// should not be pushed into any NSQ topic.
+	NextQueueTopic string
 
 	// NSQMessage is the NSQ message the worker is processing.
 	NSQMessage *nsq.Message
+
+	// Processor is handles whatever phase of the ingest process
+	// this worker is responsible for (validation, storage, recording, etc.)
+	Processor ingest.Runnable
 
 	// WorkResult describes the result of this worker's work.
 	WorkResult *service.WorkResult
@@ -43,7 +57,7 @@ type DeletionItem struct {
 // every two minutes while the WorkItem is in process. We need this
 // because operations like calculating checksums on a 200GB file
 // cannot pause to touch the NSQ message before it times out.
-func (item *DeletionItem) NSQStart() {
+func (item *Task) NSQStart() {
 	item.NSQMessage.DisableAutoResponse()
 	interval := time.Duration(2) * time.Minute
 	ticker := time.NewTicker(interval)
@@ -66,25 +80,25 @@ func (item *DeletionItem) NSQStart() {
 
 // NSQRequeue requeues the message with the specified duration
 // and stops sending touches.
-func (item *DeletionItem) NSQRequeue(delay time.Duration) {
+func (item *Task) NSQRequeue(delay time.Duration) {
 	item.nsqStopChannel <- true
 	item.NSQMessage.Requeue(delay)
 }
 
 // NSQFinishes the message and stops sending touches.
-func (item *DeletionItem) NSQFinish() {
+func (item *Task) NSQFinish() {
 	item.nsqStopChannel <- true
 	item.NSQMessage.Finish()
 }
 
 // StartCalled returns true if NSQStart() has been called on this object.
 // This method exist for testing purposes.
-func (item *DeletionItem) StartCalled() bool {
+func (item *Task) StartCalled() bool {
 	return item.nsqStartCalled
 }
 
 // TickerStopped returns true if either NSQFinish() or NSQRequeue()
 // has been called. This method exist for testing purposes.
-func (item *DeletionItem) TickerStopped() bool {
+func (item *Task) TickerStopped() bool {
 	return item.tickerStopped
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 // Manager deletes files from preservation and ensures that Pharos
@@ -79,6 +79,12 @@ func (m *Manager) Run() (count int, errors []*service.ProcessingError) {
 		count, errors = m.deleteFiles()
 	}
 	return count, errors
+}
+
+// GetIngestObject is a dummy method that allows this object to conform to the
+// ingest.Runnable interface.
+func (m *Manager) GetIngestObject() *service.IngestObject {
+	return nil
 }
 
 // deleteSingleFile is for deleting a single GenericFile. Call this when ItemType

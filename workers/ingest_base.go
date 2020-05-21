@@ -31,21 +31,21 @@ type IngestBase struct {
 
 	// ProcessChannel is where the work actually happens: validation,
 	// storage, recording, etc., depending on the worker's responsibility.
-	ProcessChannel chan *IngestItem
+	ProcessChannel chan *Task
 
 	// SuccessChannel processes items that have gone through the
 	// ProcessChannel with no errors.
-	SuccessChannel chan *IngestItem
+	SuccessChannel chan *Task
 
 	// ErrorChannel processes items that have gone through the
 	// ProcessChannel with one or more non-fatal errors. These items
 	// typically should be retried.
-	ErrorChannel chan *IngestItem
+	ErrorChannel chan *Task
 
 	// FatalErrorChannel processes items that have gone through the
 	// ProcessChannel with one or more fatal errors. These items
 	// typically should not be retried.
-	FatalErrorChannel chan *IngestItem
+	FatalErrorChannel chan *Task
 
 	// Settings contains information on what to do in post-processing
 	// in the SuccessChannel, ErrorChannel, and FatalErrorChannel.
@@ -73,10 +73,10 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 		Context:              context,
 		Settings:             settings,
 		ItemsInProcess:       service.NewRingList(settings.ChannelBufferSize),
-		ProcessChannel:       make(chan *IngestItem, settings.ChannelBufferSize),
-		SuccessChannel:       make(chan *IngestItem, settings.ChannelBufferSize),
-		ErrorChannel:         make(chan *IngestItem, settings.ChannelBufferSize),
-		FatalErrorChannel:    make(chan *IngestItem, settings.ChannelBufferSize),
+		ProcessChannel:       make(chan *Task, settings.ChannelBufferSize),
+		SuccessChannel:       make(chan *Task, settings.ChannelBufferSize),
+		ErrorChannel:         make(chan *Task, settings.ChannelBufferSize),
+		FatalErrorChannel:    make(chan *Task, settings.ChannelBufferSize),
 		processorConstructor: processorConstructor,
 		institutionCache:     make(map[int]string),
 	}
@@ -157,7 +157,7 @@ func (b *IngestBase) HandleMessage(message *nsq.Message) error {
 	}
 
 	// Set up the IngestItem.
-	ingestItem := &IngestItem{
+	task := &Task{
 		NSQMessage: message,
 		WorkResult: workResult,
 		WorkItem:   workItem,
@@ -165,132 +165,132 @@ func (b *IngestBase) HandleMessage(message *nsq.Message) error {
 	}
 
 	// Tell Pharos and Redis we're starting work on this
-	b.MarkAsStarted(ingestItem)
+	b.MarkAsStarted(task)
 
 	// Make a note that we're processing this.
 	b.AddToInProcessList(workItem.ID)
 
 	// Put the item into the PreProcess channel, which
 	// will set up the Processor to handle it.
-	b.ProcessChannel <- ingestItem
+	b.ProcessChannel <- task
 
 	// Return nil (no error) so NSQ knows we're working on this.
 	return nil
 }
 
-// ProcessItem calls ingestItem.Processor.Run() and then routes the
-// ingestItem to the SuccessChannel, the ErrorChannel, or the
+// ProcessItem calls task.Processor.Run() and then routes the
+// task to the SuccessChannel, the ErrorChannel, or the
 // FatalErrorChannel, depending on the outcome.
 func (b *IngestBase) processItem() {
-	for ingestItem := range b.ProcessChannel {
-		count, errors := ingestItem.Processor.Run()
-		ingestItem.WorkResult.Errors = errors
+	for task := range b.ProcessChannel {
+		count, errors := task.Processor.Run()
+		task.WorkResult.Errors = errors
 
-		b.Context.Logger.Infof("WorkItem %d: count %d", ingestItem.WorkItem.ID, count)
+		b.Context.Logger.Infof("WorkItem %d: count %d", task.WorkItem.ID, count)
 
-		if ingestItem.WorkResult.HasFatalErrors() {
-			b.FatalErrorChannel <- ingestItem
-		} else if ingestItem.WorkResult.HasErrors() {
-			b.ErrorChannel <- ingestItem
+		if task.WorkResult.HasFatalErrors() {
+			b.FatalErrorChannel <- task
+		} else if task.WorkResult.HasErrors() {
+			b.ErrorChannel <- task
 		} else {
-			b.SuccessChannel <- ingestItem
+			b.SuccessChannel <- task
 		}
 	}
 }
 
 func (b *IngestBase) ProcessSuccessChannel() {
-	for ingestItem := range b.SuccessChannel {
+	for task := range b.SuccessChannel {
 		b.Context.Logger.Infof("WorkItem %d (%s) is in success channel",
-			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name)
+			task.WorkItem.ID, task.WorkItem.Name)
 		// Tell Pharos item succeeded.
-		ingestItem.WorkItem.Note = b.Settings.WorkItemSuccessNote
-		ingestItem.WorkItem.Stage = b.Settings.NextWorkItemStage
-		ingestItem.WorkItem.Status = constants.StatusPending
-		ingestItem.WorkItem.Retry = true
-		ingestItem.WorkItem.NeedsAdminReview = false
+		task.WorkItem.Note = b.Settings.WorkItemSuccessNote
+		task.WorkItem.Stage = b.Settings.NextWorkItemStage
+		task.WorkItem.Status = constants.StatusPending
+		task.WorkItem.Retry = true
+		task.WorkItem.NeedsAdminReview = false
 
 		// When cleaup succeeds, we need to mark the item as succeeded.
 		if b.Settings.NSQTopic == constants.IngestCleanup {
-			ingestItem.WorkItem.Status = constants.StatusSuccess
-			ingestItem.WorkItem.Outcome = "Ingest complete"
-			ingestItem.WorkItem.ObjectIdentifier = ingestItem.Processor.GetIngestObject().Identifier()
+			task.WorkItem.Status = constants.StatusSuccess
+			task.WorkItem.Outcome = "Ingest complete"
+			task.WorkItem.ObjectIdentifier = task.Processor.GetIngestObject().Identifier()
 		}
 
 		// Push item to next queue.
-		ingestItem.NextQueueTopic = b.Settings.NextQueueTopic
-		b.FinishItem(ingestItem)
+		task.NextQueueTopic = b.Settings.NextQueueTopic
+		b.FinishItem(task)
 
 		// Tell NSQ this b is done with this message.
-		ingestItem.NSQFinish()
+		task.NSQFinish()
 	}
 }
 
 func (b *IngestBase) ProcessErrorChannel() {
-	for ingestItem := range b.ErrorChannel {
+	for task := range b.ErrorChannel {
 		shouldRequeue := true
 		b.Context.Logger.Warningf("WorkItem %d (%s) is in error channel",
-			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name)
+			task.WorkItem.ID, task.WorkItem.Name)
 		b.Context.Logger.Warningf("Non-fatal errors for WorkItem %d (%s): %s",
-			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name,
-			ingestItem.WorkResult.NonFatalErrorMessage())
+			task.WorkItem.ID, task.WorkItem.Name,
+			task.WorkResult.NonFatalErrorMessage())
 
 		// Update WorkItem in Pharos
-		ingestItem.WorkItem.Note = ingestItem.WorkResult.NonFatalErrorMessage()
-		if ingestItem.WorkResult.Attempt >= b.Settings.MaxAttempts {
-			ingestItem.WorkItem.Note += fmt.Sprintf(" Will not retry: failed %d times. Interim processing data persists.", ingestItem.WorkResult.Attempt)
-			ingestItem.WorkItem.Retry = false
-			ingestItem.WorkItem.NeedsAdminReview = true
+		task.WorkItem.Note = task.WorkResult.NonFatalErrorMessage()
+		if task.WorkResult.Attempt >= b.Settings.MaxAttempts {
+			task.WorkItem.Note += fmt.Sprintf(" Will not retry: failed %d times. Interim processing data persists.", task.WorkResult.Attempt)
+			task.WorkItem.Retry = false
+			task.WorkItem.NeedsAdminReview = true
 			shouldRequeue = false
 
 			// Go to NSQ cleanup or not?
 			if b.Settings.PushToCleanupAfterMaxFailedAttempts {
-				ingestItem.Processor.GetIngestObject().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterMaxFailedAttempts
-				ingestItem.NextQueueTopic = constants.IngestCleanup
+				task.Processor.GetIngestObject().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterMaxFailedAttempts
+				task.NextQueueTopic = constants.IngestCleanup
 			} else {
-				ingestItem.NextQueueTopic = ""
+				task.NextQueueTopic = ""
 			}
 		} else {
 			// Processing failed due to non-fatal (transient) errors,
 			// and we haven't reached MaxAttempts. Don't push to next
 			// queue. We'll requeue below.
-			ingestItem.NextQueueTopic = ""
+			task.NextQueueTopic = ""
 		}
 
-		b.FinishItem(ingestItem)
+		b.FinishItem(task)
 		if shouldRequeue {
-			ingestItem.NSQRequeue(b.Settings.RequeueTimeout)
+			task.NSQRequeue(b.Settings.RequeueTimeout)
 		} else {
-			ingestItem.NSQFinish()
+			task.NSQFinish()
 		}
 	}
 }
 
 func (b *IngestBase) ProcessFatalErrorChannel() {
-	for ingestItem := range b.FatalErrorChannel {
+	for task := range b.FatalErrorChannel {
 		b.Context.Logger.Errorf("WorkItem %d (%s) is in fatal error channel",
-			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name)
+			task.WorkItem.ID, task.WorkItem.Name)
 		b.Context.Logger.Errorf("Fatal errors for WorkItem %d (%s): %s",
-			ingestItem.WorkItem.ID, ingestItem.WorkItem.Name,
-			ingestItem.WorkResult.FatalErrorMessage())
+			task.WorkItem.ID, task.WorkItem.Name,
+			task.WorkResult.FatalErrorMessage())
 
 		// Update WorkItem for Pharos
-		ingestItem.WorkItem.Note = ingestItem.WorkResult.FatalErrorMessage()
-		ingestItem.WorkItem.Retry = false
-		ingestItem.WorkItem.NeedsAdminReview = true
+		task.WorkItem.Note = task.WorkResult.FatalErrorMessage()
+		task.WorkItem.Retry = false
+		task.WorkItem.NeedsAdminReview = true
 
 		// NSQ
 		if b.Settings.PushToCleanupOnFatalError {
-			ingestItem.Processor.GetIngestObject().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterFatalError
-			ingestItem.NextQueueTopic = constants.IngestCleanup
+			task.Processor.GetIngestObject().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterFatalError
+			task.NextQueueTopic = constants.IngestCleanup
 		} else {
-			ingestItem.NextQueueTopic = ""
+			task.NextQueueTopic = ""
 		}
 
 		// Update Pharos and Redis, and send to next queue if required.
-		b.FinishItem(ingestItem)
+		b.FinishItem(task)
 
 		// Tell NSQ we're done with this message.
-		ingestItem.NSQFinish()
+		task.NSQFinish()
 	}
 }
 
@@ -659,39 +659,39 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 
 // MarkAsStarted tells Pharos, Redis, and NSQ that work on this
 // item has started.
-func (b *IngestBase) MarkAsStarted(ingestItem *IngestItem) {
+func (b *IngestBase) MarkAsStarted(task *Task) {
 	// Redis...
-	ingestItem.WorkResult.Reset()
-	ingestItem.WorkResult.Attempt++
-	ingestItem.WorkResult.Host, _ = os.Hostname()
-	ingestItem.WorkResult.Pid = os.Getpid()
-	b.SaveWorkResult(ingestItem.WorkItem.ID, ingestItem.WorkResult)
+	task.WorkResult.Reset()
+	task.WorkResult.Attempt++
+	task.WorkResult.Host, _ = os.Hostname()
+	task.WorkResult.Pid = os.Getpid()
+	b.SaveWorkResult(task.WorkItem.ID, task.WorkResult)
 
 	// Pharos...
-	ingestItem.WorkItem.MarkInProgress(
-		ingestItem.WorkItem.Stage,
+	task.WorkItem.MarkInProgress(
+		task.WorkItem.Stage,
 		constants.StatusStarted,
 		fmt.Sprintf("Item has started stage %s", b.Settings.NSQTopic),
 	)
-	b.SaveWorkItem(ingestItem.WorkItem)
+	b.SaveWorkItem(task.WorkItem)
 
 	// NSQ. Note that this disables NSQ autoresponse, and pings
 	// NSQ every few minutes to say we're still working on the item.
-	ingestItem.NSQStart()
+	task.NSQStart()
 }
 
 // FinishItem updates NSQ and Pharos, finishes and saves the WorkResult,
 // and removes this item from the ItemsInProcess list.
-func (b *IngestBase) FinishItem(ingestItem *IngestItem) {
-	ingestItem.WorkItem.Node = ""
-	ingestItem.WorkItem.Pid = 0
-	b.SaveWorkItem(ingestItem.WorkItem)
-	ingestItem.WorkResult.Finish()
-	b.SaveWorkResult(ingestItem.WorkItem.ID, ingestItem.WorkResult)
-	if ingestItem.NextQueueTopic != "" {
-		b.PushToQueue(ingestItem.WorkItem, ingestItem.NextQueueTopic)
+func (b *IngestBase) FinishItem(task *Task) {
+	task.WorkItem.Node = ""
+	task.WorkItem.Pid = 0
+	b.SaveWorkItem(task.WorkItem)
+	task.WorkResult.Finish()
+	b.SaveWorkResult(task.WorkItem.ID, task.WorkResult)
+	if task.NextQueueTopic != "" {
+		b.PushToQueue(task.WorkItem, task.NextQueueTopic)
 	}
-	b.RemoveFromInProcessList(ingestItem.WorkItem.ID)
+	b.RemoveFromInProcessList(task.WorkItem.ID)
 }
 
 // PushToQueue pushes the specified WorkItem to the named nsqTopic.
