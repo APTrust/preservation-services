@@ -409,24 +409,24 @@ func TestIngestBase_MarkAsStarted(t *testing.T) {
 	putWorkItemInPharos(t, ingestBase.Context, copyOfWorkItem)
 
 	hostname, _ := os.Hostname()
-	ingestItem := &workers.IngestItem{
+	task := &workers.Task{
 		NSQMessage: copyOfNsqMessage,
 		WorkResult: service.NewWorkResult(ingestBase.Settings.NSQTopic),
 		WorkItem:   copyOfWorkItem,
 	}
 
-	//data, _ := ingestItem.WorkItem.ToJSON()
+	//data, _ := task.WorkItem.ToJSON()
 	//fmt.Println(string(data))
 
-	assert.NotEqual(t, constants.StatusStarted, ingestItem.WorkItem.Status)
-	assert.Equal(t, 0, ingestItem.WorkResult.Attempt)
+	assert.NotEqual(t, constants.StatusStarted, task.WorkItem.Status)
+	assert.Equal(t, 0, task.WorkResult.Attempt)
 
-	ingestBase.MarkAsStarted(ingestItem)
-	assert.Equal(t, constants.StatusStarted, ingestItem.WorkItem.Status)
-	assert.Equal(t, "Item has started stage ingest01_prefetch", ingestItem.WorkItem.Note)
-	assert.Equal(t, 1, ingestItem.WorkResult.Attempt)
-	assert.Equal(t, hostname, ingestItem.WorkResult.Host)
-	assert.Equal(t, os.Getpid(), ingestItem.WorkResult.Pid)
+	ingestBase.MarkAsStarted(task)
+	assert.Equal(t, constants.StatusStarted, task.WorkItem.Status)
+	assert.Equal(t, "Item has started stage ingest01_prefetch", task.WorkItem.Note)
+	assert.Equal(t, 1, task.WorkResult.Attempt)
+	assert.Equal(t, hostname, task.WorkResult.Host)
+	assert.Equal(t, os.Getpid(), task.WorkResult.Pid)
 }
 
 func TestIngestBase_FinishItem(t *testing.T) {
@@ -440,19 +440,19 @@ func TestIngestBase_FinishItem(t *testing.T) {
 	copy(msgId[:], []byte("3333"))
 	testNSQMessage := nsq.NewMessage(msgId, msgBody)
 
-	ingestItem := &workers.IngestItem{
+	task := &workers.Task{
 		NSQMessage: testNSQMessage,
 		WorkResult: service.NewWorkResult(ingestBase.Settings.NSQTopic),
 		WorkItem:   copyOfWorkItem,
 	}
 
-	ingestBase.MarkAsStarted(ingestItem)
-	ingestBase.AddToInProcessList(ingestItem.WorkItem.ID)
+	ingestBase.MarkAsStarted(task)
+	ingestBase.AddToInProcessList(task.WorkItem.ID)
 
-	ingestItem.WorkItem.Status = constants.StatusCancelled
-	ingestItem.WorkItem.Note = "Cancelled for testing purposes"
-	ingestItem.NextQueueTopic = "finish_test_topic"
-	ingestBase.FinishItem(ingestItem)
+	task.WorkItem.Status = constants.StatusCancelled
+	task.WorkItem.Note = "Cancelled for testing purposes"
+	task.NextQueueTopic = "finish_test_topic"
+	ingestBase.FinishItem(task)
 
 	// Fetch and test WorkItem
 	retrievedWorkItem, err := ingestBase.GetWorkItem(testNSQMessage)
@@ -464,12 +464,12 @@ func TestIngestBase_FinishItem(t *testing.T) {
 	assert.Equal(t, 0, retrievedWorkItem.Pid)
 
 	// Fetch and test WorkResult
-	retrievedWorkResult := ingestBase.GetWorkResult(ingestItem.WorkItem.ID)
+	retrievedWorkResult := ingestBase.GetWorkResult(task.WorkItem.ID)
 	assert.True(t, retrievedWorkResult.Finished())
 	assert.Equal(t, 1, retrievedWorkResult.Attempt)
 
 	// Make sure item was removed from ItemsInProcess
-	assert.False(t, ingestBase.ItemsInProcess.Contains(strconv.Itoa(ingestItem.WorkItem.ID)))
+	assert.False(t, ingestBase.ItemsInProcess.Contains(strconv.Itoa(task.WorkItem.ID)))
 
 	// Make sure item was pushed to queue
 	stats, procErr := ingestBase.Context.NSQClient.GetStats()
