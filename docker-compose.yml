@@ -6,7 +6,7 @@ services:
       restart: always
       volumes:
          - type: bind
-           source: "${BASE_WORKING_DIR:-./docker}"
+           source: "${DOCKER_DATA_PATH:-./docker}"
            target: /app/data
          - type: bind
            source: "${DOCKER_DATA_PATH:-./docker}"
@@ -100,7 +100,7 @@ services:
       command: redis-server --appendonly yes
       volumes:
          - type: bind
-           source: "${BASE_WORKING_DIR:-./docker}/redis"
+           source: "${DOCKER_DATA_PATH:-./docker}/redis"
            target: /data
       env_file:
          - .env.docker
