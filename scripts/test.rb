@@ -58,6 +58,7 @@ class TestRunner
   def ingest_service_commands
     ingest_services = []
     names = [
+      "apt_delete",
       "ingest_pre_fetch",
       "ingest_validator",
       "reingest_manager",

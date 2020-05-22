@@ -62,6 +62,11 @@ func NewDeleter(bufSize, numWorkers, maxAttempts int) *Deleter {
 	go deleter.ProcessFatalErrorChannel()
 	go deleter.ProcessSuccessChannel()
 
+	err := deleter.RegisterAsNsqConsumer()
+	if err != nil {
+		panic(fmt.Sprintf("Cannot register NSQ consumer: %v", err))
+	}
+
 	return deleter
 }
 

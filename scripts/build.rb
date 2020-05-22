@@ -8,6 +8,7 @@ class Build
     @apps_dir = File.expand_path(File.join(__dir__, "..", "apps"))
     @output_dir = File.expand_path(File.join(__dir__, "..", "bin", "go-bin"))
     @sources = [
+      "apt_delete/apt_delete.go",
       "ingest_pre_fetch/ingest_pre_fetch.go",
       "ingest_validator/ingest_validator.go",
       "reingest_manager/reingest_manager.go",
