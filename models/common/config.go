@@ -394,7 +394,9 @@ func (config *Config) makeDirs() error {
 	}
 	for _, dir := range dirs {
 		err := os.MkdirAll(dir, 0755)
-		if err != nil {
+		if err == nil || os.IsExist(err) {
+			return nil
+		} else {
 			util.PrintAndExit(err.Error())
 		}
 	}
