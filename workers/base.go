@@ -32,6 +32,7 @@ type ServiceWorker interface {
 	SaveWorkItem(*registry.WorkItem) error
 	OtherWorkerIsHandlingThis(*registry.WorkItem) bool
 	ImAlreadyProcessingThis(*registry.WorkItem) bool
+	ShouldRetry(*registry.WorkItem) bool
 	AddToInProcessList(int)
 	RemoveFromInProcessList(int)
 	MarkAsStarted(*Task)
@@ -404,6 +405,22 @@ func (b *Base) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
 		return true
 	}
 	return false
+}
+
+// ShouldRetry marks a WorkItem as no longer in progress and logs a
+// message to that effect if the WorkItem's Retry flag is false. It returns
+// the value of WorkItem.Retry.
+func (b *Base) ShouldRetry(workItem *registry.WorkItem) bool {
+	if workItem.Retry == false {
+		message := fmt.Sprintf("Rejecting WorkItem %d because retry = false", workItem.ID)
+		workItem.MarkNoLongerInProgress(
+			workItem.Stage,
+			workItem.Status,
+			message,
+		)
+		b.Context.Logger.Info(message)
+	}
+	return workItem.Retry
 }
 
 // AddToInProcessList adds workItemID to this worker's ItemsInProcess list.

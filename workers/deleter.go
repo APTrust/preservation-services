@@ -30,6 +30,12 @@ func NewDeleter(context *common.Context, settings *Settings) *Deleter {
 		},
 	}
 
+	// Set these methods on base with our custom versions.
+	// These methods are not defined at all in base. Failing
+	// to set them will result in nil pointers and crashes.
+	deleter.Base.ShouldSkipThis = deleter.ShouldSkipThis
+	deleter.Base.GetTaskObject = deleter.GetTaskObject
+
 	context.Logger.Info("Delete worker started with the following settings:")
 	context.Logger.Info(settings.ToJSON())
 	context.Logger.Info("Config settings (omitting sensitive credentials):")
@@ -37,6 +43,7 @@ func NewDeleter(context *common.Context, settings *Settings) *Deleter {
 
 	// Spin up the go routines that will act as workers
 	for i := 0; i < settings.NumberOfWorkers; i++ {
+		context.Logger.Infof("Starting worker #%d", i+1)
 		go deleter.ProcessItem()
 	}
 	go deleter.ProcessErrorChannel()
@@ -44,46 +51,6 @@ func NewDeleter(context *common.Context, settings *Settings) *Deleter {
 	go deleter.ProcessSuccessChannel()
 
 	return deleter
-}
-
-// HandleMessage checks to see whether we should process this message at
-// all. If so, it packages up an IngestItem with everything except the
-// Processor object (an instance of ingest.Base). It puts the IngestItem
-// in the the PreProcessChannel. From there, the worker should instantiate
-// and assign the right IngestItem.Processor type and push the item into
-// the ProcessChannel.
-func (d *Deleter) HandleMessage(message *nsq.Message) error {
-	// Get the WorkItem from Pharos. If we can't, it's fatal.
-	workItem, procErr := d.GetWorkItem(message)
-	if procErr != nil && procErr.IsFatal {
-		d.Context.Logger.Error(procErr.Error())
-		return fmt.Errorf(procErr.Error())
-	}
-
-	// If there's any reason to skip this, return nil to tell
-	// NSQ it's done. This function also sets some properties on
-	// the WorkItem, so admins and depositors will know the item's
-	// state. So save the WorkItem before returning.
-	if d.ShouldSkipThis(workItem) {
-		d.SaveWorkItem(workItem)
-		return nil
-	}
-
-	workResult := d.GetWorkResult(workItem.ID)
-	task, _ := d.GetTaskObject(message, workItem, workResult)
-
-	// Tell Pharos and Redis we're starting work on this
-	d.MarkAsStarted(task)
-
-	// Make a note that we're processing this.
-	d.AddToInProcessList(workItem.ID)
-
-	// Put the item into the PreProcess channel, which
-	// will set up the Processor to handle it.
-	d.ProcessChannel <- task
-
-	// Return nil (no error) so NSQ knows we're working on this.
-	return nil
 }
 
 func (d *Deleter) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
@@ -122,40 +89,17 @@ func (d *Deleter) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 	// It's possible that another worker recently marked this as
 	// "do not retry." If that's the case, skip it.
-	if workItem.Retry == false {
-		message := fmt.Sprintf("Rejecting WorkItem %d because retry = false", workItem.ID)
-		workItem.MarkNoLongerInProgress(
-			workItem.Stage,
-			workItem.Status,
-			message,
-		)
-		d.Context.Logger.Info(message)
+	if d.ShouldRetry(workItem) == false {
 		return true
 	}
 
 	// Definitely don't delete this if it's not a deletion request.
-	if workItem.Action != constants.ActionDelete {
-		message := fmt.Sprintf("Rejecting WorkItem %d because action is %s, not 'Delete'", workItem.ID, workItem.Action)
-		workItem.Retry = false
-		workItem.MarkNoLongerInProgress(
-			workItem.Stage,
-			constants.StatusCancelled,
-			message,
-		)
-		d.Context.Logger.Info(message)
+	if d.HasWrongAction(workItem) {
 		return true
 	}
 
 	// Do not proceed without the approval of institutional admin.
-	if workItem.InstApprover == "" {
-		message := fmt.Sprintf("Rejecting WorkItem %d because institutional approver is missing", workItem.ID)
-		workItem.Retry = false
-		workItem.MarkNoLongerInProgress(
-			workItem.Stage,
-			constants.StatusCancelled,
-			message,
-		)
-		d.Context.Logger.Info(message)
+	if d.MissingRequiredApproval(workItem) {
 		return true
 	}
 
@@ -187,13 +131,37 @@ func (d *Deleter) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	return false
 }
 
-// GetWorkResult returns an WorkResult object for this WorkItem. If one
-// already exists in Redis, it returns that. If not, it creates a new one.
-func (d *Deleter) GetWorkResult(workItemID int) *service.WorkResult {
-	workResult, err := d.Context.RedisClient.WorkResultGet(workItemID, d.Settings.NSQTopic)
-	if err != nil {
-		d.Context.Logger.Infof("No WorkResult in Redis for WorkItem %d. No problem. Creating a new one.", workItemID)
-		workResult = service.NewWorkResult(d.Settings.NSQTopic)
+// HasWrongAction returns true and marks this item as no longer in
+// progress if the WorkItem.Action is anything other than delete.
+func (d *Deleter) HasWrongAction(workItem *registry.WorkItem) bool {
+	if workItem.Action != constants.ActionDelete {
+		message := fmt.Sprintf("Rejecting WorkItem %d because action is %s, not 'Delete'", workItem.ID, workItem.Action)
+		workItem.Retry = false
+		workItem.MarkNoLongerInProgress(
+			workItem.Stage,
+			constants.StatusCancelled,
+			message,
+		)
+		d.Context.Logger.Info(message)
+		return true
 	}
-	return workResult
+	return false
+}
+
+// MissingRequiredApproval returns true and marks this item as no longer in
+// progress if the deletion WorkItem has not been approved by an institutional
+// admin.
+func (d *Deleter) MissingRequiredApproval(workItem *registry.WorkItem) bool {
+	if workItem.InstApprover == "" {
+		message := fmt.Sprintf("Rejecting WorkItem %d because institutional approver is missing", workItem.ID)
+		workItem.Retry = false
+		workItem.MarkNoLongerInProgress(
+			workItem.Stage,
+			constants.StatusCancelled,
+			message,
+		)
+		d.Context.Logger.Info(message)
+		return true
+	}
+	return false
 }

@@ -97,14 +97,7 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 	// It's possible that another worker recently marked this as
 	// "do not retry." If that's the case, skip it.
-	if workItem.Retry == false {
-		message := fmt.Sprintf("Rejecting WorkItem %d because retry = false", workItem.ID)
-		workItem.MarkNoLongerInProgress(
-			workItem.Stage,
-			workItem.Status,
-			message,
-		)
-		b.Context.Logger.Info(message)
+	if b.ShouldRetry(workItem) == false {
 		return true
 	}
 
