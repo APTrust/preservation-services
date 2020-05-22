@@ -2,6 +2,7 @@ package workers
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/deletion"
@@ -18,10 +19,21 @@ type Deleter struct {
 
 // NewDeleter creates a new Deleter worker. Param context is a
 // Context object with connections to S3, Redis, Pharos, and NSQ.
-func NewDeleter(context *common.Context, settings *Settings) *Deleter {
+func NewDeleter(bufSize, numWorkers, maxAttempts int) *Deleter {
+	settings := &Settings{
+		ChannelBufferSize: bufSize,
+		MaxAttempts:       maxAttempts,
+		NSQChannel:        constants.Deleter + "_worker_chan",
+		NSQTopic:          constants.Deleter,
+		NextQueueTopic:    "",
+		NextWorkItemStage: constants.StageResolve,
+		NumberOfWorkers:   numWorkers,
+		RequeueTimeout:    (1 * time.Minute),
+	}
 	deleter := &Deleter{
 		Base: Base{
-			Context:           context,
+			Context:           common.NewContext(),
+			Settings:          settings,
 			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize),
 			ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
@@ -36,14 +48,14 @@ func NewDeleter(context *common.Context, settings *Settings) *Deleter {
 	deleter.Base.ShouldSkipThis = deleter.ShouldSkipThis
 	deleter.Base.GetTaskObject = deleter.GetTaskObject
 
-	context.Logger.Info("Delete worker started with the following settings:")
-	context.Logger.Info(settings.ToJSON())
-	context.Logger.Info("Config settings (omitting sensitive credentials):")
-	context.Logger.Info(context.Config.ToJSON())
+	deleter.Context.Logger.Info("Delete worker started with the following settings:")
+	deleter.Context.Logger.Info(settings.ToJSON())
+	deleter.Context.Logger.Info("Config settings (omitting sensitive credentials):")
+	deleter.Context.Logger.Info(deleter.Context.Config.ToJSON())
 
 	// Spin up the go routines that will act as workers
 	for i := 0; i < settings.NumberOfWorkers; i++ {
-		context.Logger.Infof("Starting worker #%d", i+1)
+		deleter.Context.Logger.Infof("Starting worker #%d", i+1)
 		go deleter.ProcessItem()
 	}
 	go deleter.ProcessErrorChannel()
@@ -51,6 +63,76 @@ func NewDeleter(context *common.Context, settings *Settings) *Deleter {
 	go deleter.ProcessSuccessChannel()
 
 	return deleter
+}
+
+func (d *Deleter) ProcessSuccessChannel() {
+	for task := range d.SuccessChannel {
+		d.Context.Logger.Infof("WorkItem %d (%s) is in success channel",
+			task.WorkItem.ID, task.WorkItem.Name)
+
+		// Tell Pharos item succeeded.
+		note := fmt.Sprintf("Deletion completed at the request of %s, approved by %s.", task.WorkItem.User, task.WorkItem.InstApprover)
+		if task.WorkItem.APTrustApprover != "" {
+			note += fmt.Sprintf(" APTrust approver: %s.", task.WorkItem.APTrustApprover)
+		}
+		task.WorkItem.Note = note
+		task.WorkItem.Stage = d.Settings.NextWorkItemStage
+		task.WorkItem.Status = constants.StatusSuccess
+		task.WorkItem.Retry = false
+		task.WorkItem.NeedsAdminReview = false
+
+		d.FinishItem(task)
+
+		// Tell NSQ this b is done with this message.
+		task.NSQFinish()
+	}
+}
+
+func (d *Deleter) ProcessErrorChannel() {
+	for task := range d.ErrorChannel {
+		shouldRequeue := true
+		d.Context.Logger.Warningf("WorkItem %d (%s) is in error channel",
+			task.WorkItem.ID, task.WorkItem.Name)
+		d.Context.Logger.Warningf("Non-fatal errors for WorkItem %d (%s): %s",
+			task.WorkItem.ID, task.WorkItem.Name,
+			task.WorkResult.NonFatalErrorMessage())
+
+		// Update WorkItem in Pharos
+		task.WorkItem.Note = task.WorkResult.NonFatalErrorMessage()
+		if task.WorkResult.Attempt >= d.Settings.MaxAttempts {
+			task.WorkItem.Note += fmt.Sprintf(" Will not retry: failed %d times. Interim processing data persists.", task.WorkResult.Attempt)
+			task.WorkItem.Retry = false
+			task.WorkItem.NeedsAdminReview = true
+			shouldRequeue = false
+		}
+		d.FinishItem(task)
+		if shouldRequeue {
+			task.NSQRequeue(d.Settings.RequeueTimeout)
+		} else {
+			task.NSQFinish()
+		}
+	}
+}
+
+func (d *Deleter) ProcessFatalErrorChannel() {
+	for task := range d.FatalErrorChannel {
+		d.Context.Logger.Errorf("WorkItem %d (%s) is in fatal error channel",
+			task.WorkItem.ID, task.WorkItem.Name)
+		d.Context.Logger.Errorf("Fatal errors for WorkItem %d (%s): %s",
+			task.WorkItem.ID, task.WorkItem.Name,
+			task.WorkResult.FatalErrorMessage())
+
+		// Update WorkItem for Pharos
+		task.WorkItem.Note = task.WorkResult.FatalErrorMessage()
+		task.WorkItem.Retry = false
+		task.WorkItem.NeedsAdminReview = true
+
+		// Update Pharos and Redis
+		d.FinishItem(task)
+
+		// Tell NSQ we're done with this message.
+		task.NSQFinish()
+	}
 }
 
 func (d *Deleter) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
