@@ -55,7 +55,7 @@ func initConsumerAndTester(t *testing.T, context *common.Context) {
 	var err error
 	nsqConfig := nsq.NewConfig()
 	nsqConfig.Set("max_in_flight", 20)
-	nsqConfig.Set("max_attempts", 1) // import, or wg counter goes negative
+	nsqConfig.Set("max_attempts", 1) // important, or wg counter goes negative
 	nsqConfig.Set("heartbeat_interval", 1000)
 	consumer, err = nsq.NewConsumer("ingest_task_topic", "ingest_task_channel", nsqConfig)
 	require.Nil(t, err)

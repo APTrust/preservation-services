@@ -59,7 +59,6 @@ class TestRunner
     ingest_services = []
     names = [
       "apt_delete",
-      "ingest_bucket_reader",
       "ingest_pre_fetch",
       "ingest_validator",
       "reingest_manager",
@@ -175,7 +174,7 @@ class TestRunner
 
   def run_bucket_reader
     puts "Starting bucket reader"
-    cmd = "./bin/go-bin/ingest_bucket_reader"
+    cmd = "./bin/go-bin/ingest_bucket_reader --run-once"
     puts cmd
     pid = Process.spawn(env_hash, cmd, chdir: project_root)
     Process.wait pid

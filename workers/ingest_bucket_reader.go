@@ -22,7 +22,12 @@ func NewIngestBucketReader() *IngestBucketReader {
 	}
 }
 
-func (r *IngestBucketReader) Run() {
+func (r *IngestBucketReader) RunOnce() {
+	r.logStartup()
+	r.scanReceivingBuckets()
+}
+
+func (r *IngestBucketReader) RunAsService() {
 	r.logStartup()
 	for {
 		r.scanReceivingBuckets()

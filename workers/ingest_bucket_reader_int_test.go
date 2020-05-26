@@ -26,7 +26,7 @@ func TestIngestBucketReader_Run(t *testing.T) {
 	// Bucket reader should add four items from int_test_bags/original
 	// to the queue.
 	reader := workers.NewIngestBucketReader()
-	reader.Run()
+	reader.RunOnce()
 	assertStatsCount(t, context, preTestCount+4)
 
 	// Make sure the records are in Pharos as well.
