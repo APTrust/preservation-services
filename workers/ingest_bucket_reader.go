@@ -23,6 +23,23 @@ func NewIngestBucketReader() *IngestBucketReader {
 }
 
 func (r *IngestBucketReader) Run() {
+	r.logStartup()
+	for {
+		r.scanReceivingBuckets()
+		r.Context.Logger.Infof("Finished. Will scan again in %s",
+			r.Context.Config.IngestBucketReaderInterval.String())
+		time.Sleep(r.Context.Config.IngestBucketReaderInterval)
+	}
+}
+
+func (r *IngestBucketReader) logStartup() {
+	r.Context.Logger.Info("Starting with config settings:")
+	r.Context.Logger.Info(r.Context.Config.ToJSON())
+	r.Context.Logger.Infof("Scan interval: %s",
+		r.Context.Config.IngestBucketReaderInterval.String())
+}
+
+func (r *IngestBucketReader) scanReceivingBuckets() {
 	for _, inst := range r.LoadInstitutions() {
 		r.Context.Logger.Infof("Scanning ingest bucket for %s", inst.Identifier)
 		r.ScanBucket(inst)

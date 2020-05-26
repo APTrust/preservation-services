@@ -59,6 +59,7 @@ class TestRunner
     ingest_services = []
     names = [
       "apt_delete",
+      "ingest_bucket_reader",
       "ingest_pre_fetch",
       "ingest_validator",
       "reingest_manager",

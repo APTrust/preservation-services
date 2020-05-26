@@ -17,8 +17,12 @@ func main() {
 		os.Exit(0)
 	}
 
+	stopChan := make(chan struct{})
+
 	reader := workers.NewIngestBucketReader()
 	reader.Run()
+
+	<-stopChan
 }
 
 func printHelp() {
@@ -28,10 +32,9 @@ ingest. It creates a new WorkItem for each new bag and queues the WorkItem
 ID in the NSQ ingest pre-fetch topic.
 
 Though this accepts the common ingest worker params bufsize, max-attempts,
-and workers, it ignores them. Unlike other workers, ingest_bucket_reader
-does not run as a service. It's meant to be run as a cron job, doing its
-work and then exiting on completion. A single run can take a few seconds
-for a handful of bags, or over an hour for thousands of bags.
+and workers, it ignores them. It relies on the config setting
+INGEST_BUCKET_READER_INTERVAL to determine how long to wait after the end
+of one scan before beginning the next.
 
 `
 	fmt.Println(message)
