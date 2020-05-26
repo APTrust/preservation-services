@@ -55,7 +55,12 @@ class TestRunner
     File.delete('dump.rdb') if File.exists?('dump.rdb')
   end
 
-  def ingest_service_commands
+  # Starts all the services we need to run ingest.
+  # Param extra_services is a list of additional services
+  # to start. For example, interactive tests need the bucket
+  # reader to run as a service, so we pass in param
+  # ['ingest_bucket_reader'].
+  def ingest_service_commands(extra_services)
     ingest_services = []
     names = [
       "apt_delete",
@@ -69,6 +74,7 @@ class TestRunner
       "ingest_recorder",
       "ingest_cleanup",
     ]
+    names += extra_services
     names.each do |name|
       ingest_services.push({
         name: name,
@@ -118,7 +124,7 @@ class TestRunner
   def run_interactive(arg)
     build_ingest_services
     init_for_integration
-    start_ingest_services
+    start_ingest_services(["ingest_bucket_reader"])
     puts ">> NSQ: 'http://localhost:4171'"
     puts ">> Minio: 'http://localhost:9899' login/pwd -> minioadmin/minioadmin"
     puts ">> Pharos: 'http://localhost:9292' login/pwd -> system@aptrust.org"
@@ -172,6 +178,9 @@ class TestRunner
     create_nsq_topics
   end
 
+  # This runs the bucket reader once, as opposed to running it as
+  # a service. Use this in integration and end-to-end (e2e) tests
+  # when you want to control exactly when the bucket reader runs.
   def run_bucket_reader
     puts "Starting bucket reader"
     cmd = "./bin/go-bin/ingest_bucket_reader --run-once"
@@ -185,8 +194,8 @@ class TestRunner
     Process.wait build_pid
   end
 
-  def start_ingest_services
-    self.ingest_service_commands.each do |svc|
+  def start_ingest_services(extra_services)
+    self.ingest_service_commands(extra_services).each do |svc|
       puts "Starting #{svc['name']}"
       self.start_service(svc)
     end
