@@ -32,6 +32,7 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, "wasabi-or", config.BucketWasabiOR)
 	assert.Equal(t, "wasabi-va", config.BucketWasabiVA)
 	assert.Equal(t, "test", config.ConfigName)
+	assert.Equal(t, time.Duration(1*time.Minute), config.IngestBucketReaderInterval)
 	assert.Equal(t, tempDir, config.IngestTempDir)
 	assert.Equal(t, logDir, config.LogDir)
 	assert.Equal(t, logging.DEBUG, config.LogLevel)

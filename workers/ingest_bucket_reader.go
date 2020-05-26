@@ -12,8 +12,6 @@ import (
 	"github.com/minio/minio-go/v6"
 )
 
-// TODO: Create pid file and exit if other bucket reader is running
-
 type IngestBucketReader struct {
 	Context *common.Context
 }
