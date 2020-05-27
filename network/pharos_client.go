@@ -1010,9 +1010,13 @@ func (client *PharosClient) DoRequest(resp *PharosResponse, method, absoluteURL 
 
 	if resp.Error == nil && resp.Response.StatusCode >= 400 {
 		body, _ := resp.RawResponseData()
+		// Setting url.Opaque ruins url.String(),
+		// so we have to roll our own.
+		urlStr := fmt.Sprintf("%s://%s:%s%s", request.URL.Scheme, request.URL.Host,
+			request.URL.Path, request.URL.Opaque)
 		resp.Error = fmt.Errorf("Server returned status code %d. "+
 			"%s %s - Body: %s",
-			resp.Response.StatusCode, method, request.URL.String(), string(body))
+			resp.Response.StatusCode, method, urlStr, string(body))
 	}
 }
 
