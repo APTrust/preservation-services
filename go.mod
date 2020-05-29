@@ -14,7 +14,7 @@ require (
 	github.com/richardlehane/siegfried v1.8.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/viper v1.7.0
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.0
 	golang.org/x/lint v0.0.0-20200130185559-910be7a94367 // indirect
 	golang.org/x/tools v0.0.0-20200226224502-204d844ad48d // indirect
 	golang.org/x/tools/gopls v0.2.2 // indirect
