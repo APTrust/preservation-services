@@ -58,3 +58,12 @@ Note: Integration test files end with `_int_test.go` and include the following b
 Logs, NSQ, temp files and Redis aof files are in `/data/preserv`.
 
 Source tree is in `/srv/docker/preserv`
+
+To see stdout and stderr of workers:
+
+```
+cd /srv/docker/preserv
+sudo docker-compose logs -f ingest_staging_uploader
+```
+
+...or `sudo docker-compose logs -f` to tail all services
