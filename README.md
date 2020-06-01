@@ -53,6 +53,14 @@ Note: Integration test files end with `_int_test.go` and include the following b
 
 ```
 
+# Docker Build & Deploy
+
+Wait for Travis to build the docker containers, or build locally with `make release`.
+
+Regardless of where the container build is initiated, deploy with ansible:
+
+`ansible-playbook preserv.staging.docker.yml --diff`
+
 # Deployment Notes
 
 Logs, NSQ, temp files and Redis aof files are in `/data/preserv`.
