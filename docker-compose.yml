@@ -100,6 +100,17 @@ services:
          - gateway
       ports:
          - "4171:4171"
+      labels:
+         - "traefik.enable=true"
+           # - "traefik.http.routers.nsqadmin.rule=Host(`${VIRTUAL_HOST:-localhost}`)"
+         - "traefik.http.routers.nsqadmin.rule=Host(`${DOCKER_DOMAIN:-localhost}`)"
+         - "traefik.http.routers.nsqadmin.entrypoints=nsqadmin"
+         - "traefik.http.routers.nsqadmin.tls=true"
+         - "traefik.http.routers.nsqadmin.tls.certresolver=le"
+         - "traefik.http.services.nsqadmin.loadbalancer.server.port=4171"
+         - "traefik.http.middlewares.admin.basicauth.users=admin:$$2y$$05$$ngKkHMr5f3AdFbfSZ9fjkO5UQxzdcWVtBoMoGbx/eFXQS3pl42iqu"
+
+
    redis:
       image: redis:6.0-alpine
       restart: always
