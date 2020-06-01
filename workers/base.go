@@ -189,12 +189,12 @@ func (b *Base) GetWorkItem(message *nsq.Message) (*registry.WorkItem, *service.P
 	workItemID, err := strconv.Atoi(string(msgBody))
 	if err != nil || workItemID == 0 {
 		fullErr := fmt.Errorf("Could not get WorkItemId from NSQ message body: %v", err)
-		return nil, b.Error(0, msgBody, fullErr, false)
+		return nil, b.Error(0, msgBody, fullErr, true)
 	}
 	resp := b.Context.PharosClient.WorkItemGet(workItemID)
 	if resp.Error != nil {
 		fullErr := fmt.Errorf("Error getting WorkItem %d from Pharos: %v", workItemID, resp.Error)
-		return nil, b.Error(workItemID, msgBody, fullErr, false)
+		return nil, b.Error(workItemID, msgBody, fullErr, true)
 	}
 	workItem := resp.WorkItem()
 	if workItem == nil {
