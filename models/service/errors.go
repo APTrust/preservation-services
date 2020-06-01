@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"runtime"
+	"runtime/debug"
 )
 
 // ProcessingError contains detailed information about an error that
@@ -24,6 +25,9 @@ type ProcessingError struct {
 	// Source contains the file name and line number where the error
 	// occurred.
 	Source string
+
+	// Stack is the stack trace.
+	Stack string
 
 	// WorkItemID is the ID of the WorkItem being processed when the
 	// error occurree.
@@ -53,6 +57,7 @@ func NewProcessingError(workItemID int, identifier, message string, isFatal bool
 		IsFatal:    isFatal,
 		Message:    message,
 		Source:     source,
+		Stack:      string(debug.Stack()),
 		WorkItemID: workItemID,
 	}
 }
@@ -67,6 +72,6 @@ func (e *ProcessingError) Error() string {
 		source = e.Source
 	}
 	return fmt.Sprintf("(workitem %d) (message: %s) (severity: %s) "+
-		"(identifier: %s) (source: %s)", e.WorkItemID, e.Message,
-		severity, e.Identifier, source)
+		"(identifier: %s) (source: %s) (stack: %s)", e.WorkItemID, e.Message,
+		severity, e.Identifier, source, e.Stack)
 }

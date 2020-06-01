@@ -52,3 +52,9 @@ Note: Integration test files end with `_int_test.go` and include the following b
 // +build integration
 
 ```
+
+# Deployment Notes
+
+Logs, NSQ, temp files and Redis aof files are in `/data/preserv`.
+
+Source tree is in `/srv/docker/preserv`
