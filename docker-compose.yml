@@ -73,8 +73,14 @@ services:
       env_file:
          - .env.docker
       networks:
-         - default
-         - gateway
+         default:
+            aliases:
+               - nsqd
+               - "${NSQ_BROADCAST_ADDRESS}"
+         gateway:
+            aliases:
+               - nsqd
+               - "${NSQ_BROADCAST_ADDRESS}"
       depends_on:
          - nsqlookupd
       ports:
