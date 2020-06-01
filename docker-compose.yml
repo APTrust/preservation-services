@@ -45,7 +45,7 @@ services:
       image: aptrust/ingest_validator:${DOCKER_TAG_NAME:-latest}
       <<: *default
    reingest_manager:
-      image: aptrust/ingest_validator:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/reingest_manager:${DOCKER_TAG_NAME:-latest}
       <<: *default
    nsqlookupd:
       image: nsqio/nsq:v1.2.0
