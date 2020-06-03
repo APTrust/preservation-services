@@ -111,6 +111,10 @@ func (b *IngestBase) ProcessErrorChannel() {
 			task.WorkItem.NeedsAdminReview = true
 			shouldRequeue = false
 
+			// Clear this, so if it's manually requeued,
+			// it will get a new set of attempts.
+			task.WorkResult.Attempt = 0
+
 			// Go to NSQ cleanup or not?
 			if b.Settings.PushToCleanupAfterMaxFailedAttempts {
 				task.Processor.GetIngestObject().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterMaxFailedAttempts
