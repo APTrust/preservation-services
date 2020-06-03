@@ -56,7 +56,7 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		for _, uploadTarget := range uploadTargets {
 			if !ingestFile.NeedsSaveAt(uploadTarget.Provider, uploadTarget.Bucket) {
-				uploader.Context.Logger.Infof("Skipping: %s already uploaded to %s/%s", uploadTarget.Provider, uploadTarget.Bucket)
+				uploader.Context.Logger.Infof("Skipping: %s already uploaded to %s/%s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket)
 				continue
 			}
 			uploader.Context.Logger.Infof("Copying %s to %s/%s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket)
