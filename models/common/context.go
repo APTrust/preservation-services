@@ -2,6 +2,8 @@ package common
 
 import (
 	"fmt"
+	"os"
+	"path"
 
 	"github.com/APTrust/preservation-services/network"
 	"github.com/APTrust/preservation-services/util/logger"
@@ -25,13 +27,14 @@ type Context struct {
 
 func NewContext() *Context {
 	config := NewConfig()
+	_logger := getLogger(config)
 	return &Context{
 		Config:       config,
-		Logger:       getLogger(config),
+		Logger:       _logger,
 		NSQClient:    getNsqClient(config),
 		PharosClient: getPharosClient(config),
 		RedisClient:  getRedisClient(config),
-		S3Clients:    getS3Clients(config),
+		S3Clients:    getS3Clients(config, _logger),
 	}
 }
 
@@ -64,7 +67,8 @@ func getPharosClient(config *Config) *network.PharosClient {
 	return client
 }
 
-func getS3Clients(config *Config) map[string]*minio.Client {
+func getS3Clients(config *Config, logger *logging.Logger) map[string]*minio.Client {
+	processName := path.Base(os.Args[0])
 	s3Clients := make(map[string]*minio.Client, len(config.S3Credentials))
 	useSSL := true
 	if config.ConfigName == "dev" || config.ConfigName == "test" {
@@ -75,6 +79,7 @@ func getS3Clients(config *Config) map[string]*minio.Client {
 		if creds == nil {
 			panic(fmt.Sprintf("Missing credentials for S3 host %s", target.Host))
 		}
+		logger.Infof("[%s] Initializing S3 client '%s' for provider %s, host %s, bucket %s in region %s", processName, target.Description, target.Provider, creds.Host, target.Bucket, target.Region)
 		client, err := minio.NewWithRegion(
 			creds.Host,
 			creds.KeyID,
