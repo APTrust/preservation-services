@@ -56,8 +56,10 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		for _, uploadTarget := range uploadTargets {
 			if !ingestFile.NeedsSaveAt(uploadTarget.Provider, uploadTarget.Bucket) {
+				uploader.Context.Logger.Infof("Skipping: %s already uploaded to %s/%s", uploadTarget.Provider, uploadTarget.Bucket)
 				continue
 			}
+			uploader.Context.Logger.Infof("Copying %s to %s/%s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket)
 			var processingError *service.ProcessingError
 			if uploadTarget.Provider == constants.StorageProviderAWS {
 				processingError = uploader.CopyToAWSPreservation(ingestFile, uploadTarget)
@@ -77,6 +79,7 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 					StoredAt: time.Now().UTC(),
 					URL:      uploadTarget.URLFor(ingestFile.UUID),
 				}
+				uploader.Context.Logger.Infof("Copied %s to %s/%s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket)
 				ingestFile.SetStorageRecord(storageRecord)
 			}
 		}
@@ -93,6 +96,7 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) *service.ProcessingError {
 	client, err := uploader.getS3Client(uploadTarget.Provider)
 	if err != nil {
+		uploader.Context.Logger.Error(err, ingestFile.Identifier())
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	// Comments at https://github.com/minio/minio-go/blob/44ba45c1aa02cff384a840fe35950b50978bf620/api-compose-object.go#L48-L56
@@ -112,10 +116,12 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 		nil,
 	)
 	if err != nil {
+		uploader.Context.Logger.Infof("Error getting destination info for %s (%s/%s): %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	err = client.CopyObject(destInfo, sourceInfo)
 	if err != nil {
+		uploader.Context.Logger.Infof("Error copying %s to %s/%s: %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	return nil
@@ -135,10 +141,12 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) *service.ProcessingError {
 	srcClient, err := uploader.getS3Client(constants.StorageProviderAWS)
 	if err != nil {
+		uploader.Context.Logger.Error(ingestFile.Identifier(), err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	destClient, err := uploader.getS3Client(uploadTarget.Provider)
 	if err != nil {
+		uploader.Context.Logger.Error(ingestFile.Identifier(), err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	srcObject, err := srcClient.GetObject(
@@ -147,10 +155,12 @@ func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *ser
 		minio.GetObjectOptions{},
 	)
 	if err != nil {
+		uploader.Context.Logger.Infof("Error getting source object for %s (%s/%s): %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	putOptions, err := ingestFile.GetPutOptions()
 	if err != nil {
+		uploader.Context.Logger.Infof("Error getting PutOptions for %s (%s/%s): %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	bytesCopied, err := destClient.PutObject(
@@ -161,6 +171,7 @@ func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *ser
 		putOptions,
 	)
 	if err != nil {
+		uploader.Context.Logger.Infof("Error copying %s to %s/%s: %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	if bytesCopied != ingestFile.Size {
