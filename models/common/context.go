@@ -70,16 +70,21 @@ func getS3Clients(config *Config) map[string]*minio.Client {
 	if config.ConfigName == "dev" || config.ConfigName == "test" {
 		useSSL = false // talking to localhost in dev and test
 	}
-	for name, creds := range config.S3Credentials {
-		client, err := minio.New(
+	for _, target := range config.UploadTargets {
+		creds := config.CredentialsForS3Host(target.Host)
+		if creds == nil {
+			panic(fmt.Sprintf("Missing credentials for S3 host %s", target.Host))
+		}
+		client, err := minio.NewWithRegion(
 			creds.Host,
 			creds.KeyID,
 			creds.SecretKey,
-			useSSL)
+			useSSL,
+			target.Region)
 		if err != nil {
 			panic(err)
 		}
-		s3Clients[name] = client
+		s3Clients[target.Provider] = client
 	}
 	return s3Clients
 }

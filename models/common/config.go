@@ -53,7 +53,7 @@ type Config struct {
 	RedisUser                  string `json:"-"`
 	RestoreDir                 string
 	S3AWSHost                  string
-	S3Credentials              map[string]S3Credentials `json:"-"`
+	S3Credentials              map[string]*S3Credentials `json:"-"`
 	S3LocalHost                string
 	S3WasabiHost               string
 	StagingBucket              string
@@ -147,18 +147,18 @@ func loadConfig() *Config {
 		RedisUser:                  v.GetString("REDIS_USER"),
 		RestoreDir:                 v.GetString("RESTORE_DIR"),
 		S3AWSHost:                  v.GetString("S3_AWS_HOST"),
-		S3Credentials: map[string]S3Credentials{
-			constants.StorageProviderAWS: S3Credentials{
+		S3Credentials: map[string]*S3Credentials{
+			constants.StorageProviderAWS: &S3Credentials{
 				Host:      v.GetString("S3_AWS_HOST"),
 				KeyID:     v.GetString("S3_AWS_KEY"),
 				SecretKey: v.GetString("S3_AWS_SECRET"),
 			},
-			constants.StorageProviderLocal: S3Credentials{
+			constants.StorageProviderLocal: &S3Credentials{
 				Host:      v.GetString("S3_LOCAL_HOST"),
 				KeyID:     v.GetString("S3_LOCAL_KEY"),
 				SecretKey: v.GetString("S3_LOCAL_SECRET"),
 			},
-			constants.StorageProviderWasabi: S3Credentials{
+			constants.StorageProviderWasabi: &S3Credentials{
 				Host:      v.GetString("S3_WASABI_HOST"),
 				KeyID:     v.GetString("S3_WASABI_KEY"),
 				SecretKey: v.GetString("S3_WASABI_SECRET"),
@@ -171,6 +171,17 @@ func loadConfig() *Config {
 		StagingUploadRetryMs: v.GetDuration("STAGING_UPLOAD_RETRY_MS"),
 		VolumeServiceURL:     v.GetString("VOLUME_SERVICE_URL"),
 	}
+}
+
+// CredentialsForS3Host returns the credentials for the specifed
+// S3 host, or nil if no credentials exist for that host.
+func (config *Config) CredentialsForS3Host(host string) (credentials *S3Credentials) {
+	for _, c := range config.S3Credentials {
+		if c.Host == host {
+			credentials = c
+		}
+	}
+	return credentials
 }
 
 // UploadTargetFor returns the upload targets for the specified storage option.
