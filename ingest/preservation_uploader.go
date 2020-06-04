@@ -61,7 +61,16 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 			}
 			uploader.Context.Logger.Infof("Copying %s to %s/%s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket)
 			var processingError *service.ProcessingError
-			if uploadTarget.Provider == constants.StorageProviderAWS {
+
+			// Hate to do this but we can only use Minio.CopyObject within
+			// AWS us-east-1. The Minio client cannot find buckets with path-based
+			// names outside of us-east-1, and we can't yet switch to virtual
+			// host names because all our bucket names contain periods.
+			// So for now, copies to anything outside AWS us-east-1 have to
+			// use the inefficient CopyToExternalPreservation which streams
+			// from source bucket to destination bucket through this server.
+			if uploadTarget.Provider == constants.StorageProviderAWS &&
+				uploadTarget.Region == constants.RegionAWSUSEast1 {
 				processingError = uploader.CopyToAWSPreservation(ingestFile, uploadTarget)
 			} else {
 				processingError = uploader.CopyToExternalPreservation(ingestFile, uploadTarget)
@@ -119,6 +128,7 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 		uploader.Context.Logger.Infof("Error getting destination info for %s (%s/%s): %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
+	uploader.Context.Logger.Infof("Copying %s from %s to %s using CopyObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket)
 	err = client.CopyObject(destInfo, sourceInfo)
 	if err != nil {
 		uploader.Context.Logger.Infof("Error copying %s to %s/%s: %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
@@ -163,6 +173,9 @@ func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *ser
 		uploader.Context.Logger.Infof("Error getting PutOptions for %s (%s/%s): %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
+
+	uploader.Context.Logger.Infof("Copying %s from %s to %s using PutObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket)
+
 	bytesCopied, err := destClient.PutObject(
 		uploadTarget.Bucket,
 		ingestFile.UUID,

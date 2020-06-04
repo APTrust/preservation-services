@@ -6,7 +6,6 @@ import (
 	"github.com/APTrust/preservation-services/network"
 	"github.com/APTrust/preservation-services/util/logger"
 	"github.com/minio/minio-go/v6"
-	"github.com/minio/minio-go/v6/pkg/credentials"
 	"github.com/op/go-logging"
 )
 
@@ -76,12 +75,11 @@ func getS3Clients(config *Config, logger *logging.Logger) map[string]*minio.Clie
 	// Note there's also credentials.NewStaticV2 for providers
 	// who don't support V4.
 	for provider, creds := range config.S3Credentials {
-		opts := &minio.Options{
-			Creds:        credentials.NewStaticV4(creds.KeyID, creds.SecretKey, ""),
-			Secure:       useSSL,
-			BucketLookup: minio.BucketLookupPath,
-		}
-		client, err := minio.NewWithOptions(creds.Host, opts)
+		client, err := minio.New(
+			creds.Host,
+			creds.KeyID,
+			creds.SecretKey,
+			useSSL)
 		if err != nil {
 			panic(err)
 		}
