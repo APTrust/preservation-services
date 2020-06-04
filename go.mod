@@ -19,5 +19,3 @@ require (
 	golang.org/x/tools v0.0.0-20200226224502-204d844ad48d // indirect
 	golang.org/x/tools/gopls v0.2.2 // indirect
 )
-
-replace github.com/minio/minio-go/v6 => github.com/APTrust/minio-go/v6 v6.0.57
