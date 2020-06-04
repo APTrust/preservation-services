@@ -62,15 +62,7 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 			uploader.Context.Logger.Infof("Copying %s to %s/%s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket)
 			var processingError *service.ProcessingError
 
-			// Hate to do this but we can only use Minio.CopyObject within
-			// AWS us-east-1. The Minio client cannot find buckets with path-based
-			// names outside of us-east-1, and we can't yet switch to virtual
-			// host names because all our bucket names contain periods.
-			// So for now, copies to anything outside AWS us-east-1 have to
-			// use the inefficient CopyToExternalPreservation which streams
-			// from source bucket to destination bucket through this server.
-			if uploadTarget.Provider == constants.StorageProviderAWS &&
-				uploadTarget.Region == constants.RegionAWSUSEast1 {
+			if uploadTarget.Provider == constants.StorageProviderAWS {
 				processingError = uploader.CopyToAWSPreservation(ingestFile, uploadTarget)
 			} else {
 				processingError = uploader.CopyToExternalPreservation(ingestFile, uploadTarget)
