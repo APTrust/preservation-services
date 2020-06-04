@@ -67,7 +67,9 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 
 	c.Context.Logger.Infof("WorkItem %d: cleaning up items in bucket %s with prefix %s", c.WorkItemID, stagingBucket, prefix)
 	for obj := range s3Client.ListObjects(stagingBucket, prefix, true, doneCh) {
-		if obj.Key == "" {
+		// Filter out empty keys and ones like "staging.edu/btr-bag".
+		// How do these even get into the list?
+		if !strings.HasPrefix(obj.Key, prefix) {
 			continue
 		}
 		if obj.Err != nil {
