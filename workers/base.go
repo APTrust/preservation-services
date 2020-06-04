@@ -105,6 +105,7 @@ func (b *Base) RegisterAsNsqConsumer() error {
 	config := nsq.NewConfig()
 	//config.Set("msg_timeout", "600m")
 	config.Set("heartbeat_interval", "10s")
+	config.Set("max_in_flight", b.Settings.ChannelBufferSize)
 	consumer, err := nsq.NewConsumer(b.Settings.NSQTopic, b.Settings.NSQChannel, config)
 	if err != nil {
 		return err
