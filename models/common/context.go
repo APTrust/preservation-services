@@ -2,12 +2,11 @@ package common
 
 import (
 	"fmt"
-	"os"
-	"path"
 
 	"github.com/APTrust/preservation-services/network"
 	"github.com/APTrust/preservation-services/util/logger"
 	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v6/pkg/credentials"
 	"github.com/op/go-logging"
 )
 
@@ -68,28 +67,25 @@ func getPharosClient(config *Config) *network.PharosClient {
 }
 
 func getS3Clients(config *Config, logger *logging.Logger) map[string]*minio.Client {
-	processName := path.Base(os.Args[0])
 	s3Clients := make(map[string]*minio.Client, len(config.S3Credentials))
 	useSSL := true
 	if config.ConfigName == "dev" || config.ConfigName == "test" {
 		useSSL = false // talking to localhost in dev and test
 	}
-	for _, target := range config.UploadTargets {
-		creds := config.CredentialsForS3Host(target.Host)
-		if creds == nil {
-			panic(fmt.Sprintf("Missing credentials for S3 host %s", target.Host))
+	// Use NewWithOptions to force bucket lookup by path.
+	// Note there's also credentials.NewStaticV2 for providers
+	// who don't support V4.
+	for provider, creds := range config.S3Credentials {
+		opts := &minio.Options{
+			Creds:        credentials.NewStaticV4(creds.KeyID, creds.SecretKey, ""),
+			Secure:       useSSL,
+			BucketLookup: minio.BucketLookupPath,
 		}
-		logger.Infof("[%s] Initializing S3 client '%s' for provider %s, host %s, bucket %s in region %s", processName, target.Description, target.Provider, creds.Host, target.Bucket, target.Region)
-		client, err := minio.NewWithRegion(
-			creds.Host,
-			creds.KeyID,
-			creds.SecretKey,
-			useSSL,
-			target.Region)
+		client, err := minio.NewWithOptions(creds.Host, opts)
 		if err != nil {
 			panic(err)
 		}
-		s3Clients[target.Provider] = client
+		s3Clients[provider] = client
 	}
 	return s3Clients
 }
