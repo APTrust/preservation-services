@@ -65,6 +65,7 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 	doneCh := make(chan struct{})
 	defer close(doneCh)
 
+	c.Context.Logger.Infof("WorkItem %d: cleaning up items in bucket %s with prefix %s", c.WorkItemID, stagingBucket, prefix)
 	for obj := range s3Client.ListObjects(stagingBucket, prefix, true, doneCh) {
 		if obj.Err != nil {
 			identifier := c.IngestObject.Identifier()
