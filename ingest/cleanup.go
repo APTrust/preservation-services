@@ -67,13 +67,12 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 
 	c.Context.Logger.Infof("WorkItem %d: cleaning up items in bucket %s with prefix %s", c.WorkItemID, stagingBucket, prefix)
 	for obj := range s3Client.ListObjects(stagingBucket, prefix, true, doneCh) {
+		if obj.Key == "" {
+			continue
+		}
 		if obj.Err != nil {
-			identifier := c.IngestObject.Identifier()
-			if obj.Key != "" {
-				identifier = obj.Key
-			}
-			errors = append(errors, c.Error(identifier, obj.Err, false))
-			c.Context.Logger.Infof("Error listing item: %s/%s - %s", stagingBucket, identifier, obj.Err.Error())
+			errors = append(errors, c.Error(obj.Key, obj.Err, false))
+			c.Context.Logger.Infof("Error listing item: %s/%s - %s", stagingBucket, obj.Key, obj.Err.Error())
 			if len(errors) > maxErrors {
 				return fileCount, errors
 			}
