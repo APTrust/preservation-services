@@ -187,10 +187,16 @@ func TestPharosInstitutionList(t *testing.T) {
 		fmt.Sprintf("/api/v2/institutions/?%s", v.Encode()),
 		resp.Request.URL.Opaque)
 	institutions := resp.Institutions()
-	assert.Equal(t, len(InstFixtures), len(institutions))
+	// We have one more institution than what's in the fixtures
+	// because a rake task creates staging.edu when the Pharos
+	// container starts up.
+	assert.Equal(t, len(InstFixtures)+1, len(institutions))
+
 	// Make sure we got the expected items in our list of 4
 	for _, inst := range institutions {
-		assert.NotNil(t, InstFixtures[inst.Identifier])
+		if inst.Identifier != "staging.edu" {
+			assert.NotNil(t, InstFixtures[inst.Identifier])
+		}
 	}
 }
 
