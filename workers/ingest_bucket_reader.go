@@ -46,6 +46,11 @@ func (r *IngestBucketReader) logStartup() {
 
 func (r *IngestBucketReader) scanReceivingBuckets() {
 	for _, inst := range r.LoadInstitutions() {
+		// Pharos needs to provide proper filtering on Institutions controller
+		if inst.State == "D" {
+			r.Context.Logger.Infof("Skipping inactive institution %s", inst.Identifier)
+			continue
+		}
 		r.Context.Logger.Infof("Scanning ingest bucket for %s", inst.Identifier)
 		r.ScanBucket(inst)
 	}
