@@ -121,7 +121,18 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	uploader.Context.Logger.Infof("Copying %s from %s to %s using CopyObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket)
-	err = client.CopyObject(destInfo, sourceInfo)
+
+	// CopyObject handles objects only up to 5GB.
+	//err = client.CopyObject(destInfo, sourceInfo)
+
+	// ComposeObject *should* handle objects of any size.
+	// Initial Minio bug report: https://github.com/minio/minio-go/pull/644
+	// Migrated to: https://github.com/minio/minio-go/pull/715
+	sources := []minio.SourceInfo{
+		sourceInfo,
+	}
+	err = client.ComposeObject(destInfo, sources)
+
 	if err != nil {
 		uploader.Context.Logger.Infof("Error copying %s to %s/%s: %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
