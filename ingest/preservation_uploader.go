@@ -120,7 +120,7 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 		uploader.Context.Logger.Infof("Error getting destination info for %s (%s/%s): %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
-	uploader.Context.Logger.Infof("Copying %s from %s to %s using CopyObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket)
+	uploader.Context.Logger.Infof("Copying %s from %s to %s using ComposeObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket)
 
 	// CopyObject handles objects only up to 5GB.
 	//err = client.CopyObject(destInfo, sourceInfo)
