@@ -294,6 +294,8 @@ func (b *Base) OtherWorkerIsHandlingThis(workItem *registry.WorkItem) bool {
 // worker.
 func (b *Base) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
 	if b.ItemsInProcess.Contains(strconv.Itoa(workItem.ID)) {
+		// Node and pid may be empty if this was manually requeued. Reset them.
+		workItem.SetNodeAndPid()
 		b.Context.Logger.Infof("Skipping WorkItem %d because this worker is already working on it host %s, pid %d", workItem.ID, workItem.Node, workItem.Pid)
 		return true
 	}
