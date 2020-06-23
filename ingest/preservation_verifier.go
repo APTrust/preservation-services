@@ -47,6 +47,7 @@ func (v *PreservationVerifier) Run() (int, []*service.ProcessingError) {
 func (v *PreservationVerifier) getVerifyFunction() func(*service.IngestFile) (errors []*service.ProcessingError) {
 	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		for _, record := range ingestFile.StorageRecords {
+			v.Context.Logger.Infof("Verifying %s (%s) in %s %s", ingestFile.Identifier(), ingestFile.UUID, record.Provider, record.Bucket)
 			objInfo, err := v.Context.S3StatObject(
 				record.Provider,
 				record.Bucket,
@@ -54,6 +55,7 @@ func (v *PreservationVerifier) getVerifyFunction() func(*service.IngestFile) (er
 			)
 			// Should check err type -> "no such key" should be fatal
 			if err != nil {
+				v.Context.Logger.Errorf("Error for %s (%s) in %s %s: %v", ingestFile.Identifier(), ingestFile.UUID, record.Provider, record.Bucket, err)
 				errors = append(errors, v.Error(ingestFile.Identifier(), err, false))
 			} else {
 				record.ETag = strings.Replace(objInfo.ETag, "\"", "", -1)
@@ -62,6 +64,7 @@ func (v *PreservationVerifier) getVerifyFunction() func(*service.IngestFile) (er
 					record.VerifiedAt = time.Now().UTC()
 				} else {
 					err = fmt.Errorf("Preservation size %d does not match recorded file size %d", record.Size, ingestFile.Size)
+					v.Context.Logger.Errorf("Error for %s (%s) in %s %s: %v", ingestFile.Identifier(), ingestFile.UUID, record.Provider, record.Bucket, err)
 					record.Error = err.Error()
 					errors = append(errors, v.Error(ingestFile.Identifier(), err, false))
 				}

@@ -56,10 +56,10 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		for _, uploadTarget := range uploadTargets {
 			if !ingestFile.NeedsSaveAt(uploadTarget.Provider, uploadTarget.Bucket) {
-				uploader.Context.Logger.Infof("Skipping: %s already uploaded to %s/%s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket)
+				uploader.Context.Logger.Infof("Skipping: %s already uploaded to %s/%s as %s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, ingestFile.UUID)
 				continue
 			}
-			uploader.Context.Logger.Infof("Copying %s to %s/%s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket)
+			uploader.Context.Logger.Infof("Copying %s to %s/%s as %s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, ingestFile.UUID)
 			var processingError *service.ProcessingError
 
 			if uploadTarget.Provider == constants.StorageProviderAWS {
@@ -80,7 +80,7 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 					StoredAt: time.Now().UTC(),
 					URL:      uploadTarget.URLFor(ingestFile.UUID),
 				}
-				uploader.Context.Logger.Infof("Copied %s to %s/%s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket)
+				uploader.Context.Logger.Infof("Copied %s to %s/%s as %s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, ingestFile.UUID)
 				ingestFile.SetStorageRecord(storageRecord)
 			}
 		}
@@ -120,7 +120,7 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 		uploader.Context.Logger.Infof("Error getting destination info for %s (%s/%s): %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
-	uploader.Context.Logger.Infof("Copying %s from %s to %s using ComposeObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket)
+	uploader.Context.Logger.Infof("Copying %s from %s to %s as %s using ComposeObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket, ingestFile.UUID)
 
 	// CopyObject handles objects only up to 5GB.
 	//err = client.CopyObject(destInfo, sourceInfo)
@@ -134,7 +134,7 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 	err = client.ComposeObject(destInfo, sources)
 
 	if err != nil {
-		uploader.Context.Logger.Infof("Error copying %s to %s/%s: %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
+		uploader.Context.Logger.Infof("Error copying %s (%s) to %s/%s: %v", ingestFile.Identifier(), ingestFile.UUID, uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	return nil
@@ -177,7 +177,7 @@ func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *ser
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 
-	uploader.Context.Logger.Infof("Copying %s from %s to %s using PutObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket)
+	uploader.Context.Logger.Infof("Copying %s (%s) from %s to %s using PutObject()", ingestFile.Identifier(), ingestFile.UUID, uploader.Context.Config.StagingBucket, uploadTarget.Bucket)
 
 	bytesCopied, err := destClient.PutObject(
 		uploadTarget.Bucket,
@@ -187,11 +187,11 @@ func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *ser
 		putOptions,
 	)
 	if err != nil {
-		uploader.Context.Logger.Infof("Error copying %s to %s/%s: %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
+		uploader.Context.Logger.Infof("Error copying %s (%s) to %s/%s: %v", ingestFile.Identifier(), ingestFile.UUID, uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	if bytesCopied != ingestFile.Size {
-		err = fmt.Errorf("Copied only %d of %d bytes from staging to preservation", bytesCopied, ingestFile.Size)
+		err = fmt.Errorf("Copied only %d of %d bytes from staging to preservation (UUID %s)", bytesCopied, ingestFile.Size, ingestFile.UUID)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	return nil
