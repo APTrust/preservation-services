@@ -53,6 +53,12 @@ Note: Integration test files end with `_int_test.go` and include the following b
 
 ```
 
+# Interactive Testing
+
+You can launch interactive tests with `./scripts/test.rb interactive`
+
+If you're going to tweak Pharos code during interactive tests, be sure to set `config.cache_classes = true` in the Pharos file `config/envionments/docker_integration.rb`.
+
 # Docker Build & Deploy
 
 Wait for Travis to build the docker containers, or build locally with `make release`.
