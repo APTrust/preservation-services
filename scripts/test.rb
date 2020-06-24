@@ -124,7 +124,11 @@ class TestRunner
 
   # Force docker to load Pharos code, or the bucket reader's
   # initial call will fail and the bucket reader will quit,
-  # thinking Pharos is unavailable..
+  # thinking Pharos is unavailable. This key works for local
+  # dev and integration tests only. It's hard-coded into the
+  # Pharos integration setup.
+  #
+  # TODO: Read from .env file instead of hard-coding?
   def force_docker_to_load_pharos_code
     10.times do
       begin
