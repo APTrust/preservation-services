@@ -113,6 +113,7 @@ class TestRunner
 
   def run_integration_tests(arg)
     init_for_integration
+    force_docker_to_load_pharos_code
     puts "Starting integration tests..."
     arg = "./..." if arg.nil?
     cmd = "go test -p 1 -tags=integration #{arg}"
