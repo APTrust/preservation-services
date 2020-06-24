@@ -4,6 +4,7 @@
 # Run unit and integration tests for preservation-services.
 
 require 'fileutils'
+require 'net/http'
 require 'optparse'
 
 class TestRunner
@@ -121,9 +122,29 @@ class TestRunner
     self.print_results
   end
 
+  # Force docker to load Pharos code, or the bucket reader's
+  # initial call will fail and the bucket reader will quit,
+  # thinking Pharos is unavailable..
+  def force_docker_to_load_pharos_code
+    10.times do
+      begin
+        req = Net::HTTP::Get.new(URI('http://localhost:9292/institutions'))
+        req['X-Pharos-API-User'] = 'system@aptrust.org'
+	    req['X-Pharos-API-Key'] = 'c3958c7b09e40af1d065020484dafa9b2a35cea0'
+        http.request(req)
+        puts 'Connected to Pharos'
+        break
+      rescue
+        puts 'Trying to connect to Pharos...'
+        sleep(3)
+      end
+    end
+  end
+
   def run_interactive(arg)
     build_ingest_services
     init_for_integration
+    force_docker_to_load_pharos_code
     start_ingest_services(["ingest_bucket_reader"])
     puts ">> NSQ: 'http://localhost:4171'"
     puts ">> Minio: 'http://localhost:9899' login/pwd -> minioadmin/minioadmin"
