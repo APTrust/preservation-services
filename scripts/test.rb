@@ -326,7 +326,10 @@ class TestRunner
       puts "Using existing Pharos container (use --rebuild if you want a new one)"
     end
 
-    docker_start_pid = Process.spawn("make integration", chdir: pharos_root)
+    # Note that we have to both cd into pharos_root AND overwrite PWD
+    # with pharos_root. The Pharos Makefile accesses PWD, which remains
+    # set to THIS directory even when telling spawn to chdir.
+    docker_start_pid = Process.spawn({ 'PWD' => pharos_root }, "make integration", chdir: pharos_root)
 	Process.wait docker_start_pid
 
     @pharos_started = true
