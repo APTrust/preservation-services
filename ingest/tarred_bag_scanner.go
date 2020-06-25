@@ -3,6 +3,7 @@ package ingest
 import (
 	"archive/tar"
 	"crypto/md5"
+	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
@@ -121,16 +122,28 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 
 // Calculates the file's checksums, and saves it to a temp file
 // if the file is a manifest, tag manifest, or parsable tag file.
-// Note that we currently calculate only md5, sha256, and sha512 digests.
+// Note that we currently calculate only md5, sha1, sha256, and sha512 digests.
 // Standard is now sha512, and we will phase out md5 and sha256 for ingest
 // over time. However, for fixity checking, we have millions of legacy
 // files with md5 and sha256.
+//
+// TODO: We should probably make this more efficient. Don't calculate digests
+// we don't need, just the ones specified in the BagIt profile, or the
+// ones present in the bag.
+//
+// However, we do need to keep md5 and sha256 for APTrust legacy reasons,
+// and we likely need to keep sha1 because the BTR bag export built in to
+// Fedora and D-Space may add this manifest by default. We definitely
+// want to keep sha512 for forward compatibility, since it's now the LOC
+// recommendation.
 func (scanner *TarredBagScanner) processFile(ingestFile *service.IngestFile) error {
 	md5Hash := md5.New()
+	sha1Hash := sha1.New()
 	sha256Hash := sha256.New()
 	sha512Hash := sha512.New()
 	writers := []io.Writer{
 		md5Hash,
+		sha1Hash,
 		sha256Hash,
 		sha512Hash,
 	}
@@ -151,17 +164,23 @@ func (scanner *TarredBagScanner) processFile(ingestFile *service.IngestFile) err
 	if err != nil {
 		return err
 	}
-	scanner.addChecksums(ingestFile, md5Hash, sha256Hash, sha512Hash)
+	scanner.addChecksums(ingestFile, md5Hash, sha1Hash, sha256Hash, sha512Hash)
 	return nil
 }
 
 // Adds the checksums to the IngestFile object.
-func (scanner *TarredBagScanner) addChecksums(ingestFile *service.IngestFile, md5Hash, sha256Hash, sha512Hash hash.Hash) {
+func (scanner *TarredBagScanner) addChecksums(ingestFile *service.IngestFile, md5Hash, sha1Hash, sha256Hash, sha512Hash hash.Hash) {
 	now := time.Now()
 	md5Checksum := &service.IngestChecksum{
 		Algorithm: constants.AlgMd5,
 		DateTime:  now,
 		Digest:    fmt.Sprintf("%x", md5Hash.Sum(nil)),
+		Source:    constants.SourceIngest,
+	}
+	sha1Checksum := &service.IngestChecksum{
+		Algorithm: constants.AlgSha1,
+		DateTime:  now,
+		Digest:    fmt.Sprintf("%x", sha1Hash.Sum(nil)),
 		Source:    constants.SourceIngest,
 	}
 	sha256Checksum := &service.IngestChecksum{
@@ -177,6 +196,7 @@ func (scanner *TarredBagScanner) addChecksums(ingestFile *service.IngestFile, md
 		Source:    constants.SourceIngest,
 	}
 	ingestFile.SetChecksum(md5Checksum)
+	ingestFile.SetChecksum(sha1Checksum)
 	ingestFile.SetChecksum(sha256Checksum)
 	ingestFile.SetChecksum(sha512Checksum)
 }

@@ -209,8 +209,8 @@ func testFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentif
 		assert.NotEmpty(t, event.Outcome)
 	}
 
-	// md5, sha256, sha512
-	assert.Equal(t, 3, eventTypes[constants.EventDigestCalculation])
+	// md5, sha1, sha256, sha512
+	assert.Equal(t, 4, eventTypes[constants.EventDigestCalculation])
 
 	// 1) semantic identifier assignment, 2) URL identifier assignment
 	assert.Equal(t, 2, eventTypes[constants.EventIdentifierAssignment])
@@ -228,7 +228,7 @@ func testChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *registry
 	resp := recorder.Context.PharosClient.ChecksumList(params)
 	require.Nil(t, resp.Error)
 	checksums := resp.Checksums()
-	assert.Equal(t, 3, len(checksums))
+	assert.Equal(t, 4, len(checksums))
 
 	for _, gfChecksum := range gf.Checksums {
 		found := false
@@ -492,8 +492,8 @@ func testUpdatedFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, file
 
 	changedFile := getChangedFileRecord(fileIdentifier)
 
-	// md5, sha256, sha512
-	assert.Equal(t, 3, eventTypes[constants.EventDigestCalculation], fileIdentifier)
+	// md5, sha1, sha256, sha512
+	assert.Equal(t, 4, eventTypes[constants.EventDigestCalculation], fileIdentifier)
 
 	// 1) semantic identifier assignment, 2) URL identifier assignment
 	// But if this is a reingest of an existing file, no new IDs were
@@ -521,12 +521,12 @@ func testUpdatedChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *r
 	changedFile := getChangedFileRecord(gf.Identifier)
 
 	// For reingested files, we should have an old and a new
-	// md5, sha256, and sha512 digest. For new files, we
+	// md5, sha1, sha256, and sha512 digest. For new files, we
 	// should have just one of each.
 	if changedFile.IsReingest {
-		assert.Equal(t, 6, len(checksums), gf.Identifier)
+		assert.Equal(t, 8, len(checksums), gf.Identifier)
 	} else {
-		assert.Equal(t, 3, len(checksums), gf.Identifier)
+		assert.Equal(t, 4, len(checksums), gf.Identifier)
 	}
 
 	for _, gfChecksum := range gf.Checksums {

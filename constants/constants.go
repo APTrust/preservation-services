@@ -10,6 +10,7 @@ const (
 	ActionIngest               = "Ingest"
 	ActionRestore              = "Restore"
 	AlgMd5                     = "md5"
+	AlgSha1                    = "sha1"
 	AlgSha256                  = "sha256"
 	AlgSha512                  = "sha512"
 	BagItProfileBTR            = "btr-v1.0.json"

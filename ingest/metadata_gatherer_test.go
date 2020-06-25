@@ -126,15 +126,16 @@ func testIngestFile_MetadataGatherer(t *testing.T, ingestFile *service.IngestFil
 		// Untracked tag file does not appear in manifests.
 		// This is a legal case per the BagIt spec.
 		// TODO: Is there a reliable way to identify untracked tag files?
-		assert.Equal(t, 3, len(ingestFile.Checksums), ingestFile.Identifier())
+		assert.Equal(t, 4, len(ingestFile.Checksums), ingestFile.Identifier())
 	} else if filetype != constants.FileTypeTagManifest {
-		assert.Equal(t, 5, len(ingestFile.Checksums), ingestFile.Identifier())
+		assert.Equal(t, 6, len(ingestFile.Checksums), ingestFile.Identifier())
 	} else {
 		// Manifest files don't include manifest checksums
-		assert.Equal(t, 3, len(ingestFile.Checksums), ingestFile.Identifier())
+		assert.Equal(t, 4, len(ingestFile.Checksums), ingestFile.Identifier())
 	}
 	algs := []string{
 		"md5",    // from ingest scan
+		"sha1",   // from ingest scan
 		"sha256", // from ingest scan
 		"sha512", // from ingest scan
 		"md5",    // from manifest
@@ -150,7 +151,7 @@ func testChecksum(t *testing.T, checksum *service.IngestChecksum, alg string, in
 	assert.NotEmpty(t, checksum.DateTime)
 	assert.NotEqual(t, emptyTimeValue, checksum.DateTime)
 	assert.NotEmpty(t, checksum.Digest)
-	if index < 3 {
+	if index < 4 {
 		assert.Equal(t, "ingest", checksum.Source)
 	} else {
 		assert.True(t, (checksum.Source == constants.SourceManifest ||

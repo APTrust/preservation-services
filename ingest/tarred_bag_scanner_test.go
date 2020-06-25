@@ -106,17 +106,29 @@ func assertIngestFileComplete(t *testing.T, f *service.IngestFile) {
 }
 
 func assertChecksumsComplete(t *testing.T, f *service.IngestFile) {
-	cs1 := f.Checksums[0]
-	assert.Equal(t, constants.SourceIngest, cs1.Source)
-	assert.Equal(t, constants.AlgMd5, cs1.Algorithm)
-	assert.False(t, cs1.DateTime.IsZero())
-	assert.Equal(t, 32, len(cs1.Digest))
+	cs0 := f.Checksums[0]
+	assert.Equal(t, constants.SourceIngest, cs0.Source)
+	assert.Equal(t, constants.AlgMd5, cs0.Algorithm)
+	assert.False(t, cs0.DateTime.IsZero())
+	assert.Equal(t, 32, len(cs0.Digest))
 
-	cs2 := f.Checksums[1]
+	cs1 := f.Checksums[1]
+	assert.Equal(t, constants.SourceIngest, cs1.Source)
+	assert.Equal(t, constants.AlgSha1, cs1.Algorithm)
+	assert.False(t, cs1.DateTime.IsZero())
+	assert.Equal(t, 40, len(cs1.Digest))
+
+	cs2 := f.Checksums[2]
 	assert.Equal(t, constants.SourceIngest, cs2.Source)
 	assert.Equal(t, constants.AlgSha256, cs2.Algorithm)
 	assert.False(t, cs2.DateTime.IsZero())
 	assert.Equal(t, 64, len(cs1.Digest))
+
+	cs3 := f.Checksums[3]
+	assert.Equal(t, constants.SourceIngest, cs3.Source)
+	assert.Equal(t, constants.AlgSha256, cs3.Algorithm)
+	assert.False(t, cs3.DateTime.IsZero())
+	assert.Equal(t, 128, len(cs3.Digest))
 }
 
 func assertAllFilesFound(t *testing.T, files []*service.IngestFile) {
