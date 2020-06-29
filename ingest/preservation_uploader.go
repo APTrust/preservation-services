@@ -120,14 +120,14 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 		uploader.Context.Logger.Infof("Error getting destination info for %s (%s/%s): %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
-	uploader.Context.Logger.Infof("Copying %s from %s to %s as %s using ComposeObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket, ingestFile.UUID)
 
 	// CopyObject handles objects only up to 5GB.
 	if ingestFile.Size <= constants.MaxServerSideCopySize {
+		uploader.Context.Logger.Infof("Copying %s from %s to %s as %s using CopyObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket, ingestFile.UUID)
 		err = client.CopyObject(destInfo, sourceInfo)
 	} else {
+		uploader.Context.Logger.Infof("Copying %s from %s to %s as %s using ComposeObjectWithProgress()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket, ingestFile.UUID)
 		sources := []minio.SourceInfo{sourceInfo}
-
 		// progressLogger copies Minio's internal progress info to our log file.
 		var progressLogger = logger.NewMinioProgressLogger(
 			uploader.Context.Logger,
