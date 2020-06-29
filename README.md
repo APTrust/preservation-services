@@ -81,3 +81,9 @@ sudo docker-compose logs -f ingest_staging_uploader
 ```
 
 ...or `sudo docker-compose logs -f` to tail all services
+
+# Staging Notes
+
+To run the Redis CLI on staging:
+
+`docker run -it --rm redis redis-cli --version`
