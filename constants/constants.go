@@ -58,6 +58,7 @@ const (
 	MatchTypeContainer         = "container"
 	MatchTypeExtension         = "extension"
 	MatchTypeSignature         = "signature"
+	MaxServerSideCopySize      = int64(5368709120) // 5GB
 	MaxValidationErrors        = 30
 	OutcomeFailure             = "Failure"
 	OutcomeSuccess             = "Success"

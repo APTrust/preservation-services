@@ -7,6 +7,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util/logger"
 	"github.com/minio/minio-go/v6"
 )
 
@@ -59,7 +60,6 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 				uploader.Context.Logger.Infof("Skipping: %s already uploaded to %s/%s as %s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, ingestFile.UUID)
 				continue
 			}
-			uploader.Context.Logger.Infof("Copying %s to %s/%s as %s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, ingestFile.UUID)
 			var processingError *service.ProcessingError
 
 			if uploadTarget.Provider == constants.StorageProviderAWS {
@@ -123,15 +123,23 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 	uploader.Context.Logger.Infof("Copying %s from %s to %s as %s using ComposeObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket, ingestFile.UUID)
 
 	// CopyObject handles objects only up to 5GB.
-	//err = client.CopyObject(destInfo, sourceInfo)
+	if ingestFile.Size <= constants.MaxServerSideCopySize {
+		err = client.CopyObject(destInfo, sourceInfo)
+	} else {
+		sources := []minio.SourceInfo{sourceInfo}
 
-	// ComposeObject *should* handle objects of any size.
-	// Initial Minio bug report: https://github.com/minio/minio-go/pull/644
-	// Migrated to: https://github.com/minio/minio-go/pull/715
-	sources := []minio.SourceInfo{
-		sourceInfo,
+		// progressLogger copies Minio's internal progress info to our log file.
+		var progressLogger = logger.NewMinioProgressLogger(
+			uploader.Context.Logger,
+			fmt.Sprintf("Uploaded part of %s to %s/%s",
+				ingestFile.Identifier(),
+				uploadTarget.Bucket,
+				ingestFile.UUID),
+			ingestFile.Size,
+		)
+		// ComposeObject handles items up to 5TB in a multipart server-to-server put.
+		err = client.ComposeObjectWithProgress(destInfo, sources, progressLogger)
 	}
-	err = client.ComposeObject(destInfo, sources)
 
 	if err != nil {
 		uploader.Context.Logger.Infof("Error copying %s (%s) to %s/%s: %v", ingestFile.Identifier(), ingestFile.UUID, uploadTarget.Provider, uploadTarget.Bucket, err)
