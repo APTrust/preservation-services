@@ -427,6 +427,7 @@ func TestIngestBase_MarkAsStarted(t *testing.T) {
 	assert.Equal(t, 1, task.WorkResult.Attempt)
 	assert.Equal(t, hostname, task.WorkResult.Host)
 	assert.Equal(t, os.Getpid(), task.WorkResult.Pid)
+	assert.False(t, task.WorkResult.StartedAt.IsZero())
 }
 
 func TestIngestBase_FinishItem(t *testing.T) {

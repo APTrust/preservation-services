@@ -251,6 +251,8 @@ func (b *Base) SaveWorkResult(workItemID int, result *service.WorkResult) error 
 	for i := 0; i < 3; i++ {
 		err := b.Context.RedisClient.WorkResultSave(workItemID, result)
 		if err == nil {
+			resultJSON, _ := result.ToJSON()
+			b.Context.Logger.Infof("Saved result for WorkItem %d: %s", workItemID, resultJSON)
 			break
 		}
 		if i == 2 && err != nil {
@@ -336,6 +338,7 @@ func (b *Base) MarkAsStarted(task *Task) {
 	b.Context.Logger.Infof("Starting Redis WorkResult for WorkItem %d (%s)", task.WorkItem.ID, task.WorkItem.Name)
 	task.WorkResult.Reset()
 	task.WorkResult.Attempt++
+	task.WorkResult.Start()
 	task.WorkResult.Host, _ = os.Hostname()
 	task.WorkResult.Pid = os.Getpid()
 	b.SaveWorkResult(task.WorkItem.ID, task.WorkResult)
