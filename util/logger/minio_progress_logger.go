@@ -15,9 +15,7 @@ type MinioProgressLogger struct {
 	prefix         string
 }
 
-const _100MB = int64(104857600)
-const _1GB = int64(1073741824)
-const _10GB = int64(10737418240)
+const _20GB = int64(21474836480)
 
 // NewMinioProgressLogger creates a new MinioProgressLogger.
 func NewMinioProgressLogger(logger *logging.Logger, prefix string, fileSize int64) *MinioProgressLogger {
@@ -55,15 +53,10 @@ func (e *MinioProgressLogger) Read(p []byte) (n int, err error) {
 // of each part, but we really don't want 10K log entries for a single upload.
 // So we log only meaningful progress.
 func (e *MinioProgressLogger) shouldPrint(pctComplete float64) bool {
+	threshold := 10.0
 	diff := pctComplete - e.lastPctPrinted
-	if e.fileSize > _10GB {
-		return diff >= float64(1.0)
+	if e.fileSize > _20GB {
+		threshold = 1.0
 	}
-	if e.fileSize > _1GB {
-		return diff >= 5.0
-	}
-	if e.fileSize > _100MB {
-		return diff >= 20.0
-	}
-	return false
+	return diff >= threshold
 }
