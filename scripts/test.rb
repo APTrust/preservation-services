@@ -73,8 +73,10 @@ class TestRunner
       "ingest_preservation_uploader",
       "ingest_preservation_verifier",
       "ingest_recorder",
-      "ingest_cleanup",
     ]
+    unless @options[:nocleanup]
+      names += 'ingest_cleanup'
+    end
     names += extra_services
     names.each do |name|
       ingest_services.push({
@@ -131,14 +133,13 @@ class TestRunner
   #
   # TODO: Read from .env file instead of hard-coding?
   def force_docker_to_load_pharos_code
-    10.times do
+    5.times do
       begin
         req = Net::HTTP::Get.new(URI('http://localhost:9292/institutions'))
         req['X-Pharos-API-User'] = 'system@aptrust.org'
 	    req['X-Pharos-API-Key'] = 'c3958c7b09e40af1d065020484dafa9b2a35cea0'
         http.request(req)
         puts 'Connected to Pharos'
-        break
       rescue
         puts 'Trying to connect to Pharos...'
         sleep(3)
@@ -379,18 +380,6 @@ class TestRunner
     @services_stopped = true
   end
 
-  def print_nostop_message
-    puts "Services are still running because you passed command flag -n"
-    puts "Pharos is at http://localhost:9292 (system@aptrust.org/password)"
-    puts "Redis: http://localhost:6379 (no user or password required)"
-    puts "Minio: http://localhost:9899 (minioadmin/minioadmin)"
-    puts "To stop services, you'll need to kill the following processes:"
-    @pids.each do |name, pid|
-      puts "#{name} -> #{pid}"
-    end
-    puts "To stop Pharos: cd into Pharos dir and 'make integration_clean'"
-  end
-
   def print_results
     puts "Logs are in #{File.join(ENV['HOME'], "tmp", "logs")}"
     if $?.success?
@@ -432,8 +421,8 @@ if __FILE__ == $0
     opts.on("-f", "--formats", "Run extra format identification tests") do |f|
       options[:formats] = f
     end
-    opts.on("-n", "--nostop", "Don't stop services after tests complete") do |n|
-      options[:nostop] = n
+    opts.on("-n", "--nocleanup", "Don't clean up interim data after running") do |n|
+      options[:nocleanup] = n
     end
   end.parse!
 
@@ -443,11 +432,7 @@ if __FILE__ == $0
     t.print_help
 	exit(false)
   end
-  if options[:nostop]
-    at_exit { t.print_nostop_message }
-  else
-    at_exit { t.stop_all_services }
-  end
+  at_exit { t.stop_all_services }
   case test_name
   when 'units'
     t.run_unit_tests(ARGV[1])
