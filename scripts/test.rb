@@ -75,7 +75,7 @@ class TestRunner
       "ingest_recorder",
     ]
     unless @options[:nocleanup]
-      names += 'ingest_cleanup'
+      names += ['ingest_cleanup']
     end
     names += extra_services
     names.each do |name|
@@ -98,6 +98,7 @@ class TestRunner
   end
 
   def run_go_unit_tests(arg)
+    `redis-cli flushall`
     # Note: -p 1 flag helps prevent Redis overwrites on Linux/Travis
     puts "Starting unit tests..."
     arg = "./..." if arg.nil?
@@ -115,6 +116,7 @@ class TestRunner
 
   def run_integration_tests(arg)
     init_for_integration
+    `redis-cli flushall`
     force_docker_to_load_pharos_code
     puts "Starting integration tests..."
     arg = "./..." if arg.nil?
@@ -150,6 +152,7 @@ class TestRunner
   def run_interactive(arg)
     build_ingest_services
     init_for_integration
+    `redis-cli flushall`
     force_docker_to_load_pharos_code
     start_ingest_services(["ingest_bucket_reader"])
     puts ">> NSQ: 'http://localhost:4171'"
