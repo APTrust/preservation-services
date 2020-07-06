@@ -125,7 +125,9 @@ func (s *StagingUploader) CopyFileToStaging(tarReader *tar.Reader, ingestFile *s
 		ingestFile.Size,
 		putOptions)
 	if err != nil {
-		return fmt.Errorf("Error copying %s to staging: %v", ingestFile.Identifier(), err)
+		return fmt.Errorf("Error copying %s (%s) to staging: %v", ingestFile.Identifier(), key, err)
+	} else {
+		s.Context.Logger.Infof("Copied %s to staging with key %s", ingestFile.Identifier(), key)
 	}
 	return s.MarkFileAsCopied(ingestFile)
 }

@@ -296,9 +296,13 @@ func (f *IngestFile) HasPreservableName() bool {
 }
 
 // NeedsSaveAt returns true if this file needs to be copied the specified
-// bucket at the specified provider. This will return true if the file
-// has a savable name and has no confirmed storage record at the specified
-// provider + bucket.
+// bucket at the specified provider. This will return true if 1) the file
+// has a savable name and 2) the is flagged as needing to be saved, and 3)
+// the file has no confirmed storage record at the specified provider + bucket.
+//
+// The ReingestManager will mark an IngestFile as NeedsSave = false
+// if the file's checksums have not changed since the last ingest. This is a
+// fairly common case, and will cause NeedsSaveAt to return false.
 //
 // The ingest processes that manipulate this file are responsible for
 // creating and updating this file's storage records. Also note that this
@@ -308,7 +312,7 @@ func (f *IngestFile) HasPreservableName() bool {
 // StorageOption, whether the file actually *should* be stored at
 // the provider + bucket.
 func (f *IngestFile) NeedsSaveAt(provider, bucket string) bool {
-	if f.HasPreservableName() == false {
+	if f.HasPreservableName() == false || f.NeedsSave == false {
 		return false
 	}
 	storageRecord := f.GetStorageRecord(provider, bucket)

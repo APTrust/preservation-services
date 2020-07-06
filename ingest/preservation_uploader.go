@@ -57,7 +57,15 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		for _, uploadTarget := range uploadTargets {
 			if !ingestFile.NeedsSaveAt(uploadTarget.Provider, uploadTarget.Bucket) {
-				uploader.Context.Logger.Infof("Skipping: %s already uploaded to %s/%s as %s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, ingestFile.UUID)
+				reason := "file has already been uploaded"
+				if !ingestFile.HasPreservableName() {
+					reason = "file does not have preservable name"
+				} else if !ingestFile.NeedsSave {
+					reason = "NeedsSave is false (unmodified reingest)"
+				}
+				uploader.Context.Logger.Infof("Skipping: %s because %s to %s/%s as %s",
+					ingestFile.Identifier(), reason, uploadTarget.Provider,
+					uploadTarget.Bucket, ingestFile.UUID)
 				continue
 			}
 			var processingError *service.ProcessingError

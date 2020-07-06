@@ -69,8 +69,10 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 			key,
 			minio.GetObjectOptions{})
 
+		errKey := fmt.Sprintf("%s (%s)", ingestFile.Identifier(), key)
+
 		if err != nil {
-			return append(errors, fi.Error(ingestFile.Identifier(), err, false))
+			return append(errors, fi.Error(errKey, err, false))
 		}
 
 		defer s3Object.Close()
@@ -78,7 +80,7 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 		identifications, err := fi.Siegfried.Identify(s3Object, ingestFile.PathInBag, "")
 
 		if err != nil {
-			errors = append(errors, fi.Error(ingestFile.Identifier(), err, false))
+			errors = append(errors, fi.Error(errKey, err, false))
 		} else {
 			mimeType := ""
 			basis := ""

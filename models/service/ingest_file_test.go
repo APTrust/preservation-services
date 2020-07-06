@@ -406,6 +406,7 @@ func TestNeedsSaveAt(t *testing.T) {
 	bucket := "example-bucket"
 	f := &service.IngestFile{
 		PathInBag: "data/some-file.txt",
+		NeedsSave: true,
 	}
 	// True because name is preservavable, and there's no StorageRecord
 	// for this provider/bucket combination.
@@ -430,6 +431,16 @@ func TestNeedsSaveAt(t *testing.T) {
 
 	// False because file does not have preservable name
 	assert.False(t, f.NeedsSaveAt(provider, bucket))
+
+	// Try NeedsSave = false
+	f = &service.IngestFile{
+		PathInBag: "data/my_file.txt",
+		NeedsSave: false,
+	}
+
+	// False because NeedsSave is false
+	assert.False(t, f.NeedsSaveAt(provider, bucket))
+
 }
 
 func TestGetPutOptions(t *testing.T) {
