@@ -9,10 +9,13 @@ require 'optparse'
 
 class TestRunner
 
+  attr_accessor :test_name
+
   def initialize(options)
     @options = options
     @pids = {}
     @services_stopped = false
+    @test_name = '';
     bin = self.bin_dir
     @unit_services = [
       {
@@ -261,8 +264,10 @@ class TestRunner
 	env = {}
 	ENV.each{ |k,v| env[k] = v }
 	env['RAILS_ENV'] = 'integration'
-    env['PHAROS_ROOT'] = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
-	env['RBENV_VERSION'] = `cat #{ENV['PHAROS_ROOT']}/.ruby-version`.chomp
+    if self.test_name != 'units'
+      env['PHAROS_ROOT'] = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
+	  env['RBENV_VERSION'] = `cat #{ENV['PHAROS_ROOT']}/.ruby-version`.chomp
+    end
     env['APT_CONFIG_DIR'] = File.expand_path(
       File.join(
         File.dirname(__FILE__),
@@ -429,13 +434,13 @@ if __FILE__ == $0
   end.parse!
 
   t = TestRunner.new(options)
-  test_name = ARGV[0]
-  if !['units', 'integration', 'interactive'].include?(test_name)
+  t.test_name = ARGV[0]
+  if !['units', 'integration', 'interactive'].include?(t.test_name)
     t.print_help
 	exit(false)
   end
   at_exit { t.stop_all_services }
-  case test_name
+  case t.test_name
   when 'units'
     t.run_unit_tests(ARGV[1])
   when 'integration'
