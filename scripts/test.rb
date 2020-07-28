@@ -175,12 +175,12 @@ class TestRunner
   def init_for_integration
     clean_test_cache
     make_test_dirs
+    self.pharos_start
+    sleep(5)
     # Start NSQ, Minio, Redis, and Docker/Pharos
     @all_services.each do |svc|
       start_service(svc)
     end
-    self.pharos_start
-    sleep(5)
     create_nsq_topics
   end
 
@@ -242,16 +242,16 @@ class TestRunner
     puts ""
   end
 
-  def stop_service(svc)
-	pid = @pids[svc[:name]]
+  def stop_service(name, pid)
 	if pid.nil? || pid == 0
+      puts "Pid for #{name} is zero. Can't kill that..."
 	  return
 	end
-	puts "Stopping #{svc[:name]} service (pid #{pid})"
+	puts "Stopping #{name} service (pid #{pid})"
 	begin
 	  Process.kill('TERM', pid)
 	rescue
-	  puts "Hmm... Couldn't kill #{svc[:name]}."
+	  puts "Hmm... Couldn't kill #{name}."
       puts "Check system processes to see if a version "
       puts "of that process is lingering from a previous test run."
 	end
@@ -379,10 +379,10 @@ class TestRunner
   def stop_all_services
     return if @services_stopped
     puts "Stopping all services"
-    services = @all_services
-    services.push['pharos'] if @pids['pharos']
-    services.each do |svc|
-      stop_service(svc)
+    #services = @all_services
+    #services.push['pharos'] if @pids['pharos']
+    @pids.each do |name, pid|
+      stop_service(name, pid)
     end
     @services_stopped = true
   end
