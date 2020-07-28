@@ -12,7 +12,6 @@ class TestRunner
   def initialize(options)
     @options = options
     @pids = {}
-    @pharos_started = false
     @services_stopped = false
     bin = self.bin_dir
     @unit_services = [
@@ -117,7 +116,6 @@ class TestRunner
   def run_integration_tests(arg)
     init_for_integration
     `redis-cli flushall`
-    force_docker_to_load_pharos_code
     puts "Starting integration tests..."
     arg = "./..." if arg.nil?
     cmd = "go test -p 1 -tags=integration #{arg}"
@@ -127,37 +125,15 @@ class TestRunner
     self.print_results
   end
 
-  # Force docker to load Pharos code, or the bucket reader's
-  # initial call will fail and the bucket reader will quit,
-  # thinking Pharos is unavailable. This key works for local
-  # dev and integration tests only. It's hard-coded into the
-  # Pharos integration setup.
-  #
-  # TODO: Read from .env file instead of hard-coding?
-  def force_docker_to_load_pharos_code
-    5.times do
-      begin
-        req = Net::HTTP::Get.new(URI('http://localhost:9292/institutions'))
-        req['X-Pharos-API-User'] = 'system@aptrust.org'
-	    req['X-Pharos-API-Key'] = 'c3958c7b09e40af1d065020484dafa9b2a35cea0'
-        http.request(req)
-        puts 'Connected to Pharos'
-      rescue
-        puts 'Trying to connect to Pharos...'
-        sleep(3)
-      end
-    end
-  end
 
   def run_interactive(arg)
     build_ingest_services
     init_for_integration
     `redis-cli flushall`
-    force_docker_to_load_pharos_code
     start_ingest_services(["ingest_bucket_reader"])
     puts ">> NSQ: 'http://localhost:4171'"
     puts ">> Minio: 'http://localhost:9899' login/pwd -> minioadmin/minioadmin"
-    puts ">> Pharos: 'http://localhost:9292' login/pwd -> system@aptrust.org"
+    puts ">> Pharos: 'http://localhost:9292' login/pwd -> system@aptrust.org/password"
 
     puts "Push some bags to aptrust.receiving.test.test.edu"
     puts "on the local minio server, then run the bucket reader"
@@ -251,7 +227,7 @@ class TestRunner
   end
 
   def start_service(svc)
-    log_file = File.join(ENV['HOME'], "tmp", "logs", "#{svc[:name]}.log")
+    log_file = log_file_path(svc[:name])
     pid = Process.spawn(env_hash, svc[:cmd], out: log_file, err: log_file)
     Process.detach pid
     log_started(svc, pid, log_file)
@@ -284,8 +260,9 @@ class TestRunner
   def env_hash
 	env = {}
 	ENV.each{ |k,v| env[k] = v }
-	#env['RBENV_VERSION'] = `cat #{@pharos_root}/.ruby-version`.chomp
 	env['RAILS_ENV'] = 'integration'
+    env['PHAROS_ROOT'] = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
+	env['RBENV_VERSION'] = `cat #{ENV['PHAROS_ROOT']}/.ruby-version`.chomp
     env['APT_CONFIG_DIR'] = File.expand_path(
       File.join(
         File.dirname(__FILE__),
@@ -346,40 +323,67 @@ class TestRunner
   end
 
   def pharos_start
-    pharos_root = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
-
-    if @options[:rebuild]
-      puts "Rebuilding Pharos docker container (because you said so)"
-      build_pid = docker_pid = Process.spawn("make build", chdir: pharos_root)
-      Process.wait build_pid
-    else
-      puts "Using existing Pharos container (use --rebuild if you want a new one)"
-    end
-
-    # Note that we have to both cd into pharos_root AND overwrite PWD
-    # with pharos_root. The Pharos Makefile accesses PWD, which remains
-    # set to THIS directory even when telling spawn to chdir.
-    docker_start_pid = Process.spawn({ 'PWD' => pharos_root }, "make integration", chdir: pharos_root)
-	Process.wait docker_start_pid
-
-    @pharos_started = true
+	if !@pids['pharos']
+      pharos_reset_db
+      pharos_db_migrate
+      pharos_load_fixtures
+	  env = env_hash
+	  cmd = 'bundle exec rails server'
+	  log_file = log_file_path('pharos')
+	  pharos_pid = Process.spawn(env,
+								 cmd,
+								 chdir: env['PHAROS_ROOT'],
+								 out: [log_file, 'w'],
+								 err: [log_file, 'w'])
+	  Process.detach pharos_pid
+      @pids['pharos'] = pharos_pid
+	  puts "Started Pharos with command '#{cmd}' and pid #{pharos_pid}"
+	end
   end
 
-  def pharos_stop
-    pharos_root = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
-    docker_stop_pid = Process.spawn("make integration_clean", chdir: pharos_root)
-	Process.wait docker_stop_pid
-    @pharos_started = false
+  # reset, migrate, load fixtures
+  def pharos_reset_db
+	puts "Resetting Pharos DB"
+	env = env_hash
+	cmd = 'bundle exec rake db:reset'
+	log_file = log_file_path('pharos')
+	pid = Process.spawn(env, cmd, chdir: env['PHAROS_ROOT'])
+	Process.wait pid
+	puts "Finished resetting Pharos DB"
+  end
+
+  def pharos_db_migrate
+	puts "Migrating Pharos DB"
+	env = env_hash
+	cmd = 'bundle exec rake db:migrate'
+	log_file = log_file_path('pharos')
+	pid = Process.spawn(env, cmd, chdir: env['PHAROS_ROOT'])
+	Process.wait pid
+	puts "Finished migrating Pharos DB"
+  end
+
+  def pharos_load_fixtures
+	puts "Loading Pharos fixtures"
+	env = env_hash
+	cmd = 'bundle exec rake db:fixtures:load'
+	log_file = log_file_path('pharos')
+	pid = Process.spawn(env, cmd, chdir: env['PHAROS_ROOT'])
+	Process.wait pid
+	puts "Finished loading Pharos fixtures"
+  end
+
+  def log_file_path(service_name)
+    return File.join(ENV['HOME'], "tmp", "logs", service_name + ".log")
   end
 
   def stop_all_services
     return if @services_stopped
     puts "Stopping all services"
     services = @all_services
+    services.push['pharos'] if @pids['pharos']
     services.each do |svc|
       stop_service(svc)
     end
-    self.pharos_stop if @pharos_started
     @services_stopped = true
   end
 
@@ -418,9 +422,6 @@ end
 if __FILE__ == $0
   options = {}
   OptionParser.new do |opts|
-    opts.on("-r", "--rebuild", "Rebuild Pharos docker container") do |r|
-      options[:rebuild] = r
-    end
     opts.on("-f", "--formats", "Run extra format identification tests") do |f|
       options[:formats] = f
     end

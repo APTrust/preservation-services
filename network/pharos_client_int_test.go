@@ -190,7 +190,7 @@ func TestPharosInstitutionList(t *testing.T) {
 	// We have one more institution than what's in the fixtures
 	// because a rake task creates staging.edu when the Pharos
 	// container starts up.
-	assert.Equal(t, len(InstFixtures)+1, len(institutions))
+	assert.Equal(t, len(InstFixtures), len(institutions))
 
 	// Make sure we got the expected items in our list of 4
 	for _, inst := range institutions {
