@@ -379,8 +379,6 @@ class TestRunner
   def stop_all_services
     return if @services_stopped
     puts "Stopping all services"
-    #services = @all_services
-    #services.push['pharos'] if @pids['pharos']
     @pids.each do |name, pid|
       stop_service(name, pid)
     end
