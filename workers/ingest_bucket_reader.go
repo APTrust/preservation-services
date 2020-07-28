@@ -62,7 +62,7 @@ func (r *IngestBucketReader) LoadInstitutions() []*registry.Institution {
 	v.Set("per_page", "100")
 	resp := r.Context.PharosClient.InstitutionList(v)
 	if resp.Error != nil {
-		r.Context.Logger.Fatalf("Error getting institutions from Pharos: %v", resp.Error)
+		r.Context.Logger.Errorf("Error getting institutions from Pharos: %v", resp.Error)
 	}
 	return resp.Institutions()
 }
