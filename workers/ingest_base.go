@@ -118,6 +118,7 @@ func (b *IngestBase) ProcessErrorChannel() {
 			// Go to NSQ cleanup or not?
 			if b.Settings.PushToCleanupAfterMaxFailedAttempts {
 				task.Processor.GetIngestObject().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterMaxFailedAttempts
+				task.Processor.IngestObjectSave()
 				task.NextQueueTopic = constants.IngestCleanup
 			} else {
 				task.NextQueueTopic = ""
@@ -150,10 +151,12 @@ func (b *IngestBase) ProcessFatalErrorChannel() {
 		task.WorkItem.Note = task.WorkResult.FatalErrorMessage()
 		task.WorkItem.Retry = false
 		task.WorkItem.NeedsAdminReview = true
+		task.WorkItem.Status = constants.StatusFailed
 
 		// NSQ
 		if b.Settings.PushToCleanupOnFatalError {
 			task.Processor.GetIngestObject().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterFatalError
+			task.Processor.IngestObjectSave()
 			task.NextQueueTopic = constants.IngestCleanup
 		} else {
 			task.NextQueueTopic = ""

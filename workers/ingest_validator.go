@@ -18,7 +18,7 @@ type IngestValidator struct {
 func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
 	settings := &Settings{
 		ChannelBufferSize:                         bufSize,
-		DeleteFromReceivingAfterFatalError:        false,
+		DeleteFromReceivingAfterFatalError:        true,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,
 		MaxAttempts:                         maxAttempts,
 		NSQChannel:                          constants.IngestValidation + "_worker_chan",
@@ -27,7 +27,7 @@ func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
 		NextWorkItemStage:                   constants.StageReingestCheck,
 		NumberOfWorkers:                     numWorkers,
 		PushToCleanupAfterMaxFailedAttempts: false,
-		PushToCleanupOnFatalError:           false,
+		PushToCleanupOnFatalError:           true,
 		RequeueTimeout:                      (1 * time.Minute),
 		WorkItemSuccessNote:                 "Bag is valid",
 	}

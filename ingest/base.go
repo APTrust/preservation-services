@@ -12,6 +12,7 @@ type BaseConstructor func(*common.Context, int, *service.IngestObject) Runnable
 type Runnable interface {
 	Run() (int, []*service.ProcessingError)
 	GetIngestObject() *service.IngestObject
+	IngestObjectSave() error
 }
 
 // Base is the base type for workers in the ingest namespace.

@@ -87,6 +87,12 @@ func (m *Manager) GetIngestObject() *service.IngestObject {
 	return nil
 }
 
+// IngestObjectSave is a dummy method that allows this object to conform to the
+// ingest.Runnable interface.
+func (m *Manager) IngestObjectSave() error {
+	return nil
+}
+
 // deleteSingleFile is for deleting a single GenericFile. Call this when ItemType
 // is GenericFile.
 func (m *Manager) deleteSingleFile() (count int, errors []*service.ProcessingError) {
