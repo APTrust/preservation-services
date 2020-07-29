@@ -16,7 +16,7 @@ type Options struct {
 var opts = Options{}
 var defaultAttempts = 3
 var defaultBufSize = 20
-var defaultWorkers = 2
+var defaultWorkers = 3
 var defaultTimeout = 1 * time.Minute
 
 var EnvMessage = `If you don't set -config-dir and -config-name on the command line,
