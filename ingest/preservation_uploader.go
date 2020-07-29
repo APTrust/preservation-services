@@ -70,10 +70,13 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 			}
 			var processingError *service.ProcessingError
 
-			if uploadTarget.Provider == constants.StorageProviderAWS {
-				processingError = uploader.CopyToAWSPreservation(ingestFile, uploadTarget)
+			// User S3 server-side copying only in US East 1, where our
+			// receiving buckets are. Cross-region server-side copying
+			// is too slow. https://trello.com/c/52YwknCr
+			if uploadTarget.Provider == constants.StorageProviderAWS && uploadTarget.Region == constants.RegionAWSUSEast1 {
+				processingError = uploader.CopyToPreservationServerSide(ingestFile, uploadTarget)
 			} else {
-				processingError = uploader.CopyToExternalPreservation(ingestFile, uploadTarget)
+				processingError = uploader.CopyToPreservation(ingestFile, uploadTarget)
 			}
 			if processingError != nil {
 				errors = append(errors, processingError)
@@ -96,13 +99,13 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 	}
 }
 
-// CopyToAWSPreservation copies an object from AWS staging to AWS preservation.
-// Since staging bucket and upload target are both within AWS,
+// CopyToPreservationServerSide copies an object from AWS staging to AWS preservation.
+// Since staging bucket and upload target are both within AWS US East 1,
 // we can use CopyObject to do a bucket-to-bucket copy.
 //
 // Avoid calling this directly. Call Run() instead. This is
 // public so we can test it.
-func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) *service.ProcessingError {
+func (uploader *PreservationUploader) CopyToPreservationServerSide(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) *service.ProcessingError {
 	client, err := uploader.getS3Client(uploadTarget.Provider)
 	if err != nil {
 		uploader.Context.Logger.Error(err, ingestFile.Identifier())
@@ -156,7 +159,7 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 	return nil
 }
 
-// CopyToExternalPreservation copies an object from AWS staging to an
+// CopyToPreservation copies an object from AWS staging to an
 // external S3 provider, like Wasabi.
 //
 // When copying from AWS staging to an external provider, we need two
@@ -167,7 +170,7 @@ func (uploader *PreservationUploader) CopyToAWSPreservation(ingestFile *service.
 //
 // Avoid calling this directly. Call Run() instead. This is
 // public so we can test it.
-func (uploader *PreservationUploader) CopyToExternalPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) *service.ProcessingError {
+func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) *service.ProcessingError {
 	srcClient, err := uploader.getS3Client(constants.StorageProviderAWS)
 	if err != nil {
 		uploader.Context.Logger.Error(ingestFile.Identifier(), err)

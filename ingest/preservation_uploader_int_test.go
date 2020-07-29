@@ -39,8 +39,8 @@ func TestPreservationUploaderRun(t *testing.T) {
 	testFilesAreInRightBuckets(t, uploader)
 
 	fileIdentifier := uploader.IngestObject.FileIdentifier("aptrust-info.txt")
-	testCopyToAWSPreservation(t, uploader, fileIdentifier)
-	testCopyToExternalPreservation(t, uploader, fileIdentifier)
+	testCopyToPreservationServerSide(t, uploader, fileIdentifier)
+	testCopyToPreservation(t, uploader, fileIdentifier)
 }
 
 // This function tests that each file was copied to both
@@ -116,7 +116,7 @@ func testFilesAreInRightBuckets(t *testing.T, uploader *ingest.PreservationUploa
 	assert.Empty(t, errors, errors)
 }
 
-func testCopyToAWSPreservation(t *testing.T, uploader *ingest.PreservationUploader, fileIdentifier string) {
+func testCopyToPreservationServerSide(t *testing.T, uploader *ingest.PreservationUploader, fileIdentifier string) {
 	ingestFile, err := uploader.Context.RedisClient.IngestFileGet(
 		uploader.WorkItemID,
 		fileIdentifier,
@@ -124,9 +124,9 @@ func testCopyToAWSPreservation(t *testing.T, uploader *ingest.PreservationUpload
 	require.Nil(t, err)
 	require.NotNil(t, ingestFile)
 
-	uploadTarget := uploader.Context.Config.UploadTargetsFor(constants.StorageGlacierOH)[0]
+	uploadTarget := uploader.Context.Config.UploadTargetsFor(constants.StorageGlacierVA)[0]
 
-	err = uploader.CopyToAWSPreservation(ingestFile, uploadTarget)
+	err = uploader.CopyToPreservationServerSide(ingestFile, uploadTarget)
 	require.Nil(t, err)
 
 	stats, err := uploader.Context.S3StatObject(
@@ -138,7 +138,7 @@ func testCopyToAWSPreservation(t *testing.T, uploader *ingest.PreservationUpload
 	require.EqualValues(t, ingestFile.Size, stats.Size)
 }
 
-func testCopyToExternalPreservation(t *testing.T, uploader *ingest.PreservationUploader, fileIdentifier string) {
+func testCopyToPreservation(t *testing.T, uploader *ingest.PreservationUploader, fileIdentifier string) {
 	ingestFile, err := uploader.Context.RedisClient.IngestFileGet(
 		uploader.WorkItemID,
 		fileIdentifier,
@@ -148,7 +148,7 @@ func testCopyToExternalPreservation(t *testing.T, uploader *ingest.PreservationU
 
 	uploadTarget := uploader.Context.Config.UploadTargetsFor(constants.StorageWasabiOR)[0]
 
-	err = uploader.CopyToExternalPreservation(ingestFile, uploadTarget)
+	err = uploader.CopyToPreservation(ingestFile, uploadTarget)
 	require.Nil(t, err)
 
 	stats, err := uploader.Context.S3StatObject(
