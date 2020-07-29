@@ -3,6 +3,7 @@ package ingest
 import (
 	"fmt"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -80,6 +81,14 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 		identifications, err := fi.Siegfried.Identify(s3Object, ingestFile.PathInBag, "")
 
 		if err != nil {
+			// Not sure how best to identify this error,
+			// but when it occurs, we want to stick with the
+			// original extension-based format identification
+			// rather than letting the ingest process stall.
+			// https://trello.com/c/9ds5MYIt
+			if strings.Contains(err.Error(), "mscfb: slicer read error") {
+				fi.Context.Logger.Warningf("Got mscfb slicer read error on %s. Sticking with extension format %s", ingestFile.Identifier(), ingestFile.FileFormat)
+			}
 			errors = append(errors, fi.Error(errKey, err, false))
 		} else {
 			mimeType := ""
