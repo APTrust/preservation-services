@@ -78,9 +78,16 @@ func (b *IngestBase) ProcessSuccessChannel() {
 		task.WorkItem.Retry = true
 		task.WorkItem.NeedsAdminReview = false
 
-		// When cleaup succeeds, we need to mark the item as succeeded.
+		// When cleaup succeeds, we need to mark the item as succeeded,
+		// unless we're cleaning up an item that was cancelled.
 		if b.Settings.NSQTopic == constants.IngestCleanup {
-			task.WorkItem.Status = constants.StatusSuccess
+			if task.WasCancelled {
+				b.Context.Logger.Infof("WorkItem %d (%s): Cleaned up cancelled item. Leaving status as Cancelled.",
+					task.WorkItem.ID, task.WorkItem.Name)
+				task.WorkItem.Status = constants.StatusCancelled
+			} else {
+				task.WorkItem.Status = constants.StatusSuccess
+			}
 			task.WorkItem.Outcome = "Ingest complete"
 			task.WorkItem.ObjectIdentifier = task.Processor.GetIngestObject().Identifier()
 		}
@@ -89,7 +96,7 @@ func (b *IngestBase) ProcessSuccessChannel() {
 		task.NextQueueTopic = b.Settings.NextQueueTopic
 		b.FinishItem(task)
 
-		// Tell NSQ this b is done with this message.
+		// Tell NSQ this worker is done with this message.
 		task.NSQFinish()
 	}
 }
@@ -186,10 +193,11 @@ func (b *IngestBase) GetTaskObject(message *nsq.Message, workItem *registry.Work
 
 	// Set up the Task.
 	task := &Task{
-		NSQMessage: message,
-		WorkResult: workResult,
-		WorkItem:   workItem,
-		Processor:  b.processorConstructor(b.Context, workItem.ID, ingestObject),
+		NSQMessage:   message,
+		WasCancelled: workItem.Status == constants.StatusCancelled,
+		WorkResult:   workResult,
+		WorkItem:     workItem,
+		Processor:    b.processorConstructor(b.Context, workItem.ID, ingestObject),
 	}
 	return task, nil
 }

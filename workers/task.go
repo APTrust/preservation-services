@@ -37,6 +37,12 @@ type Task struct {
 	// this worker is responsible for (validation, storage, recording, etc.)
 	Processor ingest.Runnable
 
+	// WasCancelled will be true if this task was cancelled in any
+	// stage prior to Cleanup. When this is true, the Cleanup worker
+	// must set the final status of this task's WorkItem to Cancelled
+	// instead of Succeeded, even when Cleanup does succeed.
+	WasCancelled bool
+
 	// WorkResult describes the result of this worker's work.
 	WorkResult *service.WorkResult
 
