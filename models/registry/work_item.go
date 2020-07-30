@@ -21,7 +21,7 @@ type WorkItem struct {
 	ETag                  string    `json:"etag"`
 	GenericFileIdentifier string    `json:"generic_file_identifier"`
 	ID                    int       `json:"id,omitempty"`
-	InstApprover          string    `json:"inst_appropver"`
+	InstApprover          string    `json:"inst_approver"`
 	InstitutionID         int       `json:"institution_id"`
 	Name                  string    `json:"name"`
 	NeedsAdminReview      bool      `json:"needs_admin_review"`
@@ -93,7 +93,7 @@ type WorkItemForPharos struct {
 	Date                  time.Time `json:"date"`
 	ETag                  string    `json:"etag"`
 	GenericFileIdentifier string    `json:"generic_file_identifier"`
-	InstApprover          string    `json:"inst_appropver"`
+	InstApprover          string    `json:"inst_approver"`
 	InstitutionID         int       `json:"institution_id"`
 	Name                  string    `json:"name"`
 	NeedsAdminReview      bool      `json:"needs_admin_review"`
