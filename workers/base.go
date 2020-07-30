@@ -284,7 +284,7 @@ func (b *Base) OtherWorkerIsHandlingThis(workItem *registry.WorkItem) bool {
 	}
 	hostname, _ := os.Hostname()
 	if workItem.Node != hostname || workItem.Pid != os.Getpid() {
-		b.Context.Logger.Infof("Skipping WorkItem %d because it's being processed by host %s, pid %d", workItem.ID, workItem.Node, workItem.Pid)
+		b.Context.Logger.Infof("Skipping WorkItem %d because it's being processed by host %s, pid %d and this worker is host %s, pid %d", workItem.ID, workItem.Node, workItem.Pid, hostname, os.Getpid())
 		return true
 	}
 	return false
