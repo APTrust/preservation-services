@@ -365,6 +365,8 @@ func (b *Base) FinishItem(task *Task) {
 	task.WorkItem.Node = ""
 	task.WorkItem.Pid = 0
 	b.SaveWorkItem(task.WorkItem)
+	jsonData, _ := task.WorkItem.ToJSON()
+	b.Context.Logger.Infof("Saved WorkItem to Pharos: %s", jsonData)
 	task.WorkResult.Finish()
 	b.SaveWorkResult(task.WorkItem.ID, task.WorkResult)
 	if task.NextQueueTopic != "" {
