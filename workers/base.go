@@ -268,7 +268,7 @@ func (b *Base) SaveWorkResult(workItemID int, result *service.WorkResult) error 
 func (b *Base) SaveWorkItem(workItem *registry.WorkItem) error {
 	resp := b.Context.PharosClient.WorkItemSave(workItem)
 	if resp.Error != nil {
-		b.Context.Logger.Error("Error saving WorkItem %d to Pharos: %v",
+		b.Context.Logger.Errorf("Error saving WorkItem %d to Pharos: %v",
 			workItem.ID, resp.Error)
 		return resp.Error
 	}
