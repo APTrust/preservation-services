@@ -30,7 +30,7 @@ func NewContext() *Context {
 		Config:       config,
 		Logger:       _logger,
 		NSQClient:    getNsqClient(config),
-		PharosClient: getPharosClient(config),
+		PharosClient: getPharosClient(config, _logger),
 		RedisClient:  getRedisClient(config),
 		S3Clients:    getS3Clients(config, _logger),
 	}
@@ -52,12 +52,13 @@ func getRedisClient(config *Config) *network.RedisClient {
 		config.RedisDefaultDB)
 }
 
-func getPharosClient(config *Config) *network.PharosClient {
+func getPharosClient(config *Config, logger *logging.Logger) *network.PharosClient {
 	client, err := network.NewPharosClient(
 		config.PharosURL,
 		config.PharosAPIVersion,
 		config.PharosAPIUser,
-		config.PharosAPIKey)
+		config.PharosAPIKey,
+		logger)
 	if err != nil {
 		msg := fmt.Sprintf("Could not initialize Pharos client: %v", err)
 		panic(msg)

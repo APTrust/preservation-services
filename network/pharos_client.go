@@ -9,9 +9,11 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
+	"github.com/op/go-logging"
 )
 
 // PharosClient supports basic calls to the Pharos Admin REST API.
@@ -22,12 +24,13 @@ type PharosClient struct {
 	APIUser    string
 	APIKey     string
 	httpClient *http.Client
+	logger     *logging.Logger
 	transport  *http.Transport
 }
 
 // NewPharosClient creates a new pharos client. Param HostUrl should
 // come from the config.json file.
-func NewPharosClient(HostURL, APIVersion, APIUser, APIKey string) (*PharosClient, error) {
+func NewPharosClient(HostURL, APIVersion, APIUser, APIKey string, logger *logging.Logger) (*PharosClient, error) {
 	if !util.TestsAreRunning() && (APIUser == "" || APIKey == "") {
 		panic("Env vars PHAROS_API_USER and PHAROS_API_KEY cannot be empty.")
 	}
@@ -52,6 +55,7 @@ func NewPharosClient(HostURL, APIVersion, APIUser, APIKey string) (*PharosClient
 		APIVersion: APIVersion,
 		APIUser:    APIUser,
 		APIKey:     APIKey,
+		logger:     logger,
 		httpClient: httpClient,
 		transport:  transport}, nil
 }
@@ -994,9 +998,11 @@ func (client *PharosClient) DoRequest(resp *PharosResponse, method, absoluteURL 
 	}
 
 	// Issue the HTTP request
+	reqTime := time.Now()
 	resp.Response, resp.Error = client.httpClient.Do(request)
+	client.logger.Infof("%s %s completed in %s", method, absoluteURL, time.Now().Sub(reqTime))
 	if resp.Error != nil {
-		resp.Error = fmt.Errorf("%s %s: %s", method, request.URL.String(), resp.Error.Error())
+		resp.Error = fmt.Errorf("%s %s: %s", method, absoluteURL, resp.Error.Error())
 		return
 	}
 
@@ -1010,13 +1016,9 @@ func (client *PharosClient) DoRequest(resp *PharosResponse, method, absoluteURL 
 
 	if resp.Error == nil && resp.Response.StatusCode >= 400 {
 		body, _ := resp.RawResponseData()
-		// Setting url.Opaque ruins url.String(),
-		// so we have to roll our own.
-		urlStr := fmt.Sprintf("%s://%s:%s%s", request.URL.Scheme, request.URL.Host,
-			request.URL.Path, request.URL.Opaque)
 		resp.Error = fmt.Errorf("Server returned status code %d. "+
 			"%s %s - Body: %s",
-			resp.Response.StatusCode, method, urlStr, string(body))
+			resp.Response.StatusCode, method, absoluteURL, string(body))
 	}
 }
 

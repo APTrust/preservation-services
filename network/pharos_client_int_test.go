@@ -14,6 +14,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/network"
+	"github.com/APTrust/preservation-services/util/logger"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -92,11 +93,14 @@ func LoadWorkItemFixtures(t *testing.T) map[string]*registry.WorkItem {
 func GetPharosClient(t *testing.T) *network.PharosClient {
 	config := common.NewConfig()
 	assert.Equal(t, "test", config.ConfigName)
+	_logger, _ := logger.InitLogger(config.LogDir, config.LogLevel)
+	require.NotNil(t, _logger)
 	client, err := network.NewPharosClient(
 		config.PharosURL,
 		config.PharosAPIVersion,
 		config.PharosAPIUser,
 		config.PharosAPIKey,
+		_logger,
 	)
 	require.Nil(t, err)
 	require.NotNil(t, client)
