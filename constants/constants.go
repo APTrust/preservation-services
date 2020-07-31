@@ -141,6 +141,13 @@ var PreferredAlgsInOrder []string = []string{
 	AlgMd5,
 }
 
+var SupportedManifestAlgorithms []string = []string{
+	AlgMd5,
+	AlgSha1,
+	AlgSha256,
+	AlgSha512,
+}
+
 var StorageProviders = []string{
 	StorageProviderAWS,
 	StorageProviderLocal,

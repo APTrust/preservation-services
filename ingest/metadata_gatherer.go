@@ -82,6 +82,14 @@ func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingErr
 		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, false))
 	}
 
+	// Special action for staging system, where re-deployments can leave
+	// stale manifests in the staging.staging bucket. These cause bag validation
+	// to fail because the stale manifests include entries for files that do not
+	// exist in the new bag.
+	if m.Context.Config.StagingBucket == "aptrust.staging.staging" {
+		m.deleteStaleItemsFromStaging(m.WorkItemID)
+	}
+
 	err = m.CopyTempFilesToS3(scanner.TempFiles)
 	if err != nil {
 		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, false))
@@ -315,6 +323,35 @@ func (m *MetadataGatherer) setMissingDefaultTags() {
 			tag = bagit.NewTag("aptrust-info.txt", "Storage-Option", "Standard")
 			m.IngestObject.Tags = append(m.IngestObject.Tags, tag)
 		}
+	}
+}
+
+// Delete stale manifests from the staging bucket. This problem affects
+// our staging environment. See https://trello.com/c/cE9rLSUH
+func (m *MetadataGatherer) deleteStaleItemsFromStaging(workItemId int) {
+	if m.Context.Config.StagingBucket != "aptrust.staging.staging" {
+		return
+	}
+	m.deleteStaleStagingItem(fmt.Sprintf("%d/%s", workItemId, "bagit.txt"))
+	m.deleteStaleStagingItem(fmt.Sprintf("%d/%s", workItemId, "bag-info.txt"))
+	m.deleteStaleStagingItem(fmt.Sprintf("%d/%s", workItemId, "aptrust-info.txt"))
+	for _, alg := range constants.SupportedManifestAlgorithms {
+		manifest := fmt.Sprintf("manifest-%s.txt", alg)
+		tagManifest := fmt.Sprintf("tag%s", alg)
+		m.deleteStaleStagingItem(fmt.Sprintf("%d/%s", workItemId, manifest))
+		m.deleteStaleStagingItem(fmt.Sprintf("%d/%s", workItemId, tagManifest))
+	}
+}
+
+func (m *MetadataGatherer) deleteStaleStagingItem(key string) {
+	if m.Context.Config.StagingBucket != "aptrust.staging.staging" {
+		return
+	}
+	s3Client := m.Context.S3Clients[constants.StorageProviderAWS]
+	m.Context.Logger.Infof("Deleting stale item %s staging", key)
+	err := s3Client.RemoveObject(m.Context.Config.StagingBucket, key)
+	if err != nil && err.Error() != "The specified key does not exist." {
+		m.Context.Logger.Warningf("Error deleting stale item %s staging: %v", key, err)
 	}
 }
 
