@@ -53,6 +53,15 @@ func NewMetadataGatherer(context *common.Context, workItemID int, ingestObject *
 // S3 staging bucket. The text files include manifests, tag manifests,
 // and selected tag files.
 func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingError) {
+
+	// Delete stale metadata in staging. Part of
+	// https://trello.com/c/cE9rLSUH
+	// *** Consider applying this change to demo and production as well. ***
+	if m.Context.Config.StagingBucket == "aptrust.staging.staging" {
+		m.Context.Logger.Infof("Deleting old Redis data for WorkItem %d", m.WorkItemID)
+		m.Context.RedisClient.WorkItemDelete(m.WorkItemID)
+	}
+
 	tarredBag, err := m.Context.S3GetObject(
 		constants.StorageProviderAWS,
 		m.IngestObject.S3Bucket,
@@ -86,6 +95,8 @@ func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingErr
 	// stale manifests in the staging.staging bucket. These cause bag validation
 	// to fail because the stale manifests include entries for files that do not
 	// exist in the new bag.
+	//
+	// *** Consider applying this change to demo and production as well. ***
 	if m.Context.Config.StagingBucket == "aptrust.staging.staging" {
 		m.deleteStaleItemsFromStaging(m.WorkItemID)
 	}
