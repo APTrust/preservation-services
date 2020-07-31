@@ -161,7 +161,7 @@ func (b *IngestBase) ProcessFatalErrorChannel() {
 		task.WorkItem.Status = constants.StatusFailed
 
 		// NSQ
-		if b.Settings.PushToCleanupOnFatalError {
+		if b.Settings.PushToCleanupOnFatalError && task.WorkItem.Stage != constants.StageCleanup {
 			task.Processor.GetIngestObject().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterFatalError
 			task.Processor.IngestObjectSave()
 			task.NextQueueTopic = constants.IngestCleanup
@@ -215,7 +215,7 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	// Occasionally, NSQ will think an item has timed out because
 	// it took a long time to record. NSQ sends it to a new worker
 	// after the original worker has completed it.
-	if workItem.ProcessingHasCompleted() {
+	if workItem.ProcessingHasCompleted() && workItem.Stage != constants.StageCleanup {
 		message := fmt.Sprintf("Rejecting WorkItem %d because status is %s", workItem.ID, workItem.Status)
 		b.Context.Logger.Info(message)
 		return true
