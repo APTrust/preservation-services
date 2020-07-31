@@ -337,7 +337,7 @@ func (m *MetadataGatherer) deleteStaleItemsFromStaging(workItemId int) {
 	m.deleteStaleStagingItem(fmt.Sprintf("%d/%s", workItemId, "aptrust-info.txt"))
 	for _, alg := range constants.SupportedManifestAlgorithms {
 		manifest := fmt.Sprintf("manifest-%s.txt", alg)
-		tagManifest := fmt.Sprintf("tag%s", alg)
+		tagManifest := fmt.Sprintf("tag%s", manifest)
 		m.deleteStaleStagingItem(fmt.Sprintf("%d/%s", workItemId, manifest))
 		m.deleteStaleStagingItem(fmt.Sprintf("%d/%s", workItemId, tagManifest))
 	}
