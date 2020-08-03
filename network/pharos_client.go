@@ -48,6 +48,7 @@ func NewPharosClient(HostURL, APIVersion, APIUser, APIKey string, logger *loggin
 	transport := &http.Transport{
 		//MaxIdleConnsPerHost: 2,
 		DisableKeepAlives: true,
+		ForceAttemptHTTP2: true,
 	}
 	httpClient := &http.Client{Jar: cookieJar, Transport: transport}
 	return &PharosClient{
