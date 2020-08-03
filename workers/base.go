@@ -13,6 +13,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/network"
 	"github.com/nsqio/go-nsq"
 )
 
@@ -266,11 +267,31 @@ func (b *Base) SaveWorkResult(workItemID int, result *service.WorkResult) error 
 
 // SaveWorkItem saves a WorkItem back to Pharos.
 func (b *Base) SaveWorkItem(workItem *registry.WorkItem) error {
-	resp := b.Context.PharosClient.WorkItemSave(workItem)
+	var resp *network.PharosResponse
+	for i := 0; i < 5; i++ {
+		resp = b.Context.PharosClient.WorkItemSave(workItem)
+		if resp.Error == nil {
+			break
+		} else {
+			// Main problem here is 502/Bad Gateway, which seems
+			// to happen in particular in the reingest check worker,
+			// where turnaround between calls to Pharos is a fraction
+			// of a second.
+			b.Context.Logger.Errorf(
+				"Error saving WorkItem %d to Pharos "+
+					"(attempt %d, will retry in 1 second): %v",
+				workItem.ID, i+1, resp.Error)
+			time.Sleep(1 * time.Second)
+		}
+	}
 	if resp.Error != nil {
-		b.Context.Logger.Errorf("Error saving WorkItem %d to Pharos: %v",
+		b.Context.Logger.Errorf("Error saving WorkItem %d to Pharos "+
+			"after max attempts: %v",
 			workItem.ID, resp.Error)
 		return resp.Error
+	} else {
+		jsonData, _ := workItem.ToJSON()
+		b.Context.Logger.Infof("Saved WorkItem to Pharos: %s", jsonData)
 	}
 	return nil
 }
@@ -365,8 +386,6 @@ func (b *Base) FinishItem(task *Task) {
 	task.WorkItem.Node = ""
 	task.WorkItem.Pid = 0
 	b.SaveWorkItem(task.WorkItem)
-	jsonData, _ := task.WorkItem.ToJSON()
-	b.Context.Logger.Infof("Saved WorkItem to Pharos: %s", jsonData)
 	task.WorkResult.Finish()
 	b.SaveWorkResult(task.WorkItem.ID, task.WorkResult)
 	if task.NextQueueTopic != "" {
