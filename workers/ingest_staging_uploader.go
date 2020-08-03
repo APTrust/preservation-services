@@ -21,7 +21,7 @@ func NewStagingUploader(bufSize, numWorkers, maxAttempts int) *StagingUploader {
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,
 		MaxAttempts:                         maxAttempts,
-		NSQChannel:                          constants.IngestStorage + "_worker_chan",
+		NSQChannel:                          constants.IngestStaging + "_worker_chan",
 		NSQTopic:                            constants.IngestStaging,
 		NextQueueTopic:                      constants.IngestFormatIdentification,
 		NextWorkItemStage:                   constants.StageFormatIdentification,
