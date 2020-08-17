@@ -379,6 +379,28 @@ This could allow restoration to scale horizontally, and could be less painful th
 
 This would present a problem in the theoretical case of mass restoration. If we're restoring dozens of bags at once, would we have trouble mounting and unmounting dozens of drives?
 
-## TODOs
+## Restoration
 
-See todos in util/testutil/mock_services.go and in models/common/config.go
+Ideally, we'd restore from S3 to S3, but Minio's PutObject (and other similar libraries) require a single input stream for copying. ComposeObject could work, but we'd have to figure out how to inject tar headers between files, and that would be a lot of work.
+
+For now, we'll follow the old process of downloading all files to local disk and bag from there. If we keep a 1TB general purpose EBS volume, that will cost us $100/month. If we need more restoration space for larget bags, we'll have to provision a new temporary volume.
+
+### Restoration Process
+
+1. Copy all bag files to local disk. (In directory named restoration/<IntelObjId>.)
+2. Create the bag according to the appropriate BagIt profile:
+    * Write manifests
+    * Write tag files
+    * Write JSON events file, if possible (limit to deletes and re-ingests?)
+    * Write tag manifests
+    * Write payload files
+3. Validate the bag according to the appropriate BagIt profile.
+4. Upload the bag to the depositor's restoration bucket.
+5. Trigger restoration alert.
+6. Close out the WorkItem.
+
+We'll need something like the old [Exchange Volume Service](https://github.com/APTrust/exchange/blob/master/service/volume_service.go) to manage disk space, and we'll also need a mechanism or alert to provision a new volume when asked to restore a large bag.
+
+#### Glacier Restoration
+
+For items stored in Glacier and Glacier Deep Archive, we'll need a first step similar to [Glacier Restore Init](https://github.com/APTrust/exchange/blob/master/workers/apt_glacier_restore_init.go) from Exchange.
