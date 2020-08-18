@@ -17,3 +17,17 @@ type Base struct {
 	RestorationObject *service.RestorationObject
 	WorkItemID        int
 }
+
+// Error returns a ProcessingError describing something that went wrong
+// during the restoration process for this object. Identifier can be either
+// an IntellectualObect identifier, a GenericFile identifier, or in rare
+// cases a WorkItem ID. Since each has a different format, you can discern
+// the identifier type by looking at it.
+func (b *Base) Error(identifier string, err error, isFatal bool) *service.ProcessingError {
+	return service.NewProcessingError(
+		b.WorkItemID,
+		identifier,
+		err.Error(),
+		isFatal,
+	)
+}
