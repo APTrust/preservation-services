@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -30,9 +31,9 @@ type RestorationObject struct {
 	// completing.
 	ErrorMessage string `json:"error_message"`
 
-	// ObjIdentifier is the identifier of the IntellectionObject (from Pharos)
-	// to be restored.
-	ObjIdentifier string `json:"obj_identifier"`
+	// Identifier is the identifier of the IntellectionObject or GenericFile
+	// (from Pharos) to be restored.
+	Identifier string `json:"identifier"`
 
 	// PathToBag is the path the restored bag on local disk.
 	PathToBag string `json:"path_to_bag"`
@@ -51,4 +52,24 @@ type RestorationObject struct {
 	// URL is the URL of the restored bag in the depositor's restoration
 	// bucket.
 	URL string `json:"url"`
+}
+
+// RestorationObjectFromJSON converts the JSON representation of a
+// RestorationObject to an actual object.
+func RestorationObjectFromJSON(jsonData string) (*RestorationObject, error) {
+	obj := &RestorationObject{}
+	err := json.Unmarshal([]byte(jsonData), obj)
+	if err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+// ToJSON converts this object to its JSON representation.
+func (obj *RestorationObject) ToJSON() (string, error) {
+	bytes, err := json.Marshal(obj)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }

@@ -30,7 +30,7 @@ func NewDownloader(context *common.Context, workItemID int, restorationObject *s
 
 func (d *Downloader) Run() (fileCount int, errors []*service.ProcessingError) {
 	fileCount = 1
-	objIdentifier := d.RestorationObject.ObjIdentifier
+	objIdentifier := d.RestorationObject.Identifier
 	hasMore := true
 	pageNumber := 1
 	for hasMore {
@@ -41,6 +41,7 @@ func (d *Downloader) Run() (fileCount int, errors []*service.ProcessingError) {
 		}
 		hasMore = len(files) == BatchSize
 		for _, gf := range files {
+			// TODO: Get bucket and key from GenericFile storage record.
 			bucket := ""
 			key := ""
 			_, err = d.Download(bucket, key)

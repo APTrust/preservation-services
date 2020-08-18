@@ -6,6 +6,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/network"
+	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"strings"
@@ -84,6 +85,32 @@ func TestIngestFileDelete(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = client.IngestFileDelete(9999, f.Identifier())
+	assert.Nil(t, err)
+}
+
+func TestRestorationObjectSaveAndGet(t *testing.T) {
+	client := getRedisClient()
+	require.NotNil(t, client)
+	obj := testutil.GetRestorationObject()
+	err := client.RestorationObjectSave(9999, obj)
+	assert.Nil(t, err)
+
+	retrievedObj, err := client.RestorationObjectGet(9999, obj.Identifier)
+	assert.Nil(t, err)
+	assert.NotNil(t, retrievedObj)
+	assert.Equal(t, obj.ETag, retrievedObj.ETag)
+	assert.Equal(t, obj.Identifier, retrievedObj.Identifier)
+	assert.Equal(t, obj.URL, retrievedObj.URL)
+}
+
+func TestRestorationObjectDelete(t *testing.T) {
+	client := getRedisClient()
+	require.NotNil(t, client)
+	obj := testutil.GetRestorationObject()
+	err := client.RestorationObjectSave(9999, obj)
+	assert.Nil(t, err)
+
+	err = client.IngestObjectDelete(9999, obj.Identifier)
 	assert.Nil(t, err)
 }
 

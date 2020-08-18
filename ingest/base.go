@@ -22,7 +22,7 @@ type Base struct {
 	WorkItemID   int
 }
 
-// IngestObjectGet resturns this struct's IngestObject. This satisfies part
+// IngestObjectGet returns this struct's IngestObject. This satisfies part
 // of the Runnable interface.
 func (b *Base) IngestObjectGet() *service.IngestObject {
 	return b.IngestObject
