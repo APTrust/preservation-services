@@ -42,6 +42,8 @@ func (d *Downloader) Run() (fileCount int, errors []*service.ProcessingError) {
 		hasMore = len(files) == BatchSize
 		for _, gf := range files {
 			// TODO: Get bucket and key from GenericFile storage record.
+			// TODO: Pharos needs a flag to include StorageRecords with
+			// GenericFiles. See https://github.com/APTrust/pharos/blob/feature/storage-record/app/controllers/generic_files_controller.rb
 			bucket := ""
 			key := ""
 			_, err = d.Download(bucket, key)
