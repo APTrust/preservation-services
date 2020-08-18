@@ -253,9 +253,9 @@ func TestIngestBase_GetInstitutionIdentifier(t *testing.T) {
 	assert.Equal(t, "test.edu", identifier)
 }
 
-func TestIngestBase_GetIngestObject(t *testing.T) {
+func TestIngestBase_IngestObjectGet(t *testing.T) {
 	ingestBase := getIngestBase()
-	ingestObj, err := ingestBase.GetIngestObject(testWorkItem)
+	ingestObj, err := ingestBase.IngestObjectGet(testWorkItem)
 	assert.Nil(t, err)
 	require.NotNil(t, ingestObj)
 	assert.Equal(t, objectIdentifier, ingestObj.Identifier())

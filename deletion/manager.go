@@ -81,9 +81,9 @@ func (m *Manager) Run() (count int, errors []*service.ProcessingError) {
 	return count, errors
 }
 
-// GetIngestObject is a dummy method that allows this object to conform to the
+// IngestObjectGet is a dummy method that allows this object to conform to the
 // ingest.Runnable interface.
-func (m *Manager) GetIngestObject() *service.IngestObject {
+func (m *Manager) IngestObjectGet() *service.IngestObject {
 	return nil
 }
 

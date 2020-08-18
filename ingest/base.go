@@ -11,7 +11,7 @@ type BaseConstructor func(*common.Context, int, *service.IngestObject) Runnable
 
 type Runnable interface {
 	Run() (int, []*service.ProcessingError)
-	GetIngestObject() *service.IngestObject
+	IngestObjectGet() *service.IngestObject
 	IngestObjectSave() error
 }
 
@@ -22,9 +22,9 @@ type Base struct {
 	WorkItemID   int
 }
 
-// GetIngestObject resturns this struct's IngestObject. This satisfies part
+// IngestObjectGet resturns this struct's IngestObject. This satisfies part
 // of the Runnable interface.
-func (b *Base) GetIngestObject() *service.IngestObject {
+func (b *Base) IngestObjectGet() *service.IngestObject {
 	return b.IngestObject
 }
 

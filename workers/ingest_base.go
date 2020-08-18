@@ -89,7 +89,7 @@ func (b *IngestBase) ProcessSuccessChannel() {
 				task.WorkItem.Status = constants.StatusSuccess
 			}
 			task.WorkItem.Outcome = "Ingest complete"
-			task.WorkItem.ObjectIdentifier = task.Processor.GetIngestObject().Identifier()
+			task.WorkItem.ObjectIdentifier = task.Processor.IngestObjectGet().Identifier()
 		}
 
 		// Push item to next queue.
@@ -124,7 +124,7 @@ func (b *IngestBase) ProcessErrorChannel() {
 
 			// Go to NSQ cleanup or not?
 			if b.Settings.PushToCleanupAfterMaxFailedAttempts {
-				task.Processor.GetIngestObject().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterMaxFailedAttempts
+				task.Processor.IngestObjectGet().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterMaxFailedAttempts
 				task.Processor.IngestObjectSave()
 				task.NextQueueTopic = constants.IngestCleanup
 			} else {
@@ -162,7 +162,7 @@ func (b *IngestBase) ProcessFatalErrorChannel() {
 
 		// NSQ
 		if b.Settings.PushToCleanupOnFatalError && task.WorkItem.Stage != constants.StageCleanup {
-			task.Processor.GetIngestObject().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterFatalError
+			task.Processor.IngestObjectGet().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterFatalError
 			task.Processor.IngestObjectSave()
 			task.NextQueueTopic = constants.IngestCleanup
 		} else {
@@ -180,7 +180,7 @@ func (b *IngestBase) ProcessFatalErrorChannel() {
 // GetTaskObject returns an object representing the task to be implemented.
 // This object will be passed from channel to channel during processing.
 func (b *IngestBase) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
-	ingestObject, err := b.GetIngestObject(workItem)
+	ingestObject, err := b.IngestObjectGet(workItem)
 	if err != nil {
 		message := fmt.Sprintf("WorkItem %d: %v", workItem.ID, err)
 		b.Context.Logger.Error(message)
@@ -265,11 +265,11 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	return false
 }
 
-// GetIngestObject returns the IngestObject for the specified WorkItem from
+// IngestObjectGet returns the IngestObject for the specified WorkItem from
 // Redis, or it creates a new one. For the first phase of ingest (PreFetch),
 // this will almost always have to create a new IngestObject. For subsequent
 // phases, it should never have to create one.
-func (b *IngestBase) GetIngestObject(workItem *registry.WorkItem) (*service.IngestObject, error) {
+func (b *IngestBase) IngestObjectGet(workItem *registry.WorkItem) (*service.IngestObject, error) {
 	instIdentifier, err := b.GetInstitutionIdentifier(workItem.InstitutionID)
 	if err != nil {
 		return nil, b.Error(workItem.ID, "", err, true)
