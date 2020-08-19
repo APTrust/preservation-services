@@ -72,10 +72,10 @@ func (d *Downloader) Run() (fileCount int, errors []*service.ProcessingError) {
 func (d *Downloader) BestRestorationSource(gf *registry.GenericFile) (bestSource *common.PerservationBucket, err error) {
 	priority := DefaultPriority
 	for _, storageRecord := range gf.StorageRecords {
-		for _, target := range d.Context.Config.PerservationBuckets {
-			if target.HostsURL(storageRecord.URL) && target.RestorePriority < priority {
-				bestSource = target
-				priority = target.RestorePriority
+		for _, preservationBucket := range d.Context.Config.PerservationBuckets {
+			if preservationBucket.HostsURL(storageRecord.URL) && preservationBucket.RestorePriority < priority {
+				bestSource = preservationBucket
+				priority = preservationBucket.RestorePriority
 			}
 		}
 	}

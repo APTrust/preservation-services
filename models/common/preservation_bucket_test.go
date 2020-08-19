@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getTarget() *common.PerservationBucket {
+func getBucket() *common.PerservationBucket {
 	return &common.PerservationBucket{
 		Bucket:       "test-bucket",
-		Description:  "Test target",
+		Description:  "Test bucket",
 		Host:         "flava.flave",
 		OptionName:   "FakeStorageOption",
 		Provider:     constants.StorageProviderAWS,
@@ -21,26 +21,26 @@ func getTarget() *common.PerservationBucket {
 }
 
 func TestPerservationBucketURLFor(t *testing.T) {
-	target := getTarget()
+	preservationBucket := getBucket()
 	expected := "https://s3.us-east-2.flava.flave/test-bucket/abc"
-	assert.Equal(t, expected, target.URLFor("abc"))
+	assert.Equal(t, expected, preservationBucket.URLFor("abc"))
 
-	target.Provider = constants.StorageProviderWasabi
-	target.Region = constants.RegionWasabiUSWest1
+	preservationBucket.Provider = constants.StorageProviderWasabi
+	preservationBucket.Region = constants.RegionWasabiUSWest1
 
 	expected = "https://s3.us-west-1.flava.flave/test-bucket/xyz"
-	assert.Equal(t, expected, target.URLFor("xyz"))
+	assert.Equal(t, expected, preservationBucket.URLFor("xyz"))
 }
 
 func TestHostsURL(t *testing.T) {
-	target := getTarget()
+	preservationBucket := getBucket()
 	url1 := "https://s3.us-east-2.flava.flave/test-bucket/abc"
 	url2 := "https://s3.us-west-1.flava.flave/test-bucket/xyz"
-	assert.True(t, target.HostsURL(url1))
-	assert.False(t, target.HostsURL(url2))
+	assert.True(t, preservationBucket.HostsURL(url1))
+	assert.False(t, preservationBucket.HostsURL(url2))
 
-	target.Provider = constants.StorageProviderWasabi
-	target.Region = constants.RegionWasabiUSWest1
-	assert.False(t, target.HostsURL(url1))
-	assert.True(t, target.HostsURL(url2))
+	preservationBucket.Provider = constants.StorageProviderWasabi
+	preservationBucket.Region = constants.RegionWasabiUSWest1
+	assert.False(t, preservationBucket.HostsURL(url1))
+	assert.True(t, preservationBucket.HostsURL(url2))
 }

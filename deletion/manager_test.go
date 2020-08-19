@@ -227,14 +227,14 @@ func copyFilesToLocalPreservation(t *testing.T, context *common.Context) {
 func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 	pathToFile := testutil.PathToUnitTestBag("example.edu.multipart.b01.of02.tar")
 	gfIdentifier := fmt.Sprintf("%s/%s", objIdentifier, filename)
-	for _, target := range context.Config.PerservationBuckets {
-		_url := target.URLFor(filename)
+	for _, preservationBucket := range context.Config.PerservationBuckets {
+		_url := preservationBucket.URLFor(filename)
 		if util.StringListContains(alreadySaved, _url) {
 			continue
 		}
-		client := context.S3Clients[target.Provider]
+		client := context.S3Clients[preservationBucket.Provider]
 		_, err := client.FPutObject(
-			target.Bucket,
+			preservationBucket.Bucket,
 			filename,
 			pathToFile,
 			minio.PutObjectOptions{},

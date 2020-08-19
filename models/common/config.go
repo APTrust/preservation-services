@@ -190,13 +190,13 @@ func (config *Config) CredentialsForS3Host(host string) (credentials *S3Credenti
 // this will return a single item. For the Standard storage option, it returns
 // two preservation buckets.
 func (config *Config) PerservationBucketsFor(storageOption string) []*PerservationBucket {
-	targets := make([]*PerservationBucket, 0)
-	for _, target := range config.PerservationBuckets {
-		if target.OptionName == storageOption {
-			targets = append(targets, target)
+	preservationBuckets := make([]*PerservationBucket, 0)
+	for _, preservationBucket := range config.PerservationBuckets {
+		if preservationBucket.OptionName == storageOption {
+			preservationBuckets = append(preservationBuckets, preservationBucket)
 		}
 	}
-	return targets
+	return preservationBuckets
 }
 
 func getLogLevel(level string) logging.Level {
@@ -377,15 +377,15 @@ func (config *Config) checkS3Providers() {
 }
 
 func (config *Config) checkPerservationBuckets() {
-	for _, target := range config.PerservationBuckets {
-		if target.Host == "" {
-			util.PrintAndExit(fmt.Sprintf("S3 target %s is missing Host", target.OptionName))
+	for _, preservationBucket := range config.PerservationBuckets {
+		if preservationBucket.Host == "" {
+			util.PrintAndExit(fmt.Sprintf("S3 preservationBucket %s is missing Host", preservationBucket.OptionName))
 		}
-		if target.Bucket == "" {
-			util.PrintAndExit(fmt.Sprintf("S3 provider %s is missing Bucket", target.OptionName))
+		if preservationBucket.Bucket == "" {
+			util.PrintAndExit(fmt.Sprintf("S3 provider %s is missing Bucket", preservationBucket.OptionName))
 		}
-		if target.Region == "" {
-			util.PrintAndExit(fmt.Sprintf("S3 provider %s is missing Region", target.OptionName))
+		if preservationBucket.Region == "" {
+			util.PrintAndExit(fmt.Sprintf("S3 provider %s is missing Region", preservationBucket.OptionName))
 		}
 	}
 }
@@ -547,10 +547,10 @@ func (config *Config) ProviderBucketAndKeyFor(urlStr string) (provider, bucket, 
 	} else {
 		return "", "", "", fmt.Errorf("URL %s is missing bucket name or key", urlStr)
 	}
-	for _, target := range config.PerservationBuckets {
-		regionAndHost := fmt.Sprintf("s3.%s.%s", target.Region, target.Host)
-		if (_url.Host == target.Host || _url.Host == regionAndHost) && target.Bucket == bucket {
-			provider = target.Provider
+	for _, preservationBucket := range config.PerservationBuckets {
+		regionAndHost := fmt.Sprintf("s3.%s.%s", preservationBucket.Region, preservationBucket.Host)
+		if (_url.Host == preservationBucket.Host || _url.Host == regionAndHost) && preservationBucket.Bucket == bucket {
+			provider = preservationBucket.Provider
 			break
 		}
 	}

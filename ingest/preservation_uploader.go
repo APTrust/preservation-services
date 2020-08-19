@@ -52,11 +52,11 @@ func (uploader *PreservationUploader) Run() (int, []*service.ProcessingError) {
 }
 
 func (uploader *PreservationUploader) getUploadFunction() service.IngestFileApplyFn {
-	uploadTargets := uploader.Context.Config.PerservationBucketsFor(uploader.IngestObject.StorageOption)
+	preservationBuckets := uploader.Context.Config.PerservationBucketsFor(uploader.IngestObject.StorageOption)
 
 	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
-		for _, uploadTarget := range uploadTargets {
-			if !ingestFile.NeedsSaveAt(uploadTarget.Provider, uploadTarget.Bucket) {
+		for _, preservationBucket := range preservationBuckets {
+			if !ingestFile.NeedsSaveAt(preservationBucket.Provider, preservationBucket.Bucket) {
 				reason := "file has already been uploaded"
 				if !ingestFile.HasPreservableName() {
 					reason = "file does not have preservable name"
@@ -64,8 +64,8 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 					reason = "NeedsSave is false (unmodified reingest)"
 				}
 				uploader.Context.Logger.Infof("Skipping: %s because %s to %s/%s as %s",
-					ingestFile.Identifier(), reason, uploadTarget.Provider,
-					uploadTarget.Bucket, ingestFile.UUID)
+					ingestFile.Identifier(), reason, preservationBucket.Provider,
+					preservationBucket.Bucket, ingestFile.UUID)
 				continue
 			}
 			var processingError *service.ProcessingError
@@ -73,10 +73,10 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 			// User S3 server-side copying only in US East 1, where our
 			// receiving buckets are. Cross-region server-side copying
 			// is too slow. https://trello.com/c/52YwknCr
-			if uploadTarget.Provider == constants.StorageProviderAWS && uploadTarget.Region == constants.RegionAWSUSEast1 {
-				processingError = uploader.CopyToPreservationServerSide(ingestFile, uploadTarget)
+			if preservationBucket.Provider == constants.StorageProviderAWS && preservationBucket.Region == constants.RegionAWSUSEast1 {
+				processingError = uploader.CopyToPreservationServerSide(ingestFile, preservationBucket)
 			} else {
-				processingError = uploader.CopyToPreservation(ingestFile, uploadTarget)
+				processingError = uploader.CopyToPreservation(ingestFile, preservationBucket)
 			}
 			if processingError != nil {
 				errors = append(errors, processingError)
@@ -86,12 +86,12 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 				// Additional StorageRecord properties will be set
 				// later when we confirm the upload succeeded.
 				storageRecord := &service.StorageRecord{
-					Bucket:   uploadTarget.Bucket,
-					Provider: uploadTarget.Provider,
+					Bucket:   preservationBucket.Bucket,
+					Provider: preservationBucket.Provider,
 					StoredAt: time.Now().UTC(),
-					URL:      uploadTarget.URLFor(ingestFile.UUID),
+					URL:      preservationBucket.URLFor(ingestFile.UUID),
 				}
-				uploader.Context.Logger.Infof("Copied %s to %s/%s as %s", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, ingestFile.UUID)
+				uploader.Context.Logger.Infof("Copied %s to %s/%s as %s", ingestFile.Identifier(), preservationBucket.Provider, preservationBucket.Bucket, ingestFile.UUID)
 				ingestFile.SetStorageRecord(storageRecord)
 			}
 		}
@@ -105,8 +105,8 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 //
 // Avoid calling this directly. Call Run() instead. This is
 // public so we can test it.
-func (uploader *PreservationUploader) CopyToPreservationServerSide(ingestFile *service.IngestFile, uploadTarget *common.PerservationBucket) *service.ProcessingError {
-	client, err := uploader.getS3Client(uploadTarget.Provider)
+func (uploader *PreservationUploader) CopyToPreservationServerSide(ingestFile *service.IngestFile, preservationBucket *common.PerservationBucket) *service.ProcessingError {
+	client, err := uploader.getS3Client(preservationBucket.Provider)
 	if err != nil {
 		uploader.Context.Logger.Error(err, ingestFile.Identifier())
 		return uploader.Error(ingestFile.Identifier(), err, false)
@@ -122,29 +122,29 @@ func (uploader *PreservationUploader) CopyToPreservationServerSide(ingestFile *s
 		nil,
 	)
 	destInfo, err := minio.NewDestinationInfo(
-		uploadTarget.Bucket,
+		preservationBucket.Bucket,
 		ingestFile.UUID,
 		nil,
 		nil,
 	)
 	if err != nil {
-		uploader.Context.Logger.Infof("Error getting destination info for %s (%s/%s): %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
+		uploader.Context.Logger.Infof("Error getting destination info for %s (%s/%s): %v", ingestFile.Identifier(), preservationBucket.Provider, preservationBucket.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 
 	// CopyObject handles objects only up to 5GB.
 	if ingestFile.Size <= constants.MaxServerSideCopySize {
-		uploader.Context.Logger.Infof("Copying %s from %s to %s as %s using CopyObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket, ingestFile.UUID)
+		uploader.Context.Logger.Infof("Copying %s from %s to %s as %s using CopyObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, preservationBucket.Bucket, ingestFile.UUID)
 		err = client.CopyObject(destInfo, sourceInfo)
 	} else {
-		uploader.Context.Logger.Infof("Copying %s from %s to %s as %s using ComposeObjectWithProgress()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, uploadTarget.Bucket, ingestFile.UUID)
+		uploader.Context.Logger.Infof("Copying %s from %s to %s as %s using ComposeObjectWithProgress()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, preservationBucket.Bucket, ingestFile.UUID)
 		sources := []minio.SourceInfo{sourceInfo}
 		// progressLogger copies Minio's internal progress info to our log file.
 		var progressLogger = logger.NewMinioProgressLogger(
 			uploader.Context.Logger,
 			fmt.Sprintf("Uploaded part of %s to %s/%s",
 				ingestFile.Identifier(),
-				uploadTarget.Bucket,
+				preservationBucket.Bucket,
 				ingestFile.UUID),
 			ingestFile.Size,
 		)
@@ -153,7 +153,7 @@ func (uploader *PreservationUploader) CopyToPreservationServerSide(ingestFile *s
 	}
 
 	if err != nil {
-		uploader.Context.Logger.Infof("Error copying %s (%s) to %s/%s: %v", ingestFile.Identifier(), ingestFile.UUID, uploadTarget.Provider, uploadTarget.Bucket, err)
+		uploader.Context.Logger.Infof("Error copying %s (%s) to %s/%s: %v", ingestFile.Identifier(), ingestFile.UUID, preservationBucket.Provider, preservationBucket.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	return nil
@@ -170,13 +170,13 @@ func (uploader *PreservationUploader) CopyToPreservationServerSide(ingestFile *s
 //
 // Avoid calling this directly. Call Run() instead. This is
 // public so we can test it.
-func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.IngestFile, uploadTarget *common.PerservationBucket) *service.ProcessingError {
+func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.IngestFile, preservationBucket *common.PerservationBucket) *service.ProcessingError {
 	srcClient, err := uploader.getS3Client(constants.StorageProviderAWS)
 	if err != nil {
 		uploader.Context.Logger.Error(ingestFile.Identifier(), err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
-	destClient, err := uploader.getS3Client(uploadTarget.Provider)
+	destClient, err := uploader.getS3Client(preservationBucket.Provider)
 	if err != nil {
 		uploader.Context.Logger.Error(ingestFile.Identifier(), err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
@@ -187,26 +187,26 @@ func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.Ing
 		minio.GetObjectOptions{},
 	)
 	if err != nil {
-		uploader.Context.Logger.Infof("Error getting source object for %s (%s/%s): %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
+		uploader.Context.Logger.Infof("Error getting source object for %s (%s/%s): %v", ingestFile.Identifier(), preservationBucket.Provider, preservationBucket.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	putOptions, err := ingestFile.GetPutOptions()
 	if err != nil {
-		uploader.Context.Logger.Infof("Error getting PutOptions for %s (%s/%s): %v", ingestFile.Identifier(), uploadTarget.Provider, uploadTarget.Bucket, err)
+		uploader.Context.Logger.Infof("Error getting PutOptions for %s (%s/%s): %v", ingestFile.Identifier(), preservationBucket.Provider, preservationBucket.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 
-	uploader.Context.Logger.Infof("Copying %s (%s) from %s to %s using PutObject()", ingestFile.Identifier(), ingestFile.UUID, uploader.Context.Config.StagingBucket, uploadTarget.Bucket)
+	uploader.Context.Logger.Infof("Copying %s (%s) from %s to %s using PutObject()", ingestFile.Identifier(), ingestFile.UUID, uploader.Context.Config.StagingBucket, preservationBucket.Bucket)
 
 	bytesCopied, err := destClient.PutObject(
-		uploadTarget.Bucket,
+		preservationBucket.Bucket,
 		ingestFile.UUID,
 		srcObject,
 		ingestFile.Size,
 		putOptions,
 	)
 	if err != nil {
-		uploader.Context.Logger.Infof("Error copying %s (%s) to %s/%s: %v", ingestFile.Identifier(), ingestFile.UUID, uploadTarget.Provider, uploadTarget.Bucket, err)
+		uploader.Context.Logger.Infof("Error copying %s (%s) to %s/%s: %v", ingestFile.Identifier(), ingestFile.UUID, preservationBucket.Provider, preservationBucket.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	if bytesCopied != ingestFile.Size {

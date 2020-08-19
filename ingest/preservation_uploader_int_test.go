@@ -124,14 +124,14 @@ func testCopyToPreservationServerSide(t *testing.T, uploader *ingest.Preservatio
 	require.Nil(t, err)
 	require.NotNil(t, ingestFile)
 
-	uploadTarget := uploader.Context.Config.PerservationBucketsFor(constants.StorageGlacierVA)[0]
+	preservationBucket := uploader.Context.Config.PerservationBucketsFor(constants.StorageGlacierVA)[0]
 
-	err = uploader.CopyToPreservationServerSide(ingestFile, uploadTarget)
+	err = uploader.CopyToPreservationServerSide(ingestFile, preservationBucket)
 	require.Nil(t, err)
 
 	stats, err := uploader.Context.S3StatObject(
 		constants.StorageProviderAWS,
-		uploadTarget.Bucket,
+		preservationBucket.Bucket,
 		ingestFile.UUID,
 	)
 	require.Nil(t, err)
@@ -146,14 +146,14 @@ func testCopyToPreservation(t *testing.T, uploader *ingest.PreservationUploader,
 	require.Nil(t, err)
 	require.NotNil(t, ingestFile)
 
-	uploadTarget := uploader.Context.Config.PerservationBucketsFor(constants.StorageWasabiOR)[0]
+	preservationBucket := uploader.Context.Config.PerservationBucketsFor(constants.StorageWasabiOR)[0]
 
-	err = uploader.CopyToPreservation(ingestFile, uploadTarget)
+	err = uploader.CopyToPreservation(ingestFile, preservationBucket)
 	require.Nil(t, err)
 
 	stats, err := uploader.Context.S3StatObject(
 		constants.StorageProviderWasabi,
-		uploadTarget.Bucket,
+		preservationBucket.Bucket,
 		ingestFile.UUID,
 	)
 	require.Nil(t, err)

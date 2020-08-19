@@ -21,17 +21,17 @@ type PerservationBucket struct {
 }
 
 // URLFor returns the URL for the specified key. For example:
-// target.URLFor(uuid) returns something like
+// preservationBucket.URLFor(uuid) returns something like
 // https://s3.us-east-1.amazonaws.com/aptrust.preservation.storage/uuid
-// for an AWS upload target, or
+// for an AWS upload preservationBucket, or
 // https://s3.us-west-1.wasabisys.com/aptrust.wasabi.or/
-// for a Wasabi target.
-func (target *PerservationBucket) URLFor(key string) string {
+// for a Wasabi preservationBucket.
+func (b *PerservationBucket) URLFor(key string) string {
 	return fmt.Sprintf("https://s3.%s.%s/%s/%s",
-		target.Region, target.Host, target.Bucket, key)
+		b.Region, b.Host, b.Bucket, key)
 }
 
-// HostsURL returns true if the given URL is hosted by this upload target.
-func (target *PerservationBucket) HostsURL(url string) bool {
-	return strings.HasPrefix(url, fmt.Sprintf("https://s3.%s.%s/%s/", target.Region, target.Host, target.Bucket))
+// HostsURL returns true if the given URL is hosted by this PreservationBucket.
+func (b *PerservationBucket) HostsURL(url string) bool {
+	return strings.HasPrefix(url, fmt.Sprintf("https://s3.%s.%s/%s/", b.Region, b.Host, b.Bucket))
 }

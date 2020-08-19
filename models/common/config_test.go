@@ -70,15 +70,15 @@ func TestNewConfig(t *testing.T) {
 
 func TestPerservationBucketsFor(t *testing.T) {
 	config := common.NewConfig()
-	targets := config.PerservationBucketsFor(constants.StorageStandard)
-	require.Equal(t, 2, len(targets))
-	for _, target := range targets {
-		assert.Equal(t, constants.StorageStandard, target.OptionName)
+	preservationBuckets := config.PerservationBucketsFor(constants.StorageStandard)
+	require.Equal(t, 2, len(preservationBuckets))
+	for _, preservationBucket := range preservationBuckets {
+		assert.Equal(t, constants.StorageStandard, preservationBucket.OptionName)
 	}
 
-	targets = config.PerservationBucketsFor(constants.StorageWasabiVA)
-	require.Equal(t, 1, len(targets))
-	assert.Equal(t, constants.StorageWasabiVA, targets[0].OptionName)
+	preservationBuckets = config.PerservationBucketsFor(constants.StorageWasabiVA)
+	require.Equal(t, 1, len(preservationBuckets))
+	assert.Equal(t, constants.StorageWasabiVA, preservationBuckets[0].OptionName)
 }
 
 func TestToJson(t *testing.T) {
