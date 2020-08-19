@@ -333,6 +333,8 @@ func (client *PharosClient) GenericFileGet(identifier string) *PharosResponse {
 //   had a fixity check since the specified datetime [yyyy-mm-dd]
 // * include_relations=true - Include the file's PremisEvents and Checksums
 //   in the response.
+// * include_storage_records=true - Include the file's StorageRecords in
+//   the response.
 // * storage_option - "Standard", "Glacier-OH", "Glacier-OR", "Glacier-VA",
 //                    "Glacier-Deep-OH", "Glacier-Deep-OR", "Glacier-Deep-VA"
 //
