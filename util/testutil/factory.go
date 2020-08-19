@@ -220,6 +220,8 @@ func GetRestorationObject() *service.RestorationObject {
 		Identifier:         "test.edu/bag-name.tar",
 		PathToBag:          "/mnt/data/restore/test.edu/bag-name.tar",
 		RestoredAt:         Bloomsday,
+		RestorationSource:  constants.RestorationSourceS3,
+		RestorationType:    constants.RestorationTypeObject,
 		RestoredBagSize:    int64(9999),
 		URL:                "https://s3.example.com/restore-bucket/bag-name.tar",
 	}

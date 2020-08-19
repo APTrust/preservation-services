@@ -69,6 +69,10 @@ const (
 	RegionWasabiUSEast1        = "us-east-1" // Wasabi Virginia
 	RegionWasabiUSEast2        = "us-east-2" // Wasabi Virginia (2)
 	RegionWasabiUSWest1        = "us-west-1" // Wasabi Oregon
+	RestorationSourceGlacier   = "glacier"
+	RestorationSourceS3        = "s3"
+	RestorationTypeFile        = "file"
+	RestorationTypeObject      = "object"
 	S3ClientName               = "https://github.com/minio/minio-go v6"
 	SourceIngest               = "ingest"
 	SourceManifest             = "manifest"

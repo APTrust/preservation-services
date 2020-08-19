@@ -38,6 +38,23 @@ type RestorationObject struct {
 	// PathToBag is the path the restored bag on local disk.
 	PathToBag string `json:"path_to_bag"`
 
+	// RestorationSource describes whether the item being restored is from
+	// S3 or Glacier. S3 includes any AWS or Wasabi S3 bucket. Glacier
+	// includes any Glacier or Glacier Deep Archive bucket. Items in S3
+	// can be restored directly. Those in Glacier must first be moved from
+	// the Glacier vault into the S3 bucket of the same name.
+	//
+	// Valid values for this field are constants.RestorationSourceGlacier
+	// and constants.RestorationSourceS3
+	RestorationSource string
+
+	// RestorationType will be either constants.RestorationTypeFile or
+	// constants.RestorationTypeObject. Single file restorations require
+	// only a single be copied from preservation to the depositor's restoration
+	// bucket. Object restorations require downloading and bagging all of the
+	// object's files before copying to the restoration bucket.
+	RestorationType string
+
 	// RestoredAt describes when the restored bag was copied to the depositor's
 	// restoration bucket.
 	RestoredAt time.Time `json:"restored_at"`

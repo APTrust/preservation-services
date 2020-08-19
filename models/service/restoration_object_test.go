@@ -34,4 +34,4 @@ func TestRestorationObjToJSON(t *testing.T) {
 	assert.Equal(t, RestorationObjectJSON, data)
 }
 
-const RestorationObjectJSON = `{"all_files_downloaded":true,"bag_deleted_at":"1904-06-16T15:04:05Z","bag_validated_at":"1904-06-16T15:04:05Z","download_dir":"/mnt/data","etag":"1234567890","error_message":"No error","identifier":"test.edu/bag-name.tar","path_to_bag":"/mnt/data/restore/test.edu/bag-name.tar","restored_at":"1904-06-16T15:04:05Z","restored_bag_size":9999,"url":"https://s3.example.com/restore-bucket/bag-name.tar"}`
+const RestorationObjectJSON = `{"all_files_downloaded":true,"bag_deleted_at":"1904-06-16T15:04:05Z","bag_validated_at":"1904-06-16T15:04:05Z","download_dir":"/mnt/data","etag":"1234567890","error_message":"No error","identifier":"test.edu/bag-name.tar","path_to_bag":"/mnt/data/restore/test.edu/bag-name.tar","RestorationSource":"s3","RestorationType":"object","restored_at":"1904-06-16T15:04:05Z","restored_bag_size":9999,"url":"https://s3.example.com/restore-bucket/bag-name.tar"}`

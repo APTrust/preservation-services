@@ -398,7 +398,7 @@ func TestGenericFileGet(t *testing.T) {
 		assert.NotNil(t, resp)
 		require.Nil(t, resp.Error)
 		assert.Equal(t,
-			fmt.Sprintf("/api/v2/files/%s", network.EscapeFileIdentifier(gf.Identifier)),
+			fmt.Sprintf("/api/v2/files/%s?include_storage_records=true", network.EscapeFileIdentifier(gf.Identifier)),
 			resp.Request.URL.Opaque)
 		genericFile := resp.GenericFile()
 		assert.NotNil(t, genericFile)

@@ -3,11 +3,16 @@ package restoration
 import (
 	"fmt"
 	"net/url"
+	"os"
+	"path"
 	"strconv"
+	"time"
 
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/minio/minio-go/v6"
 )
 
 const BatchSize = 100
@@ -31,6 +36,29 @@ func NewDownloader(context *common.Context, workItemID int, restorationObject *s
 }
 
 func (d *Downloader) Run() (fileCount int, errors []*service.ProcessingError) {
+	if d.RestorationObject.RestorationType == constants.RestorationTypeFile {
+		return d.downloadOne()
+	}
+	return d.downloadAll()
+}
+
+func (d *Downloader) downloadOne() (fileCount int, errors []*service.ProcessingError) {
+	identifier := d.RestorationObject.Identifier
+	resp := d.Context.PharosClient.GenericFileGet(identifier)
+	if resp.Error != nil {
+		errors = append(errors, d.Error(identifier, resp.Error, false))
+		return 0, errors
+	}
+	gf := resp.GenericFile()
+	err := d.Download(gf)
+	if err != nil {
+		errors = append(errors, d.Error(identifier, err, false))
+		return 0, errors
+	}
+	return 1, errors
+}
+
+func (d *Downloader) downloadAll() (fileCount int, errors []*service.ProcessingError) {
 	fileCount = 1
 	objIdentifier := d.RestorationObject.Identifier
 	hasMore := true
@@ -43,13 +71,7 @@ func (d *Downloader) Run() (fileCount int, errors []*service.ProcessingError) {
 		}
 		hasMore = len(files) == BatchSize
 		for _, gf := range files {
-			restorationSource, err := d.BestRestorationSource(gf)
-			if err != nil {
-				// Fatal error if we can't find restoration source
-				errors = append(errors, d.Error(gf.Identifier, err, true))
-				break
-			}
-			_, err = d.Download(restorationSource, gf.UUID())
+			err = d.Download(gf)
 			if err != nil {
 				errors = append(errors, d.Error(gf.Identifier, err, false))
 				if len(errors) >= 30 {
@@ -97,6 +119,24 @@ func (d *Downloader) GetBatchOfFiles(objectIdentifier string, pageNumber int) (g
 	return resp.GenericFiles(), resp.Error
 }
 
-func (d *Downloader) Download(preservationBucket *common.PerservationBucket, key string) (filepath string, err error) {
-	return filepath, err
+func (d *Downloader) Download(gf *registry.GenericFile) (err error) {
+	b, err := d.BestRestorationSource(gf)
+	if err != nil {
+		return err
+	}
+	localPath := fmt.Sprintf("%s/%s", d.RestorationObject.DownloadDir, gf.Identifier)
+	err = os.MkdirAll(path.Dir(localPath), 0755)
+	if err != nil {
+		return err
+	}
+	client := d.Context.S3Clients[b.Provider]
+	for i := 0; i < 3; i++ {
+		err = client.FGetObject(b.Bucket, gf.UUID(), localPath, minio.GetObjectOptions{})
+		if err == nil {
+			d.Context.Logger.Infof("Downloaded %s to %s", gf.UUID(), localPath)
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+	return err
 }

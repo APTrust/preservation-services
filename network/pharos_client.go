@@ -305,7 +305,7 @@ func (client *PharosClient) GenericFileGet(identifier string) *PharosResponse {
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/api/%s/files/%s", client.APIVersion, EscapeFileIdentifier(identifier))
+	relativeURL := fmt.Sprintf("/api/%s/files/%s?include_storage_records=true", client.APIVersion, EscapeFileIdentifier(identifier))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
