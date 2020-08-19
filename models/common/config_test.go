@@ -68,15 +68,15 @@ func TestNewConfig(t *testing.T) {
 	}
 }
 
-func TestUploadTargetsFor(t *testing.T) {
+func TestPerservationBucketsFor(t *testing.T) {
 	config := common.NewConfig()
-	targets := config.UploadTargetsFor(constants.StorageStandard)
+	targets := config.PerservationBucketsFor(constants.StorageStandard)
 	require.Equal(t, 2, len(targets))
 	for _, target := range targets {
 		assert.Equal(t, constants.StorageStandard, target.OptionName)
 	}
 
-	targets = config.UploadTargetsFor(constants.StorageWasabiVA)
+	targets = config.PerservationBucketsFor(constants.StorageWasabiVA)
 	require.Equal(t, 1, len(targets))
 	assert.Equal(t, constants.StorageWasabiVA, targets[0].OptionName)
 }

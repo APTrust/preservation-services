@@ -52,7 +52,7 @@ func (uploader *PreservationUploader) Run() (int, []*service.ProcessingError) {
 }
 
 func (uploader *PreservationUploader) getUploadFunction() service.IngestFileApplyFn {
-	uploadTargets := uploader.Context.Config.UploadTargetsFor(uploader.IngestObject.StorageOption)
+	uploadTargets := uploader.Context.Config.PerservationBucketsFor(uploader.IngestObject.StorageOption)
 
 	return func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		for _, uploadTarget := range uploadTargets {
@@ -105,7 +105,7 @@ func (uploader *PreservationUploader) getUploadFunction() service.IngestFileAppl
 //
 // Avoid calling this directly. Call Run() instead. This is
 // public so we can test it.
-func (uploader *PreservationUploader) CopyToPreservationServerSide(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) *service.ProcessingError {
+func (uploader *PreservationUploader) CopyToPreservationServerSide(ingestFile *service.IngestFile, uploadTarget *common.PerservationBucket) *service.ProcessingError {
 	client, err := uploader.getS3Client(uploadTarget.Provider)
 	if err != nil {
 		uploader.Context.Logger.Error(err, ingestFile.Identifier())
@@ -170,7 +170,7 @@ func (uploader *PreservationUploader) CopyToPreservationServerSide(ingestFile *s
 //
 // Avoid calling this directly. Call Run() instead. This is
 // public so we can test it.
-func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.IngestFile, uploadTarget *common.UploadTarget) *service.ProcessingError {
+func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.IngestFile, uploadTarget *common.PerservationBucket) *service.ProcessingError {
 	srcClient, err := uploader.getS3Client(constants.StorageProviderAWS)
 	if err != nil {
 		uploader.Context.Logger.Error(ingestFile.Identifier(), err)

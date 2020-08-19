@@ -124,7 +124,7 @@ func testCopyToPreservationServerSide(t *testing.T, uploader *ingest.Preservatio
 	require.Nil(t, err)
 	require.NotNil(t, ingestFile)
 
-	uploadTarget := uploader.Context.Config.UploadTargetsFor(constants.StorageGlacierVA)[0]
+	uploadTarget := uploader.Context.Config.PerservationBucketsFor(constants.StorageGlacierVA)[0]
 
 	err = uploader.CopyToPreservationServerSide(ingestFile, uploadTarget)
 	require.Nil(t, err)
@@ -146,7 +146,7 @@ func testCopyToPreservation(t *testing.T, uploader *ingest.PreservationUploader,
 	require.Nil(t, err)
 	require.NotNil(t, ingestFile)
 
-	uploadTarget := uploader.Context.Config.UploadTargetsFor(constants.StorageWasabiOR)[0]
+	uploadTarget := uploader.Context.Config.PerservationBucketsFor(constants.StorageWasabiOR)[0]
 
 	err = uploader.CopyToPreservation(ingestFile, uploadTarget)
 	require.Nil(t, err)

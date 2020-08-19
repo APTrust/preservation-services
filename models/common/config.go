@@ -59,7 +59,7 @@ type Config struct {
 	StagingBucket              string
 	StagingUploadRetries       int
 	StagingUploadRetryMs       time.Duration
-	UploadTargets              []*UploadTarget
+	PerservationBuckets        []*PerservationBucket
 	VolumeServiceURL           string
 }
 
@@ -76,7 +76,7 @@ var logLevels = map[string]logging.Level{
 func NewConfig() *Config {
 	config := loadConfig()
 	config.expandPaths()
-	config.initUploadTargets()
+	config.initPerservationBuckets()
 	config.sanityCheck()
 	config.makeDirs()
 	return config
@@ -184,13 +184,14 @@ func (config *Config) CredentialsForS3Host(host string) (credentials *S3Credenti
 	return credentials
 }
 
-// UploadTargetFor returns the upload targets for the specified storage option.
+// PerservationBucketFor returns the preservation buckets
+// for the specified storage option.
 // Storage options are enumerated in constants.StorageOptions. For most options,
 // this will return a single item. For the Standard storage option, it returns
-// two upload targets.
-func (config *Config) UploadTargetsFor(storageOption string) []*UploadTarget {
-	targets := make([]*UploadTarget, 0)
-	for _, target := range config.UploadTargets {
+// two preservation buckets.
+func (config *Config) PerservationBucketsFor(storageOption string) []*PerservationBucket {
+	targets := make([]*PerservationBucket, 0)
+	for _, target := range config.PerservationBuckets {
 		if target.OptionName == storageOption {
 			targets = append(targets, target)
 		}
@@ -375,8 +376,8 @@ func (config *Config) checkS3Providers() {
 	}
 }
 
-func (config *Config) checkUploadTargets() {
-	for _, target := range config.UploadTargets {
+func (config *Config) checkPerservationBuckets() {
+	for _, target := range config.PerservationBuckets {
 		if target.Host == "" {
 			util.PrintAndExit(fmt.Sprintf("S3 target %s is missing Host", target.OptionName))
 		}
@@ -395,7 +396,7 @@ func (config *Config) sanityCheck() {
 	// installation from touching data in demo and prod systems.
 	config.checkBasicSettings()
 	config.checkS3Providers()
-	config.checkUploadTargets()
+	config.checkPerservationBuckets()
 
 	// This is turned off for now because of issues with docker,
 	// where all services appear to our tests to run on external hosts.
@@ -419,97 +420,107 @@ func (config *Config) makeDirs() error {
 	return nil
 }
 
-func (config *Config) initUploadTargets() {
-	config.UploadTargets = []*UploadTarget{
-		&UploadTarget{
-			Bucket:       config.BucketStandardVA,
-			Description:  "AWS Virginia S3 bucket for Standard primary preservation",
-			Host:         config.S3AWSHost,
-			OptionName:   constants.StorageStandard,
-			Provider:     constants.StorageProviderAWS,
-			Region:       constants.RegionAWSUSEast1,
-			StorageClass: constants.StorageClassStandard,
+func (config *Config) initPerservationBuckets() {
+	config.PerservationBuckets = []*PerservationBucket{
+		&PerservationBucket{
+			Bucket:          config.BucketStandardVA,
+			Description:     "AWS Virginia S3 bucket for Standard primary preservation",
+			Host:            config.S3AWSHost,
+			OptionName:      constants.StorageStandard,
+			Provider:        constants.StorageProviderAWS,
+			Region:          constants.RegionAWSUSEast1,
+			RestorePriority: 1,
+			StorageClass:    constants.StorageClassStandard,
 		},
-		&UploadTarget{
-			Bucket:       config.BucketStandardOR,
-			Description:  "AWS Oregon Glacier bucket for Standard storage repilication",
-			Host:         config.S3AWSHost,
-			OptionName:   constants.StorageStandard,
-			Provider:     constants.StorageProviderAWS,
-			Region:       constants.RegionAWSUSWest2,
-			StorageClass: constants.StorageClassGlacier,
+		&PerservationBucket{
+			Bucket:          config.BucketStandardOR,
+			Description:     "AWS Oregon Glacier bucket for Standard storage repilication",
+			Host:            config.S3AWSHost,
+			OptionName:      constants.StorageStandard,
+			Provider:        constants.StorageProviderAWS,
+			Region:          constants.RegionAWSUSWest2,
+			RestorePriority: 4,
+			StorageClass:    constants.StorageClassGlacier,
 		},
-		&UploadTarget{
-			Bucket:       config.BucketGlacierOH,
-			Description:  "AWS Ohio Glacier storage",
-			Host:         config.S3AWSHost,
-			OptionName:   constants.StorageGlacierOH,
-			Provider:     constants.StorageProviderAWS,
-			Region:       constants.RegionAWSUSEast2,
-			StorageClass: constants.StorageClassGlacier,
+		&PerservationBucket{
+			Bucket:          config.BucketGlacierOH,
+			Description:     "AWS Ohio Glacier storage",
+			Host:            config.S3AWSHost,
+			OptionName:      constants.StorageGlacierOH,
+			Provider:        constants.StorageProviderAWS,
+			Region:          constants.RegionAWSUSEast2,
+			RestorePriority: 6,
+			StorageClass:    constants.StorageClassGlacier,
 		},
-		&UploadTarget{
-			Bucket:       config.BucketGlacierOR,
-			Description:  "AWS Oregon Glacier storage",
-			Host:         config.S3AWSHost,
-			OptionName:   constants.StorageGlacierOR,
-			Provider:     constants.StorageProviderAWS,
-			Region:       constants.RegionAWSUSWest2,
-			StorageClass: constants.StorageClassGlacier,
+		&PerservationBucket{
+			Bucket:          config.BucketGlacierOR,
+			Description:     "AWS Oregon Glacier storage",
+			Host:            config.S3AWSHost,
+			OptionName:      constants.StorageGlacierOR,
+			Provider:        constants.StorageProviderAWS,
+			Region:          constants.RegionAWSUSWest2,
+			RestorePriority: 7,
+			StorageClass:    constants.StorageClassGlacier,
 		},
-		&UploadTarget{
-			Bucket:       config.BucketGlacierVA,
-			Description:  "AWS Virginia Glacier storage",
-			Host:         config.S3AWSHost,
-			OptionName:   constants.StorageGlacierVA,
-			Provider:     constants.StorageProviderAWS,
-			Region:       constants.RegionAWSUSEast1,
-			StorageClass: constants.StorageClassGlacier,
+		&PerservationBucket{
+			Bucket:          config.BucketGlacierVA,
+			Description:     "AWS Virginia Glacier storage",
+			Host:            config.S3AWSHost,
+			OptionName:      constants.StorageGlacierVA,
+			Provider:        constants.StorageProviderAWS,
+			Region:          constants.RegionAWSUSEast1,
+			RestorePriority: 5,
+			StorageClass:    constants.StorageClassGlacier,
 		},
-		&UploadTarget{
-			Bucket:       config.BucketGlacierDeepOH,
-			Description:  "AWS Ohio Glacier deep storage",
-			Host:         config.S3AWSHost,
-			OptionName:   constants.StorageGlacierDeepOH,
-			Provider:     constants.StorageProviderAWS,
-			Region:       constants.RegionAWSUSEast2,
-			StorageClass: constants.StorageClassGlacierDeep,
+		&PerservationBucket{
+			Bucket:          config.BucketGlacierDeepOH,
+			Description:     "AWS Ohio Glacier deep storage",
+			Host:            config.S3AWSHost,
+			OptionName:      constants.StorageGlacierDeepOH,
+			Provider:        constants.StorageProviderAWS,
+			Region:          constants.RegionAWSUSEast2,
+			RestorePriority: 9,
+			StorageClass:    constants.StorageClassGlacierDeep,
 		},
-		&UploadTarget{
-			Bucket:       config.BucketGlacierDeepOR,
-			Description:  "AWS Oregon Glacier deep storage",
-			Host:         config.S3AWSHost,
-			OptionName:   constants.StorageGlacierDeepOR,
-			Provider:     constants.StorageProviderAWS,
-			Region:       constants.RegionAWSUSWest2,
-			StorageClass: constants.StorageClassGlacierDeep,
+		&PerservationBucket{
+			Bucket:          config.BucketGlacierDeepOR,
+			Description:     "AWS Oregon Glacier deep storage",
+			Host:            config.S3AWSHost,
+			OptionName:      constants.StorageGlacierDeepOR,
+			Provider:        constants.StorageProviderAWS,
+			Region:          constants.RegionAWSUSWest2,
+			RestorePriority: 10,
+			StorageClass:    constants.StorageClassGlacierDeep,
 		},
-		&UploadTarget{
-			Bucket:       config.BucketGlacierDeepVA,
-			Description:  "AWS Virginia Glacier deep storage",
-			Host:         config.S3AWSHost,
-			OptionName:   constants.StorageGlacierDeepVA,
-			Provider:     constants.StorageProviderAWS,
-			Region:       constants.RegionAWSUSEast1,
-			StorageClass: constants.StorageClassGlacierDeep,
+		&PerservationBucket{
+			Bucket:          config.BucketGlacierDeepVA,
+			Description:     "AWS Virginia Glacier deep storage",
+			Host:            config.S3AWSHost,
+			OptionName:      constants.StorageGlacierDeepVA,
+			Provider:        constants.StorageProviderAWS,
+			Region:          constants.RegionAWSUSEast1,
+			RestorePriority: 8,
+			StorageClass:    constants.StorageClassGlacierDeep,
 		},
-		&UploadTarget{
-			Bucket:       config.BucketWasabiOR,
-			Description:  "Wasabi Oregon storage",
-			Host:         config.S3WasabiHost,
-			OptionName:   constants.StorageWasabiOR,
-			Provider:     constants.StorageProviderWasabi,
-			Region:       constants.RegionWasabiUSWest1,
-			StorageClass: constants.StorageClassWasabi,
+		&PerservationBucket{
+			Bucket:          config.BucketWasabiOR,
+			Description:     "Wasabi Oregon storage",
+			Host:            config.S3WasabiHost,
+			OptionName:      constants.StorageWasabiOR,
+			Provider:        constants.StorageProviderWasabi,
+			Region:          constants.RegionWasabiUSWest1,
+			RestorePriority: 3,
+			StorageClass:    constants.StorageClassWasabi,
 		},
-		&UploadTarget{
-			Bucket:       config.BucketWasabiVA,
-			Description:  "Wasabi Virginia storage (us-east-1)",
-			Host:         config.S3WasabiHost,
-			OptionName:   constants.StorageWasabiVA,
-			Provider:     constants.StorageProviderWasabi,
-			Region:       constants.RegionWasabiUSEast1,
-			StorageClass: constants.StorageClassWasabi,
+		&PerservationBucket{
+			Bucket:          config.BucketWasabiVA,
+			Description:     "Wasabi Virginia storage (us-east-1)",
+			Host:            config.S3WasabiHost,
+			OptionName:      constants.StorageWasabiVA,
+			Provider:        constants.StorageProviderWasabi,
+			Region:          constants.RegionWasabiUSEast1,
+			RestorePriority: 2,
+			StorageClass:    constants.StorageClassWasabi,
 		},
 	}
 }
@@ -536,7 +547,7 @@ func (config *Config) ProviderBucketAndKeyFor(urlStr string) (provider, bucket, 
 	} else {
 		return "", "", "", fmt.Errorf("URL %s is missing bucket name or key", urlStr)
 	}
-	for _, target := range config.UploadTargets {
+	for _, target := range config.PerservationBuckets {
 		regionAndHost := fmt.Sprintf("s3.%s.%s", target.Region, target.Host)
 		if (_url.Host == target.Host || _url.Host == regionAndHost) && target.Bucket == bucket {
 			provider = target.Provider

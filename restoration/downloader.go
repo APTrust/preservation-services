@@ -1,6 +1,7 @@
 package restoration
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 
@@ -10,6 +11,7 @@ import (
 )
 
 const BatchSize = 100
+const DefaultPriority = 10000
 
 // Downloader downloads all files required to restore an IntellectualObject.
 type Downloader struct {
@@ -41,12 +43,13 @@ func (d *Downloader) Run() (fileCount int, errors []*service.ProcessingError) {
 		}
 		hasMore = len(files) == BatchSize
 		for _, gf := range files {
-			// TODO: Get bucket and key from GenericFile storage record.
-			// TODO: Pharos needs a flag to include StorageRecords with
-			// GenericFiles. See https://github.com/APTrust/pharos/blob/feature/storage-record/app/controllers/generic_files_controller.rb
-			bucket := ""
-			key := ""
-			_, err = d.Download(bucket, key)
+			restorationSource, err := d.BestRestorationSource(gf)
+			if err != nil {
+				// Fatal error if we can't find restoration source
+				errors = append(errors, d.Error(gf.Identifier, err, true))
+				break
+			}
+			_, err = d.Download(restorationSource, gf.UUID())
 			if err != nil {
 				errors = append(errors, d.Error(gf.Identifier, err, false))
 				if len(errors) >= 30 {
@@ -63,6 +66,25 @@ func (d *Downloader) Run() (fileCount int, errors []*service.ProcessingError) {
 	return fileCount, errors
 }
 
+// BestRestorationSource returns the best preservation bucket from which
+// to restore a file. We generally want to restore from S3 over Glacier,
+// and US East over other regions.
+func (d *Downloader) BestRestorationSource(gf *registry.GenericFile) (bestSource *common.PerservationBucket, err error) {
+	priority := DefaultPriority
+	for _, storageRecord := range gf.StorageRecords {
+		for _, target := range d.Context.Config.PerservationBuckets {
+			if target.HostsURL(storageRecord.URL) && target.RestorePriority < priority {
+				bestSource = target
+				priority = target.RestorePriority
+			}
+		}
+	}
+	if priority == DefaultPriority {
+		err = fmt.Errorf("Could not find any suitable restoration source for %s. (%d preservation URLS, %d PerservationBuckets", gf.Identifier, len(gf.StorageRecords), len(d.Context.Config.PerservationBuckets))
+	}
+	return bestSource, err
+}
+
 // GetBatchOfFiles returns a batch of GenericFile records from Pharos.
 func (d *Downloader) GetBatchOfFiles(objectIdentifier string, pageNumber int) (genericFiles []*registry.GenericFile, err error) {
 	params := url.Values{}
@@ -75,6 +97,6 @@ func (d *Downloader) GetBatchOfFiles(objectIdentifier string, pageNumber int) (g
 	return resp.GenericFiles(), resp.Error
 }
 
-func (d *Downloader) Download(bucket, key string) (filepath string, err error) {
+func (d *Downloader) Download(preservationBucket *common.PerservationBucket, key string) (filepath string, err error) {
 	return filepath, err
 }
