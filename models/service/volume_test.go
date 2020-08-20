@@ -1,7 +1,7 @@
-package common_test
+package service_test
 
 import (
-	"github.com/APTrust/preservation-services/models/common"
+	"github.com/APTrust/preservation-services/models/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"runtime"
@@ -10,7 +10,7 @@ import (
 
 func TestClaimedReserveReleasePath(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
-	volume := common.NewVolume(filename)
+	volume := service.NewVolume(filename)
 	assert.EqualValues(t, 0, volume.ClaimedSpace())
 	assert.Equal(t, filename, volume.MountPoint())
 
@@ -29,7 +29,7 @@ func TestClaimedReserveReleasePath(t *testing.T) {
 // usage scenarios.
 func TestVolume(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
-	volume := common.NewVolume(filename)
+	volume := service.NewVolume(filename)
 
 	// Make sure we can reserve space that's actually there.
 	initialSpace, err := volume.AvailableSpace()
@@ -71,7 +71,7 @@ func TestVolume(t *testing.T) {
 
 func TestReservations(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
-	volume := common.NewVolume(filename)
+	volume := service.NewVolume(filename)
 
 	paths := []string{"p1", "p2", "p3", "p4", "p5"}
 	for i, path := range paths {

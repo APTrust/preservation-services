@@ -157,6 +157,13 @@ func ProjectRoot() string {
 	return absPath
 }
 
+// TestsAreRunning returns true when code is running under "go test"
 func TestsAreRunning() bool {
 	return flag.Lookup("test.v") != nil
+}
+
+// RunningInCI returns true when code is running in the Travis CI
+// environment.
+func RunningInCI() bool {
+	return os.Getenv("TRAVIS_BUILD_DIR") != ""
 }

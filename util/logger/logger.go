@@ -2,20 +2,20 @@ package logger
 
 import (
 	"fmt"
-	"github.com/op/go-logging"
+	"io/ioutil"
 	stdlog "log"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/op/go-logging"
 )
 
 var log *logging.Logger
 var filename string
 
-/*
-InitLogger creates and returns a logger suitable for logging
-human-readable message. Also returns the path to the log file.
-*/
+// InitLogger creates and returns a logger suitable for logging
+// human-readable messages. Also returns the path to the log file.
 func InitLogger(logDir string, logLevel logging.Level) (*logging.Logger, string) {
 	if log != nil {
 		return log, filename
@@ -35,4 +35,13 @@ func InitLogger(logDir string, logLevel logging.Level) (*logging.Logger, string)
 	logBackend := logging.NewLogBackend(writer, "", stdlog.LstdFlags|stdlog.LUTC)
 	logging.SetBackend(logBackend)
 	return log, filename
+}
+
+// DiscardLogger returns a logger that writes to dev/null.
+func DiscardLogger(module string) *logging.Logger {
+	log := logging.MustGetLogger(module)
+	devnull := logging.NewLogBackend(ioutil.Discard, "", 0)
+	logging.SetBackend(devnull)
+	logging.SetLevel(logging.INFO, "volume_test")
+	return log
 }

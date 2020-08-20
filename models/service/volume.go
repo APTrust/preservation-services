@@ -3,7 +3,7 @@
 // Don't include this in the partners build: it's not needed
 // in the partner apps, and the syscall.Stat* functions cause
 // the build to fail on Windows.
-package common
+package service
 
 import (
 	"fmt"
