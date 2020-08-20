@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
@@ -36,29 +35,6 @@ func NewDownloader(context *common.Context, workItemID int, restorationObject *s
 }
 
 func (d *Downloader) Run() (fileCount int, errors []*service.ProcessingError) {
-	if d.RestorationObject.RestorationType == constants.RestorationTypeFile {
-		return d.downloadOne()
-	}
-	return d.downloadAll()
-}
-
-func (d *Downloader) downloadOne() (fileCount int, errors []*service.ProcessingError) {
-	identifier := d.RestorationObject.Identifier
-	resp := d.Context.PharosClient.GenericFileGet(identifier)
-	if resp.Error != nil {
-		errors = append(errors, d.Error(identifier, resp.Error, false))
-		return 0, errors
-	}
-	gf := resp.GenericFile()
-	err := d.Download(gf)
-	if err != nil {
-		errors = append(errors, d.Error(identifier, err, false))
-		return 0, errors
-	}
-	return 1, errors
-}
-
-func (d *Downloader) downloadAll() (fileCount int, errors []*service.ProcessingError) {
 	fileCount = 1
 	objIdentifier := d.RestorationObject.Identifier
 	hasMore := true
