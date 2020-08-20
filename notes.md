@@ -401,6 +401,10 @@ For now, we'll follow the old process of downloading all files to local disk and
 
 We'll need something like the old [Exchange Volume Service](https://github.com/APTrust/exchange/blob/master/service/volume_service.go) to manage disk space, and we'll also need a mechanism or alert to provision a new volume when asked to restore a large bag.
 
+[Update 8/20/2020] - After starting to implement the volume service, this may not be a good idea. The volume service relies on some sys_stat calls, and there's no telling how those will behave inside a docker container when we're trying to get stats on a volume that actually belongs to the parent OS.
+
+Consider using [PipeWriter](https://golang.org/pkg/io/#PipeWriter) and [PipeReader](https://golang.org/pkg/io/#PipeReader) instead. Data flow would be S3 -> Bagger -> S3. See [Build proof of concept for direct-to-S3 bagging](https://trello.com/c/UrNjcG4r) for more info.
+
 #### Glacier Restoration
 
 For items stored in Glacier and Glacier Deep Archive, we'll need a first step similar to [Glacier Restore Init](https://github.com/APTrust/exchange/blob/master/workers/apt_glacier_restore_init.go) from Exchange.
