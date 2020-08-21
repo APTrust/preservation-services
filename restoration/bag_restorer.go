@@ -29,6 +29,7 @@ type BagRestorer struct {
 	Base
 	tarPipeWriter         *TarPipeWriter
 	bestRestorationSource *common.PerservationBucket
+	bytesWritten          int64
 	uploadError           error
 }
 
@@ -52,6 +53,9 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 	r.initUploader()
 	fileCount, errors = r.restoreAllPreservedFiles()
 
+	fmt.Println("Bytes Written:", r.bytesWritten)
+	fmt.Println("UploadError:", r.uploadError)
+
 	// -------------------------------------------------
 	// TODO: Create and copy manifests and tag manifests
 	// -------------------------------------------------
@@ -64,22 +68,27 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 // copies data comes from the TarPipeWriter. Anything we write into that pipe
 // gets copied to the restoration bucket.
 func (r *BagRestorer) initUploader() {
+
+	// PipeWriter/Reader is working but no data goes through. WTF??
+
 	go func() {
 		s3Client := r.Context.S3Clients[constants.StorageProviderAWS]
-		_, r.uploadError = s3Client.PutObject(
+		r.bytesWritten, r.uploadError = s3Client.PutObject(
 			r.RestorationObject.RestorationTarget,
-			r.RestorationObject.Identifier,
+			r.RestorationObject.Identifier+".tar",
 			r.tarPipeWriter.GetReader(),
-			-1,
+			int64(-1),
 			minio.PutObjectOptions{},
 		)
+		r.Context.Logger.Infof("Finished uploading tar file %s", r.RestorationObject.Identifier)
 	}()
+	r.Context.Logger.Infof("Initialized uploader for %s going to %s", r.RestorationObject.Identifier, r.RestorationObject.RestorationTarget)
 }
 
 // restoreAllPreservedFiles restores all files from the preservation bucket
 // to the restoration bucket in the form of a tar archive.
 func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*service.ProcessingError) {
-	fileCount = 1
+	fileCount = 0
 	hasMore := true
 	pageNumber := 1
 	for hasMore {
@@ -91,8 +100,11 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 		for _, gf := range files {
 			err = r.AddToTarFile(gf)
 			if err != nil {
+				r.Context.Logger.Errorf("Error adding %s: %v", gf.Identifier, err)
 				errors = append(errors, r.Error(gf.Identifier, err, true))
 				return fileCount, errors
+			} else {
+				r.Context.Logger.Infof("Added %s", gf.Identifier)
 			}
 			fileCount++
 			hasMore = len(files) == BatchSize
@@ -122,6 +134,8 @@ func (r *BagRestorer) BestRestorationSource(gf *registry.GenericFile) (bestSourc
 	}
 	if priority == DefaultPriority {
 		err = fmt.Errorf("Could not find any suitable restoration source for %s. (%d preservation URLS, %d PerservationBuckets", gf.Identifier, len(gf.StorageRecords), len(r.Context.Config.PerservationBuckets))
+	} else {
+		//r.Context.Logger.Infof("Restoring %s from %s", r.RestorationObject.Identifier, r.bestRestorationSource.Bucket)
 	}
 	return bestSource, err
 }
@@ -134,6 +148,7 @@ func (r *BagRestorer) GetBatchOfFiles(objectIdentifier string, pageNumber int) (
 	params.Set("per_page", strconv.Itoa(BatchSize))
 	params.Set("sort", "name")
 	params.Set("state", "A")
+	params.Set("include_storage_records", "true")
 	resp := r.Context.PharosClient.GenericFileList(params)
 	return resp.GenericFiles(), resp.Error
 }
@@ -160,6 +175,7 @@ func (r *BagRestorer) AddToTarFile(gf *registry.GenericFile) (err error) {
 	if err != nil {
 		return err
 	}
+	defer obj.Close()
 
 	// Add header and file data to tarPipeWriter
 	tarHeader := r.GetTarHeader(gf)

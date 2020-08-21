@@ -40,6 +40,7 @@ func (w *TarPipeWriter) AddFile(header *tar.Header, r io.Reader) error {
 
 	// Write the file contents
 	bytesWritten, err := io.Copy(w.tarWriter, r)
+	fmt.Printf("Tar writer wrote %d bytes\n", bytesWritten)
 	if bytesWritten != header.Size {
 		return fmt.Errorf("AddFile copied only %d of %d bytes for file %s",
 			bytesWritten, header.Size, header.Name)
