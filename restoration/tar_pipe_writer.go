@@ -77,7 +77,7 @@ func (w *TarPipeWriter) GetReader() *io.PipeReader {
 }
 
 func (w *TarPipeWriter) Finish() {
-	w.pipeReader.Close()
-	w.pipeWriter.Close()
 	w.tarWriter.Close()
+	//w.pipeWriter.CloseWithError(io.EOF)
+	//w.pipeReader.CloseWithError(io.EOF)
 }
