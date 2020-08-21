@@ -6,10 +6,10 @@ import (
 )
 
 type RestorationObject struct {
-	// AllFilesDownloaded will be true when all files have been downloaded
+	// AllFilesRestored will be true when all files have been downloaded
 	// from preservation to local disk. When this is true, we are ready
 	// to create the bag.
-	AllFilesDownloaded bool `json:"all_files_downloaded"`
+	AllFilesRestored bool `json:"all_files_restored"`
 
 	// BagDeletedAt describes when the local copy of the bag was deleted.
 	// This should happen after the bag has been uploaded to the depsitor's
@@ -18,10 +18,6 @@ type RestorationObject struct {
 
 	// BagValidatedAt describes when the restored bag was validated.
 	BagValidatedAt time.Time `json:"bag_validated_at"`
-
-	// DownloadDir is the path the directory (on local disk) to which
-	// we've downloaded files for restoration.
-	DownloadDir string `json:"download_dir"`
 
 	// ETag is the etag of the restored bag that we pushed into the depositor's
 	// restoration bucket.
@@ -35,9 +31,6 @@ type RestorationObject struct {
 	// (from Pharos) to be restored.
 	Identifier string `json:"identifier"`
 
-	// PathToBag is the path the restored bag on local disk.
-	PathToBag string `json:"path_to_bag"`
-
 	// RestorationSource describes whether the item being restored is from
 	// S3 or Glacier. S3 includes any AWS or Wasabi S3 bucket. Glacier
 	// includes any Glacier or Glacier Deep Archive bucket. Items in S3
@@ -46,14 +39,18 @@ type RestorationObject struct {
 	//
 	// Valid values for this field are constants.RestorationSourceGlacier
 	// and constants.RestorationSourceS3
-	RestorationSource string
+	RestorationSource string `json:"restoration_source"`
+
+	// RestorationTarget is the name of the depositor's bucket to which
+	// the bag should be restored.
+	RestorationTarget string `json:"restoration_target"`
 
 	// RestorationType will be either constants.RestorationTypeFile or
 	// constants.RestorationTypeObject. Single file restorations require
 	// only a single be copied from preservation to the depositor's restoration
 	// bucket. Object restorations require downloading and bagging all of the
 	// object's files before copying to the restoration bucket.
-	RestorationType string
+	RestorationType string `json:"restoration_type"`
 
 	// RestoredAt describes when the restored bag was copied to the depositor's
 	// restoration bucket.
@@ -69,6 +66,10 @@ type RestorationObject struct {
 	// URL is the URL of the restored bag in the depositor's restoration
 	// bucket.
 	URL string `json:"url"`
+
+	// TODO: Delete these if S3 copy works
+	DownloadDir string `json:"download_dir"`
+	PathToBag   string `json:"path_to_bag"`
 }
 
 // RestorationObjectFromJSON converts the JSON representation of a

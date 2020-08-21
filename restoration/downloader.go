@@ -14,8 +14,8 @@ import (
 	"github.com/minio/minio-go/v6"
 )
 
-const BatchSize = 100
-const DefaultPriority = 10000
+// const BatchSize = 100
+// const DefaultPriority = 10000
 
 // Downloader downloads all files required to restore an IntellectualObject.
 type Downloader struct {
@@ -59,7 +59,7 @@ func (d *Downloader) Run() (fileCount int, errors []*service.ProcessingError) {
 		}
 	}
 	if len(errors) == 0 {
-		d.RestorationObject.AllFilesDownloaded = true
+		d.RestorationObject.AllFilesRestored = true
 	}
 	return fileCount, errors
 }

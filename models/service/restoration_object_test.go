@@ -14,7 +14,7 @@ func TestRestorationObjFromJson(t *testing.T) {
 	obj, err := service.RestorationObjectFromJSON(RestorationObjectJSON)
 	require.Nil(t, err)
 	require.NotNil(t, obj)
-	assert.Equal(t, expectedObj.AllFilesDownloaded, obj.AllFilesDownloaded)
+	assert.Equal(t, expectedObj.AllFilesRestored, obj.AllFilesRestored)
 	assert.Equal(t, expectedObj.BagDeletedAt, obj.BagDeletedAt)
 	assert.Equal(t, expectedObj.BagValidatedAt, obj.BagValidatedAt)
 	assert.Equal(t, expectedObj.DownloadDir, obj.DownloadDir)
@@ -34,4 +34,4 @@ func TestRestorationObjToJSON(t *testing.T) {
 	assert.Equal(t, RestorationObjectJSON, data)
 }
 
-const RestorationObjectJSON = `{"all_files_downloaded":true,"bag_deleted_at":"1904-06-16T15:04:05Z","bag_validated_at":"1904-06-16T15:04:05Z","download_dir":"/mnt/data","etag":"1234567890","error_message":"No error","identifier":"test.edu/bag-name.tar","path_to_bag":"/mnt/data/restore/test.edu/bag-name.tar","RestorationSource":"s3","RestorationType":"object","restored_at":"1904-06-16T15:04:05Z","restored_bag_size":9999,"url":"https://s3.example.com/restore-bucket/bag-name.tar"}`
+const RestorationObjectJSON = `{"all_files_restored":true,"bag_deleted_at":"1904-06-16T15:04:05Z","bag_validated_at":"1904-06-16T15:04:05Z","etag":"1234567890","error_message":"No error","identifier":"test.edu/bag-name.tar","restoration_source":"s3","restoration_target":"aptrust.restore.test.edu","restoration_type":"object","restored_at":"1904-06-16T15:04:05Z","restored_bag_size":9999,"url":"https://s3.example.com/restore-bucket/bag-name.tar","download_dir":"/mnt/data","path_to_bag":"/mnt/data/restore/test.edu/bag-name.tar"}`
