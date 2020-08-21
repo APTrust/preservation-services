@@ -74,3 +74,9 @@ func (w *TarPipeWriter) ValidateHeader(header *tar.Header) error {
 func (w *TarPipeWriter) GetReader() *io.PipeReader {
 	return w.pipeReader
 }
+
+func (w *TarPipeWriter) Finish() {
+	w.pipeReader.Close()
+	w.pipeWriter.Close()
+	w.tarWriter.Close()
+}
