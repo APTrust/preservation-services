@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 	"time"
+
+	"github.com/APTrust/preservation-services/util"
 )
 
 // GenericFile represents a Pharos GenericFile object.
@@ -28,6 +30,8 @@ type GenericFile struct {
 	UpdatedAt                    time.Time        `json:"updated_at,omitempty"`
 }
 
+// GenericFileFromJSON converts a JSON representation of a GenericFile
+// to a GenericFile object.
 func GenericFileFromJSON(jsonData []byte) (*GenericFile, error) {
 	gf := &GenericFile{}
 	err := json.Unmarshal(jsonData, gf)
@@ -37,12 +41,25 @@ func GenericFileFromJSON(jsonData []byte) (*GenericFile, error) {
 	return gf, nil
 }
 
+// ToJSON returns a JSON representation of this object.
 func (gf *GenericFile) ToJSON() ([]byte, error) {
 	bytes, err := json.Marshal(gf)
 	if err != nil {
 		return nil, err
 	}
 	return bytes, nil
+}
+
+// PathInBag returns the path of this file within the original bag.
+func (gf *GenericFile) PathInBag() string {
+	return strings.Replace(gf.Identifier, gf.IntellectualObjectIdentifier+"/", "", 1)
+}
+
+// IsTagFile returns true if this file's original path in the bag
+// was not in the data (payload) directory, and the
+func (gf *GenericFile) IsTagFile() bool {
+	pathInBag := gf.PathInBag()
+	return !strings.HasPrefix(pathInBag, "data") && !util.LooksLikeManifest(pathInBag) && !util.LooksLikeTagManifest(pathInBag)
 }
 
 // JSON format for Pharos post/put is {"generic_file": <object>}

@@ -92,3 +92,34 @@ func TestGenericFileSerializeForPharos(t *testing.T) {
 func TestGenericUUID(t *testing.T) {
 	assert.Equal(t, "5432", genericFile.UUID())
 }
+
+func TestPathInBag(t *testing.T) {
+	gf := &registry.GenericFile{
+		Identifier:                   "test.edu/sample-bag/data/file.txt",
+		IntellectualObjectIdentifier: "test.edu/sample-bag",
+	}
+	assert.Equal(t, "data/file.txt", gf.PathInBag())
+}
+
+func TestPathIsTagFile(t *testing.T) {
+
+	// Not a tag file because it's in the payload directory
+	gf := &registry.GenericFile{
+		Identifier:                   "test.edu/sample-bag/data/file.txt",
+		IntellectualObjectIdentifier: "test.edu/sample-bag",
+	}
+	assert.False(t, gf.IsTagFile())
+
+	// Manifest is not a tag file
+	gf.Identifier = "test.edu/sample-bag/manifest-sha256.txt"
+	assert.False(t, gf.IsTagFile())
+
+	// Tag manifest is not a tag file
+	gf.Identifier = "test.edu/sample-bag/tagmanifest-sha256.txt"
+	assert.False(t, gf.IsTagFile())
+
+	// This is a tag file because it's not in the payload dir
+	// and it's not a manifest or tag manifest
+	gf.Identifier = "test.edu/sample-bag/bag-info.txt"
+	assert.True(t, gf.IsTagFile())
+}
