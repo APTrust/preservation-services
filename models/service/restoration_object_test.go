@@ -34,4 +34,18 @@ func TestRestorationObjToJSON(t *testing.T) {
 	assert.Equal(t, RestorationObjectJSON, data)
 }
 
+func TestObjName(t *testing.T) {
+	obj := &service.RestorationObject{
+		Identifier: "test.edu/sample-bag",
+	}
+	ident, err := obj.ObjName()
+	require.Nil(t, err)
+	assert.Equal(t, "sample-bag", ident)
+
+	obj.Identifier = "sample-bag"
+	ident, err = obj.ObjName()
+	require.NotNil(t, err)
+	assert.Equal(t, "", ident)
+}
+
 const RestorationObjectJSON = `{"all_files_restored":true,"bag_deleted_at":"1904-06-16T15:04:05Z","bag_validated_at":"1904-06-16T15:04:05Z","etag":"1234567890","error_message":"No error","identifier":"test.edu/bag-name.tar","restoration_source":"s3","restoration_target":"aptrust.restore.test.edu","restoration_type":"object","restored_at":"1904-06-16T15:04:05Z","restored_bag_size":9999,"url":"https://s3.example.com/restore-bucket/bag-name.tar","download_dir":"/mnt/data","path_to_bag":"/mnt/data/restore/test.edu/bag-name.tar"}`

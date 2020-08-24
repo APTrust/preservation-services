@@ -77,6 +77,14 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 
 	fileCount, errors = r.restoreAllPreservedFiles()
 
+	manifestsAdded, procErr := r.AddManifests()
+	if procErr != nil {
+		errors = append(errors, procErr)
+		return fileCount, errors
+	}
+	fileCount += manifestsAdded
+	fileCount++ // For bagit.txt
+
 	r.wg.Wait()
 
 	fmt.Println("Bytes Written:", r.bytesWritten)
@@ -117,7 +125,6 @@ func (r *BagRestorer) initUploader() {
 // restoreAllPreservedFiles restores all files from the preservation bucket
 // to the restoration bucket in the form of a tar archive.
 func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*service.ProcessingError) {
-	defer r.tarPipeWriter.Finish()
 	fileCount = 0
 	hasMore := true
 	pageNumber := 1
@@ -147,7 +154,6 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 		}
 	}
 	r.RestorationObject.AllFilesRestored = true
-	r.tarPipeWriter.Finish()
 	return fileCount, errors
 }
 
@@ -183,7 +189,7 @@ func (r *BagRestorer) AppendDigestToManifest(gf *registry.GenericFile, digest, a
 		return err
 	}
 	defer file.Close()
-	_, err = fmt.Fprintf(file, "%s  %s\n", digest, gf.Identifier)
+	_, err = fmt.Fprintf(file, "%s  %s\n", digest, gf.PathInBag())
 	return err
 }
 
@@ -264,11 +270,10 @@ func (r *BagRestorer) GetTarHeader(gf *registry.GenericFile) *tar.Header {
 // AddBagItFile adds the bagit.txt file to the tar file.
 func (r *BagRestorer) AddBagItFile() error {
 	// Add header and file data to tarPipeWriter
-	parts := strings.SplitN(r.RestorationObject.Identifier, "/", 2)
-	if len(parts) < 2 {
-		return fmt.Errorf("Invalid object identifier '%s': missing institution prefix", r.RestorationObject.Identifier)
+	objName, err := r.RestorationObject.ObjName()
+	if err != nil {
+		return err
 	}
-	objName := parts[1]
 	tarHeader := &tar.Header{
 		Name:     fmt.Sprintf("%s/%s", objName, "bagit.txt"),
 		Size:     int64(len(bagitTxt)),
@@ -294,6 +299,52 @@ func (r *BagRestorer) AddBagItFile() error {
 	}
 
 	return nil
+}
+
+// AddManifests adds manifests and tag manifests to the tar file.
+func (r *BagRestorer) AddManifests() (fileCount int, error *service.ProcessingError) {
+
+	// This is the last thing we write, so finish here...
+	defer r.tarPipeWriter.Finish()
+
+	objName, err := r.RestorationObject.ObjName()
+	if err != nil {
+		return fileCount, r.Error(r.RestorationObject.Identifier, err, true)
+	}
+	for _, alg := range constants.SupportedManifestAlgorithms {
+		for _, fileType := range manifestTypes {
+			manifestFile := r.GetManifestPath(alg, fileType)
+			manifestName := path.Base(manifestFile)
+
+			r.Context.Logger.Info("Adding %s from %s", manifestName, manifestFile)
+			fmt.Printf("Adding %s from %s \n", manifestName, manifestFile)
+
+			fileInfo, err := os.Stat(manifestFile)
+			if err != nil {
+				return fileCount, r.Error(manifestName, err, true)
+			}
+
+			file, err := os.Open(manifestFile)
+			if err != nil {
+				return fileCount, r.Error(manifestName, err, true)
+			}
+			defer file.Close()
+
+			tarHeader := &tar.Header{
+				Name:     fmt.Sprintf("%s/%s", objName, manifestName),
+				Size:     fileInfo.Size(),
+				Typeflag: tar.TypeReg,
+				Mode:     int64(0755),
+				ModTime:  fileInfo.ModTime(),
+			}
+			err = r.tarPipeWriter.AddFileWithoutDigests(tarHeader, file)
+			if err != nil {
+				return fileCount, r.Error(manifestName, err, true)
+			}
+			fileCount++
+		}
+	}
+	return fileCount, nil
 }
 
 // AddToTarFile adds a GenericFile to the TarPipeWriter. The contents

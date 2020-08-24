@@ -87,6 +87,36 @@ func (w *TarPipeWriter) AddFile(header *tar.Header, r io.Reader) (digests map[st
 	return digests, nil
 }
 
+func (w *TarPipeWriter) AddFileWithoutDigests(header *tar.Header, r io.Reader) (err error) {
+
+	if err = w.ValidateHeader(header); err != nil {
+		return err
+	}
+
+	if err = w.EnsureDirectoryEntry(header.Name); err != nil {
+		return err
+	}
+
+	// Write the tar header
+	if err = w.tarWriter.WriteHeader(header); err != nil {
+		return err
+	}
+
+	// Write the file contents
+	bytesWritten, err := io.Copy(w.tarWriter, r)
+	fmt.Printf("Tar writer wrote %d bytes\n", bytesWritten)
+	if bytesWritten != header.Size {
+		return fmt.Errorf("AddFile copied only %d of %d bytes for file %s",
+			bytesWritten, header.Size, header.Name)
+	}
+	if err != nil {
+		return fmt.Errorf("Error copying %s into tar archive: %v",
+			header.Name, err)
+	}
+
+	return nil
+}
+
 func (w *TarPipeWriter) EnsureDirectoryEntry(filename string) (err error) {
 	// path.Dir will break on Windows
 	// tar format always uses forward slash

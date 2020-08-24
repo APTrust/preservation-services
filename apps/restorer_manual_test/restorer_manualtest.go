@@ -12,8 +12,8 @@ import (
 func main() {
 	context := common.NewContext()
 	restorationObject := &service.RestorationObject{
-		// Identifier:        "test.edu/apt-bag-1",
-		Identifier:        "test.edu/btr-3",
+		Identifier: "test.edu/apt-bag-1",
+		// Identifier:        "test.edu/btr-3",
 		RestorationSource: constants.RestorationSourceS3,
 		RestorationTarget: "aptrust.restore.test.test.edu",
 		RestorationType:   constants.RestorationTypeObject,

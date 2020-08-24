@@ -2,6 +2,8 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -90,4 +92,12 @@ func (obj *RestorationObject) ToJSON() (string, error) {
 		return "", err
 	}
 	return string(bytes), nil
+}
+
+func (obj *RestorationObject) ObjName() (string, error) {
+	parts := strings.SplitN(obj.Identifier, "/", 2)
+	if len(parts) < 2 {
+		return "", fmt.Errorf("Invalid object identifier '%s': missing institution prefix", obj.Identifier)
+	}
+	return parts[1], nil
 }
