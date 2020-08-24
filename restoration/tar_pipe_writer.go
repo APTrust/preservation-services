@@ -36,6 +36,7 @@ func NewTarPipeWriter() *TarPipeWriter {
 func (w *TarPipeWriter) AddFile(header *tar.Header, r io.Reader) (digests map[string]string, err error) {
 
 	digests = make(map[string]string, 4)
+
 	if err = w.ValidateHeader(header); err != nil {
 		return digests, err
 	}

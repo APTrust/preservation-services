@@ -7,7 +7,9 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
@@ -31,6 +33,10 @@ var manifestTypes = []string{
 	constants.FileTypeManifest,
 	constants.FileTypeTagManifest,
 }
+
+var bagitTxt = `BagIt-Version: 1.0
+Tag-File-Character-Encoding: UTF-8
+`
 
 // BagRestorer restores an IntellectualObject in BagIt format to the
 // depositor's restoration bucket.
@@ -60,7 +66,14 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 	r.DeleteStaleManifests()
 
 	r.tarPipeWriter = NewTarPipeWriter()
+
 	r.initUploader()
+
+	err := r.AddBagItFile()
+	if err != nil {
+		errors = append(errors, r.Error(r.RestorationObject.Identifier, err, true))
+		return fileCount, errors
+	}
 
 	fileCount, errors = r.restoreAllPreservedFiles()
 
@@ -200,6 +213,10 @@ func (r *BagRestorer) DeleteStaleManifests() error {
 // and US East over other regions. We only need to figure this out once,
 // since all of an object's files will be stored in the same preservation
 // bucket or buckets.
+//
+// You must call this before writing anything to the tar file; otherwise,
+// the writes will block forever waiting for a PipeReader to read from
+// the PipeWriter.
 func (r *BagRestorer) BestRestorationSource(gf *registry.GenericFile) (bestSource *common.PerservationBucket, err error) {
 	if r.bestRestorationSource != nil {
 		return r.bestRestorationSource, nil
@@ -242,6 +259,36 @@ func (r *BagRestorer) GetTarHeader(gf *registry.GenericFile) *tar.Header {
 		Mode:     int64(0755),
 		ModTime:  gf.FileModified,
 	}
+}
+
+// AddBagItFile adds the bagit.txt file to the tar file.
+func (r *BagRestorer) AddBagItFile() error {
+	// Add header and file data to tarPipeWriter
+	tarHeader := &tar.Header{
+		Name:     "bagit.txt",
+		Size:     int64(len(bagitTxt)),
+		Typeflag: tar.TypeReg,
+		Mode:     int64(0755),
+		ModTime:  time.Now().UTC(),
+	}
+
+	digests, err := r.tarPipeWriter.AddFile(tarHeader, strings.NewReader(bagitTxt))
+	if err != nil {
+		return err
+	}
+
+	gf := &registry.GenericFile{
+		IntellectualObjectIdentifier: r.RestorationObject.Identifier,
+		Identifier:                   fmt.Sprintf("%s/%s", r.RestorationObject.Identifier, "bagit.txt"),
+	}
+	for alg, digest := range digests {
+		err = r.AppendDigestToManifest(gf, digest, alg)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // AddToTarFile adds a GenericFile to the TarPipeWriter. The contents

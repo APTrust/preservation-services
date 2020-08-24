@@ -11,3 +11,7 @@ nsqd.dat
 
 # The build script in scripts/build.rb puts our binaries here.
 bin/go-bin
+
+# VSCode and copy of .env file are for visual debugging
+.vscode/
+apps/restorer_manual_test/.env.test
