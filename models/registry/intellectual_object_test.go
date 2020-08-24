@@ -55,3 +55,17 @@ func TestIntellectualSerializeForPharos(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, objJsonForPharos, string(actualJson))
 }
+
+func TestObjIdentifierMinusInstitution(t *testing.T) {
+	obj := &registry.IntellectualObject{
+		Identifier: "test.edu/sample-bag",
+	}
+	ident, err := obj.IdentifierMinusInstitution()
+	require.Nil(t, err)
+	assert.Equal(t, "sample-bag", ident)
+
+	obj.Identifier = "sample-bag"
+	ident, err = obj.IdentifierMinusInstitution()
+	require.NotNil(t, err)
+	assert.Equal(t, "", ident)
+}

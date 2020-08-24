@@ -135,6 +135,22 @@ func TestPathInBag(t *testing.T) {
 	assert.Equal(t, "data/file.txt", gf.PathInBag())
 }
 
+func TestPathMinusInstitution(t *testing.T) {
+	gf := &registry.GenericFile{
+		Identifier:                   "test.edu/sample-bag/data/file.txt",
+		IntellectualObjectIdentifier: "test.edu/sample-bag",
+	}
+	assert.Equal(t, "sample-bag/data/file.txt", gf.PathMinusInstitution())
+}
+
+func TestInstitutionIdentifier(t *testing.T) {
+	gf := &registry.GenericFile{
+		Identifier:                   "test.edu/sample-bag/data/file.txt",
+		IntellectualObjectIdentifier: "test.edu/sample-bag",
+	}
+	assert.Equal(t, "test.edu", gf.InstitutionIdentifier())
+}
+
 func TestPathIsTagFile(t *testing.T) {
 
 	// Not a tag file because it's in the payload directory

@@ -253,7 +253,7 @@ func (r *BagRestorer) GetBatchOfFiles(objectIdentifier string, pageNumber int) (
 
 func (r *BagRestorer) GetTarHeader(gf *registry.GenericFile) *tar.Header {
 	return &tar.Header{
-		Name:     gf.PathInBag(),
+		Name:     gf.PathMinusInstitution(),
 		Size:     gf.Size,
 		Typeflag: tar.TypeReg,
 		Mode:     int64(0755),
@@ -264,8 +264,13 @@ func (r *BagRestorer) GetTarHeader(gf *registry.GenericFile) *tar.Header {
 // AddBagItFile adds the bagit.txt file to the tar file.
 func (r *BagRestorer) AddBagItFile() error {
 	// Add header and file data to tarPipeWriter
+	parts := strings.SplitN(r.RestorationObject.Identifier, "/", 2)
+	if len(parts) < 2 {
+		return fmt.Errorf("Invalid object identifier '%s': missing institution prefix", r.RestorationObject.Identifier)
+	}
+	objName := parts[1]
 	tarHeader := &tar.Header{
-		Name:     "bagit.txt",
+		Name:     fmt.Sprintf("%s/%s", objName, "bagit.txt"),
 		Size:     int64(len(bagitTxt)),
 		Typeflag: tar.TypeReg,
 		Mode:     int64(0755),

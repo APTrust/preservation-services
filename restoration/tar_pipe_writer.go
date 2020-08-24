@@ -8,6 +8,8 @@ import (
 	"crypto/sha512"
 	"fmt"
 	"io"
+	"strings"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 )
@@ -16,18 +18,20 @@ import (
 // that accepts an io.Reader. This allows us to write a tar file
 // directly to S3.
 type TarPipeWriter struct {
-	pipeReader *io.PipeReader
-	pipeWriter *io.PipeWriter
-	tarWriter  *tar.Writer
+	pipeReader  *io.PipeReader
+	pipeWriter  *io.PipeWriter
+	tarWriter   *tar.Writer
+	directories map[string]bool
 }
 
 // NewTarPipeWriter creates a new TarPipeWriter.
 func NewTarPipeWriter() *TarPipeWriter {
 	pipeReader, pipeWriter := io.Pipe()
 	return &TarPipeWriter{
-		pipeReader: pipeReader,
-		pipeWriter: pipeWriter,
-		tarWriter:  tar.NewWriter(pipeWriter),
+		pipeReader:  pipeReader,
+		pipeWriter:  pipeWriter,
+		tarWriter:   tar.NewWriter(pipeWriter),
+		directories: make(map[string]bool),
 	}
 }
 
@@ -38,6 +42,10 @@ func (w *TarPipeWriter) AddFile(header *tar.Header, r io.Reader) (digests map[st
 	digests = make(map[string]string, 4)
 
 	if err = w.ValidateHeader(header); err != nil {
+		return digests, err
+	}
+
+	if err = w.EnsureDirectoryEntry(header.Name); err != nil {
 		return digests, err
 	}
 
@@ -77,6 +85,26 @@ func (w *TarPipeWriter) AddFile(header *tar.Header, r io.Reader) (digests map[st
 	digests[constants.AlgSha512] = fmt.Sprintf("%x", sha512Hash.Sum(nil))
 
 	return digests, nil
+}
+
+func (w *TarPipeWriter) EnsureDirectoryEntry(filename string) (err error) {
+	// path.Dir will break on Windows
+	// tar format always uses forward slash
+	i := strings.LastIndex(filename, "/")
+	dirname := filename[:i+1]
+	if _, ok := w.directories[dirname]; !ok {
+		header := &tar.Header{
+			Name:     dirname,
+			Typeflag: tar.TypeDir,
+			Mode:     int64(0755),
+			ModTime:  time.Now().UTC(),
+		}
+		err = w.tarWriter.WriteHeader(header)
+		if err == nil {
+			w.directories[dirname] = true
+		}
+	}
+	return err
 }
 
 // ValidateHeader returns an error if the tar header is missing a name

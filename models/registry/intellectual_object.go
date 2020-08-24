@@ -2,6 +2,8 @@ package registry
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -42,6 +44,14 @@ func (obj *IntellectualObject) ToJSON() ([]byte, error) {
 		return nil, err
 	}
 	return bytes, nil
+}
+
+func (obj *IntellectualObject) IdentifierMinusInstitution() (string, error) {
+	parts := strings.SplitN(obj.Identifier, "/", 2)
+	if len(parts) < 2 {
+		return "", fmt.Errorf("Invalid identifier '%s': missing institution prefix", obj.Identifier)
+	}
+	return parts[1], nil
 }
 
 // JSON format for Pharos post/put is {"intellectual_object": <object>}

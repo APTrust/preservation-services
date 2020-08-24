@@ -51,8 +51,25 @@ func (gf *GenericFile) ToJSON() ([]byte, error) {
 }
 
 // PathInBag returns the path of this file within the original bag.
+// Example: If Identifier is "test.edu/bag/data/file.txt", this will
+// return "data/file.txt"
 func (gf *GenericFile) PathInBag() string {
 	return strings.Replace(gf.Identifier, gf.IntellectualObjectIdentifier+"/", "", 1)
+}
+
+// PathMinusInstitution is the object name plus PathInBag(). In other words,
+// the full Identifier minus the leading institution name.
+// Example: If Identifier is "test.edu/bag/data/file.txt", this will
+// return "bag/data/file.txt"
+func (gf *GenericFile) PathMinusInstitution() string {
+	return strings.Replace(gf.Identifier, gf.InstitutionIdentifier()+"/", "", 1)
+}
+
+// InstitutionIdentifier returns the Instition Identifier from the beginning
+// of the GenericFile Identifier. For example, if GenericFile Identifier
+// is is "test.edu/bag/data/file.txt", this will return "test.edu"
+func (gf *GenericFile) InstitutionIdentifier() string {
+	return strings.SplitN(gf.Identifier, "/", 2)[0]
 }
 
 // IsTagFile returns true if this file's original path in the bag
