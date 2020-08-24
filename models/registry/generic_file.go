@@ -77,6 +77,20 @@ func (gf *GenericFile) UUID() string {
 	return parts[len(parts)-1]
 }
 
+// GetLatestChecksum returns the most recent checksum digest for the given
+// algorithm for this file.
+func (gf *GenericFile) GetLatestChecksum(algorithm string) *Checksum {
+	var checksum *Checksum
+	latest := time.Time{}
+	for _, cs := range gf.Checksums {
+		if cs != nil && cs.Algorithm == algorithm && cs.DateTime.After(latest) {
+			checksum = cs
+			latest = cs.DateTime
+		}
+	}
+	return checksum
+}
+
 type GenericFileForPharos struct {
 	Checksums            []*Checksum      `json:"checksums_attributes,omitempty"`
 	FileFormat           string           `json:"file_format"`

@@ -4,6 +4,8 @@ import (
 	"archive/tar"
 	"fmt"
 	"net/url"
+	"os"
+	"path"
 	"strconv"
 	"sync"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/minio/minio-go/v6"
 )
 
@@ -23,6 +26,11 @@ import (
 
 const BatchSize = 100
 const DefaultPriority = 10000
+
+var manifestTypes = []string{
+	constants.FileTypeManifest,
+	constants.FileTypeTagManifest,
+}
 
 // BagRestorer restores an IntellectualObject in BagIt format to the
 // depositor's restoration bucket.
@@ -48,6 +56,8 @@ func NewBagRestorer(context *common.Context, workItemID int, restorationObject *
 }
 
 func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
+
+	r.DeleteStaleManifests()
 
 	r.tarPipeWriter = NewTarPipeWriter()
 	r.initUploader()
@@ -105,13 +115,19 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 			return fileCount, errors
 		}
 		for _, gf := range files {
-			err = r.AddToTarFile(gf)
+			digests, err := r.AddToTarFile(gf)
 			if err != nil {
 				r.Context.Logger.Errorf("Error adding %s: %v", gf.Identifier, err)
 				errors = append(errors, r.Error(gf.Identifier, err, true))
 				return fileCount, errors
 			} else {
 				r.Context.Logger.Infof("Added %s", gf.Identifier)
+			}
+			err = r.RecordDigests(gf, digests)
+			if err != nil {
+				r.Context.Logger.Errorf("Error recording digests for %s: %v", gf.Identifier, err)
+				errors = append(errors, r.Error(gf.Identifier, err, true))
+				return fileCount, errors
 			}
 			fileCount++
 			hasMore = len(files) == BatchSize
@@ -120,6 +136,63 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 	r.RestorationObject.AllFilesRestored = true
 	r.tarPipeWriter.Finish()
 	return fileCount, errors
+}
+
+func (r *BagRestorer) RecordDigests(gf *registry.GenericFile, digests map[string]string) error {
+	for _, alg := range constants.SupportedManifestAlgorithms {
+		digest := digests[alg]
+		registryChecksum := gf.GetLatestChecksum(alg)
+		if registryChecksum != nil && digest != registryChecksum.Digest {
+			return fmt.Errorf("%s digest mismatch for %s. Pharos says %s, S3 file has %s", alg, gf.Identifier, registryChecksum.Digest, digest)
+		}
+		err := r.AppendDigestToManifest(gf, digest, alg)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *BagRestorer) AppendDigestToManifest(gf *registry.GenericFile, digest, algorithm string) error {
+	fileType := constants.FileTypeManifest
+	if gf.IsTagFile() {
+		fileType = constants.FileTypeTagManifest
+	}
+	manifestPath := r.GetManifestPath(algorithm, fileType)
+	if !util.FileExists(path.Dir(manifestPath)) {
+		err := os.MkdirAll(path.Dir(manifestPath), 0755)
+		if err != nil {
+			return err
+		}
+	}
+	file, err := os.OpenFile(manifestPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = fmt.Fprintf(file, "%s  %s\n", digest, gf.Identifier)
+	return err
+}
+
+func (r *BagRestorer) GetManifestPath(algorithm, fileType string) string {
+	var filename string
+	if fileType == constants.FileTypeTagManifest {
+		filename = fmt.Sprintf("tagmanifest-%s.txt", algorithm)
+	} else {
+		filename = fmt.Sprintf("manifest-%s.txt", algorithm)
+	}
+	return path.Join(r.Context.Config.RestoreDir, strconv.Itoa(r.WorkItemID), filename)
+}
+
+func (r *BagRestorer) DeleteStaleManifests() error {
+	for _, alg := range constants.SupportedManifestAlgorithms {
+		for _, fileType := range manifestTypes {
+			manifestFile := r.GetManifestPath(alg, fileType)
+			r.Context.Logger.Info("Deleting old manifest file %s", manifestFile)
+			os.Remove(manifestFile)
+		}
+	}
+	return nil
 }
 
 // BestRestorationSource returns the best preservation bucket from which
@@ -173,15 +246,16 @@ func (r *BagRestorer) GetTarHeader(gf *registry.GenericFile) *tar.Header {
 
 // AddToTarFile adds a GenericFile to the TarPipeWriter. The contents
 // go through the TarPipeWriter to restoration bucket.
-func (r *BagRestorer) AddToTarFile(gf *registry.GenericFile) (err error) {
+func (r *BagRestorer) AddToTarFile(gf *registry.GenericFile) (digests map[string]string, err error) {
+	digests = make(map[string]string)
 	b, err := r.BestRestorationSource(gf)
 	if err != nil {
-		return err
+		return digests, err
 	}
 	client := r.Context.S3Clients[b.Provider]
 	obj, err := client.GetObject(b.Bucket, gf.UUID(), minio.GetObjectOptions{})
 	if err != nil {
-		return err
+		return digests, err
 	}
 	defer obj.Close()
 

@@ -2,6 +2,7 @@ package registry_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
@@ -89,8 +90,41 @@ func TestGenericFileSerializeForPharos(t *testing.T) {
 	assert.Equal(t, gfJsonForPharos, string(actualJson))
 }
 
-func TestGenericUUID(t *testing.T) {
+func TestGenericFileUUID(t *testing.T) {
 	assert.Equal(t, "5432", genericFile.UUID())
+}
+
+func TestGetLatestChecksum(t *testing.T) {
+	gf := &registry.GenericFile{
+		Checksums: []*registry.Checksum{
+			{
+				Algorithm:     "md5",
+				DateTime:      testutil.Bloomsday,
+				Digest:        "old-md5",
+				GenericFileID: 5432,
+			},
+			{
+				Algorithm:     "sha256",
+				DateTime:      testutil.Bloomsday,
+				Digest:        "old-sha256",
+				GenericFileID: 5432,
+			},
+			{
+				Algorithm:     "md5",
+				DateTime:      time.Now().UTC(),
+				Digest:        "new-md5",
+				GenericFileID: 5432,
+			},
+			{
+				Algorithm:     "sha256",
+				DateTime:      time.Now().UTC(),
+				Digest:        "new-sha256",
+				GenericFileID: 5432,
+			},
+		},
+	}
+	assert.Equal(t, "new-md5", gf.GetLatestChecksum("md5").Digest)
+	assert.Equal(t, "new-sha256", gf.GetLatestChecksum("sha256").Digest)
 }
 
 func TestPathInBag(t *testing.T) {
