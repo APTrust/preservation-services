@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"sync"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
@@ -31,6 +32,7 @@ type BagRestorer struct {
 	bestRestorationSource *common.PerservationBucket
 	bytesWritten          int64
 	uploadError           error
+	wg                    sync.WaitGroup
 }
 
 // NewBagRestorer creates a new BagRestorer to copy files from S3
@@ -52,6 +54,8 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 
 	fileCount, errors = r.restoreAllPreservedFiles()
 
+	r.wg.Wait()
+
 	fmt.Println("Bytes Written:", r.bytesWritten)
 	fmt.Println("UploadError:", r.uploadError)
 
@@ -67,23 +71,7 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 // copies data comes from the TarPipeWriter. Anything we write into that pipe
 // gets copied to the restoration bucket.
 func (r *BagRestorer) initUploader() {
-
-	// PipeWriter/Reader is working but no data goes through. WTF??
-	//
-	// Problem seems to come from these bugs in Minio and golang net/http:
-	//
-	// https://github.com/minio/minio-go/issues/1146
-	// https://github.com/golang/go/issues/17480
-	//
-	// Or... if this were writing nothing, it should return, but it never
-	// returns.
-	//
-	// If we give this a size, like 100000, it writes exactly that number
-	// of bytes and then stops.
-	//
-	// PartSize doesn't seem to help here. And if we were to use it,
-	// we'd have to calculate it intelligently.
-
+	r.wg.Add(1)
 	go func() {
 		s3Client := r.Context.S3Clients[constants.StorageProviderAWS]
 		//s3Client.TraceOn(nil)
@@ -98,6 +86,7 @@ func (r *BagRestorer) initUploader() {
 		)
 		fmt.Println("Upload completed")
 		r.Context.Logger.Infof("Finished uploading tar file %s", r.RestorationObject.Identifier)
+		r.wg.Done()
 	}()
 	r.Context.Logger.Infof("Initialized uploader for %s going to %s", r.RestorationObject.Identifier, r.RestorationObject.RestorationTarget)
 }
@@ -129,6 +118,7 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 		}
 	}
 	r.RestorationObject.AllFilesRestored = true
+	r.tarPipeWriter.Finish()
 	return fileCount, errors
 }
 
