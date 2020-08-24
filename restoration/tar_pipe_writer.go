@@ -76,8 +76,10 @@ func (w *TarPipeWriter) GetReader() *io.PipeReader {
 	return w.pipeReader
 }
 
+// Finish closes the TarWriter, flushing remaining data. It also closes
+// the PipeWriter, which sends an EOF to the PipeReader. Without this,
+// the process at the reading end will hang forever, waiting for EOF.
 func (w *TarPipeWriter) Finish() {
 	w.tarWriter.Close()
-	//w.pipeWriter.CloseWithError(io.EOF)
-	//w.pipeReader.CloseWithError(io.EOF)
+	w.pipeWriter.Close()
 }
