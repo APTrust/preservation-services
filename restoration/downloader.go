@@ -14,9 +14,6 @@ import (
 	"github.com/minio/minio-go/v6"
 )
 
-// const BatchSize = 100
-// const DefaultPriority = 10000
-
 // Downloader downloads all files required to restore an IntellectualObject.
 type Downloader struct {
 	Base
@@ -45,7 +42,7 @@ func (d *Downloader) Run() (fileCount int, errors []*service.ProcessingError) {
 			errors = append(errors, d.Error(objIdentifier, err, false))
 			break
 		}
-		hasMore = len(files) == BatchSize
+		hasMore = len(files) == batchSize
 		for _, gf := range files {
 			err = d.Download(gf)
 			if err != nil {
@@ -68,7 +65,7 @@ func (d *Downloader) Run() (fileCount int, errors []*service.ProcessingError) {
 // to restore a file. We generally want to restore from S3 over Glacier,
 // and US East over other regions.
 func (d *Downloader) BestRestorationSource(gf *registry.GenericFile) (bestSource *common.PerservationBucket, err error) {
-	priority := DefaultPriority
+	priority := defaultPriority
 	for _, storageRecord := range gf.StorageRecords {
 		for _, preservationBucket := range d.Context.Config.PerservationBuckets {
 			if preservationBucket.HostsURL(storageRecord.URL) && preservationBucket.RestorePriority < priority {
@@ -77,7 +74,7 @@ func (d *Downloader) BestRestorationSource(gf *registry.GenericFile) (bestSource
 			}
 		}
 	}
-	if priority == DefaultPriority {
+	if priority == defaultPriority {
 		err = fmt.Errorf("Could not find any suitable restoration source for %s. (%d preservation URLS, %d PerservationBuckets", gf.Identifier, len(gf.StorageRecords), len(d.Context.Config.PerservationBuckets))
 	}
 	return bestSource, err
@@ -88,7 +85,7 @@ func (d *Downloader) GetBatchOfFiles(objectIdentifier string, pageNumber int) (g
 	params := url.Values{}
 	params.Set("intellectual_object_identifier", objectIdentifier)
 	params.Set("page", strconv.Itoa(pageNumber))
-	params.Set("per_page", strconv.Itoa(BatchSize))
+	params.Set("per_page", strconv.Itoa(batchSize))
 	params.Set("sort", "name")
 	params.Set("state", "A")
 	resp := d.Context.PharosClient.GenericFileList(params)

@@ -26,14 +26,16 @@ import (
 // The TarPipeWriter writes all files into a single tarball, which
 // will include manifests, tag manifests, and tag files.
 
-const BatchSize = 100
-const DefaultPriority = 10000
+const batchSize = 100
+const defaultPriority = 10000
 
 var manifestTypes = []string{
 	constants.FileTypeManifest,
 	constants.FileTypeTagManifest,
 }
 
+// Contents of the bagit.txt file. We have to write this into
+// every restored bag.
 var bagitTxt = `BagIt-Version: 1.0
 Tag-File-Character-Encoding: UTF-8
 `
@@ -61,6 +63,7 @@ func NewBagRestorer(context *common.Context, workItemID int, restorationObject *
 	}
 }
 
+// Run restores the entire bag to the depositor's restoration bucket.
 func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 
 	r.DeleteStaleManifests()
@@ -87,12 +90,10 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 
 	r.wg.Wait()
 
-	fmt.Println("Bytes Written:", r.bytesWritten)
-	fmt.Println("UploadError:", r.uploadError)
-
-	// -------------------------------------------------
-	// TODO: Create and copy manifests and tag manifests
-	// -------------------------------------------------
+	if len(errors) == 0 {
+		r.RestorationObject.AllFilesRestored = true
+		r.DeleteStaleManifests()
+	}
 
 	return fileCount, errors
 }
@@ -115,7 +116,6 @@ func (r *BagRestorer) initUploader() {
 				//PartSize: 1000000,
 			},
 		)
-		fmt.Println("Upload completed")
 		r.Context.Logger.Infof("Finished uploading tar file %s", r.RestorationObject.Identifier)
 		r.wg.Done()
 	}()
@@ -150,13 +150,18 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 				return fileCount, errors
 			}
 			fileCount++
-			hasMore = len(files) == BatchSize
+			hasMore = len(files) == batchSize
 		}
 	}
-	r.RestorationObject.AllFilesRestored = true
 	return fileCount, errors
 }
 
+// RecordDigests appends file checksums to manifests and tag manifests.
+// These files are stored locally on disk and added to the tarred bag
+// at the end of the bagging process. They will always be the last items
+// written into the tar file. Manifests typically range from 1-20 kilobytes.
+// In bags with hundreds of thousands of files, manifests can be several
+// megabytes, but these are rare.
 func (r *BagRestorer) RecordDigests(gf *registry.GenericFile, digests map[string]string) error {
 	for _, alg := range constants.SupportedManifestAlgorithms {
 		digest := digests[alg]
@@ -172,6 +177,8 @@ func (r *BagRestorer) RecordDigests(gf *registry.GenericFile, digests map[string
 	return nil
 }
 
+// AppendDigestToManifest adds the given digest (checksum) for the
+// specified file to the end of a manifest.
 func (r *BagRestorer) AppendDigestToManifest(gf *registry.GenericFile, digest, algorithm string) error {
 	fileType := constants.FileTypeManifest
 	if gf.IsTagFile() {
@@ -193,6 +200,8 @@ func (r *BagRestorer) AppendDigestToManifest(gf *registry.GenericFile, digest, a
 	return err
 }
 
+// GetManifestPath returns the path to a manifest or tag manifest on
+// local disk.
 func (r *BagRestorer) GetManifestPath(algorithm, fileType string) string {
 	var filename string
 	if fileType == constants.FileTypeTagManifest {
@@ -203,6 +212,8 @@ func (r *BagRestorer) GetManifestPath(algorithm, fileType string) string {
 	return path.Join(r.Context.Config.RestoreDir, strconv.Itoa(r.WorkItemID), filename)
 }
 
+// DeleteStaleManifests deletes any manifests and tag manifests left over
+// from prior attempts to restore this bag.
 func (r *BagRestorer) DeleteStaleManifests() error {
 	for _, alg := range constants.SupportedManifestAlgorithms {
 		for _, fileType := range manifestTypes {
@@ -227,7 +238,7 @@ func (r *BagRestorer) BestRestorationSource(gf *registry.GenericFile) (bestSourc
 	if r.bestRestorationSource != nil {
 		return r.bestRestorationSource, nil
 	}
-	priority := DefaultPriority
+	priority := defaultPriority
 	for _, storageRecord := range gf.StorageRecords {
 		for _, preservationBucket := range r.Context.Config.PerservationBuckets {
 			if preservationBucket.HostsURL(storageRecord.URL) && preservationBucket.RestorePriority < priority {
@@ -236,7 +247,7 @@ func (r *BagRestorer) BestRestorationSource(gf *registry.GenericFile) (bestSourc
 			}
 		}
 	}
-	if priority == DefaultPriority {
+	if priority == defaultPriority {
 		err = fmt.Errorf("Could not find any suitable restoration source for %s. (%d preservation URLS, %d PerservationBuckets", gf.Identifier, len(gf.StorageRecords), len(r.Context.Config.PerservationBuckets))
 	} else {
 		//r.Context.Logger.Infof("Restoring %s from %s", r.RestorationObject.Identifier, r.bestRestorationSource.Bucket)
@@ -249,7 +260,7 @@ func (r *BagRestorer) GetBatchOfFiles(objectIdentifier string, pageNumber int) (
 	params := url.Values{}
 	params.Set("intellectual_object_identifier", objectIdentifier)
 	params.Set("page", strconv.Itoa(pageNumber))
-	params.Set("per_page", strconv.Itoa(BatchSize))
+	params.Set("per_page", strconv.Itoa(batchSize))
 	params.Set("sort", "name")
 	params.Set("state", "A")
 	params.Set("include_storage_records", "true")
@@ -257,6 +268,7 @@ func (r *BagRestorer) GetBatchOfFiles(objectIdentifier string, pageNumber int) (
 	return resp.GenericFiles(), resp.Error
 }
 
+// GetTarHeader returns a tar header for the specified GenericFile.
 func (r *BagRestorer) GetTarHeader(gf *registry.GenericFile) *tar.Header {
 	return &tar.Header{
 		Name:     gf.PathMinusInstitution(),
@@ -317,7 +329,6 @@ func (r *BagRestorer) AddManifests() (fileCount int, error *service.ProcessingEr
 			manifestName := path.Base(manifestFile)
 
 			r.Context.Logger.Info("Adding %s from %s", manifestName, manifestFile)
-			fmt.Printf("Adding %s from %s \n", manifestName, manifestFile)
 
 			fileInfo, err := os.Stat(manifestFile)
 			if err != nil {
