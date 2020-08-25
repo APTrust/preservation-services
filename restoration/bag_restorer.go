@@ -282,7 +282,7 @@ func (r *BagRestorer) AddBagItFile() error {
 		ModTime:  time.Now().UTC(),
 	}
 
-	digests, err := r.tarPipeWriter.AddFile(tarHeader, strings.NewReader(bagitTxt))
+	digests, err := r.tarPipeWriter.AddFile(tarHeader, strings.NewReader(bagitTxt), r.RestorationObject.ManifestAlgorithms())
 	if err != nil {
 		return err
 	}
@@ -311,7 +311,7 @@ func (r *BagRestorer) AddManifests() (fileCount int, error *service.ProcessingEr
 	if err != nil {
 		return fileCount, r.Error(r.RestorationObject.Identifier, err, true)
 	}
-	for _, alg := range constants.SupportedManifestAlgorithms {
+	for _, alg := range r.RestorationObject.ManifestAlgorithms() {
 		for _, fileType := range manifestTypes {
 			manifestFile := r.GetManifestPath(alg, fileType)
 			manifestName := path.Base(manifestFile)
@@ -337,7 +337,11 @@ func (r *BagRestorer) AddManifests() (fileCount int, error *service.ProcessingEr
 				Mode:     int64(0755),
 				ModTime:  fileInfo.ModTime(),
 			}
-			err = r.tarPipeWriter.AddFileWithoutDigests(tarHeader, file)
+			// Note that we do not want to calculate digests on manifests.
+			// BagIt spec says not to do that, and if we did, we'd be writing
+			// into the manifest files on disk as we're pushing those files
+			// into the tarball. That will result in data corruption.
+			_, err = r.tarPipeWriter.AddFile(tarHeader, file, []string{})
 			if err != nil {
 				return fileCount, r.Error(manifestName, err, true)
 			}
@@ -364,5 +368,5 @@ func (r *BagRestorer) AddToTarFile(gf *registry.GenericFile) (digests map[string
 
 	// Add header and file data to tarPipeWriter
 	tarHeader := r.GetTarHeader(gf)
-	return r.tarPipeWriter.AddFile(tarHeader, obj)
+	return r.tarPipeWriter.AddFile(tarHeader, obj, r.RestorationObject.ManifestAlgorithms())
 }

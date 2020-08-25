@@ -12,11 +12,13 @@ import (
 func main() {
 	context := common.NewContext()
 	restorationObject := &service.RestorationObject{
-		Identifier: "test.edu/apt-bag-1",
-		// Identifier:        "test.edu/btr-3",
-		RestorationSource: constants.RestorationSourceS3,
-		RestorationTarget: "aptrust.restore.test.test.edu",
-		RestorationType:   constants.RestorationTypeObject,
+		//Identifier:             "test.edu/apt-bag-1",
+		//BagItProfileIdentifier: constants.DefaultProfileIdentifier,
+		Identifier:             "test.edu/btr-3",
+		BagItProfileIdentifier: constants.BTRProfileIdentifier,
+		RestorationSource:      constants.RestorationSourceS3,
+		RestorationTarget:      "aptrust.restore.test.test.edu",
+		RestorationType:        constants.RestorationTypeObject,
 	}
 
 	restorer := restoration.NewBagRestorer(

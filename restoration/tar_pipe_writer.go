@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
+	"hash"
 	"io"
 	"strings"
 	"time"
@@ -48,7 +49,7 @@ func NewTarPipeWriter() *TarPipeWriter {
 
 // AddFile writes the specified tar header and file data (from reader r)
 // into the pipeline.
-func (w *TarPipeWriter) AddFile(header *tar.Header, r io.Reader) (digests map[string]string, err error) {
+func (w *TarPipeWriter) AddFile(header *tar.Header, r io.Reader, manifestAlgs []string) (digests map[string]string, err error) {
 
 	digests = make(map[string]string, 4)
 
@@ -65,17 +66,15 @@ func (w *TarPipeWriter) AddFile(header *tar.Header, r io.Reader) (digests map[st
 		return digests, err
 	}
 
-	md5Hash := md5.New()
-	sha1Hash := sha1.New()
-	sha256Hash := sha256.New()
-	sha512Hash := sha512.New()
-	writers := []io.Writer{
-		md5Hash,
-		sha1Hash,
-		sha256Hash,
-		sha512Hash,
-		w.tarWriter,
+	// Write file data through hashes to tar writer
+	hashes := w.GetManifestHashes(manifestAlgs)
+	writers := make([]io.Writer, len(hashes)+1)
+	i := 0
+	for _, hash := range hashes {
+		writers[i] = hash
+		i++
 	}
+	writers[i] = w.tarWriter
 	multiWriter := io.MultiWriter(writers...)
 
 	// Write the file contents
@@ -90,42 +89,31 @@ func (w *TarPipeWriter) AddFile(header *tar.Header, r io.Reader) (digests map[st
 			header.Name, err)
 	}
 
-	digests[constants.AlgMd5] = fmt.Sprintf("%x", md5Hash.Sum(nil))
-	digests[constants.AlgSha1] = fmt.Sprintf("%x", sha1Hash.Sum(nil))
-	digests[constants.AlgSha256] = fmt.Sprintf("%x", sha256Hash.Sum(nil))
-	digests[constants.AlgSha512] = fmt.Sprintf("%x", sha512Hash.Sum(nil))
+	// Collect the digests for return to caller. E.g.
+	// digest['md5'] = "68b329da9893e34099c7d8ad5cb9c940"
+	// digest['sha256'] = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	for alg, hash := range hashes {
+		digests[alg] = fmt.Sprintf("%x", hash.Sum(nil))
+	}
 
 	return digests, nil
 }
 
-func (w *TarPipeWriter) AddFileWithoutDigests(header *tar.Header, r io.Reader) (err error) {
-
-	if err = w.ValidateHeader(header); err != nil {
-		return err
+func (w *TarPipeWriter) GetManifestHashes(manifestAlgs []string) map[string]hash.Hash {
+	hashes := make(map[string]hash.Hash, len(manifestAlgs))
+	for _, alg := range manifestAlgs {
+		switch alg {
+		case constants.AlgMd5:
+			hashes[alg] = md5.New()
+		case constants.AlgSha1:
+			hashes[alg] = sha1.New()
+		case constants.AlgSha256:
+			hashes[alg] = sha256.New()
+		case constants.AlgSha512:
+			hashes[alg] = sha512.New()
+		}
 	}
-
-	if err = w.EnsureDirectoryEntry(header.Name); err != nil {
-		return err
-	}
-
-	// Write the tar header
-	if err = w.tarWriter.WriteHeader(header); err != nil {
-		return err
-	}
-
-	// Write the file contents
-	bytesWritten, err := io.Copy(w.tarWriter, r)
-	fmt.Printf("Tar writer wrote %d bytes\n", bytesWritten)
-	if bytesWritten != header.Size {
-		return fmt.Errorf("AddFile copied only %d of %d bytes for file %s",
-			bytesWritten, header.Size, header.Name)
-	}
-	if err != nil {
-		return fmt.Errorf("Error copying %s into tar archive: %v",
-			header.Name, err)
-	}
-
-	return nil
+	return hashes
 }
 
 func (w *TarPipeWriter) EnsureDirectoryEntry(filename string) (err error) {
