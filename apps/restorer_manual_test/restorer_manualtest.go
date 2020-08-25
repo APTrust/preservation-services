@@ -16,6 +16,7 @@ func main() {
 		//BagItProfileIdentifier: constants.DefaultProfileIdentifier,
 		Identifier:             "test.edu/btr-3",
 		BagItProfileIdentifier: constants.BTRProfileIdentifier,
+		FileSize:               6500000,
 		RestorationSource:      constants.RestorationSourceS3,
 		RestorationTarget:      "aptrust.restore.test.test.edu",
 		RestorationType:        constants.RestorationTypeObject,

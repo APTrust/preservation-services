@@ -37,11 +37,6 @@ func NewTarPipeWriter() *TarPipeWriter {
 }
 
 // -----------------------------------------------------------------------
-// TODO: Combine AddFile and AddFileWithoutDigests into a single function.
-// TODO: Add only those digests allowed by the profile.
-//       BTR can have all supported digests.
-//       APTrust should have only md5 and sha256.
-//       Hint: Add profile name and bag size to RestorationObject.
 // TODO: Get estimated size of bag to be restored and set preferred
 //       S3 upload chunk size based on bag size. Otherwise, Minio
 //       client can allocate a very large copy buffer (600+ MB)

@@ -35,6 +35,13 @@ type RestorationObject struct {
 	// completing.
 	ErrorMessage string `json:"error_message"`
 
+	// FileSize is the size of the file to be restored, or the sum of all the
+	// file sizes in the bag to be restored. Note that when restoring a bag,
+	// the final restored size will be larger than FileSize because of
+	// manifests, tag manifests, and tar headers. This info should come from
+	// GenericFile.Size or IntellectualObject.FileSize.
+	FileSize int64
+
 	// Identifier is the identifier of the IntellectionObject or GenericFile
 	// (from Pharos) to be restored.
 	Identifier string `json:"identifier"`
