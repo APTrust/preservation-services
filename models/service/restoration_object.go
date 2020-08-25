@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/APTrust/preservation-services/constants"
 )
 
 type RestorationObject struct {
@@ -17,6 +19,10 @@ type RestorationObject struct {
 	// This should happen after the bag has been uploaded to the depsitor's
 	// restoration bucket.
 	BagDeletedAt time.Time `json:"bag_deleted_at"`
+
+	// BagItProfileIdentifier is the identifier of the BagItProfile used
+	// to build this bag when it was deposited.
+	BagItProfileIdentifier string
 
 	// BagValidatedAt describes when the restored bag was validated.
 	BagValidatedAt time.Time `json:"bag_validated_at"`
@@ -58,13 +64,6 @@ type RestorationObject struct {
 	// restoration bucket.
 	RestoredAt time.Time `json:"restored_at"`
 
-	// RestoredBagSize is the size (in bytes) of the restored bag. This will be
-	// different from the original bag size because we include Premis events
-	// in the restored bag. The restored bag may include files added or updated
-	// since the initial ingest, and will not include files deleted after the
-	// initial ingest.
-	RestoredBagSize int64 `json:"restored_bag_size"`
-
 	// URL is the URL of the restored bag in the depositor's restoration
 	// bucket.
 	URL string `json:"url"`
@@ -94,10 +93,31 @@ func (obj *RestorationObject) ToJSON() (string, error) {
 	return string(bytes), nil
 }
 
+// ObjName returns the name of the IntellectualObject without the institution
+// identifier prefix.
 func (obj *RestorationObject) ObjName() (string, error) {
 	parts := strings.SplitN(obj.Identifier, "/", 2)
 	if len(parts) < 2 {
 		return "", fmt.Errorf("Invalid object identifier '%s': missing institution prefix", obj.Identifier)
 	}
 	return parts[1], nil
+}
+
+// BagItProfile returns the short name of the profile to use when restoring
+// the bag. This will be either constants.BagItProfileDefault or
+// constants.BagItProfileBTR.
+func (obj *RestorationObject) BagItProfile() string {
+	if obj.BagItProfileIdentifier == constants.DefaultProfileIdentifier {
+		return constants.BagItProfileDefault
+	}
+	return constants.BagItProfileBTR
+}
+
+// ManifestAlgorithms describes which digest algorithms to use for
+// manifests and tag manifests when restoring a bag.
+func (obj *RestorationObject) ManifestAlgorithms() []string {
+	if obj.BagItProfile() == constants.BagItProfileDefault {
+		return constants.APTrustRestorationAlgorithms
+	}
+	return constants.BTRRestorationAlgorithms
 }

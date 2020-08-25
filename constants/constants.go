@@ -15,6 +15,7 @@ const (
 	AlgSha512                  = "sha512"
 	BagItProfileBTR            = "btr-v1.0.json"
 	BagItProfileDefault        = "aptrust-v2.2.json"
+	BTRProfileIdentifier       = "https://github.com/dpscollaborative/btr_bagit_profile/releases/download/1.0/btr-bagit-profile.json"
 	DefaultAccess              = AccessInstitution
 	DefaultProfileIdentifier   = "https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json"
 	Deleter                    = "deleter"
@@ -145,11 +146,27 @@ var PreferredAlgsInOrder []string = []string{
 	AlgMd5,
 }
 
+// SupportedManifestAlgorithms lists the digest algorithms we support
+// for ingest.
 var SupportedManifestAlgorithms []string = []string{
 	AlgMd5,
 	AlgSha1,
 	AlgSha256,
 	AlgSha512,
+}
+
+// APTrustRestorationAlgorithms lists the digest algorithms to use
+// when restoring bags in APTrust format.
+var APTrustRestorationAlgorithms []string = []string{
+	AlgMd5,
+	AlgSha256,
+}
+
+// BTRRestorationAlgorithms lists the digest algorithms to use
+// when restoring bags in BTR format.
+var BTRRestorationAlgorithms []string = []string{
+	AlgSha1,
+	AlgSha256,
 }
 
 var StorageProviders = []string{
