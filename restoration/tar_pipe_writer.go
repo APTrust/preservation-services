@@ -36,12 +36,6 @@ func NewTarPipeWriter() *TarPipeWriter {
 	}
 }
 
-// -----------------------------------------------------------------------
-// TODO: Get estimated size of bag to be restored and set preferred
-//       S3 upload chunk size based on bag size. Otherwise, Minio
-//       client can allocate a very large copy buffer (600+ MB)
-// -----------------------------------------------------------------------
-
 // AddFile writes the specified tar header and file data (from reader r)
 // into the pipeline.
 func (w *TarPipeWriter) AddFile(header *tar.Header, r io.Reader, manifestAlgs []string) (digests map[string]string, err error) {
