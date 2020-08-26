@@ -5,7 +5,7 @@ package e2e_test
 import (
 	"testing"
 
-	"github.com/APTrust/preservation-services/constants"
+	//"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,6 +26,7 @@ func TestRedisRecords(t *testing.T) {
 		// All IngestFiles should have been deleted.
 		files, offset, err := context.RedisClient.GetBatchOfFileKeys(
 			item.ID, uint64(0), int64(20))
+		require.Nil(t, err)
 		assert.Empty(t, files)
 		assert.EqualValues(t, 0, offset)
 

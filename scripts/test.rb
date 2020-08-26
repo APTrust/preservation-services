@@ -157,7 +157,7 @@ class TestRunner
   def run_e2e_tests(arg)
     build_ingest_services
     init_for_integration
-    start_ingest_services
+    start_ingest_services([])
     run_bucket_reader
 
     puts "Giving the workers some time to finish"
@@ -408,6 +408,7 @@ class TestRunner
     puts "  test.rb units --formats         # Run unit and extra format tests"
     puts "  test.rb integration             # Run integration tests"
     puts "  test.rb integration --rebuild   # Rebuild Docker & run integration"
+    puts "  test.rb e2e                     # Run end to end tests"
     puts "\n"
     puts "To run unit tests in a single directory:"
     puts "  test.rb units ./ingest/..."
@@ -435,7 +436,7 @@ if __FILE__ == $0
 
   t = TestRunner.new(options)
   t.test_name = ARGV[0]
-  if !['units', 'integration', 'interactive'].include?(t.test_name)
+  if !['units', 'integration', 'interactive', 'e2e'].include?(t.test_name)
     t.print_help
 	exit(false)
   end
