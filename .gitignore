@@ -1,6 +1,9 @@
 # Emacs detritus
 *~
 
+# Mac crap
+*.DS_Store
+
 # Redis db files
 *.rdb
 
