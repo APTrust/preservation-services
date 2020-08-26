@@ -3,6 +3,7 @@
 package restoration_test
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path"
 	"testing"
@@ -21,6 +22,8 @@ import (
 var bagRestorerSetupCompleted = false
 
 const workItemID = 334455
+const aptrustObject = "test.edu/apt-test-restore"
+const btrObject = "test.edu/btr-512-test-restore"
 
 type RestorationItem struct {
 	WorkItemID    int
@@ -31,14 +34,41 @@ type RestorationItem struct {
 var itemsToRestore = []RestorationItem{
 	RestorationItem{
 		WorkItemID:    87777,
-		ObjIdentifier: "test.edu/apt-test-restore",
+		ObjIdentifier: aptrustObject,
 		BagItProfile:  constants.BagItProfileDefault,
 	},
 	RestorationItem{
 		WorkItemID:    87999,
-		ObjIdentifier: "test.edu/btr-512-test-restore",
+		ObjIdentifier: btrObject,
 		BagItProfile:  constants.BagItProfileBTR,
 	},
+}
+
+// These files should be in the restored APTrust bag.
+var expectedAPTrustFiles = []string{
+	"apt-test-restore/bagit.txt",
+	"apt-test-restore/data/sample.xml",
+	"apt-test-restore/data/sample.json",
+	"apt-test-restore/bag-info.txt",
+	"apt-test-restore/aptrust-info.txt",
+	"apt-test-restore/manifest-md5.txt",
+	"apt-test-restore/manifest-sha256.txt",
+	"apt-test-restore/tagmanifest-md5.txt",
+	"apt-test-restore/tagmanifest-sha256.txt",
+}
+
+// These files should be in the restored BTR bag.
+var expectedBTRFiles = []string{
+	"btr-512-test-restore/bagit.txt",
+	"btr-512-test-restore/data/sample.xml",
+	"btr-512-test-restore/data/sample.json",
+	"btr-512-test-restore/bag-info.txt",
+	"btr-512-test-restore/manifest-sha1.txt",
+	"btr-512-test-restore/manifest-sha256.txt",
+	"btr-512-test-restore/manifest-sha512.txt",
+	"btr-512-test-restore/tagmanifest-sha1.txt",
+	"btr-512-test-restore/tagmanifest-sha256.txt",
+	"btr-512-test-restore/tagmanifest-sha512.txt",
 }
 
 // setup ensures the files we want to restore are in the local Minio
@@ -79,9 +109,13 @@ func setup(t *testing.T, context *common.Context) {
 }
 
 func getRestorationObject(objIdentifier string) *service.RestorationObject {
+	profile := constants.DefaultProfileIdentifier
+	if objIdentifier == btrObject {
+		profile = constants.BTRProfileIdentifier
+	}
 	return &service.RestorationObject{
 		Identifier:             objIdentifier,
-		BagItProfileIdentifier: constants.DefaultProfileIdentifier,
+		BagItProfileIdentifier: profile,
 		RestorationSource:      constants.RestorationSourceS3,
 		RestorationTarget:      "aptrust.restore.test.test.edu",
 		RestorationType:        constants.RestorationTypeObject,
@@ -128,18 +162,35 @@ func testRestoredBag(t *testing.T, context *common.Context, item RestorationItem
 	assert.Empty(t, errors)
 
 	// fileCount is count of all files in bag, including manifests.
-	// APTrust bag has one extra: aptrust-info.txt.
-	if item.ObjIdentifier == "test.edu/apt-test-restore" {
-		assert.Equal(t, 9, fileCount)
-	} else {
-		assert.Equal(t, 8, fileCount)
+	// APTrust bag has two fewer manifests, one extra tag file: aptrust-info.txt.
+	expectedFiles := expectedAPTrustFiles
+	if item.ObjIdentifier == btrObject {
+		expectedFiles = expectedBTRFiles
 	}
+
+	assert.Equal(t, len(expectedFiles), fileCount)
 
 	// Validate the bag
 	v := ingest.NewMetadataValidator(context, item.WorkItemID, ingestObj)
 	fileCount, errors = v.Run()
 	assert.Empty(t, errors)
 
+	// Do a sanity check on the files. Although the bag may be valid,
+	// we still have to ensure that it actually does include the
+	// expected files.
+	testExpectedFiles(t, context, item, expectedFiles)
+}
+
+func testExpectedFiles(t *testing.T, context *common.Context, item RestorationItem, expectedFiles []string) {
+	for _, file := range expectedFiles {
+		// File identifier has this weird format because we
+		// read the object from aptrust.restore.test.edu/test.edu.
+		// Normally, the institution identifier appears only once
+		// as a prefix, since it's inst/s3_key_name.
+		identifier := fmt.Sprintf("test.edu/test.edu/%s", file)
+		_, err := context.RedisClient.IngestFileGet(item.WorkItemID, identifier)
+		assert.Nil(t, err, "Missing file %s", file)
+	}
 }
 
 // func TestBagRestorer_GetManifestPath(t *testing.T) {

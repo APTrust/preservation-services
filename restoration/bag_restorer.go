@@ -377,8 +377,6 @@ func (r *BagRestorer) _addManifest(manifestFile, manifestType string) error {
 		algs = r.RestorationObject.ManifestAlgorithms()
 	}
 
-	fmt.Println(manifestType, algs)
-
 	digests, err := r.tarPipeWriter.AddFile(tarHeader, file, algs)
 	if err != nil {
 		return err

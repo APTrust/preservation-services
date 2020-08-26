@@ -168,6 +168,7 @@ var APTrustRestorationAlgorithms []string = []string{
 var BTRRestorationAlgorithms []string = []string{
 	AlgSha1,
 	AlgSha256,
+	AlgSha512,
 }
 
 var StorageProviders = []string{
