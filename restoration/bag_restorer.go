@@ -78,15 +78,31 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 		return fileCount, errors
 	}
 
+	// Restore payload files and preserved tag files.
 	fileCount, errors = r.restoreAllPreservedFiles()
 
-	manifestsAdded, procErr := r.AddManifests()
+	// Add payload manifests before tag manifests, because we need to
+	// calculate checksums on the payload manifests.
+	manifestsAdded, procErr := r.AddManifests(constants.FileTypeManifest)
 	if procErr != nil {
 		errors = append(errors, procErr)
 		return fileCount, errors
 	}
 	fileCount += manifestsAdded
+
+	// Lastly, add tag manifests, which include checksums for tag files
+	// and for payload manifests.
+	tagManifestsAdded, procErr := r.AddManifests(constants.FileTypeTagManifest)
+	if procErr != nil {
+		errors = append(errors, procErr)
+		return fileCount, errors
+	}
+	fileCount += tagManifestsAdded
+
 	fileCount++ // For bagit.txt
+
+	// Close the PipeWriter, or the PipeReader will hang forever.
+	r.tarPipeWriter.Finish()
 
 	r.wg.Wait()
 
@@ -180,10 +196,13 @@ func (r *BagRestorer) RecordDigests(gf *registry.GenericFile, digests map[string
 // AppendDigestToManifest adds the given digest (checksum) for the
 // specified file to the end of a manifest.
 func (r *BagRestorer) AppendDigestToManifest(gf *registry.GenericFile, digest, algorithm string) error {
+	// Payload digests go into manifest.
+	// Digests of tag files and payload manifests go into tag manifests.
 	fileType := constants.FileTypeManifest
-	if gf.IsTagFile() {
+	if gf.IsTagFile() || util.LooksLikeManifest(gf.PathInBag()) {
 		fileType = constants.FileTypeTagManifest
 	}
+
 	manifestPath := r.GetManifestPath(algorithm, fileType)
 	if !util.FileExists(path.Dir(manifestPath)) {
 		err := os.MkdirAll(path.Dir(manifestPath), 0755)
@@ -314,52 +333,73 @@ func (r *BagRestorer) AddBagItFile() error {
 }
 
 // AddManifests adds manifests and tag manifests to the tar file.
-func (r *BagRestorer) AddManifests() (fileCount int, error *service.ProcessingError) {
-
-	// This is the last thing we write, so finish here...
-	defer r.tarPipeWriter.Finish()
-
-	objName, err := r.RestorationObject.ObjName()
-	if err != nil {
-		return fileCount, r.Error(r.RestorationObject.Identifier, err, true)
-	}
+func (r *BagRestorer) AddManifests(manifestType string) (fileCount int, error *service.ProcessingError) {
 	for _, alg := range r.RestorationObject.ManifestAlgorithms() {
-		for _, fileType := range manifestTypes {
-			manifestFile := r.GetManifestPath(alg, fileType)
-			manifestName := path.Base(manifestFile)
-
-			r.Context.Logger.Info("Adding %s from %s", manifestName, manifestFile)
-
-			fileInfo, err := os.Stat(manifestFile)
-			if err != nil {
-				return fileCount, r.Error(manifestName, err, true)
-			}
-
-			file, err := os.Open(manifestFile)
-			if err != nil {
-				return fileCount, r.Error(manifestName, err, true)
-			}
-			defer file.Close()
-
-			tarHeader := &tar.Header{
-				Name:     fmt.Sprintf("%s/%s", objName, manifestName),
-				Size:     fileInfo.Size(),
-				Typeflag: tar.TypeReg,
-				Mode:     int64(0755),
-				ModTime:  fileInfo.ModTime(),
-			}
-			// Note that we do not want to calculate digests on manifests.
-			// BagIt spec says not to do that, and if we did, we'd be writing
-			// into the manifest files on disk as we're pushing those files
-			// into the tarball. That will result in data corruption.
-			_, err = r.tarPipeWriter.AddFile(tarHeader, file, []string{})
-			if err != nil {
-				return fileCount, r.Error(manifestName, err, true)
-			}
-			fileCount++
+		manifestFile := r.GetManifestPath(alg, manifestType)
+		err := r._addManifest(manifestFile, manifestType)
+		if err != nil {
+			return fileCount, r.Error(manifestFile, err, true)
 		}
+		fileCount++
 	}
 	return fileCount, nil
+}
+
+func (r *BagRestorer) _addManifest(manifestFile, manifestType string) error {
+	objName, err := r.RestorationObject.ObjName()
+	if err != nil {
+		return err
+	}
+	manifestName := path.Base(manifestFile)
+	r.Context.Logger.Info("Adding %s from %s", manifestName, manifestFile)
+	fileInfo, err := os.Stat(manifestFile)
+	if err != nil {
+		return err
+	}
+	file, err := os.Open(manifestFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	tarHeader := &tar.Header{
+		Name:     fmt.Sprintf("%s/%s", objName, manifestName),
+		Size:     fileInfo.Size(),
+		Typeflag: tar.TypeReg,
+		Mode:     int64(0755),
+		ModTime:  fileInfo.ModTime(),
+	}
+
+	// Calculate digests on manifests, but not on tag manifests.
+	// Tag manifest files will contain digests of manifest files.
+	algs := make([]string, 0)
+	if manifestType == constants.FileTypeManifest {
+		algs = r.RestorationObject.ManifestAlgorithms()
+	}
+
+	fmt.Println(manifestType, algs)
+
+	digests, err := r.tarPipeWriter.AddFile(tarHeader, file, algs)
+	if err != nil {
+		return err
+	}
+
+	// If this is a payload manifest, add its checksum to the appropriate
+	// tag manifests.
+	if manifestType == constants.FileTypeManifest {
+		gf := &registry.GenericFile{
+			IntellectualObjectIdentifier: r.RestorationObject.Identifier,
+			Identifier:                   fmt.Sprintf("%s/%s", r.RestorationObject.Identifier, manifestName),
+		}
+		for alg, digest := range digests {
+			err = r.AppendDigestToManifest(gf, digest, alg)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // AddToTarFile adds a GenericFile to the TarPipeWriter. The contents

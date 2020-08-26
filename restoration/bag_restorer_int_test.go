@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/restoration"
@@ -108,16 +109,38 @@ func TestBagRestorer_Run(t *testing.T) {
 		fileCount, errors := restorer.Run()
 		assert.True(t, fileCount >= 3)
 		assert.Empty(t, errors)
+		testRestoredBag(t, context, item)
 	}
 }
 
-// func TestBagRestorer_RecordDigests(t *testing.T) {
+func getIngestObject(objIdentifier string) *service.IngestObject {
+	return &service.IngestObject{
+		Institution: "test.edu",
+		S3Bucket:    "aptrust.restore.test.test.edu",
+		S3Key:       objIdentifier + ".tar",
+	}
+}
 
-// }
+func testRestoredBag(t *testing.T, context *common.Context, item RestorationItem) {
+	ingestObj := getIngestObject(item.ObjIdentifier)
+	m := ingest.NewMetadataGatherer(context, item.WorkItemID, ingestObj)
+	fileCount, errors := m.Run()
+	assert.Empty(t, errors)
 
-// func TestBagRestorer_AppendDigestToManifest(t *testing.T) {
+	// fileCount is count of all files in bag, including manifests.
+	// APTrust bag has one extra: aptrust-info.txt.
+	if item.ObjIdentifier == "test.edu/apt-test-restore" {
+		assert.Equal(t, 9, fileCount)
+	} else {
+		assert.Equal(t, 8, fileCount)
+	}
 
-// }
+	// Validate the bag
+	v := ingest.NewMetadataValidator(context, item.WorkItemID, ingestObj)
+	fileCount, errors = v.Run()
+	assert.Empty(t, errors)
+
+}
 
 // func TestBagRestorer_GetManifestPath(t *testing.T) {
 
@@ -128,25 +151,5 @@ func TestBagRestorer_Run(t *testing.T) {
 // }
 
 // func TestBagRestorer_BestRestorationSource(t *testing.T) {
-
-// }
-
-// func TestBagRestorer_GetBatchOfFiles(t *testing.T) {
-
-// }
-
-// func TestBagRestorer_GetTarHeader(t *testing.T) {
-
-// }
-
-// func TestBagRestorer_AddBagItFile(t *testing.T) {
-
-// }
-
-// func TestBagRestorer_AddManifests(t *testing.T) {
-
-// }
-
-// func TestBagRestorer_AddToTarFile(t *testing.T) {
 
 // }
