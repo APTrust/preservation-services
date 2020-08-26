@@ -1,0 +1,18 @@
+Bag-Count: 1
+Bag-Group-Identifier: 
+Bag-Producing-Organization: APTrust
+Bag-Size: 43.40 KB
+BagIt-Profile-Identifier: https://raw.githubusercontent.com/dpscollaborative/btr_bagit_profile/master/btr-bagit-profile.json
+Bagging-Date: 2020-08-26T15:24:11Z
+Bagging-Software: DART 2.0.9 with Node.js v12.14.1 for darwin-x64-19.0.0.
+Contact-Email: bagger@example.com
+Contact-Name: Bagging Peon
+Contact-Phone: 434-555-1212
+External-Description: Bag to test restoration of BTR with SHA512 manifests.
+External-Identifier: BTR Restoration Test Bag (sha512)
+Internal-Sender-Description: 
+Internal-Sender-Identifier: 
+Organization-Address: 1234 Main St., Charlottesville, VA 22902
+Payload-Identifier: 
+Payload-Oxum: 44443.2
+Source-Organization: APTrust
