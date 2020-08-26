@@ -268,7 +268,7 @@ func (obj *IngestObject) BagItProfileFormat() string {
 	if len(tags) > 0 {
 		profileIdentifier = tags[0].Value
 	}
-	if strings.Contains(profileIdentifier, "btr-bagit-profile") {
+	if strings.Contains(profileIdentifier, "/btr") {
 		profile = constants.BagItProfileBTR
 	}
 	return profile
