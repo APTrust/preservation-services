@@ -148,6 +148,7 @@ func TestBagRestorer_Run(t *testing.T) {
 		testRestoredBag(t, context, item)
 		testBestRestorationSource(t, restorer)
 		testCleanup(t, restorer)
+		testRestorationURL(t, restObj)
 	}
 }
 
@@ -216,4 +217,9 @@ func testCleanup(t *testing.T, r *restoration.BagRestorer) {
 			assert.False(t, util.FileExists(manifestFile))
 		}
 	}
+}
+
+func testRestorationURL(t *testing.T, restObj *service.RestorationObject) {
+	expectedURL := fmt.Sprintf("%s/%s/%s", constants.AWSBucketPrefix, restObj.RestorationTarget, restObj.Identifier)
+	assert.Equal(t, expectedURL, restObj.URL)
 }

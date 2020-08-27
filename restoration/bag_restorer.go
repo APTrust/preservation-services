@@ -61,7 +61,12 @@ func NewBagRestorer(context *common.Context, workItemID int, restorationObject *
 // Run restores the entire bag to the depositor's restoration bucket.
 func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 
+	// Yes, we do this at the beginning and end of each run.
+	// If bag restoration worker was shut down on an interrupt signal,
+	// old manifests might persist. Those will cause an invalid bag
+	// on the next restoration attempt.
 	r.DeleteStaleManifests()
+	defer r.DeleteStaleManifests()
 
 	r.tarPipeWriter = NewTarPipeWriter()
 
@@ -103,7 +108,7 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 
 	if len(errors) == 0 {
 		r.RestorationObject.AllFilesRestored = true
-		r.DeleteStaleManifests()
+		r.RestorationObject.URL = fmt.Sprintf("%s/%s/%s", constants.AWSBucketPrefix, r.RestorationObject.RestorationTarget, r.RestorationObject.Identifier)
 	}
 
 	return fileCount, errors
@@ -264,7 +269,7 @@ func (r *BagRestorer) BestRestorationSource(gf *registry.GenericFile) (bestSourc
 	if priority == defaultPriority {
 		err = fmt.Errorf("Could not find any suitable restoration source for %s. (%d preservation URLS, %d PerservationBuckets", gf.Identifier, len(gf.StorageRecords), len(r.Context.Config.PerservationBuckets))
 	} else {
-		//r.Context.Logger.Infof("Restoring %s from %s", r.RestorationObject.Identifier, r.bestRestorationSource.Bucket)
+		r.Context.Logger.Infof("Restoring %s from %s", r.RestorationObject.Identifier, bestSource.Bucket)
 	}
 	return bestSource, err
 }
@@ -413,4 +418,16 @@ func (r *BagRestorer) AddToTarFile(gf *registry.GenericFile) (digests map[string
 	// Add header and file data to tarPipeWriter
 	tarHeader := r.GetTarHeader(gf)
 	return r.tarPipeWriter.AddFile(tarHeader, obj, r.RestorationObject.ManifestAlgorithms())
+}
+
+// IngestObjectGet satisfies Runnable interface. Does nothing because
+// we don't work with IngestObjects in this context.
+func (r *BagRestorer) IngestObjectGet() *service.IngestObject {
+	return nil
+}
+
+// IngestObjectSave satisfies Runnable interface. Does nothing because
+// we don't work with IngestObjects in this context.
+func (r *BagRestorer) IngestObjectSave() error {
+	return nil
 }

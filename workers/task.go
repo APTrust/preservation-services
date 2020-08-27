@@ -37,6 +37,11 @@ type Task struct {
 	// this worker is responsible for (validation, storage, recording, etc.)
 	Processor ingest.Runnable
 
+	// RestorationObject contains information about a file or object to be
+	// restored. This will be nil for all workers except the bag and file
+	// restoration workers.
+	RestorationObject *service.RestorationObject
+
 	// WasCancelled will be true if this task was cancelled in any
 	// stage prior to Cleanup. When this is true, the Cleanup worker
 	// must set the final status of this task's WorkItem to Cancelled

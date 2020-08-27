@@ -13,8 +13,10 @@ const (
 	AlgSha1                    = "sha1"
 	AlgSha256                  = "sha256"
 	AlgSha512                  = "sha512"
+	AWSBucketPrefix            = "https://s3.amazonaws.com/"
 	BagItProfileBTR            = "btr-v1.0.json"
 	BagItProfileDefault        = "aptrust-v2.2.json"
+	BagRestorer                = "bag_restorer"
 	BTRProfileIdentifier       = "https://github.com/dpscollaborative/btr_bagit_profile/releases/download/1.0/btr-bagit-profile.json"
 	DefaultAccess              = AccessInstitution
 	DefaultProfileIdentifier   = "https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json"
