@@ -1,5 +1,9 @@
 package constants
 
+import (
+	"fmt"
+)
+
 const (
 	AccessConsortia            = "consortia"
 	AccessInstitution          = "institution"
@@ -125,6 +129,12 @@ const (
 	StorageStandard            = "Standard"
 	StorageWasabiOR            = "Wasabi-OR"
 	StorageWasabiVA            = "Wasabi-VA"
+	TopicFileDelete            = "delete_file"
+	TopicFileRestore           = "restore_file"
+	TopicFixity                = "fixity_check"
+	TopicGlacierRestore        = "restore_glacier"
+	TopicObjectDelete          = "delete_object"
+	TopicObjectRestore         = "restore_object"
 	TypeFile                   = "GenericFile"
 	TypeObject                 = "IntellectualObject"
 )
@@ -217,4 +227,44 @@ var TypeNames = []string{
 var ManifestTypes = []string{
 	FileTypeManifest,
 	FileTypeTagManifest,
+}
+
+var ingestTopics = map[string]string{
+	ActionIngest + StageRequested:            IngestPreFetch,
+	ActionIngest + StageValidate:             IngestValidation,
+	ActionIngest + StageReingestCheck:        IngestReingestCheck,
+	ActionIngest + StageCopyToStaging:        IngestStaging,
+	ActionIngest + StageFormatIdentification: IngestFormatIdentification,
+	ActionIngest + StageStore:                IngestStorage,
+	ActionIngest + StageStorageValidation:    IngestStorageValidation,
+	ActionIngest + StageRecord:               IngestRecord,
+	ActionIngest + StageCleanup:              IngestCleanup,
+}
+
+// TopicFor returns the NSQ topic for the specified action and stage.
+// Param fileIdentifier may be GenericFile.Identifier or an empty string.
+func TopicFor(action, stage, fileIdentifier string) (topic string, err error) {
+	if action == ActionIngest {
+		topic = ingestTopics[action+stage]
+	} else if action == ActionFixityCheck {
+		topic = TopicFixity
+	} else if action == ActionRestore {
+		if fileIdentifier != "" {
+			topic = TopicFileRestore
+		} else {
+			topic = TopicObjectRestore
+		}
+	} else if action == ActionGlacierRestore {
+		topic = TopicGlacierRestore
+	} else if action == ActionDelete {
+		if fileIdentifier != "" {
+			topic = TopicFileDelete
+		} else {
+			topic = TopicObjectDelete
+		}
+	}
+	if topic == "" {
+		err = fmt.Errorf("No NSQ topic for %s/%s", action, stage)
+	}
+	return topic, err
 }
