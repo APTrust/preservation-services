@@ -75,6 +75,7 @@ class TestRunner
       "ingest_preservation_uploader",
       "ingest_preservation_verifier",
       "ingest_recorder",
+      "bag_restorer",
     ]
     unless @options[:nocleanup]
       names += ['ingest_cleanup']
@@ -223,6 +224,7 @@ class TestRunner
       "ingest07_storage_validation",
       "ingest08_record",
       "ingest09_cleanup",
+      "bag_restorer",
     ]
     topics.each do |t|
       `curl -s -X POST http://127.0.0.1:4151/topic/create?topic=#{t}`
