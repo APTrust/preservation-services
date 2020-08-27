@@ -18,6 +18,7 @@ import (
 )
 
 type Config struct {
+	APTQueueInterval           time.Duration
 	BaseWorkingDir             string
 	BucketStandardOR           string
 	BucketStandardVA           string
@@ -112,6 +113,7 @@ func loadConfig() *Config {
 		util.PrintAndExit(fmt.Sprintf("Fatal error config file: %v \n", err))
 	}
 	return &Config{
+		APTQueueInterval:           v.GetDuration("APT_QUEUE_INTERVAL"),
 		BaseWorkingDir:             v.GetString("BASE_WORKING_DIR"),
 		BucketStandardOR:           v.GetString("BUCKET_STANDARD_OR"),
 		BucketStandardVA:           v.GetString("BUCKET_STANDARD_VA"),

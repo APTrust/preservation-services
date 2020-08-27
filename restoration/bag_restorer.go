@@ -68,6 +68,8 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 	r.DeleteStaleManifests()
 	defer r.DeleteStaleManifests()
 
+	r.Context.Logger.Infof("Bag %s has profile %s (%s)", r.RestorationObject.Identifier, r.RestorationObject.BagItProfileIdentifier, r.RestorationObject.BagItProfile())
+
 	r.tarPipeWriter = NewTarPipeWriter()
 
 	r.initUploader()
@@ -108,7 +110,7 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 
 	if len(errors) == 0 {
 		r.RestorationObject.AllFilesRestored = true
-		r.RestorationObject.URL = fmt.Sprintf("%s/%s/%s", constants.AWSBucketPrefix, r.RestorationObject.RestorationTarget, r.RestorationObject.Identifier)
+		r.RestorationObject.URL = fmt.Sprintf("%s%s/%s", constants.AWSBucketPrefix, r.RestorationObject.RestorationTarget, r.RestorationObject.Identifier)
 	}
 
 	return fileCount, errors

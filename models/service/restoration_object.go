@@ -114,10 +114,10 @@ func (obj *RestorationObject) ObjName() (string, error) {
 // the bag. This will be either constants.BagItProfileDefault or
 // constants.BagItProfileBTR.
 func (obj *RestorationObject) BagItProfile() string {
-	if obj.BagItProfileIdentifier == constants.DefaultProfileIdentifier {
-		return constants.BagItProfileDefault
+	if obj.BagItProfileIdentifier == constants.BTRProfileIdentifier {
+		return constants.BagItProfileBTR
 	}
-	return constants.BagItProfileBTR
+	return constants.BagItProfileDefault
 }
 
 // ManifestAlgorithms describes which digest algorithms to use for

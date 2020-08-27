@@ -134,7 +134,7 @@ class TestRunner
     build_ingest_services
     init_for_integration
     `redis-cli flushall`
-    start_ingest_services(["ingest_bucket_reader"])
+    start_ingest_services(["ingest_bucket_reader", "apt_queue"])
     puts ">> NSQ: 'http://localhost:4171'"
     puts ">> Minio: 'http://localhost:9899' login/pwd -> minioadmin/minioadmin"
     puts ">> Pharos: 'http://localhost:9292' login/pwd -> system@aptrust.org/password"
@@ -206,7 +206,7 @@ class TestRunner
 
   def start_ingest_services(extra_services)
     self.ingest_service_commands(extra_services).each do |svc|
-      puts "Starting #{svc['name']}"
+      puts "Starting #{svc[:name]}"
       self.start_service(svc)
     end
   end

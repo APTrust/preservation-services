@@ -22,8 +22,8 @@ func NewBagRestorer(bufSize, numWorkers, maxAttempts int) *BagRestorer {
 	settings := &Settings{
 		ChannelBufferSize: bufSize,
 		MaxAttempts:       maxAttempts,
-		NSQChannel:        constants.BagRestorer + "_worker_chan",
-		NSQTopic:          constants.BagRestorer,
+		NSQChannel:        constants.TopicObjectRestore + "_worker_chan",
+		NSQTopic:          constants.TopicObjectRestore,
 		NextQueueTopic:    "",
 		NextWorkItemStage: constants.StageResolve,
 		NumberOfWorkers:   numWorkers,
