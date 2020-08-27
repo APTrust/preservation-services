@@ -211,3 +211,8 @@ var TypeNames = []string{
 	TypeFile,
 	TypeObject,
 }
+
+var ManifestTypes = []string{
+	FileTypeManifest,
+	FileTypeTagManifest,
+}

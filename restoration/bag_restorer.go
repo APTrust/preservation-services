@@ -29,11 +29,6 @@ import (
 const batchSize = 100
 const defaultPriority = 10000
 
-var manifestTypes = []string{
-	constants.FileTypeManifest,
-	constants.FileTypeTagManifest,
-}
-
 // Contents of the bagit.txt file. We have to write this into
 // every restored bag.
 var bagitTxt = `BagIt-Version: 1.0
@@ -235,7 +230,7 @@ func (r *BagRestorer) GetManifestPath(algorithm, fileType string) string {
 // from prior attempts to restore this bag.
 func (r *BagRestorer) DeleteStaleManifests() error {
 	for _, alg := range constants.SupportedManifestAlgorithms {
-		for _, fileType := range manifestTypes {
+		for _, fileType := range constants.ManifestTypes {
 			manifestFile := r.GetManifestPath(alg, fileType)
 			r.Context.Logger.Info("Deleting old manifest file %s", manifestFile)
 			os.Remove(manifestFile)

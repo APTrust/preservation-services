@@ -11,8 +11,10 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
+	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/restoration"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/minio/minio-go/v6"
 	"github.com/stretchr/testify/assert"
@@ -144,6 +146,8 @@ func TestBagRestorer_Run(t *testing.T) {
 		assert.True(t, fileCount >= 3)
 		assert.Empty(t, errors)
 		testRestoredBag(t, context, item)
+		testBestRestorationSource(t, restorer)
+		testCleanup(t, restorer)
 	}
 }
 
@@ -193,14 +197,23 @@ func testExpectedFiles(t *testing.T, context *common.Context, item RestorationIt
 	}
 }
 
-// func TestBagRestorer_GetManifestPath(t *testing.T) {
+func testBestRestorationSource(t *testing.T, r *restoration.BagRestorer) {
+	gf := &registry.GenericFile{
+		StorageRecords: []*registry.StorageRecord{
+			&registry.StorageRecord{URL: "https://s3.us-east-1.localhost:9899/preservation-va/file.txt"},
+			&registry.StorageRecord{URL: "https://s3.us-west-2.localhost:9899/preservation-or/file.txt"},
+		},
+	}
+	preservationBucket, err := r.BestRestorationSource(gf)
+	require.Nil(t, err)
+	assert.Equal(t, constants.RegionAWSUSEast1, preservationBucket.Region)
+}
 
-// }
-
-// func TestBagRestorer_DeleteStaleManifests(t *testing.T) {
-
-// }
-
-// func TestBagRestorer_BestRestorationSource(t *testing.T) {
-
-// }
+func testCleanup(t *testing.T, r *restoration.BagRestorer) {
+	for _, alg := range constants.SupportedManifestAlgorithms {
+		for _, manifestType := range constants.ManifestTypes {
+			manifestFile := r.GetManifestPath(alg, manifestType)
+			assert.False(t, util.FileExists(manifestFile))
+		}
+	}
+}
