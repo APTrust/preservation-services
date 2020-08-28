@@ -167,6 +167,7 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 				return fileCount, errors
 			}
 			fileCount++
+			pageNumber++
 			hasMore = len(files) == batchSize
 		}
 	}
