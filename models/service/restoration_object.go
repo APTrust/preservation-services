@@ -114,7 +114,8 @@ func (obj *RestorationObject) ObjName() (string, error) {
 // the bag. This will be either constants.BagItProfileDefault or
 // constants.BagItProfileBTR.
 func (obj *RestorationObject) BagItProfile() string {
-	if obj.BagItProfileIdentifier == constants.BTRProfileIdentifier {
+	// Why is the profile URL inconsistent?
+	if obj.BagItProfileIdentifier == constants.BTRProfileIdentifier || strings.Contains(obj.BagItProfileIdentifier, "btr-bagit-profile") {
 		return constants.BagItProfileBTR
 	}
 	return constants.BagItProfileDefault
