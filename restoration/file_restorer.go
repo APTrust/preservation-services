@@ -53,6 +53,7 @@ func (r *FileRestorer) Run() (fileCount int, errors []*service.ProcessingError) 
 	if len(errors) == 0 {
 		fileCount = 1
 		r.RestorationObject.AllFilesRestored = true
+		r.RestorationObject.URL = fmt.Sprintf("%s%s/%s", constants.AWSBucketPrefix, r.RestorationObject.RestorationTarget, r.RestorationObject.Identifier)
 	}
 	return fileCount, errors
 }
