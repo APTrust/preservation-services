@@ -27,7 +27,6 @@ import (
 // will include manifests, tag manifests, and tag files.
 
 const batchSize = 100
-const defaultPriority = 10000
 
 // Contents of the bagit.txt file. We have to write this into
 // every restored bag.
@@ -246,36 +245,6 @@ func (r *BagRestorer) DeleteStaleManifests() error {
 	return nil
 }
 
-// BestRestorationSource returns the best preservation bucket from which
-// to restore a file. We generally want to restore from S3 over Glacier,
-// and US East over other regions. We only need to figure this out once,
-// since all of an object's files will be stored in the same preservation
-// bucket or buckets.
-//
-// You must call this before writing anything to the tar file; otherwise,
-// the writes will block forever waiting for a PipeReader to read from
-// the PipeWriter.
-func (r *BagRestorer) BestRestorationSource(gf *registry.GenericFile) (bestSource *common.PerservationBucket, err error) {
-	if r.bestRestorationSource != nil {
-		return r.bestRestorationSource, nil
-	}
-	priority := defaultPriority
-	for _, storageRecord := range gf.StorageRecords {
-		for _, preservationBucket := range r.Context.Config.PerservationBuckets {
-			if preservationBucket.HostsURL(storageRecord.URL) && preservationBucket.RestorePriority < priority {
-				bestSource = preservationBucket
-				priority = preservationBucket.RestorePriority
-			}
-		}
-	}
-	if priority == defaultPriority {
-		err = fmt.Errorf("Could not find any suitable restoration source for %s. (%d preservation URLS, %d PerservationBuckets", gf.Identifier, len(gf.StorageRecords), len(r.Context.Config.PerservationBuckets))
-	} else {
-		r.Context.Logger.Infof("Restoring %s from %s", r.RestorationObject.Identifier, bestSource.Bucket)
-	}
-	return bestSource, err
-}
-
 // GetBatchOfFiles returns a batch of GenericFile records from Pharos.
 func (r *BagRestorer) GetBatchOfFiles(objectIdentifier string, pageNumber int) (genericFiles []*registry.GenericFile, err error) {
 	params := url.Values{}
@@ -406,7 +375,7 @@ func (r *BagRestorer) _addManifest(manifestFile, manifestType string) error {
 // go through the TarPipeWriter to restoration bucket.
 func (r *BagRestorer) AddToTarFile(gf *registry.GenericFile) (digests map[string]string, err error) {
 	digests = make(map[string]string)
-	b, err := r.BestRestorationSource(gf)
+	b, err := BestRestorationSource(gf, r.Context)
 	if err != nil {
 		return digests, err
 	}

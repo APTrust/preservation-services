@@ -205,7 +205,7 @@ func testBestRestorationSource(t *testing.T, r *restoration.BagRestorer) {
 			&registry.StorageRecord{URL: "https://s3.us-west-2.localhost:9899/preservation-or/file.txt"},
 		},
 	}
-	preservationBucket, err := r.BestRestorationSource(gf)
+	preservationBucket, err := restoration.BestRestorationSource(gf, r.Context)
 	require.Nil(t, err)
 	assert.Equal(t, constants.RegionAWSUSEast1, preservationBucket.Region)
 }
