@@ -143,9 +143,8 @@ func (r *BagRestorer) initUploader() {
 // to the restoration bucket in the form of a tar archive.
 func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*service.ProcessingError) {
 	fileCount = 0
-	hasMore := true
 	pageNumber := 1
-	for hasMore {
+	for {
 		files, err := r.GetBatchOfFiles(r.RestorationObject.Identifier, pageNumber)
 		if err != nil {
 			errors = append(errors, r.Error(r.RestorationObject.Identifier, err, false))
@@ -167,9 +166,11 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 				return fileCount, errors
 			}
 			fileCount++
-			pageNumber++
-			hasMore = len(files) == batchSize
 		}
+		if len(files) == 0 {
+			break
+		}
+		pageNumber++
 	}
 	return fileCount, errors
 }
@@ -239,7 +240,7 @@ func (r *BagRestorer) DeleteStaleManifests() error {
 	for _, alg := range constants.SupportedManifestAlgorithms {
 		for _, fileType := range constants.ManifestTypes {
 			manifestFile := r.GetManifestPath(alg, fileType)
-			r.Context.Logger.Info("Deleting old manifest file %s", manifestFile)
+			r.Context.Logger.Infof("Deleting old manifest file %s", manifestFile)
 			os.Remove(manifestFile)
 		}
 	}
