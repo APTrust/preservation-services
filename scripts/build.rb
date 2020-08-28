@@ -11,6 +11,7 @@ class Build
       "apt_delete/apt_delete.go",
       "apt_queue/apt_queue.go",
       "bag_restorer/bag_restorer.go",
+      "file_restorer/file_restorer.go",
       "ingest_pre_fetch/ingest_pre_fetch.go",
       "ingest_validator/ingest_validator.go",
       "reingest_manager/reingest_manager.go",
