@@ -390,15 +390,3 @@ func (r *BagRestorer) AddToTarFile(gf *registry.GenericFile) (digests map[string
 	tarHeader := r.GetTarHeader(gf)
 	return r.tarPipeWriter.AddFile(tarHeader, obj, r.RestorationObject.ManifestAlgorithms())
 }
-
-// IngestObjectGet satisfies Runnable interface. Does nothing because
-// we don't work with IngestObjects in this context.
-func (r *BagRestorer) IngestObjectGet() *service.IngestObject {
-	return nil
-}
-
-// IngestObjectSave satisfies Runnable interface. Does nothing because
-// we don't work with IngestObjects in this context.
-func (r *BagRestorer) IngestObjectSave() error {
-	return nil
-}

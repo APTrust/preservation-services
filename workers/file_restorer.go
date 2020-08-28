@@ -12,24 +12,24 @@ import (
 	"github.com/nsqio/go-nsq"
 )
 
-type BagRestorer struct {
+type FileRestorer struct {
 	Base
 }
 
-// NewBagRestorer creates a new BagRestorer worker. Param context is a
+// NewFileRestorer creates a new FileRestorer worker. Param context is a
 // Context object with connections to S3, Redis, Pharos, and NSQ.
-func NewBagRestorer(bufSize, numWorkers, maxAttempts int) *BagRestorer {
+func NewFileRestorer(bufSize, numWorkers, maxAttempts int) *FileRestorer {
 	settings := &Settings{
 		ChannelBufferSize: bufSize,
 		MaxAttempts:       maxAttempts,
-		NSQChannel:        constants.TopicObjectRestore + "_worker_chan",
-		NSQTopic:          constants.TopicObjectRestore,
+		NSQChannel:        constants.TopicFileRestore + "_worker_chan",
+		NSQTopic:          constants.TopicFileRestore,
 		NextQueueTopic:    "",
 		NextWorkItemStage: constants.StageResolve,
 		NumberOfWorkers:   numWorkers,
 		RequeueTimeout:    (1 * time.Minute),
 	}
-	restorer := &BagRestorer{
+	restorer := &FileRestorer{
 		Base: Base{
 			Context:           common.NewContext(),
 			Settings:          settings,
@@ -47,7 +47,7 @@ func NewBagRestorer(bufSize, numWorkers, maxAttempts int) *BagRestorer {
 	restorer.Base.ShouldSkipThis = restorer.ShouldSkipThis
 	restorer.Base.GetTaskObject = restorer.GetTaskObject
 
-	restorer.Context.Logger.Info("Bag Restorer started with the following settings:")
+	restorer.Context.Logger.Info("File Restorer started with the following settings:")
 	restorer.Context.Logger.Info(settings.ToJSON())
 	restorer.Context.Logger.Info("Config settings (omitting sensitive credentials):")
 	restorer.Context.Logger.Info(restorer.Context.Config.ToJSON())
@@ -69,13 +69,13 @@ func NewBagRestorer(bufSize, numWorkers, maxAttempts int) *BagRestorer {
 	return restorer
 }
 
-func (r *BagRestorer) ProcessSuccessChannel() {
+func (r *FileRestorer) ProcessSuccessChannel() {
 	for task := range r.SuccessChannel {
 		r.Context.Logger.Infof("WorkItem %d (%s) is in success channel",
-			task.WorkItem.ID, task.WorkItem.Name)
+			task.WorkItem.ID, task.WorkItem.GenericFileIdentifier)
 
 		// Tell Pharos item succeeded.
-		note := fmt.Sprintf("Object %s restored to %s.", task.WorkItem.ObjectIdentifier, task.RestorationObject.URL)
+		note := fmt.Sprintf("File %s restored to %s.", task.WorkItem.GenericFileIdentifier, task.RestorationObject.URL)
 		task.WorkItem.Note = note
 		task.WorkItem.Stage = r.Settings.NextWorkItemStage
 		task.WorkItem.Status = constants.StatusSuccess
@@ -89,7 +89,7 @@ func (r *BagRestorer) ProcessSuccessChannel() {
 	}
 }
 
-func (r *BagRestorer) ProcessErrorChannel() {
+func (r *FileRestorer) ProcessErrorChannel() {
 	for task := range r.ErrorChannel {
 		shouldRequeue := true
 		r.Context.Logger.Warningf("WorkItem %d (%s) is in error channel",
@@ -115,7 +115,7 @@ func (r *BagRestorer) ProcessErrorChannel() {
 	}
 }
 
-func (r *BagRestorer) ProcessFatalErrorChannel() {
+func (r *FileRestorer) ProcessFatalErrorChannel() {
 	for task := range r.FatalErrorChannel {
 		r.Context.Logger.Errorf("WorkItem %d (%s) is in fatal error channel",
 			task.WorkItem.ID, task.WorkItem.Name)
@@ -136,19 +136,19 @@ func (r *BagRestorer) ProcessFatalErrorChannel() {
 	}
 }
 
-func (r *BagRestorer) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
+func (r *FileRestorer) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
 
 	restorationObject, err := r.GetRestorationObject(workItem)
 	if err != nil {
 		return nil, err
 	}
 
-	bagRestorer := restoration.NewBagRestorer(r.Context, workItem.ID, restorationObject)
+	fileRestorer := restoration.NewFileRestorer(r.Context, workItem.ID, restorationObject)
 
 	// Set up the restoration item, which packages all the info
 	// that needs to be passed from channel to channel.
 	task := &Task{
-		Processor:         bagRestorer,
+		Processor:         fileRestorer,
 		NSQMessage:        message,
 		RestorationObject: restorationObject,
 		WorkItem:          workItem,
@@ -157,7 +157,7 @@ func (r *BagRestorer) GetTaskObject(message *nsq.Message, workItem *registry.Wor
 	return task, nil
 }
 
-func (r *BagRestorer) GetRestorationObject(workItem *registry.WorkItem) (*service.RestorationObject, error) {
+func (r *FileRestorer) GetRestorationObject(workItem *registry.WorkItem) (*service.RestorationObject, error) {
 	resp := r.Context.PharosClient.IntellectualObjectGet(workItem.ObjectIdentifier)
 	if resp.Error != nil {
 		return nil, resp.Error
@@ -175,7 +175,7 @@ func (r *BagRestorer) GetRestorationObject(workItem *registry.WorkItem) (*servic
 		return nil, fmt.Errorf("Pharos returned nil for Institution %s", intelObj.Institution)
 	}
 	return &service.RestorationObject{
-		Identifier:             workItem.ObjectIdentifier,
+		Identifier:             workItem.GenericFileIdentifier,
 		BagItProfileIdentifier: intelObj.BagItProfileIdentifier,
 		RestorationSource:      constants.RestorationSourceS3,
 		RestorationTarget:      institution.RestoreBucket,
@@ -185,7 +185,7 @@ func (r *BagRestorer) GetRestorationObject(workItem *registry.WorkItem) (*servic
 
 // ShouldSkipThis returns true if there are any reasons not process this
 // WorkItem.
-func (r *BagRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
+func (r *FileRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 	// It's possible that another worker recently marked this as
 	// "do not retry." If that's the case, skip it.
@@ -198,7 +198,7 @@ func (r *BagRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 		return true
 	}
 
-	// BagRestorer shouldn't process single file restorations.
+	// FileRestorer shouldn't process object restorations.
 	if r.IsWrongRestorationType(workItem) {
 		return true
 	}
@@ -233,7 +233,7 @@ func (r *BagRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 // HasWrongAction returns true and marks this item as no longer in
 // progress if the WorkItem.Action is anything other than restore.
-func (r *BagRestorer) HasWrongAction(workItem *registry.WorkItem) bool {
+func (r *FileRestorer) HasWrongAction(workItem *registry.WorkItem) bool {
 	if workItem.Action != constants.ActionRestore {
 		message := fmt.Sprintf("Rejecting WorkItem %d because action is %s, not '%s'", workItem.ID, workItem.Action, constants.ActionRestore)
 		workItem.Retry = false
@@ -248,14 +248,14 @@ func (r *BagRestorer) HasWrongAction(workItem *registry.WorkItem) bool {
 	return false
 }
 
-// IsWrongRestorationType returns true if this item is a file restoration,
-// as opposed to a full bag restoration. This item actually belongs
-// in the file restoration queue, not the bag restoration queue. Bag
+// IsWrongRestorationType returns true if this item is an object restoration,
+// as opposed to an individual file restoration. This item actually belongs
+// in the object restoration queue, not the file restoration queue. Bag
 // restoration items have only an ObjectIdentifier. File restorations have
 // a GenericFileIdentifier.
-func (r *BagRestorer) IsWrongRestorationType(workItem *registry.WorkItem) bool {
-	if workItem.GenericFileIdentifier != "" {
-		message := fmt.Sprintf("Rejecting WorkItem %d because it's a single-file restoration and does not belong in the bag/object restoration queue.", workItem.ID)
+func (r *FileRestorer) IsWrongRestorationType(workItem *registry.WorkItem) bool {
+	if workItem.GenericFileIdentifier == "" {
+		message := fmt.Sprintf("Rejecting WorkItem %d because it's an object restoration and does not belong in the file restoration queue.", workItem.ID)
 		workItem.Retry = false
 		workItem.MarkNoLongerInProgress(
 			workItem.Stage,

@@ -9,8 +9,6 @@ type BaseConstructor func(*common.Context, int, *service.RestorationObject) Runn
 
 type Runnable interface {
 	Run() (int, []*service.ProcessingError)
-	RestorationObjectGet() *service.RestorationObject
-	RestorationObjectSave() error
 }
 
 // Base is the base type for workers in the ingest namespace.
@@ -18,27 +16,6 @@ type Base struct {
 	Context           *common.Context
 	RestorationObject *service.RestorationObject
 	WorkItemID        int
-}
-
-// RestorationObjectGet returns this struct's RestorationObject. This satisfies part
-// of the Runnable interface.
-func (b *Base) RestorationObjectGet() *service.RestorationObject {
-	return b.RestorationObject
-}
-
-// RestorationObjectSave saves an RestorationObject record to Redis.
-func (b *Base) RestorationObjectSave() error {
-	err := b.Context.RedisClient.RestorationObjectSave(b.WorkItemID, b.RestorationObject)
-	if err != nil {
-		b.Context.Logger.Errorf(
-			"Failed to save RestorationObject to redis: WorkItem %d, %s: %s",
-			b.WorkItemID, b.RestorationObject.Identifier, err.Error())
-	} else {
-		b.Context.Logger.Infof(
-			"Saved RestorationObject to redis: WorkItem %d, %s",
-			b.WorkItemID, b.RestorationObject.Identifier)
-	}
-	return err
 }
 
 // Error returns a ProcessingError describing something that went wrong
@@ -53,4 +30,16 @@ func (b *Base) Error(identifier string, err error, isFatal bool) *service.Proces
 		err.Error(),
 		isFatal,
 	)
+}
+
+// IngestObjectGet satisfies Runnable interface. Does nothing because
+// we don't work with IngestObjects in this context.
+func (b *Base) IngestObjectGet() *service.IngestObject {
+	return nil
+}
+
+// IngestObjectSave satisfies Runnable interface. Does nothing because
+// we don't work with IngestObjects in this context.
+func (b *Base) IngestObjectSave() error {
+	return nil
 }
