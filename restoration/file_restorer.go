@@ -1,17 +1,13 @@
 package restoration
 
 import (
-	// "fmt"
-	// "net/url"
-	// "os"
-	// "path"
-	// "strconv"
-	// "time"
+	"fmt"
 
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
-	// "github.com/APTrust/preservation-services/models/registry"
+	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
-	// "github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v6"
 )
 
 // FileRestorer restores individual files to a depositor's restoration bucket.
@@ -31,11 +27,61 @@ func NewFileRestorer(context *common.Context, workItemID int, restorationObject 
 	}
 }
 
-func (d *FileRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
-
+// Run restores the file to the depositor's restoration bucket.
+func (r *FileRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
+	gf, err := r.getGenericFile()
+	if err != nil {
+		errors = append(errors, r.Error(r.RestorationObject.Identifier, err, false))
+		return fileCount, errors
+	}
+	obj, err := r.getFileFromPreservation(gf)
+	if err != nil {
+		errors = append(errors, r.Error(gf.Identifier, err, false))
+		return fileCount, errors
+	}
+	defer obj.Close()
+	r.Context.Logger.Infof("Copying %s to %s", gf.Identifier, r.RestorationObject.RestorationTarget)
+	_, err = r.Context.S3Clients[constants.StorageProviderAWS].PutObject(
+		r.RestorationObject.RestorationTarget,
+		gf.Identifier,
+		obj,
+		gf.Size,
+		minio.PutObjectOptions{})
+	if err != nil {
+		errors = append(errors, r.Error(gf.Identifier, err, false))
+	}
 	if len(errors) == 0 {
 		fileCount = 1
-		d.RestorationObject.AllFilesRestored = true
+		r.RestorationObject.AllFilesRestored = true
 	}
 	return fileCount, errors
+}
+
+// Get the GenericFile record from Pharos
+func (r *FileRestorer) getGenericFile() (*registry.GenericFile, error) {
+	resp := r.Context.PharosClient.GenericFileGet(r.RestorationObject.Identifier)
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	gf := resp.GenericFile()
+	if gf == nil {
+		return nil, fmt.Errorf("Pharos returned nil for file %s", r.RestorationObject.Identifier)
+	}
+	r.Context.Logger.Infof("File %s has %d storage records", gf.Identifier, len(gf.StorageRecords))
+	return gf, nil
+}
+
+// Get the S3 object from preservation storage.
+func (r *FileRestorer) getFileFromPreservation(gf *registry.GenericFile) (*minio.Object, error) {
+	b, err := BestRestorationSource(gf, r.Context)
+	if err != nil {
+		return nil, err
+	}
+	client := r.Context.S3Clients[b.Provider]
+	obj, err := client.GetObject(b.Bucket, gf.UUID(), minio.GetObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+	r.Context.Logger.Infof("Found %s in bucket %s", gf.Identifier, b.Bucket)
+	return obj, err
 }
