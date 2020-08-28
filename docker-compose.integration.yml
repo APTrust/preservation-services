@@ -47,6 +47,15 @@ services:
    reingest_manager:
       image: aptrust/ingest_validator:${DOCKER_TAG_NAME:-latest}
       <<: *default
+   apt_queue:
+      image: aptrust/apt_queue:${DOCKER_TAG_NAME:-latest}
+      <<: *default
+   bag_restorer:
+      image: aptrust/bag_restorer:${DOCKER_TAG_NAME:-latest}
+      <<: *default
+   file_restorer:
+      image: aptrust/file_restorer:${DOCKER_TAG_NAME:-latest}
+      <<: *default
    nsqlookupd:
       image: nsqio/nsq:v1.2.0
       restart: always
