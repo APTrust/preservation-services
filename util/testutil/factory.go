@@ -214,15 +214,9 @@ func GetPremisEvent(gf *registry.GenericFile, eventType string) *registry.Premis
 func GetRestorationObject() *service.RestorationObject {
 	return &service.RestorationObject{
 		AllFilesRestored:       true,
-		BagDeletedAt:           Bloomsday,
 		BagItProfileIdentifier: constants.DefaultProfileIdentifier,
-		BagValidatedAt:         Bloomsday,
-		DownloadDir:            "/mnt/data",
-		ETag:                   "1234567890",
 		ErrorMessage:           "No error",
-		FileSize:               543219876,
 		Identifier:             "test.edu/bag-name.tar",
-		PathToBag:              "/mnt/data/restore/test.edu/bag-name.tar",
 		RestoredAt:             Bloomsday,
 		RestorationSource:      constants.RestorationSourceS3,
 		RestorationTarget:      "aptrust.restore.test.edu",

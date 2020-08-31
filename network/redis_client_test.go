@@ -98,7 +98,6 @@ func TestRestorationObjectSaveAndGet(t *testing.T) {
 	retrievedObj, err := client.RestorationObjectGet(9999, obj.Identifier)
 	assert.Nil(t, err)
 	assert.NotNil(t, retrievedObj)
-	assert.Equal(t, obj.ETag, retrievedObj.ETag)
 	assert.Equal(t, obj.Identifier, retrievedObj.Identifier)
 	assert.Equal(t, obj.URL, retrievedObj.URL)
 }

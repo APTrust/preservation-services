@@ -15,32 +15,13 @@ type RestorationObject struct {
 	// to create the bag.
 	AllFilesRestored bool `json:"all_files_restored"`
 
-	// BagDeletedAt describes when the local copy of the bag was deleted.
-	// This should happen after the bag has been uploaded to the depsitor's
-	// restoration bucket.
-	BagDeletedAt time.Time `json:"bag_deleted_at"`
-
 	// BagItProfileIdentifier is the identifier of the BagItProfile used
 	// to build this bag when it was deposited.
 	BagItProfileIdentifier string
 
-	// BagValidatedAt describes when the restored bag was validated.
-	BagValidatedAt time.Time `json:"bag_validated_at"`
-
-	// ETag is the etag of the restored bag that we pushed into the depositor's
-	// restoration bucket.
-	ETag string `json:"etag"`
-
 	// ErrorMessage describes the error that prevented this restoration from
 	// completing.
 	ErrorMessage string `json:"error_message"`
-
-	// FileSize is the size of the file to be restored, or the sum of all the
-	// file sizes in the bag to be restored. Note that when restoring a bag,
-	// the final restored size will be larger than FileSize because of
-	// manifests, tag manifests, and tar headers. This info should come from
-	// GenericFile.Size or IntellectualObject.FileSize.
-	FileSize int64
 
 	// Identifier is the identifier of the IntellectionObject or GenericFile
 	// (from Pharos) to be restored.
@@ -74,10 +55,6 @@ type RestorationObject struct {
 	// URL is the URL of the restored bag in the depositor's restoration
 	// bucket.
 	URL string `json:"url"`
-
-	// TODO: Delete these if S3 copy works
-	DownloadDir string `json:"download_dir"`
-	PathToBag   string `json:"path_to_bag"`
 }
 
 // RestorationObjectFromJSON converts the JSON representation of a

@@ -16,13 +16,8 @@ func TestRestorationObjFromJson(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, obj)
 	assert.Equal(t, expectedObj.AllFilesRestored, obj.AllFilesRestored)
-	assert.Equal(t, expectedObj.BagDeletedAt, obj.BagDeletedAt)
-	assert.Equal(t, expectedObj.BagValidatedAt, obj.BagValidatedAt)
-	assert.Equal(t, expectedObj.DownloadDir, obj.DownloadDir)
-	assert.Equal(t, expectedObj.ETag, obj.ETag)
 	assert.Equal(t, expectedObj.ErrorMessage, obj.ErrorMessage)
 	assert.Equal(t, expectedObj.Identifier, obj.Identifier)
-	assert.Equal(t, expectedObj.PathToBag, obj.PathToBag)
 	assert.Equal(t, expectedObj.RestoredAt, obj.RestoredAt)
 	assert.Equal(t, expectedObj.URL, obj.URL)
 }
@@ -72,4 +67,4 @@ func TestRestorationObj_ManifestAlgorithms(t *testing.T) {
 	assert.Equal(t, constants.BTRRestorationAlgorithms, obj.ManifestAlgorithms())
 }
 
-const RestorationObjectJSON = `{"all_files_restored":true,"bag_deleted_at":"1904-06-16T15:04:05Z","BagItProfileIdentifier":"https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json","bag_validated_at":"1904-06-16T15:04:05Z","etag":"1234567890","error_message":"No error","FileSize":543219876,"identifier":"test.edu/bag-name.tar","restoration_source":"s3","restoration_target":"aptrust.restore.test.edu","restoration_type":"object","restored_at":"1904-06-16T15:04:05Z","url":"https://s3.example.com/restore-bucket/bag-name.tar","download_dir":"/mnt/data","path_to_bag":"/mnt/data/restore/test.edu/bag-name.tar"}`
+const RestorationObjectJSON = `{"all_files_restored":true,"BagItProfileIdentifier":"https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json","error_message":"No error","identifier":"test.edu/bag-name.tar","restoration_source":"s3","restoration_target":"aptrust.restore.test.edu","restoration_type":"object","restored_at":"1904-06-16T15:04:05Z","url":"https://s3.example.com/restore-bucket/bag-name.tar"}`
