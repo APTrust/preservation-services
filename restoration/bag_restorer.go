@@ -3,7 +3,6 @@ package restoration
 import (
 	"archive/tar"
 	"fmt"
-	"net/url"
 	"os"
 	"path"
 	"strconv"
@@ -145,7 +144,7 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 	fileCount = 0
 	pageNumber := 1
 	for {
-		files, err := r.GetBatchOfFiles(r.RestorationObject.Identifier, pageNumber)
+		files, err := GetBatchOfFiles(r.Context, r.RestorationObject.Identifier, pageNumber)
 		if err != nil {
 			errors = append(errors, r.Error(r.RestorationObject.Identifier, err, false))
 			return fileCount, errors
@@ -245,19 +244,6 @@ func (r *BagRestorer) DeleteStaleManifests() error {
 		}
 	}
 	return nil
-}
-
-// GetBatchOfFiles returns a batch of GenericFile records from Pharos.
-func (r *BagRestorer) GetBatchOfFiles(objectIdentifier string, pageNumber int) (genericFiles []*registry.GenericFile, err error) {
-	params := url.Values{}
-	params.Set("intellectual_object_identifier", objectIdentifier)
-	params.Set("page", strconv.Itoa(pageNumber))
-	params.Set("per_page", strconv.Itoa(batchSize))
-	params.Set("sort", "name")
-	params.Set("state", "A")
-	params.Set("include_storage_records", "true")
-	resp := r.Context.PharosClient.GenericFileList(params)
-	return resp.GenericFiles(), resp.Error
 }
 
 // GetTarHeader returns a tar header for the specified GenericFile.
@@ -377,7 +363,7 @@ func (r *BagRestorer) _addManifest(manifestFile, manifestType string) error {
 // go through the TarPipeWriter to restoration bucket.
 func (r *BagRestorer) AddToTarFile(gf *registry.GenericFile) (digests map[string]string, err error) {
 	digests = make(map[string]string)
-	b, err := BestRestorationSource(gf, r.Context)
+	b, _, err := BestRestorationSource(r.Context, gf)
 	if err != nil {
 		return digests, err
 	}

@@ -74,7 +74,7 @@ func (r *FileRestorer) getGenericFile() (*registry.GenericFile, error) {
 
 // Get the S3 object from preservation storage.
 func (r *FileRestorer) getFileFromPreservation(gf *registry.GenericFile) (*minio.Object, error) {
-	b, err := BestRestorationSource(gf, r.Context)
+	b, _, err := BestRestorationSource(r.Context, gf)
 	if err != nil {
 		return nil, err
 	}

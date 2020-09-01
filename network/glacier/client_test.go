@@ -11,10 +11,9 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/network/glacier"
 	"github.com/stretchr/testify/assert"
-	//"github.com/stretchr/testify/require"
 )
 
-var expectedResponseCode = 0
+var expectedResponseCode = 202
 var glacierURL = ""
 var glacierPath = "/bucket/item-uuid"
 var expectedBody = "<RestoreRequest><Days>10</Days><GlacierJobParameters><Tier>Standard</Tier></GlacierJobParameters></RestoreRequest>"
@@ -26,34 +25,11 @@ func TestGlacierRestore_200(t *testing.T) {
 	glacierURL = fmt.Sprintf("%s%s", testServer.URL, glacierPath)
 
 	context := common.NewContext()
-	//setTestServerPorts(context, testServer.URL)
 
-	codes := []int{
-		200,
-		202,
-		409,
-		503,
-	}
-
-	for _, code := range codes {
-		expectedResponseCode = code
-		statusCode, err := glacier.Restore(context, glacierURL)
-		assert.Nil(t, err)
-		assert.Equal(t, code, statusCode)
-	}
+	statusCode, err := glacier.Restore(context, glacierURL)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedResponseCode, statusCode)
 }
-
-// func getGlacierURL(testServerURL string) string {
-// 	port := strings.Split(testServerURL, ":")[2]
-// 	return fmt.Sprintf("http://s3.us-west-2.localhost:%s/preservation-or/246c54b3-6476-494c-8fd0-bdd260b712c6", port)
-// }
-
-// func setTestServerPorts(context *common.Context, testServerURL string) {
-// 	port := strings.Split(testServerURL, ":")[2]
-// 	for _, bucket := range context.Config.PerservationBuckets {
-// 		bucket.Host = strings.Replace(bucket.Host, "9899", port, 1)
-// 	}
-// }
 
 func getRestoreHandler(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	keys := []string{
