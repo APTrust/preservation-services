@@ -71,12 +71,14 @@ func GetRestorationObject(context *common.Context, workItem *registry.WorkItem, 
 	}
 
 	restorationType := constants.RestorationTypeObject
+	identifier := workItem.ObjectIdentifier
 	if workItem.GenericFileIdentifier != "" {
 		restorationType = constants.RestorationTypeFile
+		identifier = workItem.GenericFileIdentifier
 	}
 
 	return &service.RestorationObject{
-		Identifier:             workItem.ObjectIdentifier,
+		Identifier:             identifier,
 		BagItProfileIdentifier: intelObj.BagItProfileIdentifier,
 		RestorationSource:      restorationSource,
 		RestorationTarget:      institution.RestoreBucket,

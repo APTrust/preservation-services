@@ -28,7 +28,7 @@ func BestRestorationSource(context *common.Context, gf *registry.GenericFile) (b
 		}
 	}
 	if priority == defaultPriority {
-		err = fmt.Errorf("Could not find any suitable restoration source for %s. (%d preservation URLS, %d PerservationBuckets", gf.Identifier, len(gf.StorageRecords), len(context.Config.PerservationBuckets))
+		err = fmt.Errorf("Could not find any suitable restoration source for %s. (%d preservation URLS, %d PerservationBuckets)", gf.Identifier, len(gf.StorageRecords), len(context.Config.PerservationBuckets))
 	} else {
 		context.Logger.Infof("Restoring %s from %s", gf.Identifier, bestSource.Bucket)
 	}
