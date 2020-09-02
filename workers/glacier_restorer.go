@@ -25,17 +25,7 @@ Consider a simple conditional in the ProcessSuccess method to requeue
 with four hour delay if AllFilesRestored is false, or to finish item if
 AllFilesRestored is true.
 
-Also, some of the code in this worker is very similar to code in the
-BagRestorer worker and should be factored out. For example:
-
-- HasWrongAction
-- IsWrongRestorationType
-- GetTaskObject
-- GetRestorationObject
-
-Move those to a common file or to a RestorerBase object.
-
- --------------------------------------------------------------------- */
+--------------------------------------------------------------------- */
 
 type GlacierRestorer struct {
 	Base
@@ -168,7 +158,7 @@ func (r *GlacierRestorer) ProcessFatalErrorChannel() {
 
 func (r *GlacierRestorer) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
 
-	restorationObject, err := r.GetRestorationObject(workItem)
+	restorationObject, err := GetRestorationObject(r.Context, workItem, constants.RestorationSourceGlacier)
 	if err != nil {
 		return nil, err
 	}
@@ -185,38 +175,6 @@ func (r *GlacierRestorer) GetTaskObject(message *nsq.Message, workItem *registry
 		WorkResult:        workResult,
 	}
 	return task, nil
-}
-
-func (r *GlacierRestorer) GetRestorationObject(workItem *registry.WorkItem) (*service.RestorationObject, error) {
-	resp := r.Context.PharosClient.IntellectualObjectGet(workItem.ObjectIdentifier)
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-	intelObj := resp.IntellectualObject()
-	if intelObj == nil {
-		return nil, fmt.Errorf("Pharos returned nil for IntellectualObject %s", workItem.ObjectIdentifier)
-	}
-	resp = r.Context.PharosClient.InstitutionGet(intelObj.Institution)
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-	institution := resp.Institution()
-	if intelObj == nil {
-		return nil, fmt.Errorf("Pharos returned nil for Institution %s", intelObj.Institution)
-	}
-
-	restorationType := constants.RestorationTypeObject
-	if workItem.GenericFileIdentifier != "" {
-		restorationType = constants.RestorationTypeFile
-	}
-
-	return &service.RestorationObject{
-		Identifier:             workItem.ObjectIdentifier,
-		BagItProfileIdentifier: intelObj.BagItProfileIdentifier,
-		RestorationSource:      constants.RestorationSourceS3,
-		RestorationTarget:      institution.RestoreBucket,
-		RestorationType:        restorationType,
-	}, nil
 }
 
 // ShouldSkipThis returns true if there are any reasons not process this

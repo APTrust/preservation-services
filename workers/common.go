@@ -6,6 +6,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
+	"github.com/APTrust/preservation-services/models/service"
 )
 
 // HasWrongAction returns true and marks this item as no longer in
@@ -49,4 +50,36 @@ func IsWrongRestorationType(context *common.Context, workItem *registry.WorkItem
 		return true
 	}
 	return false
+}
+
+func GetRestorationObject(context *common.Context, workItem *registry.WorkItem, restorationSource string) (*service.RestorationObject, error) {
+	resp := context.PharosClient.IntellectualObjectGet(workItem.ObjectIdentifier)
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	intelObj := resp.IntellectualObject()
+	if intelObj == nil {
+		return nil, fmt.Errorf("Pharos returned nil for IntellectualObject %s", workItem.ObjectIdentifier)
+	}
+	resp = context.PharosClient.InstitutionGet(intelObj.Institution)
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	institution := resp.Institution()
+	if intelObj == nil {
+		return nil, fmt.Errorf("Pharos returned nil for Institution %s", intelObj.Institution)
+	}
+
+	restorationType := constants.RestorationTypeObject
+	if workItem.GenericFileIdentifier != "" {
+		restorationType = constants.RestorationTypeFile
+	}
+
+	return &service.RestorationObject{
+		Identifier:             workItem.ObjectIdentifier,
+		BagItProfileIdentifier: intelObj.BagItProfileIdentifier,
+		RestorationSource:      restorationSource,
+		RestorationTarget:      institution.RestoreBucket,
+		RestorationType:        restorationType,
+	}, nil
 }

@@ -138,7 +138,7 @@ func (r *FileRestorer) ProcessFatalErrorChannel() {
 
 func (r *FileRestorer) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
 
-	restorationObject, err := r.GetRestorationObject(workItem)
+	restorationObject, err := GetRestorationObject(r.Context, workItem, constants.RestorationSourceS3)
 	if err != nil {
 		return nil, err
 	}
@@ -155,32 +155,6 @@ func (r *FileRestorer) GetTaskObject(message *nsq.Message, workItem *registry.Wo
 		WorkResult:        workResult,
 	}
 	return task, nil
-}
-
-func (r *FileRestorer) GetRestorationObject(workItem *registry.WorkItem) (*service.RestorationObject, error) {
-	resp := r.Context.PharosClient.IntellectualObjectGet(workItem.ObjectIdentifier)
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-	intelObj := resp.IntellectualObject()
-	if intelObj == nil {
-		return nil, fmt.Errorf("Pharos returned nil for IntellectualObject %s", workItem.ObjectIdentifier)
-	}
-	resp = r.Context.PharosClient.InstitutionGet(intelObj.Institution)
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-	institution := resp.Institution()
-	if intelObj == nil {
-		return nil, fmt.Errorf("Pharos returned nil for Institution %s", intelObj.Institution)
-	}
-	return &service.RestorationObject{
-		Identifier:             workItem.GenericFileIdentifier,
-		BagItProfileIdentifier: intelObj.BagItProfileIdentifier,
-		RestorationSource:      constants.RestorationSourceS3,
-		RestorationTarget:      institution.RestoreBucket,
-		RestorationType:        constants.RestorationTypeObject,
-	}, nil
 }
 
 // ShouldSkipThis returns true if there are any reasons not process this
