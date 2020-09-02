@@ -199,7 +199,7 @@ func (r *BagRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	}
 
 	// BagRestorer shouldn't process single file restorations.
-	if r.IsWrongRestorationType(workItem) {
+	if IsWrongRestorationType(r.Context, workItem, constants.RestorationTypeObject) {
 		return true
 	}
 
@@ -228,25 +228,5 @@ func (r *BagRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 		return true
 	}
 
-	return false
-}
-
-// IsWrongRestorationType returns true if this item is a file restoration,
-// as opposed to a full bag restoration. This item actually belongs
-// in the file restoration queue, not the bag restoration queue. Bag
-// restoration items have only an ObjectIdentifier. File restorations have
-// a GenericFileIdentifier.
-func (r *BagRestorer) IsWrongRestorationType(workItem *registry.WorkItem) bool {
-	if workItem.GenericFileIdentifier != "" {
-		message := fmt.Sprintf("Rejecting WorkItem %d because it's a single-file restoration and does not belong in the bag/object restoration queue.", workItem.ID)
-		workItem.Retry = false
-		workItem.MarkNoLongerInProgress(
-			workItem.Stage,
-			constants.StatusCancelled,
-			message,
-		)
-		r.Context.Logger.Info(message)
-		return true
-	}
 	return false
 }

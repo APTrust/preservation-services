@@ -194,12 +194,12 @@ func (r *FileRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	}
 
 	// Make sure this is actually a restoration request
-	if r.HasWrongAction(workItem) {
+	if HasWrongAction(r.Context, workItem, constants.ActionRestore) {
 		return true
 	}
 
 	// FileRestorer shouldn't process object restorations.
-	if r.IsWrongRestorationType(workItem) {
+	if IsWrongRestorationType(r.Context, workItem, constants.RestorationTypeFile) {
 		return true
 	}
 
@@ -228,42 +228,5 @@ func (r *FileRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 		return true
 	}
 
-	return false
-}
-
-// HasWrongAction returns true and marks this item as no longer in
-// progress if the WorkItem.Action is anything other than restore.
-func (r *FileRestorer) HasWrongAction(workItem *registry.WorkItem) bool {
-	if workItem.Action != constants.ActionRestore {
-		message := fmt.Sprintf("Rejecting WorkItem %d because action is %s, not '%s'", workItem.ID, workItem.Action, constants.ActionRestore)
-		workItem.Retry = false
-		workItem.MarkNoLongerInProgress(
-			workItem.Stage,
-			constants.StatusCancelled,
-			message,
-		)
-		r.Context.Logger.Info(message)
-		return true
-	}
-	return false
-}
-
-// IsWrongRestorationType returns true if this item is an object restoration,
-// as opposed to an individual file restoration. This item actually belongs
-// in the object restoration queue, not the file restoration queue. Bag
-// restoration items have only an ObjectIdentifier. File restorations have
-// a GenericFileIdentifier.
-func (r *FileRestorer) IsWrongRestorationType(workItem *registry.WorkItem) bool {
-	if workItem.GenericFileIdentifier == "" {
-		message := fmt.Sprintf("Rejecting WorkItem %d because it's an object restoration and does not belong in the file restoration queue.", workItem.ID)
-		workItem.Retry = false
-		workItem.MarkNoLongerInProgress(
-			workItem.Stage,
-			constants.StatusCancelled,
-			message,
-		)
-		r.Context.Logger.Info(message)
-		return true
-	}
 	return false
 }
