@@ -230,7 +230,7 @@ func (r *GlacierRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	}
 
 	// Make sure this is actually a restoration request
-	if r.HasWrongAction(workItem) {
+	if HasWrongAction(r.Context, workItem, constants.ActionGlacierRestore) {
 		return true
 	}
 
@@ -259,23 +259,6 @@ func (r *GlacierRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 		return true
 	}
 
-	return false
-}
-
-// HasWrongAction returns true and marks this item as no longer in
-// progress if the WorkItem.Action is anything other than restore.
-func (r *GlacierRestorer) HasWrongAction(workItem *registry.WorkItem) bool {
-	if workItem.Action != constants.ActionGlacierRestore {
-		message := fmt.Sprintf("Rejecting WorkItem %d because action is %s, not '%s'", workItem.ID, workItem.Action, constants.ActionGlacierRestore)
-		workItem.Retry = false
-		workItem.MarkNoLongerInProgress(
-			workItem.Stage,
-			constants.StatusCancelled,
-			message,
-		)
-		r.Context.Logger.Info(message)
-		return true
-	}
 	return false
 }
 

@@ -181,7 +181,7 @@ func (d *Deleter) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	}
 
 	// Definitely don't delete this if it's not a deletion request.
-	if d.HasWrongAction(workItem) {
+	if HasWrongAction(d.Context, workItem, constants.ActionDelete) {
 		return true
 	}
 
@@ -215,23 +215,6 @@ func (d *Deleter) ShouldSkipThis(workItem *registry.WorkItem) bool {
 		return true
 	}
 
-	return false
-}
-
-// HasWrongAction returns true and marks this item as no longer in
-// progress if the WorkItem.Action is anything other than delete.
-func (d *Deleter) HasWrongAction(workItem *registry.WorkItem) bool {
-	if workItem.Action != constants.ActionDelete {
-		message := fmt.Sprintf("Rejecting WorkItem %d because action is %s, not 'Delete'", workItem.ID, workItem.Action)
-		workItem.Retry = false
-		workItem.MarkNoLongerInProgress(
-			workItem.Stage,
-			constants.StatusCancelled,
-			message,
-		)
-		d.Context.Logger.Info(message)
-		return true
-	}
 	return false
 }
 

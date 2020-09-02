@@ -194,7 +194,7 @@ func (r *BagRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	}
 
 	// Make sure this is actually a restoration request
-	if r.HasWrongAction(workItem) {
+	if HasWrongAction(r.Context, workItem, constants.ActionRestore) {
 		return true
 	}
 
@@ -228,23 +228,6 @@ func (r *BagRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 		return true
 	}
 
-	return false
-}
-
-// HasWrongAction returns true and marks this item as no longer in
-// progress if the WorkItem.Action is anything other than restore.
-func (r *BagRestorer) HasWrongAction(workItem *registry.WorkItem) bool {
-	if workItem.Action != constants.ActionRestore {
-		message := fmt.Sprintf("Rejecting WorkItem %d because action is %s, not '%s'", workItem.ID, workItem.Action, constants.ActionRestore)
-		workItem.Retry = false
-		workItem.MarkNoLongerInProgress(
-			workItem.Stage,
-			constants.StatusCancelled,
-			message,
-		)
-		r.Context.Logger.Info(message)
-		return true
-	}
 	return false
 }
 
