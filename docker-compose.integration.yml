@@ -56,6 +56,9 @@ services:
    file_restorer:
       image: aptrust/file_restorer:${DOCKER_TAG_NAME:-latest}
       <<: *default
+   glacier_restorer:
+      image: aptrust/glacier_restorer:${DOCKER_TAG_NAME:-latest}
+      <<: *default
    nsqlookupd:
       image: nsqio/nsq:v1.2.0
       restart: always
