@@ -259,7 +259,8 @@ func (r *ReingestManager) ChecksumChanged(ingestFile *service.IngestFile, pharos
 // way to change the storage option of an existing object is to completely
 // delete it, then reingest it.
 func (r *ReingestManager) SetStorageOption(ingestFile *service.IngestFile, pharosFile *registry.GenericFile) {
-	if pharosFile.State == "A" {
+	if pharosFile.State == "A" && ingestFile.StorageOption != pharosFile.StorageOption {
+		r.Context.Logger.Info("Changing StorageOption of %s from %s to %s to match previously ingested version.", ingestFile.Identifier(), ingestFile.StorageOption, pharosFile.StorageOption)
 		ingestFile.StorageOption = pharosFile.StorageOption
 	}
 }
