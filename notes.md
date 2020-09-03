@@ -387,23 +387,7 @@ For now, we'll follow the old process of downloading all files to local disk and
 
 ### Restoration Process
 
-1. Copy all bag files to local disk. (In directory named restoration/<IntelObjId>.)
-2. Create the bag according to the appropriate BagIt profile:
-    * Write manifests
-    * Write tag files
-    * Write JSON events file, if possible (limit to deletes and re-ingests?)
-    * Write tag manifests
-    * Write payload files
-3. Validate the bag according to the appropriate BagIt profile.
-4. Upload the bag to the depositor's restoration bucket.
-5. Trigger restoration alert.
-6. Close out the WorkItem.
-
-We'll need something like the old [Exchange Volume Service](https://github.com/APTrust/exchange/blob/master/service/volume_service.go) to manage disk space, and we'll also need a mechanism or alert to provision a new volume when asked to restore a large bag.
-
-[Update 8/20/2020] - After starting to implement the volume service, this may not be a good idea. The volume service relies on some sys_stat calls, and there's no telling how those will behave inside a docker container when we're trying to get stats on a volume that actually belongs to the parent OS.
-
-Consider using [PipeWriter](https://golang.org/pkg/io/#PipeWriter) and [PipeReader](https://golang.org/pkg/io/#PipeReader) instead. Data flow would be S3 -> Bagger -> S3. See [Build proof of concept for direct-to-S3 bagging](https://trello.com/c/UrNjcG4r) for more info.
+The restoration process pipes files from S3 preservation through a local bagger and straight into the depositor's restoration bucket. Files do not touch local disk.
 
 #### Glacier Restoration
 
