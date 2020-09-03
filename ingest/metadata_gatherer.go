@@ -331,8 +331,11 @@ func (m *MetadataGatherer) setMissingDefaultTags() {
 	if m.IngestObject.BagItProfileFormat() == constants.BagItProfileDefault {
 		tag := m.IngestObject.GetTag("aptrust-info.txt", "Storage-Option")
 		if tag == nil {
+			m.Context.Logger.Info("No Storage-Option for WorkItem %d, bag %s. Defaulting to Standard.", m.WorkItemID, m.IngestObject.Identifier())
 			tag = bagit.NewTag("aptrust-info.txt", "Storage-Option", "Standard")
 			m.IngestObject.Tags = append(m.IngestObject.Tags, tag)
+		} else {
+			m.Context.Logger.Info("Using Storage-Option %s as set in tag file for WorkItem %d, bag %s.", tag.Value, m.WorkItemID, m.IngestObject.Identifier())
 		}
 	}
 }
