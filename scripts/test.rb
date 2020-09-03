@@ -77,6 +77,7 @@ class TestRunner
       "ingest_recorder",
       "bag_restorer",
       "file_restorer",
+      "glacier_restorer",
     ]
     unless @options[:nocleanup]
       names += ['ingest_cleanup']

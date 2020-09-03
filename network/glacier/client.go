@@ -51,10 +51,10 @@ func Restore(context *common.Context, url string) (int, error) {
 	signedRequest := signer.SignV4(*request, creds.KeyID, creds.SecretKey, "", url)
 
 	// --- DEBUG ---
-	// fmt.Println(body)
-	// for k, v := range signedRequest.Header {
-	// 	fmt.Println(k, v)
-	// }
+	for k, v := range signedRequest.Header {
+		context.Logger.Infof("Request Header: %s = %s", k, v)
+	}
+	context.Logger.Infof("Request body: %s", body)
 	// --- DEBUG ---
 
 	httpClient := &http.Client{}
@@ -68,7 +68,7 @@ func Restore(context *common.Context, url string) (int, error) {
 	buf := new(strings.Builder)
 	_, err = io.Copy(buf, response.Body)
 	if err == nil {
-		context.Logger.Infof("Glacier restore %s returned %s", url, buf.String())
+		context.Logger.Infof("Glacier restore %s returned code %d, body %s", url, response.StatusCode, buf.String())
 	} else {
 		context.Logger.Warningf("Glacier restore %s: could not read response", url)
 	}

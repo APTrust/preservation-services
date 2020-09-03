@@ -12,6 +12,9 @@ import (
 	"github.com/APTrust/preservation-services/network/glacier"
 )
 
+// Glacier response statuses. Pending means the restoration has been
+// requested but not completed. Completed means the item has been copied
+// back to S3. Error means something went wrong.
 const (
 	RestorePending = iota
 	RestoreCompleted
@@ -25,6 +28,7 @@ type GlacierRestorer struct {
 	Base
 }
 
+// NewGlacierRestorer creates a new GlacierRestorer
 func NewGlacierRestorer(context *common.Context, workItemID int, restorationObject *service.RestorationObject) *GlacierRestorer {
 	return &GlacierRestorer{
 		Base: Base{
@@ -35,6 +39,13 @@ func NewGlacierRestorer(context *common.Context, workItemID int, restorationObje
 	}
 }
 
+// Run initiates or checks on the Glacier restore requests for a single file or for
+// all of the files that make up an intellectual object. The first call to run
+// initiates restoration requests. Subsequent calls check on the progress of the
+// restoration.
+//
+// This will return a non-fatal error unless all of the requested restorations
+// are available in S3.
 func (r *GlacierRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 	if r.RestorationObject.RestorationType == constants.RestorationTypeFile {
 		status, errors := r.restoreFile()
@@ -51,10 +62,19 @@ func (r *GlacierRestorer) Run() (fileCount int, errors []*service.ProcessingErro
 		}
 		fileCount = completed + pending + errored
 	}
-	//r.logErrors(errors)
+
+	// If we have no errors but not all files are ready in S3,
+	// return a non-fatal error so the worker will requeue this
+	// item and check it again in a few hours.
+	if len(errors) == 0 && !r.RestorationObject.AllFilesRestored {
+		err := fmt.Errorf("Initiated restore, but files are not yet available in S3. Requeue for later recheck.")
+		errors = append(errors, r.Error(r.RestorationObject.Identifier, err, false))
+	}
+
 	return fileCount, errors
 }
 
+// Restore all of the files belonging to an IntellectualObject.
 func (r *GlacierRestorer) restoreAllFiles() (completed, pending, errored int, errors []*service.ProcessingError) {
 	pageNumber := 1
 	for {
@@ -83,6 +103,7 @@ func (r *GlacierRestorer) restoreAllFiles() (completed, pending, errored int, er
 	return completed, pending, errored, errors
 }
 
+// Restore a single file from Glacier to S3
 func (r *GlacierRestorer) restoreFile() (restoreStatus int, errors []*service.ProcessingError) {
 	resp := r.Context.PharosClient.GenericFileGet(r.RestorationObject.Identifier)
 	if resp.Error != nil {
@@ -98,6 +119,7 @@ func (r *GlacierRestorer) restoreFile() (restoreStatus int, errors []*service.Pr
 	return r.requestRestoration(gf)
 }
 
+// Send the restoration request to Glacier and return the status.
 func (r *GlacierRestorer) requestRestoration(gf *registry.GenericFile) (restoreStatus int, errors []*service.ProcessingError) {
 	_, storageRecord, err := BestRestorationSource(r.Context, gf)
 	if err != nil {

@@ -12,21 +12,13 @@ import (
 	"github.com/nsqio/go-nsq"
 )
 
-/* ---------------------------------------------------------------------
-
-TODO:
-
-Glacier restorations don't quite follow the normal flow of other workers.
-If there are no errors, we need to check the value of
-RestorationObject.AllFilesRestored to determine whether to re-check
-Glacier in four hours or finish this NSQ task and create a new WorkItem.
-
-Consider a simple conditional in the ProcessSuccess method to requeue
-with four hour delay if AllFilesRestored is false, or to finish item if
-AllFilesRestored is true.
-
---------------------------------------------------------------------- */
-
+// GlacierRestorer initiates and checks on the progress of Glacier restoration
+// requests. When requests are complete, the Glacier items are in S3 and
+// can be retrieved.
+//
+// Note that requeing is part of this worker's standard process. It makes an
+// initial restore request, then checks Glacier every four hours to see if
+// the request has been completed.
 type GlacierRestorer struct {
 	Base
 }
@@ -42,7 +34,7 @@ func NewGlacierRestorer(bufSize, numWorkers, maxAttempts int) *GlacierRestorer {
 		NextQueueTopic:    "",
 		NextWorkItemStage: constants.StageResolve,
 		NumberOfWorkers:   numWorkers,
-		RequeueTimeout:    (1 * time.Minute),
+		RequeueTimeout:    (4 * time.Hour),
 	}
 	restorer := &GlacierRestorer{
 		Base: Base{
