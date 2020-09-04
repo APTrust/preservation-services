@@ -54,7 +54,11 @@ func Restore(context *common.Context, url string) (int, error) {
 	if creds == nil {
 		return 0, fmt.Errorf("Can't find credentials for %s", constants.StorageProviderAWS)
 	}
-	signedRequest := signer.SignV4(*request, creds.KeyID, creds.SecretKey, "", url)
+	region, err := getRegionFromURL(url)
+	if err != nil {
+		return 0, err
+	}
+	signedRequest := signer.SignV4(*request, creds.KeyID, creds.SecretKey, "", region)
 
 	// --- DEBUG ---
 	for k, v := range signedRequest.Header {
@@ -86,4 +90,12 @@ func Restore(context *common.Context, url string) (int, error) {
 func getRequestBody() string {
 	str := "<RestoreRequest><Days>%d</Days><GlacierJobParameters><Tier>%s</Tier></GlacierJobParameters></RestoreRequest>"
 	return fmt.Sprintf(str, DaysToLiveInRestoreBucket, DefaultTier)
+}
+
+func getRegionFromURL(url string) (string, error) {
+	parts := strings.Split(url, ".")
+	if len(parts) > 1 {
+		return parts[1], nil
+	}
+	return "", fmt.Errorf("Cannot extract region from URL %s", url)
 }
