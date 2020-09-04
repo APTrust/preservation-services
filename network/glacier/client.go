@@ -33,13 +33,13 @@ const DefaultTier = "Standard"
 //
 // For more info, see
 // https://docs.aws.amazon.com/AmazonS3/latest/API/API_RestoreObject.html
-func Restore(context *common.Context, url string) (int, error) {
+func Restore(context *common.Context, url string) (int, string, error) {
 	context.Logger.Infof("Requesting restoration of %s", url)
 	postURL := fmt.Sprintf("%s?restore=", url)
 	body := getRequestBody()
 	request, err := http.NewRequest(http.MethodPost, postURL, strings.NewReader(body))
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 	request.Header.Set("Content-Length", strconv.Itoa(len(body)))
 
@@ -52,11 +52,11 @@ func Restore(context *common.Context, url string) (int, error) {
 	// provider, so constants.StorageProviderAWS will do us for now.
 	creds := context.Config.S3Credentials[constants.StorageProviderAWS]
 	if creds == nil {
-		return 0, fmt.Errorf("Can't find credentials for %s", constants.StorageProviderAWS)
+		return 0, "", fmt.Errorf("Can't find credentials for %s", constants.StorageProviderAWS)
 	}
 	region, err := getRegionFromURL(url)
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 	signedRequest := signer.SignV4(*request, creds.KeyID, creds.SecretKey, "", region)
 
@@ -71,7 +71,7 @@ func Restore(context *common.Context, url string) (int, error) {
 	response, err := httpClient.Do(signedRequest)
 	if err != nil {
 		context.Logger.Errorf("Glacier restore request returned error %v", err)
-		return 0, err
+		return 0, body, err
 	}
 	defer response.Body.Close()
 
@@ -84,7 +84,7 @@ func Restore(context *common.Context, url string) (int, error) {
 		context.Logger.Warningf("Glacier restore %s: could not read response", url)
 	}
 
-	return response.StatusCode, nil
+	return response.StatusCode, body, nil
 }
 
 func getRequestBody() string {

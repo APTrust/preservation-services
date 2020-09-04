@@ -3,6 +3,7 @@ package restoration
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -126,7 +127,7 @@ func (r *GlacierRestorer) requestRestoration(gf *registry.GenericFile) (restoreS
 		errors = append(errors, r.Error(gf.Identifier, err, true))
 		return RestoreError, errors
 	}
-	statusCode, err := glacier.Restore(r.Context, storageRecord.URL)
+	statusCode, body, err := glacier.Restore(r.Context, storageRecord.URL)
 	if err != nil {
 		errors = append(errors, r.Error(gf.Identifier, err, false))
 		return RestoreError, errors
@@ -135,20 +136,56 @@ func (r *GlacierRestorer) requestRestoration(gf *registry.GenericFile) (restoreS
 		err = fmt.Errorf("Glacier returned 404 - object not found.")
 		errors = append(errors, r.Error(gf.Identifier, err, true))
 		return RestoreError, errors
+	} else {
+		r.Context.Logger.Infof("Glacier returned StatusCode %d for %s", statusCode, gf.Identifier)
 	}
 
-	if statusCode == http.StatusOK {
+	switch statusCode {
+	case http.StatusOK:
 		// 200 means item has already been restored to S3
+		r.Context.Logger.Infof("File %s (%s) has been copied to S3", gf.Identifier, gf.UUID)
 		restoreStatus = RestoreCompleted
-	} else if statusCode == http.StatusAccepted || statusCode == http.StatusConflict || statusCode == http.StatusServiceUnavailable {
+	case http.StatusForbidden:
+		// 403 means item is in S3 storage class, not Glacier.
+		// We'll hit this often when testing on staging and demo,
+		// where items take a day or so to transition from S3
+		// to Glacier. As long as it's in S3, we're OK to proceed.
+		if r.isInS3StorageClass(body) {
+			r.Context.Logger.Infof("File %s (%s) is already in S3 storage class", gf.Identifier, gf.UUID)
+			restoreStatus = RestoreCompleted
+		} else {
+			// If this is forbidden for some other reason, it's likely
+			// bad credentials or a misconfigured bucket. Neither case
+			// should ever happen, and both require admin intervention.
+			err = fmt.Errorf("Glacier returned status %d: %s", statusCode, body)
+			errors = append(errors, r.Error(gf.Identifier, err, true))
+			restoreStatus = RestoreError
+		}
+	case http.StatusAccepted:
 		// 202/Accepted means the restore request has been queued
-		// 409/Conflict means restore request is in progress
-		// 503/Service Unavailable means try again later
+		r.Context.Logger.Infof("Restoration request for %s (%s) has been accepted", gf.Identifier, gf.UUID)
 		restoreStatus = RestorePending
-	} else {
-		err = fmt.Errorf("Glacier returned unexpected status %d", statusCode)
+	case http.StatusConflict:
+		// 409/Conflict means restore request is in progress
+		r.Context.Logger.Infof("Restoration request for %s (%s) was accepted earlier and is pending", gf.Identifier, gf.UUID)
+		restoreStatus = RestorePending
+	case http.StatusServiceUnavailable:
+		r.Context.Logger.Infof("Restoration request for %s (%s) temporarily denied: expedited restore service unavailable. Try again later.", gf.Identifier, gf.UUID)
+		restoreStatus = RestorePending
+	default:
+		err = fmt.Errorf("Glacier returned unexpected status %d: %s", statusCode, body)
 		errors = append(errors, r.Error(gf.Identifier, err, true))
 		restoreStatus = RestoreError
 	}
 	return restoreStatus, errors
 }
+
+func (r *GlacierRestorer) isInS3StorageClass(body string) bool {
+	// Body is typically ~200 bytes of XML
+	return strings.Contains(body, "InvalidObjectState")
+}
+
+/*
+<?xml version="1.0" encoding="UTF-8"?>
+<Error><Code>InvalidObjectState</Code><Message>Restore is not allowed for the object's current storage class</Message><RequestId>0R4VDR7M1W9T6GAW</RequestId><HostId>AxVAZQwthloiJJwhIvwctT27qD1uCAu/AihSPwLXQ63hXi5QGH1GjMRhl6Y+iPgNUrY2hkm0EYw=</HostId></Error>
+*/

@@ -26,9 +26,10 @@ func TestGlacierRestore_200(t *testing.T) {
 
 	context := common.NewContext()
 
-	statusCode, err := glacier.Restore(context, glacierURL)
+	statusCode, body, err := glacier.Restore(context, glacierURL)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedResponseCode, statusCode)
+	assert.Equal(t, expectedBody, body)
 }
 
 func getRestoreHandler(t *testing.T) func(http.ResponseWriter, *http.Request) {
