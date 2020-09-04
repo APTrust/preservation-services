@@ -230,6 +230,7 @@ func (r *GlacierRestorer) CreateRestorationWorkItem(task *Task) {
 		Name:                  task.WorkItem.Name,
 		Note:                  "Moved from Glacier to S3, awaiting restoration",
 		ObjectIdentifier:      task.WorkItem.ObjectIdentifier,
+		Outcome:               "Awaiting restoration",
 		Retry:                 true,
 		Size:                  task.WorkItem.Size,
 		Stage:                 constants.StageRequested,
