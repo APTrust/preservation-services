@@ -12,7 +12,7 @@ func getBucket() *common.PerservationBucket {
 	return &common.PerservationBucket{
 		Bucket:       "test-bucket",
 		Description:  "Test bucket",
-		Host:         "flava.flave",
+		Host:         "s3.flava.flave",
 		OptionName:   "FakeStorageOption",
 		Provider:     constants.StorageProviderAWS,
 		Region:       constants.RegionAWSUSEast2,

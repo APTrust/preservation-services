@@ -27,11 +27,15 @@ type PerservationBucket struct {
 // https://s3.us-west-1.wasabisys.com/aptrust.wasabi.or/
 // for a Wasabi preservationBucket.
 func (b *PerservationBucket) URLFor(key string) string {
-	return fmt.Sprintf("https://s3.%s.%s/%s/%s",
-		b.Region, b.Host, b.Bucket, key)
+	// While the general S3 host URLs look like s3.amazonaws.com
+	// and s3.wasabisys.com, for specific object URLs, we have to
+	// move the s3.prefix to the front of the URL.
+	host := strings.Replace(b.Host, "s3.", "", 1)
+	return fmt.Sprintf("https://s3.%s.%s/%s/%s", b.Region, host, b.Bucket, key)
 }
 
 // HostsURL returns true if the given URL is hosted by this PreservationBucket.
 func (b *PerservationBucket) HostsURL(url string) bool {
-	return strings.HasPrefix(url, fmt.Sprintf("https://s3.%s.%s/%s/", b.Region, b.Host, b.Bucket))
+	host := strings.Replace(b.Host, "s3.", "", 1)
+	return strings.HasPrefix(url, fmt.Sprintf("https://s3.%s.%s/%s/", b.Region, host, b.Bucket))
 }
