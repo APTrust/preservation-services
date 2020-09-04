@@ -43,6 +43,11 @@ func Restore(context *common.Context, url string) (int, error) {
 	}
 	request.Header.Set("Content-Length", strconv.Itoa(len(body)))
 
+	// Set the payload hash header
+	sha := sha256.New()
+	io.Copy(sha, strings.NewReader(body))
+	request.Header.Set("X-Amz-Content-Sha256", fmt.Sprintf("%x", sha.Sum(nil)))
+
 	// Note that for now, we only use AWS Glacier. There is no other Glacier
 	// provider, so constants.StorageProviderAWS will do us for now.
 	creds := context.Config.S3Credentials[constants.StorageProviderAWS]
@@ -50,11 +55,6 @@ func Restore(context *common.Context, url string) (int, error) {
 		return 0, fmt.Errorf("Can't find credentials for %s", constants.StorageProviderAWS)
 	}
 	signedRequest := signer.SignV4(*request, creds.KeyID, creds.SecretKey, "", url)
-
-	sha := sha256.New()
-	io.Copy(sha, strings.NewReader(body))
-	signedRequest.Header.Set("X-Amz-Content-Sha256", fmt.Sprintf("%x", sha.Sum(nil)))
-	// signedRequest.Header.Set("Host", "s3.amazonaws.com")
 
 	// --- DEBUG ---
 	for k, v := range signedRequest.Header {
