@@ -111,7 +111,7 @@ func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingErr
 		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, false))
 	}
 
-	m.setMissingDefaultTags()
+	m.setStorageOption()
 
 	err = m.IngestObjectSave()
 	if err != nil {
@@ -327,15 +327,27 @@ func (m *MetadataGatherer) parseTagFile(filename string) error {
 // We have announced and documented that if Storage-Option is unspecified,
 // it defaults to "Standard". We have to force this tag into bags where
 // it's missing so that the validator will approve them.
-func (m *MetadataGatherer) setMissingDefaultTags() {
+//
+// If the tag is not missing, use it to set the ingest object's
+// StorageOption. Note that BTR bags don't include aptrust-info.txt.
+// If we find a Storage-Option tag in bag-info.txt, we'll apply it.
+func (m *MetadataGatherer) setStorageOption() {
 	if m.IngestObject.BagItProfileFormat() == constants.BagItProfileDefault {
 		tag := m.IngestObject.GetTag("aptrust-info.txt", "Storage-Option")
 		if tag == nil {
-			m.Context.Logger.Info("No Storage-Option for WorkItem %d, bag %s. Defaulting to Standard.", m.WorkItemID, m.IngestObject.Identifier())
+			m.Context.Logger.Infof("No Storage-Option for WorkItem %d, bag %s. Defaulting to Standard.", m.WorkItemID, m.IngestObject.Identifier())
 			tag = bagit.NewTag("aptrust-info.txt", "Storage-Option", "Standard")
 			m.IngestObject.Tags = append(m.IngestObject.Tags, tag)
 		} else {
-			m.Context.Logger.Info("Using Storage-Option %s as set in tag file for WorkItem %d, bag %s.", tag.Value, m.WorkItemID, m.IngestObject.Identifier())
+			m.Context.Logger.Infof("Using Storage-Option %s as set in tag file for WorkItem %d, bag %s.", tag.Value, m.WorkItemID, m.IngestObject.Identifier())
+			m.IngestObject.StorageOption = tag.Value
+		}
+	} else {
+		// BTR bag. Storage-Option is not a standard tag in this profile,
+		// but if it's present, let's honor it.
+		tag := m.IngestObject.GetTag("bag-info.txt", "Storage-Option")
+		if tag != nil {
+			m.IngestObject.StorageOption = tag.Value
 		}
 	}
 }

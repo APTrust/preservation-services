@@ -12,6 +12,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
+	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -168,5 +169,48 @@ func testS3Files(t *testing.T, context *common.Context) {
 		stats, err := os.Stat(fullpath)
 		require.Nil(t, err)
 		assert.Equal(t, goodbags3FileSizes[i], stats.Size())
+	}
+}
+
+// Specifically test bug https://trello.com/c/9E356dMX,
+// which showed all items ingested into staging were being marked
+// with StorageOption Standard, even when the Storage-Option
+// tag in aptrust-info.txt specified a glacier option.
+func TestStorageOptionIsSetCorrectly(t *testing.T) {
+	context := common.NewContext()
+
+	bags := []struct {
+		Name          string
+		StorageOption string
+		Md5Sum        string
+	}{
+		{
+			Name:          "example.edu.sample_glacier_oh.tar",
+			StorageOption: constants.StorageGlacierOH,
+			Md5Sum:        "de11380fd69842f3a81cf803c6198d11",
+		},
+		{
+			Name:          "example.edu.sample_glacier_or.tar",
+			StorageOption: constants.StorageGlacierOR,
+			Md5Sum:        "398fb79ec31b4f12d6e4a12dd9570d69",
+		},
+		{
+			Name:          "example.edu.sample_glacier_va.tar",
+			StorageOption: constants.StorageGlacierVA,
+			Md5Sum:        "73232aac4ebcb95cb71f8094094596d4",
+		},
+	}
+
+	for i, bag := range bags {
+		pathToBag := testutil.PathToUnitTestBag(bag.Name)
+		setupS3(t, context, bag.Name, pathToBag)
+		obj := getIngestObject(pathToBag, bag.Md5Sum)
+		g := ingest.NewMetadataGatherer(context, 700+i, obj)
+
+		fileCount, errors := g.Run()
+		require.Empty(t, errors)
+		assert.True(t, fileCount > 0)
+
+		assert.Equal(t, bag.StorageOption, obj.StorageOption)
 	}
 }

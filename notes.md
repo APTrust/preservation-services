@@ -392,3 +392,11 @@ The restoration process pipes files from S3 preservation through a local bagger 
 #### Glacier Restoration
 
 For items stored in Glacier and Glacier Deep Archive, we'll need a first step similar to [Glacier Restore Init](https://github.com/APTrust/exchange/blob/master/workers/apt_glacier_restore_init.go) from Exchange.
+
+## Checklist for Adding New Services and Binaries
+
+* Add to scripts/build.rb
+* Add to scripts/test.rb
+* Add to docker-compose.yml
+* Add to docker-compose.integration.yml
+* Add new container repo in Docker Hub
