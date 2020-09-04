@@ -29,7 +29,7 @@ func TestGlacierRestore_200(t *testing.T) {
 	statusCode, body, err := glacier.Restore(context, glacierURL)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedResponseCode, statusCode)
-	assert.Equal(t, expectedBody, body)
+	assert.Equal(t, "Hello Kitty", body)
 }
 
 func getRestoreHandler(t *testing.T) func(http.ResponseWriter, *http.Request) {
@@ -58,5 +58,6 @@ func getRestoreHandler(t *testing.T) func(http.ResponseWriter, *http.Request) {
 
 		// Return whatever is expected
 		w.WriteHeader(expectedResponseCode)
+		w.Write([]byte("Hello Kitty"))
 	}
 }

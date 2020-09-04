@@ -84,7 +84,7 @@ func Restore(context *common.Context, url string) (int, string, error) {
 		context.Logger.Warningf("Glacier restore %s: could not read response", url)
 	}
 
-	return response.StatusCode, body, nil
+	return response.StatusCode, buf.String(), nil
 }
 
 func getRequestBody() string {

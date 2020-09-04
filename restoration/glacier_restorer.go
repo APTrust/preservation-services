@@ -157,6 +157,7 @@ func (r *GlacierRestorer) requestRestoration(gf *registry.GenericFile) (restoreS
 			// If this is forbidden for some other reason, it's likely
 			// bad credentials or a misconfigured bucket. Neither case
 			// should ever happen, and both require admin intervention.
+			r.Context.Logger.Errorf("File %s (%s): forbidden, but not because of storage class.", gf.Identifier, gf.UUID)
 			err = fmt.Errorf("Glacier returned status %d: %s", statusCode, body)
 			errors = append(errors, r.Error(gf.Identifier, err, true))
 			restoreStatus = RestoreError
