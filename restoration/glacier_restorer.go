@@ -67,7 +67,7 @@ func (r *GlacierRestorer) Run() (fileCount int, errors []*service.ProcessingErro
 	// return a non-fatal error so the worker will requeue this
 	// item and check it again in a few hours.
 	if len(errors) == 0 && !r.RestorationObject.AllFilesRestored {
-		err := fmt.Errorf("Initiated restore, but files are not yet available in S3. Requeue for later recheck.")
+		err := fmt.Errorf("Initiated restore, but files are not yet available in S3. Requeued for later recheck.")
 		errors = append(errors, r.Error(r.RestorationObject.Identifier, err, false))
 	}
 

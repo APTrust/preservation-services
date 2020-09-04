@@ -60,6 +60,7 @@ func Restore(context *common.Context, url string) (int, error) {
 	httpClient := &http.Client{}
 	response, err := httpClient.Do(signedRequest)
 	if err != nil {
+		context.Logger.Errorf("Glacier restore request returned error %v", err)
 		return 0, err
 	}
 	defer response.Body.Close()
