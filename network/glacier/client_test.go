@@ -36,6 +36,7 @@ func getRestoreHandler(t *testing.T) func(http.ResponseWriter, *http.Request) {
 		"Content-Length",
 		"X-Amz-Date",
 		"Authorization",
+		"X-Amz-Content-Sha256",
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Make sure URL is correct
