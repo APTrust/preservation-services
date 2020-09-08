@@ -143,7 +143,7 @@ func (r *GlacierRestorer) requestRestoration(gf *registry.GenericFile) (restoreS
 	switch statusCode {
 	case http.StatusOK:
 		// 200 means item has already been restored to S3
-		r.Context.Logger.Infof("File %s (%s) has been copied to S3", gf.Identifier, gf.UUID)
+		r.Context.Logger.Infof("File %s (%s) has been copied to S3", gf.Identifier, gf.UUID())
 		restoreStatus = RestoreCompleted
 	case http.StatusForbidden:
 		// 403 means item is in S3 storage class, not Glacier.
@@ -151,27 +151,27 @@ func (r *GlacierRestorer) requestRestoration(gf *registry.GenericFile) (restoreS
 		// where items take a day or so to transition from S3
 		// to Glacier. As long as it's in S3, we're OK to proceed.
 		if r.isInS3StorageClass(body) {
-			r.Context.Logger.Infof("File %s (%s) is already in S3 storage class", gf.Identifier, gf.UUID)
+			r.Context.Logger.Infof("File %s (%s) is already in S3 storage class", gf.Identifier, gf.UUID())
 			restoreStatus = RestoreCompleted
 		} else {
 			// If this is forbidden for some other reason, it's likely
 			// bad credentials or a misconfigured bucket. Neither case
 			// should ever happen, and both require admin intervention.
-			r.Context.Logger.Errorf("File %s (%s): forbidden, but not because of storage class.", gf.Identifier, gf.UUID)
+			r.Context.Logger.Errorf("File %s (%s): forbidden, but not because of storage class.", gf.Identifier, gf.UUID())
 			err = fmt.Errorf("Glacier returned status %d: %s", statusCode, body)
 			errors = append(errors, r.Error(gf.Identifier, err, true))
 			restoreStatus = RestoreError
 		}
 	case http.StatusAccepted:
 		// 202/Accepted means the restore request has been queued
-		r.Context.Logger.Infof("Restoration request for %s (%s) has been accepted", gf.Identifier, gf.UUID)
+		r.Context.Logger.Infof("Restoration request for %s (%s) has been accepted", gf.Identifier, gf.UUID())
 		restoreStatus = RestorePending
 	case http.StatusConflict:
 		// 409/Conflict means restore request is in progress
-		r.Context.Logger.Infof("Restoration request for %s (%s) was accepted earlier and is pending", gf.Identifier, gf.UUID)
+		r.Context.Logger.Infof("Restoration request for %s (%s) was accepted earlier and is pending", gf.Identifier, gf.UUID())
 		restoreStatus = RestorePending
 	case http.StatusServiceUnavailable:
-		r.Context.Logger.Infof("Restoration request for %s (%s) temporarily denied: expedited restore service unavailable. Try again later.", gf.Identifier, gf.UUID)
+		r.Context.Logger.Infof("Restoration request for %s (%s) temporarily denied: expedited restore service unavailable. Try again later.", gf.Identifier, gf.UUID())
 		restoreStatus = RestorePending
 	default:
 		err = fmt.Errorf("Glacier returned unexpected status %d: %s", statusCode, body)
