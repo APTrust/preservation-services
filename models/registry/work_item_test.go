@@ -2,6 +2,7 @@ package registry_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
@@ -43,6 +44,8 @@ var itemJson = `{"aptrust_approver":"nobody@aptrust.org","action":"Ingest","bag_
 
 var itemJsonForPharos = `{"aptrust_approver":"nobody@aptrust.org","action":"Ingest","bag_date":"1904-06-16T15:04:05Z","bucket":"receiving-bucket","date":"1904-06-16T15:04:05Z","etag":"54321","generic_file_identifier":"test.edu/bag/data/file.txt","inst_approver":"admin@test.edu","institution_id":333,"name":"test.edu.bag.tar","needs_admin_review":false,"node":"apt-prod-services-01","note":"This is just to say...","object_identifier":"test.edu/bag","outcome":"Ingest in progress","pid":3100,"queued_at":"1904-06-16T15:04:05Z","retry":true,"size":2858933,"stage":"Receive","stage_started_at":"1904-06-16T15:04:05Z","status":"Started","user":"user@example.com"}`
 
+var itemWithNullQueuedAt = `{"aptrust_approver":"nobody@aptrust.org","action":"Ingest","bag_date":"1904-06-16T15:04:05Z","bucket":"receiving-bucket","date":"1904-06-16T15:04:05Z","etag":"54321","generic_file_identifier":"test.edu/bag/data/file.txt","inst_approver":"admin@test.edu","institution_id":333,"name":"test.edu.bag.tar","needs_admin_review":false,"node":"apt-prod-services-01","note":"This is just to say...","object_identifier":"test.edu/bag","outcome":"Ingest in progress","pid":3100,"queued_at":null,"retry":true,"size":2858933,"stage":"Receive","stage_started_at":"1904-06-16T15:04:05Z","status":"Started","user":"user@example.com"}`
+
 func TestWorkItemFromJson(t *testing.T) {
 	workItem, err := registry.WorkItemFromJSON([]byte(itemJson))
 	require.Nil(t, err)
@@ -59,6 +62,14 @@ func TestWorkItemSerializeForPharos(t *testing.T) {
 	actualJson, err := item.SerializeForPharos()
 	require.Nil(t, err)
 	assert.Equal(t, itemJsonForPharos, string(actualJson))
+
+	// Make sure QueuedAt is null if it's an empty Time struct
+	unqueuedItem, err := registry.WorkItemFromJSON([]byte(itemJson))
+	require.Nil(t, err)
+	unqueuedItem.QueuedAt = time.Time{}
+	actualJson, err = unqueuedItem.SerializeForPharos()
+	require.Nil(t, err)
+	assert.Equal(t, itemWithNullQueuedAt, string(actualJson))
 }
 
 func TestWorkItemProcessingHasCompleted(t *testing.T) {
