@@ -56,7 +56,8 @@ type Config struct {
 	S3AWSHost                  string
 	S3Credentials              map[string]*S3Credentials `json:"-"`
 	S3LocalHost                string
-	S3WasabiHost               string
+	S3WasabiHostOR             string
+	S3WasabiHostVA             string
 	StagingBucket              string
 	StagingUploadRetries       int
 	StagingUploadRetryMs       time.Duration
@@ -160,14 +161,20 @@ func loadConfig() *Config {
 				KeyID:     v.GetString("S3_LOCAL_KEY"),
 				SecretKey: v.GetString("S3_LOCAL_SECRET"),
 			},
-			constants.StorageProviderWasabi: &S3Credentials{
-				Host:      v.GetString("S3_WASABI_HOST"),
+			constants.StorageProviderWasabiOR: &S3Credentials{
+				Host:      v.GetString("S3_WASABI_HOST_OR"),
+				KeyID:     v.GetString("S3_WASABI_KEY"),
+				SecretKey: v.GetString("S3_WASABI_SECRET"),
+			},
+			constants.StorageProviderWasabiVA: &S3Credentials{
+				Host:      v.GetString("S3_WASABI_HOST_VA"),
 				KeyID:     v.GetString("S3_WASABI_KEY"),
 				SecretKey: v.GetString("S3_WASABI_SECRET"),
 			},
 		},
 		S3LocalHost:          v.GetString("S3_LOCAL_HOST"),
-		S3WasabiHost:         v.GetString("S3_WASABI_HOST"),
+		S3WasabiHostOR:       v.GetString("S3_WASABI_HOST_OR"),
+		S3WasabiHostVA:       v.GetString("S3_WASABI_HOST_VA"),
 		StagingBucket:        v.GetString("STAGING_BUCKET"),
 		StagingUploadRetries: v.GetInt("STAGING_UPLOAD_RETRIES"),
 		StagingUploadRetryMs: v.GetDuration("STAGING_UPLOAD_RETRY_MS"),
@@ -507,9 +514,9 @@ func (config *Config) initPerservationBuckets() {
 		&PerservationBucket{
 			Bucket:          config.BucketWasabiOR,
 			Description:     "Wasabi Oregon storage",
-			Host:            config.S3WasabiHost,
+			Host:            config.S3WasabiHostOR,
 			OptionName:      constants.StorageWasabiOR,
-			Provider:        constants.StorageProviderWasabi,
+			Provider:        constants.StorageProviderWasabiOR,
 			Region:          constants.RegionWasabiUSWest1,
 			RestorePriority: 3,
 			StorageClass:    constants.StorageClassWasabi,
@@ -517,9 +524,9 @@ func (config *Config) initPerservationBuckets() {
 		&PerservationBucket{
 			Bucket:          config.BucketWasabiVA,
 			Description:     "Wasabi Virginia storage (us-east-1)",
-			Host:            config.S3WasabiHost,
+			Host:            config.S3WasabiHostVA,
 			OptionName:      constants.StorageWasabiVA,
-			Provider:        constants.StorageProviderWasabi,
+			Provider:        constants.StorageProviderWasabiVA,
 			Region:          constants.RegionWasabiUSEast1,
 			RestorePriority: 2,
 			StorageClass:    constants.StorageClassWasabi,

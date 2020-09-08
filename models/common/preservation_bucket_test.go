@@ -25,7 +25,7 @@ func TestPerservationBucketURLFor(t *testing.T) {
 	expected := "https://s3.us-east-2.flava.flave/test-bucket/abc"
 	assert.Equal(t, expected, preservationBucket.URLFor("abc"))
 
-	preservationBucket.Provider = constants.StorageProviderWasabi
+	preservationBucket.Provider = constants.StorageProviderWasabiOR
 	preservationBucket.Region = constants.RegionWasabiUSWest1
 
 	expected = "https://s3.us-west-1.flava.flave/test-bucket/xyz"
@@ -39,7 +39,7 @@ func TestHostsURL(t *testing.T) {
 	assert.True(t, preservationBucket.HostsURL(url1))
 	assert.False(t, preservationBucket.HostsURL(url2))
 
-	preservationBucket.Provider = constants.StorageProviderWasabi
+	preservationBucket.Provider = constants.StorageProviderWasabiOR
 	preservationBucket.Region = constants.RegionWasabiUSWest1
 	assert.False(t, preservationBucket.HostsURL(url1))
 	assert.True(t, preservationBucket.HostsURL(url2))

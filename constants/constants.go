@@ -125,7 +125,8 @@ const (
 	StorageGlacierVA           = "Glacier-VA"
 	StorageProviderAWS         = "AWS"
 	StorageProviderLocal       = "Local"
-	StorageProviderWasabi      = "Wasabi"
+	StorageProviderWasabiOR    = "Wasabi-OR"
+	StorageProviderWasabiVA    = "Wasabi-VA"
 	StorageStandard            = "Standard"
 	StorageWasabiOR            = "Wasabi-OR"
 	StorageWasabiVA            = "Wasabi-VA"
@@ -186,7 +187,8 @@ var BTRRestorationAlgorithms []string = []string{
 var StorageProviders = []string{
 	StorageProviderAWS,
 	StorageProviderLocal,
-	StorageProviderWasabi,
+	StorageProviderWasabiOR,
+	StorageProviderWasabiVA,
 }
 
 var StorageOptions = []string{

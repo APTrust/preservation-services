@@ -36,6 +36,11 @@ func (b *PerservationBucket) URLFor(key string) string {
 
 // HostsURL returns true if the given URL is hosted by this PreservationBucket.
 func (b *PerservationBucket) HostsURL(url string) bool {
-	host := strings.Replace(b.Host, "s3.", "", 1)
+	// Wasabi host names already include region.
+	// AWS host names don't (in our system).
+	host := b.Host
+	if !strings.Contains(b.Host, "wasabisys") {
+		host = strings.Replace(b.Host, "s3.", "", 1)
+	}
 	return strings.HasPrefix(url, fmt.Sprintf("https://s3.%s.%s/%s/", b.Region, host, b.Bucket))
 }

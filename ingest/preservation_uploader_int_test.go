@@ -152,7 +152,7 @@ func testCopyToPreservation(t *testing.T, uploader *ingest.PreservationUploader,
 	require.Nil(t, err)
 
 	stats, err := uploader.Context.S3StatObject(
-		constants.StorageProviderWasabi,
+		constants.StorageProviderWasabiOR,
 		preservationBucket.Bucket,
 		ingestFile.UUID,
 	)

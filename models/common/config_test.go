@@ -56,7 +56,7 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, time.Duration(250*time.Millisecond), config.StagingUploadRetryMs)
 	assert.Equal(t, "http://localhost:8898", config.VolumeServiceURL)
 
-	require.Equal(t, 3, len(config.S3Credentials))
+	require.Equal(t, 4, len(config.S3Credentials))
 
 	// In test env, these are all set to the local minio instance,
 	// so we don't save/delete/overwrite in any external services.
@@ -126,7 +126,7 @@ func TestProviderBucketAndKeyFor(t *testing.T) {
 	config := common.NewConfig()
 
 	provider, bucket, key, err := config.ProviderBucketAndKeyFor("https://localhost:9899/wasabi-or/1234")
-	assert.Equal(t, constants.StorageProviderWasabi, provider)
+	assert.Equal(t, constants.StorageProviderWasabiOR, provider)
 	assert.Equal(t, config.BucketWasabiOR, bucket)
 	assert.Equal(t, "1234", key)
 	assert.Nil(t, err)
