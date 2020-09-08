@@ -19,14 +19,15 @@ var defaultBufSize = 20
 var defaultWorkers = 2
 var defaultTimeout = 1 * time.Minute
 
-var EnvMessage = `If you don't set -config-dir and -config-name on the command line,
-this requires the following environtment vars:
+var EnvMessage = `
+Before running this, set env variable APT_ENV
+to the name of the configuration to load. For example:
+    test - Loads .env.test
+    demo - Loads .env.demo
 
-APT_CONFIG_DIR - Path to the directory containing the .env settings file.
+The .env file should be in the current working directory
+from which you launch the process.
 
-APT_ENV - Name of the configuration to load. For example:
-    test - Loads .env.test from APT_CONFIG_DIR
-    demo - Loads .env.demo from APT_CONFIG_DIR
 `
 
 func Init() {
