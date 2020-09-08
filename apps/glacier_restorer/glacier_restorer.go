@@ -17,6 +17,10 @@ func main() {
 		os.Exit(0)
 	}
 
+	if opts.MaxAttempts < 4 {
+		opts.MaxAttempts = 4
+	}
+
 	// If anything goes wrong, this panics.
 	// Otherwise, it starts handling NSQ messages immediately.
 	worker := workers.NewGlacierRestorer(
@@ -41,7 +45,12 @@ is complete.
 
 Once files have been restored from Glacier to S3, the worker creates a normal
 restoration WorkItem, so the bag_restorer or file_restorer can restore the
-file or object to the depositor's restoration bucket.`
+file or object to the depositor's restoration bucket.
+
+Note that MaxAttempts for this worker can be no less than 4, even if you try
+to set it lower than that. Glacier restorations require periodic re-checks
+every few hours, and if MaxAttempts is too low, the worker will say the item
+was not restored simply because it didn't wait long enough.`
 	fmt.Println(message)
 	fmt.Println(cli.EnvMessage)
 }
