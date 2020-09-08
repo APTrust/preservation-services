@@ -102,7 +102,7 @@ type WorkItemForPharos struct {
 	ObjectIdentifier      string    `json:"object_identifier"`
 	Outcome               string    `json:"outcome"`
 	Pid                   int       `json:"pid"`
-	QueuedAt              time.Time `json:"queued_at"`
+	QueuedAt              time.Time `json:"queued_at,omitempty"`
 	Retry                 bool      `json:"retry"`
 	Size                  int64     `json:"size"`
 	Stage                 string    `json:"stage"`
