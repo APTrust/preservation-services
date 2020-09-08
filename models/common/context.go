@@ -95,7 +95,10 @@ func (context *Context) S3StatObject(provider, bucket, key string) (minio.Object
 	if client == nil {
 		return emptyInfo, fmt.Errorf("No S3 client for provider %s", provider)
 	}
-	return client.StatObject(bucket, key, minio.StatObjectOptions{})
+	client.TraceOn(GetTracer(context.Logger))
+	info, err := client.StatObject(bucket, key, minio.StatObjectOptions{})
+	client.TraceOff()
+	return info, err
 }
 
 func (context *Context) S3GetObject(provider, bucket, key string) (*minio.Object, error) {
