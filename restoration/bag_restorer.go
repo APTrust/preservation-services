@@ -38,7 +38,7 @@ Tag-File-Character-Encoding: UTF-8
 type BagRestorer struct {
 	Base
 	tarPipeWriter         *TarPipeWriter
-	bestRestorationSource *common.PerservationBucket
+	bestRestorationSource *common.PreservationBucket
 	bytesWritten          int64
 	uploadError           error
 	wg                    sync.WaitGroup

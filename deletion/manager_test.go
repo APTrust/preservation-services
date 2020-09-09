@@ -227,7 +227,7 @@ func copyFilesToLocalPreservation(t *testing.T, context *common.Context) {
 func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 	pathToFile := testutil.PathToUnitTestBag("example.edu.multipart.b01.of02.tar")
 	gfIdentifier := fmt.Sprintf("%s/%s", objIdentifier, filename)
-	for _, preservationBucket := range context.Config.PerservationBuckets {
+	for _, preservationBucket := range context.Config.PreservationBuckets {
 		_url := preservationBucket.URLFor(filename)
 		if util.StringListContains(alreadySaved, _url) {
 			continue

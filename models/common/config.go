@@ -61,7 +61,7 @@ type Config struct {
 	StagingBucket              string
 	StagingUploadRetries       int
 	StagingUploadRetryMs       time.Duration
-	PerservationBuckets        []*PerservationBucket
+	PreservationBuckets        []*PreservationBucket
 	VolumeServiceURL           string
 }
 
@@ -78,7 +78,7 @@ var logLevels = map[string]logging.Level{
 func NewConfig() *Config {
 	config := loadConfig()
 	config.expandPaths()
-	config.initPerservationBuckets()
+	config.initPreservationBuckets()
 	config.sanityCheck()
 	config.makeDirs()
 	return config
@@ -193,14 +193,14 @@ func (config *Config) CredentialsForS3Host(host string) (credentials *S3Credenti
 	return credentials
 }
 
-// PerservationBucketFor returns the preservation buckets
+// PreservationBucketFor returns the preservation buckets
 // for the specified storage option.
 // Storage options are enumerated in constants.StorageOptions. For most options,
 // this will return a single item. For the Standard storage option, it returns
 // two preservation buckets.
-func (config *Config) PerservationBucketsFor(storageOption string) []*PerservationBucket {
-	preservationBuckets := make([]*PerservationBucket, 0)
-	for _, preservationBucket := range config.PerservationBuckets {
+func (config *Config) PreservationBucketsFor(storageOption string) []*PreservationBucket {
+	preservationBuckets := make([]*PreservationBucket, 0)
+	for _, preservationBucket := range config.PreservationBuckets {
 		if preservationBucket.OptionName == storageOption {
 			preservationBuckets = append(preservationBuckets, preservationBucket)
 		}
@@ -385,8 +385,8 @@ func (config *Config) checkS3Providers() {
 	}
 }
 
-func (config *Config) checkPerservationBuckets() {
-	for _, preservationBucket := range config.PerservationBuckets {
+func (config *Config) checkPreservationBuckets() {
+	for _, preservationBucket := range config.PreservationBuckets {
 		if preservationBucket.Host == "" {
 			util.PrintAndExit(fmt.Sprintf("S3 preservationBucket %s is missing Host", preservationBucket.OptionName))
 		}
@@ -405,7 +405,7 @@ func (config *Config) sanityCheck() {
 	// installation from touching data in demo and prod systems.
 	config.checkBasicSettings()
 	config.checkS3Providers()
-	config.checkPerservationBuckets()
+	config.checkPreservationBuckets()
 
 	// This is turned off for now because of issues with docker,
 	// where all services appear to our tests to run on external hosts.
@@ -429,9 +429,9 @@ func (config *Config) makeDirs() error {
 	return nil
 }
 
-func (config *Config) initPerservationBuckets() {
-	config.PerservationBuckets = []*PerservationBucket{
-		&PerservationBucket{
+func (config *Config) initPreservationBuckets() {
+	config.PreservationBuckets = []*PreservationBucket{
+		&PreservationBucket{
 			Bucket:          config.BucketStandardVA,
 			Description:     "AWS Virginia S3 bucket for Standard primary preservation",
 			Host:            config.S3AWSHost,
@@ -441,7 +441,7 @@ func (config *Config) initPerservationBuckets() {
 			RestorePriority: 1,
 			StorageClass:    constants.StorageClassStandard,
 		},
-		&PerservationBucket{
+		&PreservationBucket{
 			Bucket:          config.BucketStandardOR,
 			Description:     "AWS Oregon Glacier bucket for Standard storage repilication",
 			Host:            config.S3AWSHost,
@@ -451,7 +451,7 @@ func (config *Config) initPerservationBuckets() {
 			RestorePriority: 4,
 			StorageClass:    constants.StorageClassGlacier,
 		},
-		&PerservationBucket{
+		&PreservationBucket{
 			Bucket:          config.BucketGlacierOH,
 			Description:     "AWS Ohio Glacier storage",
 			Host:            config.S3AWSHost,
@@ -461,7 +461,7 @@ func (config *Config) initPerservationBuckets() {
 			RestorePriority: 6,
 			StorageClass:    constants.StorageClassGlacier,
 		},
-		&PerservationBucket{
+		&PreservationBucket{
 			Bucket:          config.BucketGlacierOR,
 			Description:     "AWS Oregon Glacier storage",
 			Host:            config.S3AWSHost,
@@ -471,7 +471,7 @@ func (config *Config) initPerservationBuckets() {
 			RestorePriority: 7,
 			StorageClass:    constants.StorageClassGlacier,
 		},
-		&PerservationBucket{
+		&PreservationBucket{
 			Bucket:          config.BucketGlacierVA,
 			Description:     "AWS Virginia Glacier storage",
 			Host:            config.S3AWSHost,
@@ -481,7 +481,7 @@ func (config *Config) initPerservationBuckets() {
 			RestorePriority: 5,
 			StorageClass:    constants.StorageClassGlacier,
 		},
-		&PerservationBucket{
+		&PreservationBucket{
 			Bucket:          config.BucketGlacierDeepOH,
 			Description:     "AWS Ohio Glacier deep storage",
 			Host:            config.S3AWSHost,
@@ -491,7 +491,7 @@ func (config *Config) initPerservationBuckets() {
 			RestorePriority: 9,
 			StorageClass:    constants.StorageClassGlacierDeep,
 		},
-		&PerservationBucket{
+		&PreservationBucket{
 			Bucket:          config.BucketGlacierDeepOR,
 			Description:     "AWS Oregon Glacier deep storage",
 			Host:            config.S3AWSHost,
@@ -501,7 +501,7 @@ func (config *Config) initPerservationBuckets() {
 			RestorePriority: 10,
 			StorageClass:    constants.StorageClassGlacierDeep,
 		},
-		&PerservationBucket{
+		&PreservationBucket{
 			Bucket:          config.BucketGlacierDeepVA,
 			Description:     "AWS Virginia Glacier deep storage",
 			Host:            config.S3AWSHost,
@@ -511,7 +511,7 @@ func (config *Config) initPerservationBuckets() {
 			RestorePriority: 8,
 			StorageClass:    constants.StorageClassGlacierDeep,
 		},
-		&PerservationBucket{
+		&PreservationBucket{
 			Bucket:          config.BucketWasabiOR,
 			Description:     "Wasabi Oregon storage",
 			Host:            config.S3WasabiHostOR,
@@ -521,7 +521,7 @@ func (config *Config) initPerservationBuckets() {
 			RestorePriority: 3,
 			StorageClass:    constants.StorageClassWasabi,
 		},
-		&PerservationBucket{
+		&PreservationBucket{
 			Bucket:          config.BucketWasabiVA,
 			Description:     "Wasabi Virginia storage (us-east-1)",
 			Host:            config.S3WasabiHostVA,
@@ -556,7 +556,7 @@ func (config *Config) ProviderBucketAndKeyFor(urlStr string) (provider, bucket, 
 	} else {
 		return "", "", "", fmt.Errorf("URL %s is missing bucket name or key", urlStr)
 	}
-	for _, preservationBucket := range config.PerservationBuckets {
+	for _, preservationBucket := range config.PreservationBuckets {
 		regionAndHost := fmt.Sprintf("s3.%s.%s", preservationBucket.Region, preservationBucket.Host)
 		if (_url.Host == preservationBucket.Host || _url.Host == regionAndHost) && preservationBucket.Bucket == bucket {
 			provider = preservationBucket.Provider

@@ -16,10 +16,10 @@ const defaultPriority = 10000
 // and US East over other regions. We only need to figure this out once,
 // since all of an object's files will be stored in the same preservation
 // bucket or buckets.
-func BestRestorationSource(context *common.Context, gf *registry.GenericFile) (bestSource *common.PerservationBucket, storageRecord *registry.StorageRecord, err error) {
+func BestRestorationSource(context *common.Context, gf *registry.GenericFile) (bestSource *common.PreservationBucket, storageRecord *registry.StorageRecord, err error) {
 	priority := defaultPriority
 	for _, sr := range gf.StorageRecords {
-		for _, preservationBucket := range context.Config.PerservationBuckets {
+		for _, preservationBucket := range context.Config.PreservationBuckets {
 			if preservationBucket.HostsURL(sr.URL) && preservationBucket.RestorePriority < priority {
 				bestSource = preservationBucket
 				storageRecord = sr
@@ -28,7 +28,7 @@ func BestRestorationSource(context *common.Context, gf *registry.GenericFile) (b
 		}
 	}
 	if priority == defaultPriority {
-		err = fmt.Errorf("Could not find any suitable restoration source for %s. (%d preservation URLS, %d PerservationBuckets)", gf.Identifier, len(gf.StorageRecords), len(context.Config.PerservationBuckets))
+		err = fmt.Errorf("Could not find any suitable restoration source for %s. (%d preservation URLS, %d PreservationBuckets)", gf.Identifier, len(gf.StorageRecords), len(context.Config.PreservationBuckets))
 	} else {
 		context.Logger.Infof("Restoring %s from %s", gf.Identifier, bestSource.Bucket)
 	}

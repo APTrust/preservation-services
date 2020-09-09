@@ -2,10 +2,13 @@ package common
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
-type PerservationBucket struct {
+var HostWithRegionPrefix = regexp.MustCompile("^[Ss]3\\.\\w{2}-\\w+-\\d\\.")
+
+type PreservationBucket struct {
 	Bucket      string
 	Description string
 	Host        string
@@ -26,21 +29,28 @@ type PerservationBucket struct {
 // for an AWS upload preservationBucket, or
 // https://s3.us-west-1.wasabisys.com/aptrust.wasabi.or/
 // for a Wasabi preservationBucket.
-func (b *PerservationBucket) URLFor(key string) string {
-	// While the general S3 host URLs look like s3.amazonaws.com
-	// and s3.wasabisys.com, for specific object URLs, we have to
-	// move the s3.prefix to the front of the URL.
-	host := strings.Replace(b.Host, "s3.", "", 1)
-	return fmt.Sprintf("https://s3.%s.%s/%s/%s", b.Region, host, b.Bucket, key)
+func (b *PreservationBucket) URLFor(key string) string {
+	return fmt.Sprintf("https://%s/%s/%s", b.GetHostNameWithRegion(), b.Bucket, key)
 }
 
 // HostsURL returns true if the given URL is hosted by this PreservationBucket.
-func (b *PerservationBucket) HostsURL(url string) bool {
+func (b *PreservationBucket) HostsURL(url string) bool {
 	// Wasabi host names already include region.
 	// AWS host names don't (in our system).
-	host := b.Host
-	if !strings.Contains(b.Host, "wasabisys") {
-		host = strings.Replace(b.Host, "s3.", "", 1)
+	return strings.HasPrefix(url, fmt.Sprintf("https://%s/%s/", b.GetHostNameWithRegion(), b.Bucket))
+}
+
+func (b *PreservationBucket) GetHostNameWithRegion() string {
+	host := strings.ToLower(b.Host)
+	if strings.HasPrefix(host, "s3.") && !b.RegionIsEmbeddedInHostName() {
+		host = strings.Replace(host, "s3.", "", 1)
 	}
-	return strings.HasPrefix(url, fmt.Sprintf("https://s3.%s.%s/%s/", b.Region, host, b.Bucket))
+	if !b.RegionIsEmbeddedInHostName() {
+		host = fmt.Sprintf("s3.%s.%s", b.Region, host)
+	}
+	return host
+}
+
+func (b *PreservationBucket) RegionIsEmbeddedInHostName() bool {
+	return HostWithRegionPrefix.MatchString(b.Host)
 }

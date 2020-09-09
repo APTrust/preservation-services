@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getBucket() *common.PerservationBucket {
-	return &common.PerservationBucket{
+func getBucket() *common.PreservationBucket {
+	return &common.PreservationBucket{
 		Bucket:       "test-bucket",
 		Description:  "Test bucket",
 		Host:         "s3.flava.flave",
@@ -20,7 +20,7 @@ func getBucket() *common.PerservationBucket {
 	}
 }
 
-func TestPerservationBucketURLFor(t *testing.T) {
+func TestPreservationBucketURLFor(t *testing.T) {
 	preservationBucket := getBucket()
 	expected := "https://s3.us-east-2.flava.flave/test-bucket/abc"
 	assert.Equal(t, expected, preservationBucket.URLFor("abc"))
@@ -43,4 +43,54 @@ func TestHostsURL(t *testing.T) {
 	preservationBucket.Region = constants.RegionWasabiUSWest1
 	assert.False(t, preservationBucket.HostsURL(url1))
 	assert.True(t, preservationBucket.HostsURL(url2))
+}
+
+func TestGetHostNameWithRegion(t *testing.T) {
+	b := getBucket()
+	assert.Equal(t, "s3.us-east-2.flava.flave", b.GetHostNameWithRegion())
+
+	b.Host = "flava.flave"
+	assert.Equal(t, "s3.us-east-2.flava.flave", b.GetHostNameWithRegion())
+
+	b.Host = "s3.amazonaws.com"
+	b.Region = constants.RegionAWSUSWest1
+	assert.Equal(t, "s3.us-west-1.amazonaws.com", b.GetHostNameWithRegion())
+
+	b.Host = "amazonaws.com"
+	assert.Equal(t, "s3.us-west-1.amazonaws.com", b.GetHostNameWithRegion())
+
+	b.Host = "s3.us-west-1.amazonaws.com"
+	assert.Equal(t, "s3.us-west-1.amazonaws.com", b.GetHostNameWithRegion())
+
+	b.Host = "wasabisys.com"
+	assert.Equal(t, "s3.us-west-1.wasabisys.com", b.GetHostNameWithRegion())
+
+	b.Host = "s3.wasabisys.com"
+	assert.Equal(t, "s3.us-west-1.wasabisys.com", b.GetHostNameWithRegion())
+
+	b.Host = "s3.us-west-1.wasabisys.com"
+	assert.Equal(t, "s3.us-west-1.wasabisys.com", b.GetHostNameWithRegion())
+}
+
+func TestRegionIsEmbedded(t *testing.T) {
+	b := getBucket()
+	assert.False(t, b.RegionIsEmbeddedInHostName())
+
+	b.Host = "s3.amazonaws.com"
+	assert.False(t, b.RegionIsEmbeddedInHostName())
+
+	b.Host = "amazonaws.com"
+	assert.False(t, b.RegionIsEmbeddedInHostName())
+
+	b.Host = "s3.us-west-1.amazonaws.com"
+	assert.True(t, b.RegionIsEmbeddedInHostName())
+
+	b.Host = "wasabisys.com"
+	assert.False(t, b.RegionIsEmbeddedInHostName())
+
+	b.Host = "s3.wasabisys.com"
+	assert.False(t, b.RegionIsEmbeddedInHostName())
+
+	b.Host = "s3.us-west-1.wasabisys.com"
+	assert.True(t, b.RegionIsEmbeddedInHostName())
 }

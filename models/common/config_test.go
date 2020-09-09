@@ -68,15 +68,15 @@ func TestNewConfig(t *testing.T) {
 	}
 }
 
-func TestPerservationBucketsFor(t *testing.T) {
+func TestPreservationBucketsFor(t *testing.T) {
 	config := common.NewConfig()
-	preservationBuckets := config.PerservationBucketsFor(constants.StorageStandard)
+	preservationBuckets := config.PreservationBucketsFor(constants.StorageStandard)
 	require.Equal(t, 2, len(preservationBuckets))
 	for _, preservationBucket := range preservationBuckets {
 		assert.Equal(t, constants.StorageStandard, preservationBucket.OptionName)
 	}
 
-	preservationBuckets = config.PerservationBucketsFor(constants.StorageWasabiVA)
+	preservationBuckets = config.PreservationBucketsFor(constants.StorageWasabiVA)
 	require.Equal(t, 1, len(preservationBuckets))
 	assert.Equal(t, constants.StorageWasabiVA, preservationBuckets[0].OptionName)
 }
