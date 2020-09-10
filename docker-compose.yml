@@ -51,7 +51,7 @@ services:
       image: aptrust/apt_queue:${DOCKER_TAG_NAME:-latest}
       <<: *default
    apt_delete:
-      image: aptrust/apt_queue:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/apt_delete:${DOCKER_TAG_NAME:-latest}
       <<: *default
    bag_restorer:
       image: aptrust/bag_restorer:${DOCKER_TAG_NAME:-latest}
