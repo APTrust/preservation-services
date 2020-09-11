@@ -204,10 +204,14 @@ func (m *Manager) deleteFromPreservationStorage(bucket *common.PreservationBucke
 
 	// We can ignore this message because the item may have been deleted
 	// on a prior attempt.
-	if err != nil && strings.Contains(err.Error(), "key does not exist") {
-		m.Context.Logger.Warningf("Item %s %s/%s does not exist. May have been deleted in prior run.",
-			bucket.Provider, bucket.Bucket, key)
-		return nil
+	if err != nil {
+		if strings.Contains(err.Error(), "key does not exist") {
+			m.Context.Logger.Warningf("Item %s %s/%s does not exist. May have been deleted in prior run.", bucket.Provider, bucket.Bucket, key)
+			return nil
+		}
+		m.Context.Logger.Errorf("Attempt to delete item %s %s/%s failed. Provider returned: %v", bucket.Provider, bucket.Bucket, key, err)
+	} else {
+		m.Context.Logger.Infof("Delete item %s %s/%s", bucket.Provider, bucket.Bucket, key)
 	}
 
 	// Other errors are permission denied, bucket does not exist, conflict,
