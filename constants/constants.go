@@ -130,11 +130,10 @@ const (
 	StorageStandard            = "Standard"
 	StorageWasabiOR            = "Wasabi-OR"
 	StorageWasabiVA            = "Wasabi-VA"
-	TopicFileDelete            = "delete_file"
+	TopicDelete                = "delete_item"
 	TopicFileRestore           = "restore_file"
 	TopicFixity                = "fixity_check"
 	TopicGlacierRestore        = "restore_glacier"
-	TopicObjectDelete          = "delete_object"
 	TopicObjectRestore         = "restore_object"
 	TypeFile                   = "GenericFile"
 	TypeObject                 = "IntellectualObject"
@@ -259,11 +258,7 @@ func TopicFor(action, stage, fileIdentifier string) (topic string, err error) {
 	} else if action == ActionGlacierRestore {
 		topic = TopicGlacierRestore
 	} else if action == ActionDelete {
-		if fileIdentifier != "" {
-			topic = TopicFileDelete
-		} else {
-			topic = TopicObjectDelete
-		}
+		topic = TopicDelete
 	}
 	if topic == "" {
 		err = fmt.Errorf("No NSQ topic for %s/%s", action, stage)

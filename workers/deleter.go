@@ -23,8 +23,8 @@ func NewDeleter(bufSize, numWorkers, maxAttempts int) *Deleter {
 	settings := &Settings{
 		ChannelBufferSize: bufSize,
 		MaxAttempts:       maxAttempts,
-		NSQChannel:        constants.Deleter + "_worker_chan",
-		NSQTopic:          constants.Deleter,
+		NSQChannel:        constants.TopicDelete + "_worker_chan",
+		NSQTopic:          constants.TopicDelete,
 		NextQueueTopic:    "",
 		NextWorkItemStage: constants.StageResolve,
 		NumberOfWorkers:   numWorkers,

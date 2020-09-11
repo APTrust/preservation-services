@@ -69,6 +69,11 @@ func NewManager(context *common.Context, workItemID int, identifier, itemType, r
 //
 // It's up to the caller to ensure that the WorkItem has the proper approvals
 // before calling this method.
+//
+// After deleting files from storage, this method creates deletion PREMIS events
+// in Pharos for each file, and it changes the state of each file from "A" (active)
+// to "D" (deleted). For object deletion, it also changes the Pharos object's
+// state to "D" if all file deletions succeeded.
 func (m *Manager) Run() (count int, errors []*service.ProcessingError) {
 	if m.RequestedBy == "" || m.InstApprover == "" {
 		return 0, append(errors, m.Error(m.Identifier, fmt.Errorf("Deletion requires email of requestor and institutional approver"), true))

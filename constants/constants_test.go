@@ -92,13 +92,13 @@ var items = []Item{
 		Action:         constants.ActionDelete,
 		Stage:          "",
 		FileIdentifier: "",
-		Expected:       constants.TopicObjectDelete,
+		Expected:       constants.TopicDelete,
 	},
 	Item{
 		Action:         constants.ActionDelete,
 		Stage:          "",
 		FileIdentifier: "test.edu/bag/data/file.txt",
-		Expected:       constants.TopicFileDelete,
+		Expected:       constants.TopicDelete,
 	},
 }
 
