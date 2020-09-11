@@ -163,12 +163,12 @@ func (m *Manager) deleteFile(gf *registry.GenericFile) (errors []*service.Proces
 	}
 	// A single file can have multiple storage records.
 	for _, sr := range resp.StorageRecords() {
-		provider, bucket, key, err := m.Context.Config.ProviderBucketAndKeyFor(sr.URL)
+		bucket, key, err := m.Context.Config.BucketAndKeyFor(sr.URL)
 		if err != nil {
 			errors = append(errors, m.Error(gf.Identifier, err, false))
 			continue
 		}
-		err = m.deleteFromPreservationStorage(provider, bucket, key)
+		err = m.deleteFromPreservationStorage(bucket, key)
 		if err != nil {
 			errors = append(errors, m.Error(gf.Identifier, err, false))
 			continue
@@ -195,18 +195,18 @@ func (m *Manager) deleteFile(gf *registry.GenericFile) (errors []*service.Proces
 // deleteFromPreservationStroage deletes the copy of the file located
 // in this S3/Glacier bucket. Note that a file may be saved in multiple
 // buckets. This deletes from just one of those buckets.
-func (m *Manager) deleteFromPreservationStorage(provider, bucket, key string) error {
-	client := m.Context.S3Clients[provider]
+func (m *Manager) deleteFromPreservationStorage(bucket *common.PreservationBucket, key string) error {
+	client := m.Context.S3Clients[bucket.Provider]
 	if client == nil {
-		return fmt.Errorf("No S3 client for provider %s", provider)
+		return fmt.Errorf("No S3 client for provider %s", bucket.Provider)
 	}
-	err := client.RemoveObject(bucket, key)
+	err := client.RemoveObject(bucket.Bucket, key)
 
 	// We can ignore this message because the item may have been deleted
 	// on a prior attempt.
 	if err != nil && strings.Contains(err.Error(), "key does not exist") {
 		m.Context.Logger.Warningf("Item %s %s/%s does not exist. May have been deleted in prior run.",
-			provider, bucket, key)
+			bucket.Provider, bucket.Bucket, key)
 		return nil
 	}
 

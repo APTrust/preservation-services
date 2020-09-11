@@ -542,29 +542,26 @@ func (config *Config) ToJSON() string {
 	return string(data)
 }
 
-// ProviderBucketAndKeyFor returns the name of the S3 storage provider, S3 bucket,
-// and S3 key for the specified URL.
-func (config *Config) ProviderBucketAndKeyFor(urlStr string) (provider, bucket, key string, err error) {
+// BucketAndKeyFor returns the PreservationBucket object and S3 key
+// for the specified URL.
+func (config *Config) BucketAndKeyFor(urlStr string) (bucket *PreservationBucket, key string, err error) {
 	_url, err := url.Parse(urlStr)
 	if err != nil {
-		return "", "", "", err
+		return nil, "", err
 	}
 	parts := strings.SplitN(_url.Path, "/", 3) // parts[0] contains leading slash
 	if len(parts) > 2 {
-		bucket = parts[1]
 		key = parts[2]
 	} else {
-		return "", "", "", fmt.Errorf("URL %s is missing bucket name or key", urlStr)
+		return nil, "", fmt.Errorf("URL %s is missing key", urlStr)
 	}
 	for _, preservationBucket := range config.PreservationBuckets {
-		regionAndHost := fmt.Sprintf("s3.%s.%s", preservationBucket.Region, preservationBucket.Host)
-		if (_url.Host == preservationBucket.Host || _url.Host == regionAndHost) && preservationBucket.Bucket == bucket {
-			provider = preservationBucket.Provider
-			break
+		if preservationBucket.HostsURL(urlStr) {
+			bucket = preservationBucket
 		}
 	}
-	if provider == "" {
-		return "", "", "", fmt.Errorf("Cannot determine provider for URL %s", urlStr)
+	if bucket == nil {
+		return nil, "", fmt.Errorf("Cannot determine provider for URL %s", urlStr)
 	}
-	return provider, bucket, key, nil
+	return bucket, key, nil
 }

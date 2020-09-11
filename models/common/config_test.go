@@ -122,33 +122,36 @@ func TestToJson(t *testing.T) {
 	}
 }
 
-func TestProviderBucketAndKeyFor(t *testing.T) {
+func TestBucketAndKeyFor(t *testing.T) {
 	config := common.NewConfig()
 
-	provider, bucket, key, err := config.ProviderBucketAndKeyFor("https://localhost:9899/wasabi-or/1234")
-	assert.Equal(t, constants.StorageProviderWasabiOR, provider)
-	assert.Equal(t, config.BucketWasabiOR, bucket)
+	bucket, key, err := config.BucketAndKeyFor("https://s3.us-west-1.localhost:9899/wasabi-or/1234")
+	require.Nil(t, err)
+	require.NotNil(t, bucket)
+	assert.Equal(t, constants.StorageProviderWasabiOR, bucket.Provider)
+	assert.Equal(t, config.BucketWasabiOR, bucket.Bucket)
 	assert.Equal(t, "1234", key)
-	assert.Nil(t, err)
 
-	provider, bucket, key, err = config.ProviderBucketAndKeyFor("https://localhost:9899/glacier-deep-va/nested/key/5678")
-	assert.Equal(t, constants.StorageProviderAWS, provider)
-	assert.Equal(t, config.BucketGlacierDeepVA, bucket)
+	bucket, key, err = config.BucketAndKeyFor("https://s3.us-east-1.localhost:9899/glacier-deep-va/nested/key/5678")
+	require.Nil(t, err)
+	require.NotNil(t, bucket)
+	assert.Equal(t, constants.StorageProviderAWS, bucket.Provider)
+	assert.Equal(t, config.BucketGlacierDeepVA, bucket.Bucket)
 	assert.Equal(t, "nested/key/5678", key)
-	assert.Nil(t, err)
 
 	// With region prefix
-	provider, bucket, key, err = config.ProviderBucketAndKeyFor("https://s3.us-east-1.localhost:9899/preservation-va/nested/key/5678")
-	assert.Equal(t, constants.StorageProviderAWS, provider)
-	assert.Equal(t, config.BucketStandardVA, bucket)
+	bucket, key, err = config.BucketAndKeyFor("https://s3.us-east-1.localhost:9899/preservation-va/nested/key/5678")
+	require.Nil(t, err)
+	require.NotNil(t, bucket)
+	assert.Equal(t, constants.StorageProviderAWS, bucket.Provider)
+	assert.Equal(t, config.BucketStandardVA, bucket.Bucket)
 	assert.Equal(t, "nested/key/5678", key)
-	assert.Nil(t, err)
 
 	// Not bucket or key
-	provider, bucket, key, err = config.ProviderBucketAndKeyFor("https://localhost:9899")
+	bucket, key, err = config.BucketAndKeyFor("https://localhost:9899")
 	assert.NotNil(t, err)
 
 	// Unknown provider
-	provider, bucket, key, err = config.ProviderBucketAndKeyFor("https://example.com/wont-work")
+	bucket, key, err = config.BucketAndKeyFor("https://example.com/wont-work")
 	assert.NotNil(t, err)
 }

@@ -6,7 +6,7 @@ import (
 
 // StorageRecord describes where a GenericFile is stored in
 // preservation. Each GenericFile can have multiple StorageRecords.
-// See common.Config.ProviderBucketAndKeyFor(url) to extract
+// See common.Config.BucketAndKeyFor(url) to extract
 // provider, bucket and key info from the URL.
 type StorageRecord struct {
 	GenericFileID int    `json:"generic_file_id"`
