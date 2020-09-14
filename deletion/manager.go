@@ -2,6 +2,7 @@ package deletion
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/network"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -209,6 +211,10 @@ func (m *Manager) deleteFromPreservationStorage(bucket *common.PreservationBucke
 			m.Context.Logger.Warningf("Item %s %s/%s does not exist. May have been deleted in prior run.", bucket.Provider, bucket.Bucket, key)
 			return nil
 		}
+		if err.Error() == "Access Denied" && strings.Contains(bucket.Host, "wasabi") {
+			err = fmt.Errorf("%v - Note that Wasabi has a minimum storage period of 30 days. Deletions before then will be denied.", err)
+		}
+
 		m.Context.Logger.Errorf("Attempt to delete item %s %s/%s failed. Provider returned: %v", bucket.Provider, bucket.Bucket, key, err)
 	} else {
 		m.Context.Logger.Infof("Delete item %s %s/%s", bucket.Provider, bucket.Bucket, key)
@@ -264,7 +270,19 @@ func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.S
 		UpdatedAt:                    now,
 	}
 
-	resp := m.Context.PharosClient.PremisEventSave(event)
+	// If recording the deletion PREMIS event fails with a 502,
+	// then we won't be able to change the GenericFile state to "D".
+	// 502s occur sporadically when Pharos is so busy that Nginx
+	// can't forward the request. See https://trello.com/c/pI16xrcD
+	// for this particular ticket.
+	var resp *network.PharosResponse
+	for i := 0; i < 3; i++ {
+		resp = m.Context.PharosClient.PremisEventSave(event)
+		if resp.Response.StatusCode != http.StatusBadGateway {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
 	return resp.Error
 }
 
