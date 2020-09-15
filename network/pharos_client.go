@@ -555,6 +555,9 @@ func (client *PharosClient) ChecksumGet(id int) *PharosResponse {
 // * generic_file_identifier - The identifier of the file to which
 //   the checksum belongs.
 // * algorithm - The checksum algorithm (constants.AldMd5, constants.AlgSha256)
+//
+// Pharos should support order and limit for this call, but it doesn't.
+// Order is "datetime desc" by default, and limit cannot be set.
 func (client *PharosClient) ChecksumList(params url.Values) *PharosResponse {
 	// Set up the response object
 	resp := NewPharosResponse(PharosChecksum)

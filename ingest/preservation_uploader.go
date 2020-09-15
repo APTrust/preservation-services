@@ -190,6 +190,7 @@ func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.Ing
 		uploader.Context.Logger.Infof("Error getting source object for %s (%s/%s): %v", ingestFile.Identifier(), preservationBucket.Provider, preservationBucket.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
+	defer srcObject.Close()
 	putOptions, err := ingestFile.GetPutOptions()
 	if err != nil {
 		uploader.Context.Logger.Infof("Error getting PutOptions for %s (%s/%s): %v", ingestFile.Identifier(), preservationBucket.Provider, preservationBucket.Bucket, err)
