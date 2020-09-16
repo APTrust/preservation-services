@@ -126,7 +126,7 @@ func (c *Checker) CalculateFixity(gf *registry.GenericFile) (fixity, url string,
 	sha256Hash := sha256.New()
 	_, err = io.Copy(sha256Hash, obj)
 	if err != nil {
-		err = fmt.Errorf("Error streaming S3 file through hash function: %v", err)
+		err = fmt.Errorf("Error streaming S3 file %s/%s through hash function: %v", preservationBucket.Bucket, gf.UUID(), err)
 		return "", storageRecord.URL, err
 	}
 	fixity = fmt.Sprintf("%x", sha256Hash.Sum(nil))
@@ -158,6 +158,7 @@ func (c *Checker) GetFixityEvent(gf *registry.GenericFile, url, expectedFixity, 
 	if expectedFixity != actualFixity {
 		outcome = string(constants.StatusFailed)
 		outcomeInformation = fmt.Sprintf("Fixity did not match at %s. Expected %s, got %s", url, expectedFixity, actualFixity)
+		c.Context.Logger.Errorf("GenericFile %s: %s", gf.Identifier, outcomeInformation)
 	}
 	return &registry.PremisEvent{
 		Agent:                        agent,

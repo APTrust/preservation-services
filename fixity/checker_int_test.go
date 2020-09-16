@@ -3,6 +3,7 @@
 package fixity_test
 
 import (
+	"fmt"
 	"path"
 	"testing"
 	"time"
@@ -100,23 +101,44 @@ func getGenericFile(t *testing.T, context *common.Context) *registry.GenericFile
 		Size:                         15,
 		State:                        constants.StateActive,
 		StorageOption:                constants.StorageStandard,
-		URI:                          "https://example.com/00000000",
+		URI:                          fmt.Sprintf("https://example.com/%s", fileUUID),
 	}
 }
 
 func TestNewChecker(t *testing.T) {
-	identifier := "test.edu/bag/data/file.txt"
 	context := common.NewContext()
-	checker := fixity.NewChecker(context, identifier)
+	checker := fixity.NewChecker(context, fileIdentifier)
 	require.NotNil(t, checker)
 	assert.Equal(t, context, checker.Context)
-	assert.Equal(t, identifier, checker.Identifier)
+	assert.Equal(t, fileIdentifier, checker.Identifier)
 }
 
 func TestRun_FixityMatch(t *testing.T) {
 	setup(t)
+	context := common.NewContext()
+	checker := fixity.NewChecker(context, fileIdentifier)
+	count, errors := checker.Run()
+	assert.Equal(t, 1, count)
+	assert.Empty(t, errors)
 }
 
-func TestRun_FixityMismatch(t *testing.T) {
+func TestSupportingMethods(t *testing.T) {
 	setup(t)
+	context := common.NewContext()
+	checker := fixity.NewChecker(context, fileIdentifier)
+
+	// Need to get GenericFile with StorageRecords
+	gf := context.PharosClient.GenericFileGet(fileIdentifier).GenericFile()
+	actualFixity, url, err := checker.CalculateFixity(gf)
+	assert.Equal(t, expectedFixity, actualFixity)
+	assert.Equal(t, "https://s3.us-east-1.localhost:9899/preservation-va/8dc5ba50-4a53-4cfc-bb27-6f5e799ace53", url)
+	assert.Nil(t, err)
+
+	matched, err := checker.RecordFixityEvent(gf, url, expectedFixity, actualFixity)
+	assert.True(t, matched)
+	require.Nil(t, err)
+
+	matched, err = checker.RecordFixityEvent(gf, url, expectedFixity, "this-will-not-match")
+	assert.False(t, matched)
+	require.Nil(t, err)
 }
