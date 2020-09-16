@@ -37,7 +37,7 @@ func IsWrongRestorationType(context *common.Context, workItem *registry.WorkItem
 	if expectedType == constants.RestorationTypeFile && workItem.GenericFileIdentifier == "" {
 		message = fmt.Sprintf("Rejecting WorkItem %d because it's an object restoration and does not belong in the file restoration queue.", workItem.ID)
 	} else if expectedType == constants.RestorationTypeObject && workItem.GenericFileIdentifier != "" {
-		fmt.Sprintf("Rejecting WorkItem %d because it's a single-file restoration and does not belong in the bag/object restoration queue.", workItem.ID)
+		message = fmt.Sprintf("Rejecting WorkItem %d because it's a single-file restoration and does not belong in the bag/object restoration queue.", workItem.ID)
 	}
 	if message != "" {
 		workItem.Retry = false
