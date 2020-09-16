@@ -38,13 +38,6 @@ func NewChecker(context *common.Context, identifier string) *Checker {
 }
 
 func (c *Checker) Run() (count int, errors []*service.ProcessingError) {
-	// Get GenericFile with storage records.
-	// Reject if file is Glacier-only.
-	// Get current sha256 from Pharos.
-	// Choose the best copy to check fixity on.
-	// Fetch and calculate sha256.
-	// Compare to known value
-
 	gf, err := c.GetGenericFile()
 	if err != nil {
 		errors = append(errors, c.Error(err, true))
