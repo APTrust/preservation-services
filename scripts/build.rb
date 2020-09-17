@@ -9,6 +9,7 @@ class Build
     @output_dir = File.expand_path(File.join(__dir__, "..", "bin", "go-bin"))
     @sources = [
       "apt_delete/apt_delete.go",
+      "apt_fixity/apt_fixity.go",
       "apt_queue/apt_queue.go",
       "bag_restorer/bag_restorer.go",
       "file_restorer/file_restorer.go",
