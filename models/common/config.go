@@ -37,6 +37,7 @@ type Config struct {
 	LogDir                     string
 	LogLevel                   logging.Level
 	MaxDaysSinceFixityCheck    int
+	MaxFixityItemsPerRun       int
 	MaxFileSize                int64
 	MaxWorkerAttempts          int
 	NsqLookupd                 string
@@ -46,6 +47,7 @@ type Config struct {
 	PharosAPIVersion           string
 	PharosURL                  string
 	ProfilesDir                string
+	QueueFixityInterval        time.Duration
 	RedisDefaultDB             int
 	RedisPassword              string `json:"-"`
 	RedisRetries               int
@@ -134,6 +136,7 @@ func loadConfig() *Config {
 		LogLevel:                   getLogLevel(v.GetString("LOG_LEVEL")),
 		MaxDaysSinceFixityCheck:    v.GetInt("MAX_DAYS_SINCE_LAST_FIXITY"),
 		MaxFileSize:                v.GetInt64("MAX_FILE_SIZE"),
+		MaxFixityItemsPerRun:       v.GetInt("MAX_FIXITY_ITEMS_PER_RUN"),
 		MaxWorkerAttempts:          v.GetInt("MAX_WORKER_ATTEMPTS"),
 		NsqLookupd:                 v.GetString("NSQ_LOOKUPD"),
 		NsqURL:                     v.GetString("NSQ_URL"),
@@ -142,6 +145,7 @@ func loadConfig() *Config {
 		PharosAPIVersion:           v.GetString("PHAROS_API_VERSION"),
 		PharosURL:                  v.GetString("PHAROS_URL"),
 		ProfilesDir:                v.GetString("PROFILES_DIR"),
+		QueueFixityInterval:        v.GetDuration("QUEUE_FIXITY_INTERVAL"),
 		RedisDefaultDB:             v.GetInt("REDIS_DEFAULT_DB"),
 		RedisPassword:              v.GetString("REDIS_PASSWORD"),
 		RedisRetries:               v.GetInt("REDIS_RETRIES"),

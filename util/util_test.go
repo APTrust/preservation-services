@@ -286,3 +286,8 @@ func TestProjectRoot(t *testing.T) {
 	assert.True(t, len(projectRoot) > 2)
 	assert.True(t, strings.Contains(projectRoot, string(os.PathSeparator)))
 }
+
+func TestMin(t *testing.T) {
+	assert.Equal(t, 2, util.Min(2, 10))
+	assert.Equal(t, 2, util.Min(10, 2))
+}

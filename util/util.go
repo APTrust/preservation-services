@@ -167,3 +167,13 @@ func TestsAreRunning() bool {
 func RunningInCI() bool {
 	return os.Getenv("TRAVIS_BUILD_DIR") != ""
 }
+
+// Min returns the minimum of x or y without all the casting required
+// by the math package.
+func Min(x, y int) int {
+	if x < y {
+		return x
+	} else {
+		return y
+	}
+}

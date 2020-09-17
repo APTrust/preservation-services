@@ -53,11 +53,11 @@ func NewNSQClient(url string) *NSQClient {
 // Param workItemId is the id of the WorkItem record in Pharos we want to queue.
 func (client *NSQClient) Enqueue(topic string, workItemID int) error {
 	idAsString := strconv.Itoa(workItemID)
-	return client.enqueueString(topic, idAsString)
+	return client.EnqueueString(topic, idAsString)
 }
 
 // EnqueueString posts string data to the specified NSQ topic
-func (client *NSQClient) enqueueString(topic string, data string) error {
+func (client *NSQClient) EnqueueString(topic string, data string) error {
 	url := fmt.Sprintf("%s/pub?topic=%s", client.URL, topic)
 	resp, err := http.Post(url, "text/html", bytes.NewBuffer([]byte(data)))
 	if err != nil {
