@@ -34,7 +34,7 @@ func main() {
 
 func printHelp() {
 	message := `
-apt_queue queues WorkItems for fixity check, deletion and restoration in NSQ
+apt_queue queues WorkItems for deletion and restoration in NSQ
 
 When running as a service (i.e. withouth --run-once), this relies on the
 config setting INGEST_APT_QUEUE_INTERVAL to determine how long to wait

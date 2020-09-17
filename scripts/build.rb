@@ -11,6 +11,7 @@ class Build
       "apt_delete/apt_delete.go",
       "apt_fixity/apt_fixity.go",
       "apt_queue/apt_queue.go",
+      "apt_queue_fixity/apt_queue_fixity.go",
       "bag_restorer/bag_restorer.go",
       "file_restorer/file_restorer.go",
       "glacier_restorer/glacier_restorer.go",

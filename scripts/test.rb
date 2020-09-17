@@ -137,7 +137,7 @@ class TestRunner
     build_ingest_services
     init_for_integration
     `redis-cli flushall`
-    start_ingest_services(["ingest_bucket_reader", "apt_queue"])
+    start_ingest_services(["ingest_bucket_reader", "apt_queue", "apt_queue_fixity"])
     puts ">> NSQ: 'http://localhost:4171'"
     puts ">> Minio: 'http://localhost:9899' login/pwd -> minioadmin/minioadmin"
     puts ">> Pharos: 'http://localhost:9292' login/pwd -> system@aptrust.org/password"
