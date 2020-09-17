@@ -81,13 +81,14 @@ func (q *QueueFixity) run() {
 	// "not_checked_since" queries.
 	params := url.Values{}
 	itemsAdded := 0
-	params.Set("not_checked_since", sinceWhen.Format(time.RFC3339))
 	params.Set("per_page", strconv.Itoa(perPage))
 	params.Set("page", "1")
 	params.Set("sort", "last_fixity_check") // takes advantage of SQL index
 	if q.IdentifierLike != "" {
 		params.Set("identifier_like", q.IdentifierLike)
 		q.Context.Logger.Infof("Queuing only files whose identifier contains %s", q.IdentifierLike)
+	} else {
+		params.Set("not_checked_since", sinceWhen.Format(time.RFC3339))
 	}
 	for {
 		resp := q.Context.PharosClient.GenericFileList(params)
