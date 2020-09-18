@@ -52,18 +52,13 @@ of items to queue in a single run.
 You can also run this as a one-off job with the --run-once
 flag. It will perform one scan and then exit.
 
-You can also supply a command-line argment to queue only files whose
-identifiers are like the given string. For example, this will queue
-files whose identifiers begin with the specified string:
-
-$ apt_queue_fixity 'test.edu/bag-of-photots/data/image01'
-
-While this will queue the file matching the exact identifier:
+You can also supply a command-line argment to queue a specific generic file.
+For example, this will queue the file matching the exact identifier:
 
 $ apt_queue_fixity 'test.edu/bag-of-photots/data/image01.jpg'
 
 If you do specify a file identifier, this app will run in --run-once
-mode, since it doesn't make sense to queue the same file ever hour.
+mode, since it doesn't make sense to queue the same file every hour.
 `
 	fmt.Println(message)
 	fmt.Println(cli.EnvMessage)

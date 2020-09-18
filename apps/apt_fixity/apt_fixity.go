@@ -20,10 +20,8 @@ func main() {
 	// If anything goes wrong, this panics.
 	// Otherwise, it starts handling NSQ messages immediately.
 	worker := workers.NewFixityChecker(
-		//opts.ChannelBufferSize,
-		//opts.NumWorkers,
-		100,
-		4,
+		opts.ChannelBufferSize,
+		opts.NumWorkers,
 		opts.MaxAttempts,
 	)
 

@@ -12,17 +12,16 @@ import (
 )
 
 type QueueFixity struct {
-	Context        *common.Context
-	IdentifierLike string
+	Context    *common.Context
+	Identifier string
 }
 
 // NewQueueFixity creates a new worker to push files needing
 // a fixity check into the NSQ.
 //
-// The optional param identifierLike can be an exact or partial
-// GenericFile identifier. If provided, only items matching
-// identifierLike will be queued. This is useful for manual testing
-// and spot checks.
+// The optional param identifier is a GenericFile identifier.
+// If provided, only that item will be queued. This is useful
+// for manual testing and spot checks.
 //
 // This relies on these config settings:
 //
@@ -37,10 +36,10 @@ type QueueFixity struct {
 // to queue per run. In production, this is usually 2500, though
 // it could be set higher when we have the bandwidth and want to
 // clear out backlogs.
-func NewQueueFixity(identifierLike string) *QueueFixity {
+func NewQueueFixity(identifier string) *QueueFixity {
 	return &QueueFixity{
-		Context:        common.NewContext(),
-		IdentifierLike: identifierLike,
+		Context:    common.NewContext(),
+		Identifier: identifier,
 	}
 }
 
@@ -68,6 +67,14 @@ func (q *QueueFixity) RunAsService() {
 // adds the Identifier of each file to the NSQ fixity_check topic.
 // It stops after queuing maxFiles.
 func (q *QueueFixity) run() {
+	if q.Identifier != "" {
+		q.queueOne()
+	} else {
+		q.queueList()
+	}
+}
+
+func (q *QueueFixity) queueList() {
 	// Get to work. Note that we don't have to filter on storage option
 	// because Pharos now knows to exclude Glacier-only files from
 	// "not_checked_since" queries.
@@ -77,16 +84,13 @@ func (q *QueueFixity) run() {
 	params.Set("per_page", strconv.Itoa(perPage))
 	params.Set("page", "1")
 	params.Set("sort", "last_fixity_check") // takes advantage of SQL index
-	if q.IdentifierLike != "" {
-		params.Set("identifier_like", q.IdentifierLike)
-		params.Set("not_checked_since", time.Now().UTC().Format(time.RFC3339))
-		q.Context.Logger.Infof("Queuing only files whose identifier contains %s", q.IdentifierLike)
-	} else {
-		hours := q.Context.Config.MaxDaysSinceFixityCheck * 24 * -1
-		sinceWhen := time.Now().Add(time.Duration(hours) * time.Hour).UTC()
-		params.Set("not_checked_since", sinceWhen.Format(time.RFC3339))
-		q.Context.Logger.Infof("Queuing up to %d files not checked since %s to topic %s", q.Context.Config.MaxFixityItemsPerRun, sinceWhen.Format(time.RFC3339), constants.TopicFixity)
-	}
+
+	hours := q.Context.Config.MaxDaysSinceFixityCheck * 24 * -1
+	sinceWhen := time.Now().Add(time.Duration(hours) * time.Hour).UTC()
+	params.Set("not_checked_since", sinceWhen.Format(time.RFC3339))
+
+	q.Context.Logger.Infof("Queuing up to %d files not checked since %s to topic %s", q.Context.Config.MaxFixityItemsPerRun, sinceWhen.Format(time.RFC3339), constants.TopicFixity)
+
 	for {
 		resp := q.Context.PharosClient.GenericFileList(params)
 		q.Context.Logger.Infof("GET %s", resp.Request.URL)
@@ -103,6 +107,15 @@ func (q *QueueFixity) run() {
 		}
 		params = resp.ParamsForNextPage()
 	}
+}
+
+func (q *QueueFixity) queueOne() {
+	resp := q.Context.PharosClient.GenericFileGet(q.Identifier)
+	if resp.Error != nil {
+		q.Context.Logger.Errorf("Error getting GenericFile list from Pharos: %s", resp.Error)
+		return
+	}
+	q.addToNSQ(resp.GenericFile())
 }
 
 func (q *QueueFixity) addToNSQ(gf *registry.GenericFile) bool {
