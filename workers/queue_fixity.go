@@ -68,17 +68,10 @@ func (q *QueueFixity) RunAsService() {
 // adds the Identifier of each file to the NSQ fixity_check topic.
 // It stops after queuing maxFiles.
 func (q *QueueFixity) run() {
-
-	// Set up basic params
-	hours := q.Context.Config.MaxDaysSinceFixityCheck * 24 * -1
-	sinceWhen := time.Now().Add(time.Duration(hours) * time.Hour).UTC()
-	perPage := util.Min(100, q.Context.Config.MaxFixityItemsPerRun)
-
-	q.Context.Logger.Infof("Queuing up to %d files not checked since %s to topic %s", q.Context.Config.MaxFixityItemsPerRun, sinceWhen.Format(time.RFC3339), constants.TopicFixity)
-
 	// Get to work. Note that we don't have to filter on storage option
 	// because Pharos now knows to exclude Glacier-only files from
 	// "not_checked_since" queries.
+	perPage := util.Min(100, q.Context.Config.MaxFixityItemsPerRun)
 	params := url.Values{}
 	itemsAdded := 0
 	params.Set("per_page", strconv.Itoa(perPage))
@@ -86,9 +79,13 @@ func (q *QueueFixity) run() {
 	params.Set("sort", "last_fixity_check") // takes advantage of SQL index
 	if q.IdentifierLike != "" {
 		params.Set("identifier_like", q.IdentifierLike)
+		params.Set("not_checked_since", time.Now().UTC().Format(time.RFC3339))
 		q.Context.Logger.Infof("Queuing only files whose identifier contains %s", q.IdentifierLike)
 	} else {
+		hours := q.Context.Config.MaxDaysSinceFixityCheck * 24 * -1
+		sinceWhen := time.Now().Add(time.Duration(hours) * time.Hour).UTC()
 		params.Set("not_checked_since", sinceWhen.Format(time.RFC3339))
+		q.Context.Logger.Infof("Queuing up to %d files not checked since %s to topic %s", q.Context.Config.MaxFixityItemsPerRun, sinceWhen.Format(time.RFC3339), constants.TopicFixity)
 	}
 	for {
 		resp := q.Context.PharosClient.GenericFileList(params)

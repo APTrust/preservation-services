@@ -43,8 +43,11 @@ func (c *Checker) Run() (count int, errors []*service.ProcessingError) {
 		errors = append(errors, c.Error(err, true))
 		return 0, errors
 	}
+	c.Context.Logger.Infof("Got Pharos record for %s", gf.Identifier)
 	if c.IsGlacierOnlyFile(gf) {
-		c.Context.Logger.Info("Skipping file %s because it's Glacier-only", gf.Identifier)
+		err = fmt.Errorf("Skipping file %s because it's Glacier-only", gf.Identifier)
+		c.Context.Logger.Warningf("%v", err)
+		errors = append(errors, c.Error(err, true))
 		return 0, errors
 	}
 	checksum, err := c.GetLatestSha256()
@@ -54,9 +57,11 @@ func (c *Checker) Run() (count int, errors []*service.ProcessingError) {
 	}
 	actualFixity, url, err := c.CalculateFixity(gf)
 	if err != nil {
+		c.Context.Logger.Error(err)
 		errors = append(errors, c.Error(err, true))
 		return 0, errors
 	}
+	c.Context.Logger.Infof("Preservation file %s has fixity %s", gf.Identifier, actualFixity)
 	fixityMatched, err := c.RecordFixityEvent(gf, url, checksum.Digest, actualFixity)
 	if err != nil {
 		errors = append(errors, c.Error(err, true))
@@ -66,6 +71,8 @@ func (c *Checker) Run() (count int, errors []*service.ProcessingError) {
 	if !fixityMatched {
 		err = fmt.Errorf("Fixity mismatch for %s in %s. Expected %s, got %s.", gf.Identifier, url, checksum.Digest, actualFixity)
 		errors = append(errors, c.Error(err, true))
+	} else {
+		c.Context.Logger.Infof("Fixity matched for %s", gf.Identifier)
 	}
 	return count, errors
 }
@@ -98,6 +105,8 @@ func (c *Checker) GetLatestSha256() (checksum *registry.Checksum, err error) {
 	}
 	if checksum == nil {
 		err = fmt.Errorf("Pharos returned no sha256 checksum for file %s", c.Identifier)
+	} else {
+		c.Context.Logger.Infof("Got checksum %s for file %s", checksum.Digest, c.Identifier)
 	}
 	return checksum, err
 }
@@ -106,12 +115,16 @@ func (c *Checker) CalculateFixity(gf *registry.GenericFile) (fixity, url string,
 	// TODO: Stream S3 download through sha256 hash.
 	preservationBucket, storageRecord, err := restoration.BestRestorationSource(c.Context, gf)
 	if err != nil {
+		c.Context.Logger.Errorf("Could not find restoration source for %s: %v", gf.Identifier, err)
 		return "", "", err
 	}
 	client := c.Context.S3Clients[preservationBucket.Provider]
 	if client == nil {
-		return "", "", fmt.Errorf("Cannot find S3 client for provider %s", preservationBucket.Provider)
+		err = fmt.Errorf("Cannot find S3 client for provider %s", preservationBucket.Provider)
+		c.Context.Logger.Error(err.Error())
+		return "", "", err
 	}
+	c.Context.Logger.Infof("Checking %s for file %s with UUID %s", preservationBucket.Bucket, gf.Identifier, gf.UUID())
 	obj, err := client.GetObject(
 		preservationBucket.Bucket,
 		gf.UUID(),

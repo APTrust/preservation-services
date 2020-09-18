@@ -14,8 +14,19 @@ import (
 )
 
 // FixityChecker is a worker that processes file and object deletion requests.
+// FixityChecker does not inherit from the Base worker because fixity checks
+// do not have associated WorkItems or Redis models. Much of the underlying
+// code in workers.Base handles WorkItem and Redis housekeeping that is not
+// required here. In fact, that code would fail, since there are no WorkItems
+// or Redis records to work with.
 type FixityChecker struct {
-	Base
+	Context           *common.Context
+	ProcessChannel    chan *Task
+	SuccessChannel    chan *Task
+	ErrorChannel      chan *Task
+	FatalErrorChannel chan *Task
+	Settings          *Settings
+	NSQConsumer       *nsq.Consumer
 }
 
 // NewFixityChecker creates a new FixityChecker worker. Param context is a
@@ -32,22 +43,13 @@ func NewFixityChecker(bufSize, numWorkers, maxAttempts int) *FixityChecker {
 		RequeueTimeout:    (20 * time.Second),
 	}
 	checker := &FixityChecker{
-		Base: Base{
-			Context:           common.NewContext(),
-			Settings:          settings,
-			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize),
-			ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),
-			SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
-			ErrorChannel:      make(chan *Task, settings.ChannelBufferSize),
-			FatalErrorChannel: make(chan *Task, settings.ChannelBufferSize),
-		},
+		Context:           common.NewContext(),
+		Settings:          settings,
+		ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),
+		SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
+		ErrorChannel:      make(chan *Task, settings.ChannelBufferSize),
+		FatalErrorChannel: make(chan *Task, settings.ChannelBufferSize),
 	}
-
-	// Set these methods on base with our custom versions.
-	// These methods are not defined at all in base. Failing
-	// to set them will result in nil pointers and crashes.
-	checker.Base.ShouldSkipThis = checker.ShouldSkipThis
-	checker.Base.GetTaskObject = checker.GetTaskObject
 
 	checker.Context.Logger.Info("FixityCheck worker started with the following settings:")
 	checker.Context.Logger.Info(settings.ToJSON())
@@ -71,44 +73,80 @@ func NewFixityChecker(bufSize, numWorkers, maxAttempts int) *FixityChecker {
 	return checker
 }
 
-// Overrides Base version of this method, because we're not really working
-// with a WorkItem. Unlike other queues, where the message body is a WorkItem
-// ID (int), in this queue, it's a GenericFile identifier (string).
-//
+// Tell NSQ we're listening
+func (c *FixityChecker) RegisterAsNsqConsumer() error {
+	config := nsq.NewConfig()
+	config.Set("heartbeat_interval", "10s")
+	config.Set("max_in_flight", c.Settings.ChannelBufferSize)
+	consumer, err := nsq.NewConsumer(c.Settings.NSQTopic, c.Settings.NSQChannel, config)
+	if err != nil {
+		return err
+	}
+	c.NSQConsumer = consumer
+	c.NSQConsumer.AddHandler(c)
+	c.NSQConsumer.ConnectToNSQLookupd(c.Context.Config.NsqLookupd)
+	c.Context.Logger.Info("Registered as NSQ consumer")
+	c.Context.Logger.Infof("Topic: %s, Channel: %s", c.Settings.NSQTopic, c.Settings.NSQChannel)
+	c.Context.Logger.Infof("Workers: %d", c.Settings.NumberOfWorkers)
+	c.Context.Logger.Infof("Channel Buffer Size: %d", c.Settings.ChannelBufferSize)
+	c.Context.Logger.Infof("Max Attempts: %d", c.Settings.MaxAttempts)
+	return nil
+}
+
 // This method omits a lot of WorkItem housekeeping that the other workers
 // need to do.
 func (c *FixityChecker) HandleMessage(message *nsq.Message) error {
 	gfIdentifier := strings.TrimSpace(string(message.Body))
-	workItem := &registry.WorkItem{
-		ID:                    -1,
-		GenericFileIdentifier: gfIdentifier,
-	}
-	workResult := c.GetWorkResult(workItem.ID)
-	task, err := c.GetTaskObject(message, workItem, workResult)
+	task, err := c.GetTaskObject(message, gfIdentifier)
 	if err != nil {
-		c.Context.Logger.Errorf("Could not get Task for WorkItem %d (%s): %v", workItem.ID, workItem.GenericFileIdentifier, err)
+		c.Context.Logger.Errorf("Could not get Task for WorkItem %s: %v", gfIdentifier, err)
 		return err
 	}
-	c.Context.Logger.Infof("Starting %s", gfIdentifier)
+	c.Context.Logger.Infof("Starting attempt %d for %s", message.Attempts, gfIdentifier)
 	c.ProcessChannel <- task
 	return nil
 }
 
+// ProcessItem calls task.Processor.Run() and then routes the
+// task to the SuccessChannel, the ErrorChannel, or the
+// FatalErrorChannel, depending on the outcome.
+func (c *FixityChecker) ProcessItem() {
+	for task := range c.ProcessChannel {
+		c.Context.Logger.Infof("GenericFile %s is in ProcessChannel", task.WorkItem.GenericFileIdentifier)
+		task.WorkResult.Start()
+		count, errors := task.Processor.Run()
+		task.WorkResult.Errors = errors
+		task.WorkResult.Finish()
+
+		c.Context.Logger.Infof("GenericFile %s: count %d", task.WorkItem.GenericFileIdentifier, count)
+
+		if task.WorkResult.HasFatalErrors() {
+			c.FatalErrorChannel <- task
+		} else if task.WorkResult.HasErrors() {
+			c.ErrorChannel <- task
+		} else {
+			c.SuccessChannel <- task
+		}
+	}
+}
+
 func (c *FixityChecker) ProcessSuccessChannel() {
 	for task := range c.SuccessChannel {
-		c.Context.Logger.Infof("File %s is in success channel", task.WorkItem.GenericFileIdentifier)
+		c.Context.Logger.Infof("File %s: fixity matched", task.WorkItem.GenericFileIdentifier)
 		task.NSQFinish()
 	}
 }
 
 func (c *FixityChecker) ProcessErrorChannel() {
 	for task := range c.ErrorChannel {
-		shouldRequeue := true
+		shouldRequeue := int(task.NSQMessage.Attempts) < c.Settings.MaxAttempts
 		c.Context.Logger.Warningf("File %s is in error channel", task.WorkItem.GenericFileIdentifier)
-		c.Context.Logger.Warningf("Non-fatal errors for WorkItem %s: %s", task.WorkItem.GenericFileIdentifier, task.WorkResult.NonFatalErrorMessage())
+		c.Context.Logger.Warningf("Non-fatal errors for file %s: %s", task.WorkItem.GenericFileIdentifier, task.WorkResult.NonFatalErrorMessage())
 		if shouldRequeue {
+			c.Context.Logger.Infof("Requeueing %s", task.WorkItem.GenericFileIdentifier)
 			task.NSQRequeue(c.Settings.RequeueTimeout)
 		} else {
+			c.Context.Logger.Infof("Not requeueing %s: max attempts exceeded", task.WorkItem.GenericFileIdentifier)
 			task.NSQFinish()
 		}
 	}
@@ -122,8 +160,14 @@ func (c *FixityChecker) ProcessFatalErrorChannel() {
 	}
 }
 
-func (c *FixityChecker) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
-	fixityChecker := fixity.NewChecker(c.Context, workItem.GenericFileIdentifier)
+func (c *FixityChecker) GetTaskObject(message *nsq.Message, gfIdentifier string) (*Task, error) {
+	fixityChecker := fixity.NewChecker(c.Context, gfIdentifier)
+	workItem := &registry.WorkItem{
+		ID:                    -1,
+		GenericFileIdentifier: gfIdentifier,
+	}
+	workResult := service.NewWorkResult(constants.ActionFixityCheck)
+	workResult.Attempt = int(message.Attempts)
 	task := &Task{
 		Processor:  fixityChecker,
 		NSQMessage: message,
@@ -131,12 +175,4 @@ func (c *FixityChecker) GetTaskObject(message *nsq.Message, workItem *registry.W
 		WorkResult: workResult,
 	}
 	return task, nil
-}
-
-// ShouldSkipThis returns true if there are any reasons not process this
-// WorkItem. This method always returns false. The only reason to skip
-// a fixity check is if the item is in Glacier-only storage. The underlying
-// FixityChecker will figure that out.
-func (c *FixityChecker) ShouldSkipThis(workItem *registry.WorkItem) bool {
-	return false
 }
