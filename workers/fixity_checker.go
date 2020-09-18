@@ -119,6 +119,7 @@ func (c *FixityChecker) ProcessItem() {
 		task.WorkResult.Finish()
 
 		// TODO: Test that items are going into the right channel here...
+		c.Context.Logger.Infof("GenericFile %s: count %d, errors %d", task.WorkItem.GenericFileIdentifier, count, len(errors))
 
 		if task.WorkResult.HasFatalErrors() {
 			c.FatalErrorChannel <- task
