@@ -87,3 +87,20 @@ sudo docker-compose logs -f ingest_staging_uploader
 To run the Redis CLI on staging:
 
 `docker run -it --rm redis redis-cli --version`
+
+## Running One-Off Fixity Checks on Staging
+
+To run one-off fixity checks on specific files on staging:
+
+Get the container id of the fixity queue worker with
+`sudo docker ps | grep apt_queue_fixity`
+
+Then, using that container id, run `sudo docker exec -it <container id> /bin/sh`
+to get a brain-dead shell.
+
+Since the executable is in the container's root directory, the following command
+will queue your file: `./apt_queue_fixity <generic file identifier>`
+
+Or you can do all this in one line with:
+
+`sudo docker exec -it <container id> /bin/sh -c "./apt_queue_fixity '<generic file identifier>'"`
