@@ -112,6 +112,7 @@ func (c *FixityChecker) HandleMessage(message *nsq.Message) error {
 // FatalErrorChannel, depending on the outcome.
 func (c *FixityChecker) ProcessItem() {
 	for task := range c.ProcessChannel {
+		task.NSQStart()
 		c.Context.Logger.Infof("GenericFile %s is in ProcessChannel", task.WorkItem.GenericFileIdentifier)
 		task.WorkResult.Start()
 		count, errors := task.Processor.Run()
