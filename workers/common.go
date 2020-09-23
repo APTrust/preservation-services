@@ -85,3 +85,25 @@ func GetRestorationObject(context *common.Context, workItem *registry.WorkItem, 
 		RestorationType:        restorationType,
 	}, nil
 }
+
+// QueueE2EWorkItem queues a WorkItem for post tests if the env variable
+// APT_E2E is set to "true".
+func QueueE2EWorkItem(context *common.Context, topic string, workItemID int) {
+	if context.Config.IsE2ETest() {
+		err := context.NSQClient.Enqueue(topic, workItemID)
+		if err != nil {
+			context.Logger.Errorf("E2E Queue Error %s/%d: %v", topic, workItemID, err)
+		}
+	}
+}
+
+// QueueE2EWorkItem queues a generic file identifier for post tests if the
+// env variable APT_E2E is set to "true".
+func QueueE2EIdentifier(context *common.Context, topic, identifier string) {
+	if context.Config.IsE2ETest() {
+		err := context.NSQClient.EnqueueString(topic, identifier)
+		if err != nil {
+			context.Logger.Errorf("E2E Queue Error %s/%d: %v", topic, identifier, err)
+		}
+	}
+}

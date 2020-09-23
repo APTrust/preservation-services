@@ -277,6 +277,9 @@ class TestRunner
       env['PHAROS_ROOT'] = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
 	  env['RBENV_VERSION'] = `cat #{ENV['PHAROS_ROOT']}/.ruby-version`.chomp
     end
+    if self.test_name == 'e2e'
+      env['APT_E2E'] = 'true'
+    end
     env['APT_CONFIG_DIR'] = File.expand_path(
       File.join(
         File.dirname(__FILE__),

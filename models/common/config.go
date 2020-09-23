@@ -212,6 +212,13 @@ func (config *Config) PreservationBucketsFor(storageOption string) []*Preservati
 	return preservationBuckets
 }
 
+// IsE2ETest returns true if the environment variable APT_E2E is set to "true".
+// This is set only during end-to-end (E2E) tests so we can queue up some
+// items for testing.
+func (config *Config) IsE2ETest() bool {
+	return os.Getenv("APT_E2E") == "true"
+}
+
 func getLogLevel(level string) logging.Level {
 	if level == "" {
 		level = "INFO"

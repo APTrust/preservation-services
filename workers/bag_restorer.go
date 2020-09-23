@@ -86,6 +86,9 @@ func (r *BagRestorer) ProcessSuccessChannel() {
 
 		// Tell NSQ this b is done with this message.
 		task.NSQFinish()
+
+		// For e2e tests, let the test worker know restoration succeeded
+		QueueE2EWorkItem(r.Context, constants.TopicE2ERestore, task.WorkItem.ID)
 	}
 }
 
@@ -111,6 +114,8 @@ func (r *BagRestorer) ProcessErrorChannel() {
 			task.NSQRequeue(r.Settings.RequeueTimeout)
 		} else {
 			task.NSQFinish()
+			// For e2e tests, let the test worker know this failed
+			QueueE2EWorkItem(r.Context, constants.TopicE2ERestore, task.WorkItem.ID)
 		}
 	}
 }
@@ -133,6 +138,9 @@ func (r *BagRestorer) ProcessFatalErrorChannel() {
 
 		// Tell NSQ we're done with this message.
 		task.NSQFinish()
+
+		// For e2e tests, let the test worker know this failed
+		QueueE2EWorkItem(r.Context, constants.TopicE2ERestore, task.WorkItem.ID)
 	}
 }
 

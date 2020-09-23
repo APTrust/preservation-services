@@ -136,6 +136,8 @@ func (c *FixityChecker) ProcessSuccessChannel() {
 	for task := range c.SuccessChannel {
 		c.Context.Logger.Infof("File %s: fixity matched", task.WorkItem.GenericFileIdentifier)
 		task.NSQFinish()
+		// When running e2e tests, queue this item for post tests
+		QueueE2EIdentifier(c.Context, constants.TopicE2EFixity, task.WorkItem.GenericFileIdentifier)
 	}
 }
 
@@ -150,6 +152,8 @@ func (c *FixityChecker) ProcessErrorChannel() {
 		} else {
 			c.Context.Logger.Infof("Not requeueing %s: max attempts exceeded", task.WorkItem.GenericFileIdentifier)
 			task.NSQFinish()
+			// When running e2e tests, queue this item for post tests
+			QueueE2EIdentifier(c.Context, constants.TopicE2EFixity, task.WorkItem.GenericFileIdentifier)
 		}
 	}
 }
@@ -159,6 +163,8 @@ func (c *FixityChecker) ProcessFatalErrorChannel() {
 		c.Context.Logger.Errorf("File %s is in fatal error channel", task.WorkItem.GenericFileIdentifier)
 		c.Context.Logger.Errorf("Fatal errors for file %s: %s", task.WorkItem.GenericFileIdentifier, task.WorkResult.FatalErrorMessage())
 		task.NSQFinish()
+		// When running e2e tests, queue this item for post tests
+		QueueE2EIdentifier(c.Context, constants.TopicE2EFixity, task.WorkItem.GenericFileIdentifier)
 	}
 }
 

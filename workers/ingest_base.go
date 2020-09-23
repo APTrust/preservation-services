@@ -98,6 +98,9 @@ func (b *IngestBase) ProcessSuccessChannel() {
 
 		// Tell NSQ this worker is done with this message.
 		task.NSQFinish()
+
+		// For e2e tests, let the test worker know this succeeded
+		b.QueueE2E(task)
 	}
 }
 
@@ -142,6 +145,8 @@ func (b *IngestBase) ProcessErrorChannel() {
 			task.NSQRequeue(b.Settings.RequeueTimeout)
 		} else {
 			task.NSQFinish()
+			// For e2e tests, let the test worker know this failed
+			b.QueueE2E(task)
 		}
 	}
 }
@@ -174,6 +179,9 @@ func (b *IngestBase) ProcessFatalErrorChannel() {
 
 		// Tell NSQ we're done with this message.
 		task.NSQFinish()
+
+		// For e2e tests, let the test worker know this failed
+		b.QueueE2E(task)
 	}
 }
 
@@ -429,4 +437,14 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 		}
 	}
 	return false
+}
+
+func (b *IngestBase) QueueE2E(task *Task) {
+	if b.Context.Config.IsE2ETest() && b.Settings.NextQueueTopic == "" {
+		e2eTopic := constants.TopicE2EIngest
+		if task.Processor.IngestObjectGet().IsReingest {
+			e2eTopic = constants.TopicE2EReingest
+		}
+		QueueE2EWorkItem(b.Context, e2eTopic, task.WorkItem.ID)
+	}
 }
