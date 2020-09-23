@@ -74,3 +74,48 @@ Tests should ensure the following in S3:
 
 Restoration tests don't need to check Redis, since restoration workers don't
 use Redis.
+
+## Test Files
+
+All files in the e2e directory should have the build tag `// +build e2e`
+
+### e2e_test.go
+
+* Upload all ingest test bags to receiving bucket.
+* Start the following workers:
+    * ingest_posttest.go
+    * reingest_posttest.go
+    * fixity_posttest.go
+    * restoration_posttest.go
+* When ingest topic reaches expected finished count, e2e should upload
+  bags for re-ingest.
+* When reingest topic reaches expected finished count, e2e should:
+    * queue one file from each bag for fixity check
+    * queue one file from each bag for restoration
+* After files have been restored, e2e shoud queue eac of the test bags
+  for restoration.
+* e2e will wait for workers to signal they are done (via NSQ)
+* e2e will print test results
+
+### Workers
+
+Worker tests should not use require, since a failure there can shut down the
+worker and prevent it from performing further tests.
+
+Each of these workers:
+
+* ingest_posttest.go
+* reingest_posttest.go
+* fixity_posttest.go
+* restoration_posttest.go
+
+Should do the following:
+
+* Test expected outcomes for each object and file
+* Tell e2e it's done by sending a message to an NSQ topic
+
+### Test Structures
+
+For each object and file, there should be one test struct containing expected
+info about the object and its files. These structs should be available to all
+of the test workers.
