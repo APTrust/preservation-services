@@ -9,7 +9,7 @@ require (
 	github.com/nsqio/go-nsq v1.0.8
 	github.com/nsqio/nsq v1.2.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/richardlehane/siegfried v1.8.0
+	github.com/richardlehane/siegfried v1.9.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
