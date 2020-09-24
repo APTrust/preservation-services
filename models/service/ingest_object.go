@@ -229,8 +229,9 @@ func (obj *IngestObject) FileIdentifier(filename string) string {
 // specified name.
 func (obj *IngestObject) GetTags(tagFile, tagName string) []*bagit.Tag {
 	tags := make([]*bagit.Tag, 0)
+	lcTagName := strings.ToLower(tagName)
 	for _, tag := range obj.Tags {
-		if tag.TagFile == tagFile && tag.TagName == tagName {
+		if tag.TagFile == tagFile && strings.ToLower(tag.TagName) == lcTagName {
 			tags = append(tags, tag)
 		}
 	}
