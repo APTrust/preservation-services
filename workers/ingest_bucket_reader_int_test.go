@@ -3,7 +3,6 @@
 package workers_test
 
 import (
-	"io/ioutil"
 	"net/url"
 	"path"
 	"testing"
@@ -70,12 +69,11 @@ func putBagsInTestReceiving(t *testing.T, context *common.Context) {
 }
 
 func getFileList(t *testing.T) []string {
-	filenames := make([]string, 0)
+	filenames := make([]string, 4)
 	dir := path.Join(testutil.PathToTestData(), "int_test_bags", "original")
-	files, err := ioutil.ReadDir(dir)
-	require.Nil(t, err)
-	for _, file := range files {
-		filenames = append(filenames, path.Join(dir, file.Name()))
-	}
+	filenames[0] = path.Join(dir, "test.edu.apt-001.tar")
+	filenames[1] = path.Join(dir, "test.edu.apt-002.tar")
+	filenames[2] = path.Join(dir, "test.edu.btr-001.tar")
+	filenames[3] = path.Join(dir, "test.edu.btr-002.tar")
 	return filenames
 }
