@@ -347,7 +347,11 @@ func (m *MetadataGatherer) setStorageOption() {
 		// but if it's present, let's honor it.
 		tag := m.IngestObject.GetTag("bag-info.txt", "APTrust-Storage-Option")
 		if tag != nil {
-			m.IngestObject.StorageOption = tag.Value
+			if util.StringListContains(constants.StorageOptions, tag.Value) {
+				m.IngestObject.StorageOption = tag.Value
+			} else {
+				m.Context.Logger.Warningf("Ignoring invalide BTR storage option %s. Will use Standard storage.", tag.Value)
+			}
 		}
 	}
 }
