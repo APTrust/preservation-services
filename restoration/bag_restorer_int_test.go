@@ -220,6 +220,6 @@ func testCleanup(t *testing.T, r *restoration.BagRestorer) {
 }
 
 func testRestorationURL(t *testing.T, restObj *service.RestorationObject) {
-	expectedURL := fmt.Sprintf("%s%s/%s", constants.AWSBucketPrefix, restObj.RestorationTarget, restObj.Identifier)
+	expectedURL := fmt.Sprintf("%s%s/%s.tar", constants.AWSBucketPrefix, restObj.RestorationTarget, restObj.Identifier)
 	assert.Equal(t, expectedURL, restObj.URL)
 }

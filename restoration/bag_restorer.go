@@ -108,7 +108,7 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 
 	if len(errors) == 0 {
 		r.RestorationObject.AllFilesRestored = true
-		r.RestorationObject.URL = fmt.Sprintf("%s%s/%s", constants.AWSBucketPrefix, r.RestorationObject.RestorationTarget, r.RestorationObject.Identifier)
+		r.RestorationObject.URL = fmt.Sprintf("%s%s/%s.tar", constants.AWSBucketPrefix, r.RestorationObject.RestorationTarget, r.RestorationObject.Identifier)
 	}
 
 	return fileCount, errors
