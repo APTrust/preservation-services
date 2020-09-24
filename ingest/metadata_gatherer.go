@@ -343,9 +343,9 @@ func (m *MetadataGatherer) setStorageOption() {
 			m.IngestObject.StorageOption = tag.Value
 		}
 	} else {
-		// BTR bag. Storage-Option is not a standard tag in this profile,
+		// BTR bag. APTrust-Storage-Option is not a standard tag in this profile,
 		// but if it's present, let's honor it.
-		tag := m.IngestObject.GetTag("bag-info.txt", "Storage-Option")
+		tag := m.IngestObject.GetTag("bag-info.txt", "APTrust-Storage-Option")
 		if tag != nil {
 			m.IngestObject.StorageOption = tag.Value
 		}

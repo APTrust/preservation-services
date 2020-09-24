@@ -199,6 +199,16 @@ func TestStorageOptionIsSetCorrectly(t *testing.T) {
 			StorageOption: constants.StorageGlacierVA,
 			Md5Sum:        "73232aac4ebcb95cb71f8094094596d4",
 		},
+		{
+			Name:          "test.edu.btr-glacier-deep-oh.tar",
+			StorageOption: constants.StorageGlacierDeepOH,
+			Md5Sum:        "4d176a64a5395d71683c678f43c7b423",
+		},
+		{
+			Name:          "test.edu.btr-wasabi-or.tar",
+			StorageOption: constants.StorageWasabiOR,
+			Md5Sum:        "599ec9589e7a17bddb51506911b64762",
+		},
 	}
 
 	for i, bag := range bags {
