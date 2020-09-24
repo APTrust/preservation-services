@@ -350,7 +350,7 @@ func (m *MetadataGatherer) setStorageOption() {
 			if util.StringListContains(constants.StorageOptions, tag.Value) {
 				m.IngestObject.StorageOption = tag.Value
 			} else {
-				m.Context.Logger.Warningf("Ignoring invalide BTR storage option %s. Will use Standard storage.", tag.Value)
+				m.Context.Logger.Warningf("Ignoring invalid BTR storage option %s. Will use Standard storage.", tag.Value)
 			}
 		}
 	}
