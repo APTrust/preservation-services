@@ -1,6 +1,7 @@
 package util
 
 import (
+	"io"
 	"os"
 	"os/user"
 	"strings"
@@ -39,4 +40,24 @@ func LooksSafeToDelete(dir string, minLength, minSeparators int) bool {
 	separator := string(os.PathSeparator)
 	separatorCount := (len(dir) - len(strings.Replace(dir, separator, "", -1)))
 	return len(dir) >= minLength && separatorCount >= minSeparators
+}
+
+// CopyFile copies a file from src to dest
+func CopyFile(dest, src string) (int64, error) {
+	finfo, err := os.Stat(src)
+	if err != nil {
+		return int64(0), err
+	}
+	from, err := os.Open(src)
+	if err != nil {
+		return int64(0), err
+	}
+	defer from.Close()
+
+	to, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE, finfo.Mode())
+	if err != nil {
+		return int64(0), err
+	}
+	defer to.Close()
+	return io.Copy(to, from)
 }

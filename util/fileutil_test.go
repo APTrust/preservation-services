@@ -1,11 +1,15 @@
 package util_test
 
 import (
+	"os"
+	"path"
+	"strings"
+	"testing"
+
+	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
 )
 
 func TestFileExists(t *testing.T) {
@@ -29,4 +33,13 @@ func TestExpandTilde(t *testing.T) {
 func TestLooksSafeToDelete(t *testing.T) {
 	assert.True(t, util.LooksSafeToDelete("/mnt/apt/data/some_dir", 15, 3))
 	assert.False(t, util.LooksSafeToDelete("/usr/local", 12, 3))
+}
+
+func TestCopy(t *testing.T) {
+	context := common.NewContext()
+	src := testutil.PathToUnitTestBag("example.edu.sample_good.tar")
+	dest := path.Join(context.Config.BaseWorkingDir, "example.edu.sample_good.tar")
+	_, err := util.CopyFile(dest, src)
+	defer os.Remove(dest)
+	assert.Nil(t, err)
 }
