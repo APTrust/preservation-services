@@ -35,6 +35,12 @@ func TestEndToEnd(t *testing.T) {
 	waitForReingestCompletion()
 }
 
+/* -------------------------------------------------------------------------
+TODO: USE MINIO COPY instead of FileCopy so each bag gets a unique etag.
+      Otherwise, the ingest_bucket_reader thinks we've already processed
+      the updated bags (apt-001, etc) because the etag did not change.
+------------------------------------------------------------------------- */
+
 func copyInitialBagsToReceivingBucket() {
 	minioReceivingDir := path.Join(ctx.Context.Config.BaseWorkingDir, "minio", "aptrust.receiving.test.test.edu")
 	for _, tb := range e2e.TestBags {
@@ -42,6 +48,7 @@ func copyInitialBagsToReceivingBucket() {
 			dest := path.Join(minioReceivingDir, tb.TarFileName())
 			_, err := util.CopyFile(dest, tb.PathToBag)
 			require.Nil(ctx.T, err)
+			ctx.Context.Logger.Infof("Copied %s to receiving bucket", tb.TarFileName())
 		}
 	}
 }
@@ -53,6 +60,7 @@ func copyUpdatedBagsToReceivingBucket() {
 			dest := path.Join(minioReceivingDir, tb.TarFileName())
 			_, err := util.CopyFile(dest, tb.PathToBag)
 			require.Nil(ctx.T, err)
+			ctx.Context.Logger.Infof("Copied updated version of  %s to receiving bucket", tb.TarFileName())
 		}
 	}
 }
@@ -97,7 +105,9 @@ func ingestsComplete(count uint64) bool {
 	require.True(ctx.T, count > 0)
 	stats, err := ctx.Context.NSQClient.GetStats()
 	require.Nil(ctx.T, err)
-	summary, err := stats.GetChannelSummary(constants.IngestCleanup, constants.IngestCleanup+"_worker_chan")
+	channelName := constants.IngestCleanup + "_worker_chan"
+	summary, err := stats.GetChannelSummary(constants.IngestCleanup, channelName)
 	require.Nil(ctx.T, err)
-	return summary.InFlightCount == 0 && summary.MessageCount == count
+	ctx.Context.Logger.Infof("In %s: %d in flight, %d finished. Want %d", channelName, summary.InFlightCount, summary.FinishCount, count)
+	return summary.InFlightCount == 0 && summary.FinishCount == count
 }
