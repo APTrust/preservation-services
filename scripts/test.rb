@@ -161,11 +161,10 @@ class TestRunner
   def run_e2e_tests(arg)
     build_ingest_services
     init_for_integration
-    start_ingest_services([])
-    run_bucket_reader
+    start_ingest_services(["ingest_bucket_reader", "apt_queue", "apt_queue_fixity"])
 
     puts "Giving the workers some time to finish"
-    sleep(20)
+    sleep(10)
 
     puts "Starting end-to-end tests..."
     cmd = "go test -p 1 -tags=e2e ./e2e/..."

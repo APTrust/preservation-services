@@ -35,7 +35,7 @@ func TestLooksSafeToDelete(t *testing.T) {
 	assert.False(t, util.LooksSafeToDelete("/usr/local", 12, 3))
 }
 
-func TestCopy(t *testing.T) {
+func TestCopyFile(t *testing.T) {
 	context := common.NewContext()
 	src := testutil.PathToUnitTestBag("example.edu.sample_good.tar")
 	dest := path.Join(context.Config.BaseWorkingDir, "example.edu.sample_good.tar")

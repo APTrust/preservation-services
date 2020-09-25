@@ -25,6 +25,13 @@ type NSQStatsData struct {
 	Topics    []*nsqd.TopicStats `json:"topics"`
 }
 
+type ChannelSummary struct {
+	InFlightCount int64
+	MessageCount  uint64
+	FinishCount   uint64
+	RequeueCount  uint64
+}
+
 func (data *NSQStatsData) GetTopic(name string) *nsqd.TopicStats {
 	for _, topic := range data.Topics {
 		if topic.TopicName == name {
@@ -32,6 +39,30 @@ func (data *NSQStatsData) GetTopic(name string) *nsqd.TopicStats {
 		}
 	}
 	return nil
+}
+
+func (data *NSQStatsData) GetChannelSummary(topicName, channelName string) (*ChannelSummary, error) {
+	topic := data.GetTopic(topicName)
+	if topic == nil {
+		return nil, fmt.Errorf("Can't find topic %s", topicName)
+	}
+	summary := &ChannelSummary{}
+	found := false
+	for _, c := range topic.Channels {
+		if c.ChannelName == channelName {
+			found = true
+			for _, client := range c.Clients {
+				summary.FinishCount += client.FinishCount
+				summary.InFlightCount += client.InFlightCount
+				summary.MessageCount += client.MessageCount
+				summary.RequeueCount += client.RequeueCount
+			}
+		}
+	}
+	if !found {
+		return nil, fmt.Errorf("Can't find topic/channel %s/%s", topicName, channelName)
+	}
+	return summary, nil
 }
 
 // NewNSQClient returns a new NSQ client that will connect to the NSQ

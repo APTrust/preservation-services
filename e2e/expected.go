@@ -1,6 +1,6 @@
 // +build e2e
 
-package e2e_test
+package e2e
 
 import (
 	"path"
@@ -15,7 +15,7 @@ type TestBag struct {
 	StorageOption    string
 	IsValidBag       bool
 	IsUpdate         bool
-	Files            []TestFile
+	Files            []*TestFile
 }
 
 func (tb *TestBag) TarFileName() string {
