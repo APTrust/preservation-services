@@ -18,6 +18,10 @@ func PathToUnitTestBags() string {
 	return path.Join(util.ProjectRoot(), "testdata", "unit_test_bags")
 }
 
+func PathToIntTestBags() string {
+	return path.Join(util.ProjectRoot(), "testdata", "int_test_bags")
+}
+
 func PathToPharosFixture(filename string) string {
 	return path.Join(PathToTestData(), "pharos", filename)
 }

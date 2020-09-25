@@ -16,6 +16,10 @@ func TestPathToUnitTestBags(t *testing.T) {
 	assert.True(t, strings.HasSuffix(testutil.PathToUnitTestBags(), "unit_test_bags"))
 }
 
+func TestPathToIntTestBags(t *testing.T) {
+	assert.True(t, strings.HasSuffix(testutil.PathToIntTestBags(), "int_test_bags"))
+}
+
 func TestPathPharosFixture(t *testing.T) {
 	p := testutil.PathToPharosFixture("institutions.json")
 	assert.True(t, strings.Contains(p, "testdata"))
