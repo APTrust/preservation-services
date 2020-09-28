@@ -9,6 +9,12 @@ import (
 	"github.com/APTrust/preservation-services/util/testutil"
 )
 
+/*
+This file contains data used in end-to-end tests.
+e2e_test.go pushes these bags through the ingest and restortation
+processes and then tests for expected results.
+*/
+
 type TestBag struct {
 	PathToBag        string
 	ObjectIdentifier string
@@ -166,49 +172,6 @@ var TestBags = []*TestBag{
 		ObjectIdentifier: "test.edu/btr_good_sha512",
 		StorageOption:    constants.StorageStandard,
 		IsValidBag:       true,
-		IsUpdate:         false,
-		Files:            []*TestFile{},
-	},
-
-	/* ---- Invalid Bags ---- */
-
-	&TestBag{
-		PathToBag:        path.Join(testutil.PathToUnitTestBags(), "test.edu.btr_bad_checksums.tar"),
-		ObjectIdentifier: "test.edu/btr_bad_checksums",
-		StorageOption:    constants.StorageStandard,
-		IsValidBag:       false,
-		IsUpdate:         false,
-		Files:            []*TestFile{},
-	},
-	&TestBag{
-		PathToBag:        path.Join(testutil.PathToUnitTestBags(), "test.edu.btr_bad_extraneous_file.tar"),
-		ObjectIdentifier: "test.edu/btr_bad_extraneous_file",
-		StorageOption:    constants.StorageStandard,
-		IsValidBag:       false,
-		IsUpdate:         false,
-		Files:            []*TestFile{},
-	},
-	&TestBag{
-		PathToBag:        path.Join(testutil.PathToUnitTestBags(), "test.edu.btr_bad_missing_payload_file.tar"),
-		ObjectIdentifier: "test.edu/btr_bad_missing_payload_file",
-		StorageOption:    constants.StorageStandard,
-		IsValidBag:       false,
-		IsUpdate:         false,
-		Files:            []*TestFile{},
-	},
-	&TestBag{
-		PathToBag:        path.Join(testutil.PathToUnitTestBags(), "test.edu.btr_bad_missing_required_tags.tar"),
-		ObjectIdentifier: "test.edu/btr_bad_missing_required_tags",
-		StorageOption:    constants.StorageStandard,
-		IsValidBag:       false,
-		IsUpdate:         false,
-		Files:            []*TestFile{},
-	},
-	&TestBag{
-		PathToBag:        path.Join(testutil.PathToUnitTestBags(), "test.edu.sample_illegal_control.tar"),
-		ObjectIdentifier: "test.edu/sample_illegal_control",
-		StorageOption:    constants.StorageStandard,
-		IsValidBag:       false,
 		IsUpdate:         false,
 		Files:            []*TestFile{},
 	},

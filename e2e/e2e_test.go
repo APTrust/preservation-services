@@ -3,16 +3,13 @@
 package e2e_test
 
 import (
-	//"fmt"
-	"path"
 	"testing"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/e2e"
 	"github.com/APTrust/preservation-services/models/common"
-	"github.com/APTrust/preservation-services/util"
-	//"github.com/stretchr/testify/assert"
+	"github.com/minio/minio-go/v6"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,39 +26,43 @@ func TestEndToEnd(t *testing.T) {
 		Context: context,
 		T:       t,
 	}
-	copyInitialBagsToReceivingBucket()
+	uploadInitialBags()
 	waitForInitialIngestCompletion()
-	copyUpdatedBagsToReceivingBucket()
+	uploadUpdatedBags()
 	waitForReingestCompletion()
 }
 
-/* -------------------------------------------------------------------------
-TODO: USE MINIO COPY instead of FileCopy so each bag gets a unique etag.
-      Otherwise, the ingest_bucket_reader thinks we've already processed
-      the updated bags (apt-001, etc) because the etag did not change.
-------------------------------------------------------------------------- */
-
-func copyInitialBagsToReceivingBucket() {
-	minioReceivingDir := path.Join(ctx.Context.Config.BaseWorkingDir, "minio", "aptrust.receiving.test.test.edu")
+func uploadInitialBags() {
+	bags := make([]*e2e.TestBag, 0)
 	for _, tb := range e2e.TestBags {
 		if tb.IsValidBag && !tb.IsUpdate {
-			dest := path.Join(minioReceivingDir, tb.TarFileName())
-			_, err := util.CopyFile(dest, tb.PathToBag)
-			require.Nil(ctx.T, err)
-			ctx.Context.Logger.Infof("Copied %s to receiving bucket", tb.TarFileName())
+			bags = append(bags, tb)
 		}
 	}
+	pushBagsToReceiving(bags)
 }
 
-func copyUpdatedBagsToReceivingBucket() {
-	minioReceivingDir := path.Join(ctx.Context.Config.BaseWorkingDir, "minio", "aptrust.receiving.test.test.edu")
+func uploadUpdatedBags() {
+	bags := make([]*e2e.TestBag, 0)
 	for _, tb := range e2e.TestBags {
 		if tb.IsValidBag && tb.IsUpdate {
-			dest := path.Join(minioReceivingDir, tb.TarFileName())
-			_, err := util.CopyFile(dest, tb.PathToBag)
-			require.Nil(ctx.T, err)
-			ctx.Context.Logger.Infof("Copied updated version of  %s to receiving bucket", tb.TarFileName())
+			bags = append(bags, tb)
 		}
+	}
+	pushBagsToReceiving(bags)
+}
+
+func pushBagsToReceiving(testbags []*e2e.TestBag) {
+	client := ctx.Context.S3Clients[constants.StorageProviderAWS]
+	for _, tb := range testbags {
+		_, err := client.FPutObject(
+			"aptrust.receiving.test.test.edu",
+			tb.TarFileName(),
+			tb.PathToBag,
+			minio.PutObjectOptions{},
+		)
+		require.Nil(ctx.T, err)
+		ctx.Context.Logger.Infof("Copied %s to receiving bucket", tb.PathToBag)
 	}
 }
 
