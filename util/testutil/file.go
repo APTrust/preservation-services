@@ -22,6 +22,10 @@ func PathToIntTestBags() string {
 	return path.Join(util.ProjectRoot(), "testdata", "int_test_bags")
 }
 
+func PathToE2EFile(filename string) string {
+	return path.Join(util.ProjectRoot(), "testdata", "e2e_results", filename)
+}
+
 func PathToPharosFixture(filename string) string {
 	return path.Join(PathToTestData(), "pharos", filename)
 }
@@ -31,7 +35,15 @@ func PathToUnitTestBag(filename string) string {
 }
 
 func ReadPharosFixture(filename string) ([]byte, error) {
-	file, err := os.Open(PathToPharosFixture(filename))
+	return ReadFile(PathToPharosFixture(filename))
+}
+
+func ReadE2EFile(filename string) ([]byte, error) {
+	return ReadFile(PathToE2EFile(filename))
+}
+
+func ReadFile(filepath string) ([]byte, error) {
+	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
 	}

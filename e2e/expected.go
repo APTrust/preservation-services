@@ -211,3 +211,50 @@ var TestBags = []*TestBag{
 		Files:            []*TestFile{},
 	},
 }
+
+func LoadObjectJSON(t *testing.T) (map[string]*registry.IntellectualObject, error) {
+	data, err := testutil.ReadE2EFile("objects.json")
+	require.Nil(t, err)
+	objects := make(map[string]*registry.IntellectualObject)
+	err = json.Unmarshal(data, &objects)
+	require.Nil(t, err)
+	return objects
+}
+
+func LoadGenericFileJSON(t *testing.T) (map[string]*registry.GenericFile, error) {
+	data, err := testutil.ReadE2EFile("files.json")
+	require.Nil(t, err)
+	files := make(map[string]*registry.GenericFile)
+	err = json.Unmarshal(data, &files)
+	require.Nil(t, err)
+	return files
+}
+
+func GetObjectByIdentifier(objList []*registry.IntellectualObject, identifier string) (*registry.IntellectualObject, error) {
+	if objList == nil {
+		return nil, fmt.Errorf("Object list cannot be nil")
+	}
+	for _, obj := range objList {
+		if obj.Identifier == identifier {
+			return obj, nil
+		}
+	}
+	return nil, fmt.Errorf("Object not found")
+}
+
+func GetFilesByObjectIdentifier(fileList []*registry.GenericFile, objIdentifier string) ([]*registry.GenericFile, error) {
+	var err error
+	files := make([]*registry.GenericFile, 0)
+	if fileList == nil {
+		return files, fmt.Errorf("File list cannot be nil")
+	}
+	for _, f := range fileList {
+		if f.IntellectualObjectIdentifier == objIdentifier {
+			files = append(files, f)
+		}
+	}
+	if len(files) == 0 {
+		err = fmt.Errorf("No files found for object %s", objIdentifier)
+	}
+	return files, err
+}
