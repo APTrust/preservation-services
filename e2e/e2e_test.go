@@ -5,6 +5,7 @@ package e2e_test
 import (
 	"fmt"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/APTrust/preservation-services/e2e"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/minio/minio-go/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -213,8 +215,35 @@ func testChecksums(pharosFile, expectedFile *registry.GenericFile) {
 	}
 }
 
+// Our JSON file doesn't list expected storage records, but we know
+// what buckets each file should be in, based on the StorageOption.
+// Note that file URLs will change every time we run the tests, because
+// the URLs end with UUIDs.
 func testStorageRecords(pharosFile, expectedFile *registry.GenericFile) {
+	t := ctx.T
+	expectedCount := 1
+	if expectedFile.StorageOption == constants.StorageStandard {
+		expectedCount = 2
+	}
+	require.Equal(t, expectedCount, len(pharosFile.StorageRecords))
 
+	foundInBucket := make(map[string]bool)
+	buckets := ctx.Context.Config.PreservationBucketsFor(expectedFile.StorageOption)
+	for _, b := range buckets {
+		foundInBucket[b.Bucket] = false
+	}
+	for _, sr := range pharosFile.StorageRecords {
+		assert.True(t, strings.HasPrefix(sr.URL, "https://"))
+		assert.True(t, util.LooksLikeUUID(pharosFile.UUID()), pharosFile.Identifier)
+		for _, b := range buckets {
+			if strings.Contains(sr.URL, b.Bucket) {
+				foundInBucket[b.Bucket] = true
+			}
+		}
+	}
+	for _, b := range buckets {
+		assert.True(t, foundInBucket[b.Bucket], "File %s missing from preservation bucket %s", expectedFile.Identifier, b.Bucket)
+	}
 }
 
 func testPremisEvents(pharosFile, expectedFile *registry.GenericFile) {
