@@ -32,6 +32,10 @@ func TestEndToEnd(t *testing.T) {
 	waitForInitialIngestCompletion()
 	pushBagsToReceiving(e2e.ReingestBags())
 	waitForReingestCompletion()
+
+	// Test that all objects, files, checksums, storage records
+	// and premis events from these ingests are as expected
+	testPharosObjects()
 }
 
 func pushBagsToReceiving(testbags []*e2e.TestBag) {
@@ -121,7 +125,6 @@ func testObjAgainstExpected(pharosObj, expectedObj *registry.IntellectualObject)
 	assert.Equal(t, pharosObj.Access, expectedObj.Access, expectedObj.Identifier)
 	assert.Equal(t, pharosObj.BagName, expectedObj.BagName, expectedObj.Identifier)
 	assert.Equal(t, pharosObj.State, expectedObj.State, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.ETag, expectedObj.ETag, expectedObj.Identifier)
 	assert.Equal(t, pharosObj.BagGroupIdentifier, expectedObj.BagGroupIdentifier, expectedObj.Identifier)
 	assert.Equal(t, pharosObj.StorageOption, expectedObj.StorageOption, expectedObj.Identifier)
 	assert.Equal(t, pharosObj.BagItProfileIdentifier, expectedObj.BagItProfileIdentifier, expectedObj.Identifier)

@@ -241,12 +241,12 @@ func ReingestBags() []*TestBag {
 	return bags
 }
 
-func LoadObjectJSON() (map[string]*registry.IntellectualObject, error) {
+func LoadObjectJSON() ([]*registry.IntellectualObject, error) {
 	data, err := testutil.ReadE2EFile("objects.json")
 	if err != nil {
 		return nil, err
 	}
-	objects := make(map[string]*registry.IntellectualObject)
+	objects := make([]*registry.IntellectualObject, 0)
 	err = json.Unmarshal(data, &objects)
 	if err != nil {
 		return nil, err
