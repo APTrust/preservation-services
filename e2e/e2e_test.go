@@ -3,6 +3,8 @@
 package e2e_test
 
 import (
+	"fmt"
+	"net/url"
 	"testing"
 	"time"
 
@@ -38,6 +40,10 @@ func TestEndToEnd(t *testing.T) {
 	testPharosObjects()
 }
 
+// Push some bags into the receiving bucket using Minio.
+// We do this instead of a simple filesystem copy because
+// Pharos WorkItems use ETags to distinguish between versions
+// of a bag. Minio creates ETags, file copying doesn't.
 func pushBagsToReceiving(testbags []*e2e.TestBag) {
 	client := ctx.Context.S3Clients[constants.StorageProviderAWS]
 	for _, tb := range testbags {
@@ -52,6 +58,8 @@ func pushBagsToReceiving(testbags []*e2e.TestBag) {
 	}
 }
 
+// Check NSQ every 10 seconds to see whether all initial ingests
+// are complete.
 func waitForInitialIngestCompletion() {
 	for {
 		if initialIngestsComplete() {
@@ -61,6 +69,8 @@ func waitForInitialIngestCompletion() {
 	}
 }
 
+// Check NSQ every 10 seconds to see whether all reingests
+// are complete.
 func waitForReingestCompletion() {
 	for {
 		if reingestsComplete() {
@@ -70,6 +80,9 @@ func waitForReingestCompletion() {
 	}
 }
 
+// This returns the number of bags expected to be ingested
+// or reingested. The reingest count includes all ingests
+// plus reingests.
 func testBagCount(includeInvalid, includeReingest bool) uint64 {
 	count := uint64(0)
 	for _, tb := range e2e.TestBags {
@@ -80,14 +93,19 @@ func testBagCount(includeInvalid, includeReingest bool) uint64 {
 	return count
 }
 
+// Returns true if the initial version of our test bags have
+// been ingested.
 func initialIngestsComplete() bool {
 	return ingestsComplete(testBagCount(false, false))
 }
 
+// Returns true if the updated versions of our test bags have
+// been ingested.
 func reingestsComplete() bool {
 	return ingestsComplete(testBagCount(false, true))
 }
 
+// This queries NSQ to find the number of finished items in a channel.
 func ingestsComplete(count uint64) bool {
 	require.True(ctx.T, count > 0)
 	stats, err := ctx.Context.NSQClient.GetStats()
@@ -99,6 +117,8 @@ func ingestsComplete(count uint64) bool {
 	return summary.InFlightCount == 0 && summary.FinishCount == count
 }
 
+// This is the meat of the ingest test: Make sure that all
+// expected objects, files, etc. are in Pharos.
 func testPharosObjects() {
 	objects, err := e2e.LoadObjectJSON()
 	require.Nil(ctx.T, err)
@@ -157,11 +177,40 @@ func testGenericFiles(expectedObj *registry.IntellectualObject) {
 }
 
 func testFileAttributes(pharosFile, expectedFile *registry.GenericFile) {
-
+	t := ctx.T
+	assert.Equal(t, pharosFile.Identifier, expectedFile.Identifier, expectedFile.Identifier)
+	assert.Equal(t, pharosFile.FileFormat, expectedFile.FileFormat, expectedFile.Identifier)
+	assert.Equal(t, pharosFile.IntellectualObjectIdentifier, expectedFile.IntellectualObjectIdentifier, expectedFile.Identifier)
+	assert.Equal(t, pharosFile.Size, expectedFile.Size, expectedFile.Identifier)
+	assert.Equal(t, pharosFile.State, expectedFile.State, expectedFile.Identifier)
+	assert.Equal(t, pharosFile.StorageOption, expectedFile.StorageOption, expectedFile.Identifier)
 }
 
+// Make sure the latest checksums in Pharos match the latest checksums in our
+// JSON file of expected data. Reingested files will have two versions of each
+// checksum (md5, sha256, etc.). We want to make sure the latest one is present
+// and correct.
 func testChecksums(pharosFile, expectedFile *registry.GenericFile) {
+	t := ctx.T
+	params := url.Values{}
+	params.Set("generic_file_identifier", expectedFile.Identifier)
+	resp := ctx.Context.PharosClient.ChecksumList(params)
+	require.Nil(t, resp.Error)
+	pharosChecksums := resp.Checksums()
 
+	for _, alg := range constants.SupportedManifestAlgorithms {
+		// Match latest digests
+		expected, err := getLatestChecksum(expectedFile.Checksums, alg)
+		require.Nil(t, err, "Missing JSON checksum for %s -> %s", expectedFile.Identifier, alg)
+		actual, err := getLatestChecksum(pharosChecksums, alg)
+		require.Nil(t, err, "Missing Pharos checksum for %s -> %s", expectedFile.Identifier, alg)
+		assert.Equal(t, expected.Digest, actual.Digest, "%s -> %s", expectedFile.Identifier, expected.Algorithm)
+
+		// Make sure reingests have expected number of checksums.
+		expectedCount := checksumCount(expectedFile.Checksums, alg)
+		actualCount := checksumCount(pharosChecksums, alg)
+		assert.Equal(t, expectedCount, actualCount, "%s -> %s", expectedFile.Identifier, expected.Algorithm)
+	}
 }
 
 func testStorageRecords(pharosFile, expectedFile *registry.GenericFile) {
@@ -174,4 +223,32 @@ func testPremisEvents(pharosFile, expectedFile *registry.GenericFile) {
 
 func testWorkItemsAfterIngest() {
 
+}
+
+// Pharos doesn't seem to guarantee checksum order, so we have to.
+// We really need to fix this on the Pharos end.
+func getLatestChecksum(csList []*registry.Checksum, alg string) (checksum *registry.Checksum, err error) {
+	if csList == nil || len(csList) == 0 {
+		return nil, fmt.Errorf("No checksums in list")
+	}
+	latest := time.Time{}
+	for _, cs := range csList {
+		if cs.Algorithm == alg && cs.DateTime.After(latest) {
+			checksum = cs
+			latest = cs.DateTime
+		}
+	}
+	return checksum, nil
+}
+
+// Get the number of checksums having the given algorithm.
+// For most bags, there should be one checksum for each algorithm.
+// For reingests, there should be two checksums for each algorithm.
+func checksumCount(csList []*registry.Checksum, alg string) (count int) {
+	for _, cs := range csList {
+		if cs.Algorithm == alg {
+			count++
+		}
+	}
+	return count
 }
