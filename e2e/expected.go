@@ -3,9 +3,12 @@
 package e2e
 
 import (
+	"encoding/json"
+	"fmt"
 	"path"
 
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util/testutil"
 )
 
@@ -13,6 +16,9 @@ import (
 This file contains data used in end-to-end tests.
 e2e_test.go pushes these bags through the ingest and restortation
 processes and then tests for expected results.
+
+This file is really only used in tests, but go complains if it
+finds and e2e_test package without a corresponding e2e package.
 */
 
 type TestBag struct {
@@ -212,22 +218,53 @@ var TestBags = []*TestBag{
 	},
 }
 
-func LoadObjectJSON(t *testing.T) (map[string]*registry.IntellectualObject, error) {
-	data, err := testutil.ReadE2EFile("objects.json")
-	require.Nil(t, err)
-	objects := make(map[string]*registry.IntellectualObject)
-	err = json.Unmarshal(data, &objects)
-	require.Nil(t, err)
-	return objects
+// InitialBags returns a list of bags for initial ingest (i.e. not reingests)
+func InitialBags() []*TestBag {
+	bags := make([]*TestBag, 0)
+	for _, tb := range TestBags {
+		if tb.IsValidBag && !tb.IsUpdate {
+			bags = append(bags, tb)
+		}
+	}
+	return bags
 }
 
-func LoadGenericFileJSON(t *testing.T) (map[string]*registry.GenericFile, error) {
+// ReingestBags returns a list of bags for reingest (i.e. updated versions
+// of initial ingests)
+func ReingestBags() []*TestBag {
+	bags := make([]*TestBag, 0)
+	for _, tb := range TestBags {
+		if tb.IsValidBag && tb.IsUpdate {
+			bags = append(bags, tb)
+		}
+	}
+	return bags
+}
+
+func LoadObjectJSON() (map[string]*registry.IntellectualObject, error) {
+	data, err := testutil.ReadE2EFile("objects.json")
+	if err != nil {
+		return nil, err
+	}
+	objects := make(map[string]*registry.IntellectualObject)
+	err = json.Unmarshal(data, &objects)
+	if err != nil {
+		return nil, err
+	}
+	return objects, nil
+}
+
+func LoadGenericFileJSON() ([]*registry.GenericFile, error) {
 	data, err := testutil.ReadE2EFile("files.json")
-	require.Nil(t, err)
-	files := make(map[string]*registry.GenericFile)
+	if err != nil {
+		return nil, err
+	}
+	files := make([]*registry.GenericFile, 0)
 	err = json.Unmarshal(data, &files)
-	require.Nil(t, err)
-	return files
+	if err != nil {
+		return nil, err
+	}
+	return files, nil
 }
 
 func GetObjectByIdentifier(objList []*registry.IntellectualObject, identifier string) (*registry.IntellectualObject, error) {
