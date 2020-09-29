@@ -21,18 +21,16 @@ import (
 )
 
 type E2ECtx struct {
-	Context *common.Context
-	T       *testing.T
+	Context         *common.Context
+	T               *testing.T
+	ExpectedObjects []*registry.IntellectualObject
+	ExpectedFiles   []*registry.GenericFile
 }
 
 var ctx E2ECtx
 
 func TestEndToEnd(t *testing.T) {
-	context := common.NewContext()
-	ctx = E2ECtx{
-		Context: context,
-		T:       t,
-	}
+	initTestContext(t)
 	pushBagsToReceiving(e2e.InitialBags())
 	waitForInitialIngestCompletion()
 	pushBagsToReceiving(e2e.ReingestBags())
@@ -41,6 +39,23 @@ func TestEndToEnd(t *testing.T) {
 	// Test that all objects, files, checksums, storage records
 	// and premis events from these ingests are as expected
 	testPharosObjects()
+}
+
+// Set up a context for testing.
+func initTestContext(t *testing.T) {
+	objects, err := e2e.LoadObjectJSON()
+	require.Nil(t, err)
+
+	files, err := e2e.LoadGenericFileJSON()
+	require.Nil(t, err)
+
+	context := common.NewContext()
+	ctx = E2ECtx{
+		Context:         context,
+		T:               t,
+		ExpectedObjects: objects,
+		ExpectedFiles:   files,
+	}
 }
 
 // Push some bags into the receiving bucket using Minio.
@@ -123,9 +138,7 @@ func ingestsComplete(count uint64) bool {
 // This is the meat of the ingest test: Make sure that all
 // expected objects, files, etc. are in Pharos.
 func testPharosObjects() {
-	objects, err := e2e.LoadObjectJSON()
-	require.Nil(ctx.T, err)
-	for _, expectedObj := range objects {
+	for _, expectedObj := range ctx.ExpectedObjects {
 		testObject(expectedObj)
 	}
 }
@@ -161,10 +174,7 @@ func testObjAgainstExpected(pharosObj, expectedObj *registry.IntellectualObject)
 
 func testGenericFiles(expectedObj *registry.IntellectualObject) {
 	t := ctx.T
-	files, err := e2e.LoadGenericFileJSON()
-	require.Nil(t, err)
-	require.NotEmpty(t, files)
-	objFiles, err := e2e.GetFilesByObjectIdentifier(files, expectedObj.Identifier)
+	objFiles, err := e2e.GetFilesByObjectIdentifier(ctx.ExpectedFiles, expectedObj.Identifier)
 	require.Nil(t, err)
 	require.NotEmpty(t, objFiles)
 	for _, expectedFile := range objFiles {
@@ -248,7 +258,8 @@ func testStorageRecords(pharosFile, expectedFile *registry.GenericFile) {
 }
 
 func testPremisEvents(pharosFile, expectedFile *registry.GenericFile) {
-
+	//t := ctx.T
+	//ctx.ExpectedFiles
 }
 
 func testWorkItemsAfterIngest() {
