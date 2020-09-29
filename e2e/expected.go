@@ -248,10 +248,7 @@ func LoadObjectJSON() ([]*registry.IntellectualObject, error) {
 	}
 	objects := make([]*registry.IntellectualObject, 0)
 	err = json.Unmarshal(data, &objects)
-	if err != nil {
-		return nil, err
-	}
-	return objects, nil
+	return objects, err
 }
 
 func LoadGenericFileJSON() ([]*registry.GenericFile, error) {
@@ -261,10 +258,7 @@ func LoadGenericFileJSON() ([]*registry.GenericFile, error) {
 	}
 	files := make([]*registry.GenericFile, 0)
 	err = json.Unmarshal(data, &files)
-	if err != nil {
-		return nil, err
-	}
-	return files, nil
+	return files, err
 }
 
 func GetObjectByIdentifier(objList []*registry.IntellectualObject, identifier string) (*registry.IntellectualObject, error) {

@@ -5,6 +5,7 @@ package e2e_test
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -251,7 +252,47 @@ func testPremisEvents(pharosFile, expectedFile *registry.GenericFile) {
 }
 
 func testWorkItemsAfterIngest() {
+	t := ctx.T
+	testInst := GetInstitution("test.edu")
+	params := url.Values{}
+	params.Set("item_action", constants.ActionIngest)
+	params.Set("institution_id", strconv.Itoa(testInst.ID))
+	resp := ctx.Context.PharosClient.WorkItemList(params)
+	require.Nil(t, resp.Error)
+	pharosItems := resp.WorkItems()
+	require.NotEmpty(t, pharosItems)
 
+	itemCounts := make(map[string]int)
+
+	// 17 ingests plus 4 reingests
+	assert.Equal(t, 21, len(pharosItems))
+	for _, item := range pharosItems {
+		assert.Equal(t, "Finished cleanup. Ingest complete.", item.Note)
+		assert.Equal(t, constants.StageCleanup, item.Stage)
+		assert.Equal(t, constants.StatusSuccess, item.Status)
+		assert.Equal(t, "Ingest complete", item.Outcome)
+		assert.False(t, item.BagDate.IsZero())
+		assert.False(t, item.Date.IsZero())
+		assert.False(t, item.QueuedAt.IsZero())
+		assert.NotEmpty(t, item.ObjectIdentifier)
+		assert.Empty(t, item.GenericFileIdentifier)
+		assert.Empty(t, item.Node)
+		assert.Equal(t, 0, item.Pid)
+		assert.NotEmpty(t, item.InstitutionID)
+		assert.NotEmpty(t, item.Size)
+		assert.False(t, item.NeedsAdminReview)
+
+		if _, ok := itemCounts[item.Name]; !ok {
+			itemCounts[item.Name] = 0
+		}
+		itemCounts[item.Name]++
+	}
+
+	for _, bag := range e2e.ReingestBags() {
+		count := itemCounts[bag.TarFileName()]
+		assert.NotNil(t, count)
+		assert.Equal(t, 2, count)
+	}
 }
 
 // Pharos doesn't seem to guarantee checksum order, so we have to.
@@ -280,4 +321,13 @@ func checksumCount(csList []*registry.Checksum, alg string) (count int) {
 		}
 	}
 	return count
+}
+
+func GetInstitution(identifier string) *registry.Institution {
+	resp := ctx.Context.PharosClient.InstitutionGet(identifier)
+	assert.NotNil(ctx.T, resp)
+	require.Nil(ctx.T, resp.Error)
+	institution := resp.Institution()
+	require.NotNil(ctx.T, institution)
+	return institution
 }
