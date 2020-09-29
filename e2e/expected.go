@@ -218,6 +218,21 @@ var TestBags = []*TestBag{
 	},
 }
 
+var ReingestFiles = []string{
+	"test.edu/apt-001/data/files/data.csv",
+	"test.edu/apt-001/data/files/data.json",
+	"test.edu/apt-001/data/files/data.xml",
+	"test.edu/apt-002/data/files/data.csv",
+	"test.edu/apt-002/data/files/data.json",
+	"test.edu/apt-002/data/files/data.xml",
+	"test.edu/btr-001/data/files/data.csv",
+	"test.edu/btr-001/data/files/data.json",
+	"test.edu/btr-001/data/files/data.xml",
+	"test.edu/btr-002/data/files/data.csv",
+	"test.edu/btr-002/data/files/data.json",
+	"test.edu/btr-002/data/files/data.xml",
+}
+
 // InitialBags returns a list of bags for initial ingest (i.e. not reingests)
 func InitialBags() []*TestBag {
 	bags := make([]*TestBag, 0)

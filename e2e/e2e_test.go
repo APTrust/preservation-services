@@ -25,6 +25,8 @@ type E2ECtx struct {
 	T               *testing.T
 	ExpectedObjects []*registry.IntellectualObject
 	ExpectedFiles   []*registry.GenericFile
+	InitialBags     []*e2e.TestBag
+	ReingestBags    []*e2e.TestBag
 }
 
 var ctx E2ECtx
@@ -55,6 +57,8 @@ func initTestContext(t *testing.T) {
 		T:               t,
 		ExpectedObjects: objects,
 		ExpectedFiles:   files,
+		InitialBags:     e2e.InitialBags(),
+		ReingestBags:    e2e.ReingestBags(),
 	}
 }
 
@@ -258,8 +262,123 @@ func testStorageRecords(pharosFile, expectedFile *registry.GenericFile) {
 }
 
 func testPremisEvents(pharosFile, expectedFile *registry.GenericFile) {
-	//t := ctx.T
-	//ctx.ExpectedFiles
+	t := ctx.T
+
+	params := url.Values{}
+	params.Set("generic_file_identifier", expectedFile.Identifier)
+	params.Set("limit", "20")
+	resp := ctx.Context.PharosClient.PremisEventList(params)
+	require.Nil(t, resp.Error)
+	pharosEvents := resp.PremisEvents()
+
+	// An ingested file should have at least this many events.
+	// It can have more if it was ingested more than once.
+	require.True(t, len(pharosEvents) >= 5, "Has only %d", len(pharosEvents))
+
+	// Collect events by type...
+	urlEvents := findURLAssignmentEvent(pharosEvents)
+	fileIdEvents := findIdentifierAssignmentEvent(pharosEvents)
+	ingestEvents := findIngestionEvent(pharosEvents)
+	replicationEvents := findReplicationEvent(pharosEvents)
+	md5Events := findDigestCalculationEvent(pharosEvents, constants.AlgMd5)
+	sha1Events := findDigestCalculationEvent(pharosEvents, constants.AlgSha1)
+	sha256Events := findDigestCalculationEvent(pharosEvents, constants.AlgSha256)
+	sha512Events := findDigestCalculationEvent(pharosEvents, constants.AlgSha512)
+	fixityMd5Events := findFixityEvent(pharosEvents, constants.AlgMd5)
+	fixitySha256Events := findFixityEvent(pharosEvents, constants.AlgSha256)
+
+	// Most events should appear once for files that were ingested
+	// once, and twice for files that were reingested.
+	eventCount := 1
+	if isReingestFile(expectedFile.Identifier) {
+		eventCount = 2
+	}
+	assert.Equal(t, eventCount, len(ingestEvents), expectedFile.Identifier)
+	assert.Equal(t, eventCount, len(md5Events), expectedFile.Identifier)
+	assert.Equal(t, eventCount, len(sha1Events), expectedFile.Identifier)
+	assert.Equal(t, eventCount, len(sha256Events), expectedFile.Identifier)
+	assert.Equal(t, eventCount, len(sha512Events), expectedFile.Identifier)
+	assert.Equal(t, eventCount, len(fixityMd5Events), expectedFile.Identifier)
+	assert.Equal(t, eventCount, len(fixitySha256Events), expectedFile.Identifier)
+
+	// Standard storage option includes both a primary S3 copy and a
+	// replication copy in Glacier. All other storage options currently
+	// include only the primary copy with no replication.
+	if expectedFile.StorageOption == constants.StorageStandard {
+		assert.Equal(t, eventCount, len(replicationEvents), expectedFile.Identifier)
+	} else {
+		assert.Equal(t, 0, len(replicationEvents), expectedFile.Identifier)
+	}
+
+	// URLs and file identifiers should be assigned ONLY ONCE,
+	// no matter how many times we ingest a file. Those identifiers
+	// are supposed to be persistent.
+	assert.Equal(t, 1, len(urlEvents), expectedFile.Identifier)
+	assert.Equal(t, 1, len(fileIdEvents), expectedFile.Identifier)
+}
+
+func findURLAssignmentEvent(events []*registry.PremisEvent) []*registry.PremisEvent {
+	matches := make([]*registry.PremisEvent, 0)
+	for _, event := range events {
+		if event.OutcomeInformation == "Assigned url identifier" {
+			matches = append(matches, event)
+		}
+	}
+	return matches
+}
+
+func findIdentifierAssignmentEvent(events []*registry.PremisEvent) []*registry.PremisEvent {
+	matches := make([]*registry.PremisEvent, 0)
+	for _, event := range events {
+		if event.OutcomeInformation == "Assigned bag/filepath identifier" {
+			matches = append(matches, event)
+		}
+	}
+	return matches
+}
+
+func findIngestionEvent(events []*registry.PremisEvent) []*registry.PremisEvent {
+	matches := make([]*registry.PremisEvent, 0)
+	for _, event := range events {
+		if event.EventType == constants.EventIngestion {
+			matches = append(matches, event)
+		}
+	}
+	return matches
+}
+
+func findReplicationEvent(events []*registry.PremisEvent) []*registry.PremisEvent {
+	matches := make([]*registry.PremisEvent, 0)
+	for _, event := range events {
+		if event.EventType == constants.EventReplication {
+			matches = append(matches, event)
+		}
+	}
+	return matches
+}
+
+func findDigestCalculationEvent(events []*registry.PremisEvent, alg string) []*registry.PremisEvent {
+	matches := make([]*registry.PremisEvent, 0)
+	for _, event := range events {
+		if event.EventType == constants.EventDigestCalculation && strings.HasPrefix(event.OutcomeDetail, alg) {
+			matches = append(matches, event)
+		}
+	}
+	return matches
+}
+
+func findFixityEvent(events []*registry.PremisEvent, alg string) []*registry.PremisEvent {
+	matches := make([]*registry.PremisEvent, 0)
+	for _, event := range events {
+		if event.EventType == constants.EventFixityCheck && strings.HasPrefix(event.OutcomeDetail, alg) {
+			matches = append(matches, event)
+		}
+	}
+	return matches
+}
+
+func isReingestFile(identifier string) bool {
+	return util.StringListContains(e2e.ReingestFiles, identifier)
 }
 
 func testWorkItemsAfterIngest() {
