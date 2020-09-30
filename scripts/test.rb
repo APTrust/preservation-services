@@ -158,6 +158,7 @@ class TestRunner
   #       triggers to say when ingest is complete and when
   #       reingest is complete. Consider writing all the code
   #       in go with a manager that waits for WorkItems to complete.
+  # TODO: Quit if an instance of Pharos is already running on 9292.
   def run_e2e_tests(arg)
     build_ingest_services
     init_for_integration
