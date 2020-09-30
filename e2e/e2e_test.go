@@ -27,6 +27,7 @@ type E2ECtx struct {
 	ExpectedFiles   []*registry.GenericFile
 	InitialBags     []*e2e.TestBag
 	ReingestBags    []*e2e.TestBag
+	ReingestFiles   []string
 }
 
 var ctx E2ECtx
@@ -51,6 +52,16 @@ func initTestContext(t *testing.T) {
 	files, err := e2e.LoadGenericFileJSON()
 	require.Nil(t, err)
 
+	// Figure out which files in our test data are
+	// reingests. Once-ingested files have four checksums;
+	// twice-ingested files have eight.
+	reingestFiles := make([]string, 0)
+	for _, f := range files {
+		if len(f.Checksums) == 4 {
+			reingestFiles = append(reingestFiles, f.Identifier)
+		}
+	}
+
 	context := common.NewContext()
 	ctx = E2ECtx{
 		Context:         context,
@@ -59,6 +70,7 @@ func initTestContext(t *testing.T) {
 		ExpectedFiles:   files,
 		InitialBags:     e2e.InitialBags(),
 		ReingestBags:    e2e.ReingestBags(),
+		ReingestFiles:   reingestFiles,
 	}
 }
 
@@ -265,8 +277,9 @@ func testPremisEvents(pharosFile, expectedFile *registry.GenericFile) {
 	t := ctx.T
 
 	params := url.Values{}
-	params.Set("generic_file_identifier", expectedFile.Identifier)
-	params.Set("limit", "20")
+	params.Set("file_identifier", expectedFile.Identifier)
+	params.Set("page", "1")
+	params.Set("per_page", "50")
 	resp := ctx.Context.PharosClient.PremisEventList(params)
 	require.Nil(t, resp.Error)
 	pharosEvents := resp.PremisEvents()
@@ -378,7 +391,7 @@ func findFixityEvent(events []*registry.PremisEvent, alg string) []*registry.Pre
 }
 
 func isReingestFile(identifier string) bool {
-	return util.StringListContains(e2e.ReingestFiles, identifier)
+	return util.StringListContains(ctx.ReingestFiles, identifier)
 }
 
 func testWorkItemsAfterIngest() {

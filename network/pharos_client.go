@@ -649,7 +649,8 @@ func (client *PharosClient) PremisEventGet(identifier string) *PharosResponse {
 // * object_identifier - (string) Return events associated with
 //   the specified intellectual object (but not its generic files).
 // * file_identifier - (string) Return events associated with the
-//   specified generic file.
+//   specified generic file. NOTE THAT THIS DIFFERS FROM OTHER CALLS,
+//   WHICH generic_file_identifier. (!$?!#! Pharos!)
 // * event_type - (string) Return events of the specified type. See the
 //   event types listed in contants/constants.go
 // * created_after - (iso 8601 datetime string) Return events created
