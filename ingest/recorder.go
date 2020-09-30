@@ -164,7 +164,7 @@ func (r *Recorder) prepareFilesForSave(fileMap map[string]*service.IngestFile, b
 		ingestFile.InstitutionID = r.IngestObject.InstitutionID
 		ingestFile.IntellectualObjectID = r.IngestObject.ID
 		ingestFile.ObjectIdentifier = r.IngestObject.Identifier()
-		if ingestFile.HasPreservableName() && ingestFile.SavedToRegistryAt.IsZero() {
+		if ingestFile.HasPreservableName() && ingestFile.NeedsSave && ingestFile.SavedToRegistryAt.IsZero() {
 			if ingestFile.ID == 0 {
 				filesToSave = append(filesToSave, ingestFile)
 			} else {
