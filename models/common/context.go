@@ -95,9 +95,9 @@ func (context *Context) S3StatObject(provider, bucket, key string) (minio.Object
 	if client == nil {
 		return emptyInfo, fmt.Errorf("No S3 client for provider %s", provider)
 	}
-	client.TraceOn(GetTracer(context.Logger))
+	//client.TraceOn(GetTracer(context.Logger))
 	info, err := client.StatObject(bucket, key, minio.StatObjectOptions{})
-	client.TraceOff()
+	//client.TraceOff()
 	return info, err
 }
 

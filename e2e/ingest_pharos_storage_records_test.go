@@ -32,6 +32,10 @@ func testStorageRecords(pharosFile, expectedFile *registry.GenericFile) {
 				hasURLFor[b.Bucket] = true
 			}
 		}
+
+		// Test that the file that the StorageRecord points to
+		// is actually present in S3, with correct metadata.
+		testS3File(sr, pharosFile)
 	}
 	for _, b := range buckets {
 		assert.True(t, hasURLFor[b.Bucket], "File %s missing URL for preservation bucket %s", expectedFile.Identifier, b.Bucket)

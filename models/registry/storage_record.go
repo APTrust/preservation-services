@@ -2,6 +2,7 @@ package registry
 
 import (
 	"encoding/json"
+	"strings"
 )
 
 // StorageRecord describes where a GenericFile is stored in
@@ -43,4 +44,12 @@ func (r *StorageRecord) SerializeForPharos() ([]byte, error) {
 	dataStruct := make(map[string]string)
 	dataStruct["url"] = r.URL
 	return json.Marshal(dataStruct)
+}
+
+// UUID returns the last component of the URL, which should
+// always be a UUID. The caller should verify that it is in
+// fact a UUID, if the caller is concerned about this.
+func (r *StorageRecord) UUID() string {
+	parts := strings.Split(r.URL, "/")
+	return parts[len(parts)-1]
 }
