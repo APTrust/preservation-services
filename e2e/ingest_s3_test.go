@@ -60,7 +60,10 @@ func testS3Cleanup(bucketName string) {
 	client := ctx.Context.S3Clients[constants.StorageProviderAWS]
 	require.NotNil(ctx.T, client)
 
-	// TODO: Ensure bucket exists, so we know we're not testing the wrong one.
+	// Make sure we're testing an actual bucket...
+	exists, err := client.BucketExists(bucketName)
+	require.Nil(ctx.T, err)
+	require.True(ctx.T, exists)
 
 	doneCh := make(chan struct{})
 	defer close(doneCh)
