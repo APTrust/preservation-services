@@ -21,10 +21,25 @@ type E2ECtx struct {
 
 var ctx E2ECtx
 
+// TestEndToEnd runs a number of bags through ingest and reingest,
+// then tests that:
+//
+// * all Pharos data is complete and as expected
+// * all files are in the correct preservation storage buckets
+//   with complete metadata
+// * all interim processing data was deleted from S3 staging and Redis
 func TestEndToEnd(t *testing.T) {
 	initTestContext(t)
+	testIngest()
+	testRestoration()
+}
+
+func testIngest() {
+	// First, push through ingest bags...
 	pushBagsToReceiving(e2e.InitialBags())
 	waitForInitialIngestCompletion()
+
+	// Then reingest some bags...
 	pushBagsToReceiving(e2e.ReingestBags())
 	waitForReingestCompletion()
 
@@ -33,6 +48,11 @@ func TestEndToEnd(t *testing.T) {
 	testPharosObjects()
 	testGenericFiles()
 
-	// TODO: Test cleanup of staging bucket and redis.
+	// Make sure we cleaned up all interim processing resources.
 	testS3Cleanup()
+	testRedisCleanup()
+}
+
+func testRestoration() {
+	// TODO: Write this
 }

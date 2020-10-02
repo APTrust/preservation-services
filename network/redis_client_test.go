@@ -333,3 +333,19 @@ func TestWorkResultSaveAndDelete(t *testing.T) {
 	deletedResult, _ := client.WorkResultGet(9999, result.Operation)
 	assert.Nil(t, deletedResult)
 }
+
+func TestKeys(t *testing.T) {
+	client := getRedisClient()
+	require.NotNil(t, client)
+	result := service.NewWorkResult(constants.IngestPreFetch)
+	err := client.WorkResultSave(654321, result)
+	assert.Nil(t, err)
+
+	keys, err := client.Keys("*")
+	require.Nil(t, err)
+	assert.True(t, len(keys) > 0)
+
+	keys, err = client.Keys("654*")
+	require.Nil(t, err)
+	assert.Equal(t, 1, len(keys))
+}
