@@ -34,6 +34,4 @@ func TestEndToEnd(t *testing.T) {
 	testGenericFiles()
 
 	// TODO: Test cleanup of staging bucket and redis.
-	// TODO: Test e2e_ingest_post_test and e2e_reingest_post_test
-	//       queue depth instead of finished items in cleanup queue.
 }

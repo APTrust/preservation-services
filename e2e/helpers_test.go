@@ -79,40 +79,59 @@ func waitForReingestCompletion() {
 // This returns the number of bags expected to be ingested
 // or reingested. The reingest count includes all ingests
 // plus reingests.
-func testBagCount(includeInvalid, includeReingest bool) uint64 {
-	count := uint64(0)
+func testBagCount(ingestType string) int64 {
+	count := int64(0)
 	for _, tb := range e2e.TestBags {
-		if (includeInvalid || tb.IsValidBag) && (includeReingest || !tb.IsUpdate) {
+		if (ingestType == "ingest" && !tb.IsUpdate) || (ingestType == "reingest" && tb.IsUpdate) {
 			count++
 		}
 	}
 	return count
 }
 
+// Returns the number of expected ingests, based on test bags defined
+// in TestBags (in expected.go)
+func expectedIngestCount() int64 {
+	return testBagCount("ingest")
+}
+
+// Returns the number of expected reingests, based on test bags defined
+// in TestBags (in expected.go)
+func expectedReingestCount() int64 {
+	return testBagCount("reingest")
+}
+
 // Returns true if the initial version of our test bags have
 // been ingested.
 func initialIngestsComplete() bool {
-	return ingestsComplete(testBagCount(false, false))
+	return ingestsComplete("e2e_ingest_post_test", expectedIngestCount())
 }
 
 // Returns true if the updated versions of our test bags have
 // been ingested.
 func reingestsComplete() bool {
-	return ingestsComplete(testBagCount(false, true))
+	return ingestsComplete("e2e_reingest_post_test", expectedReingestCount())
 }
 
 // This queries NSQ to find the number of finished items in a channel.
-func ingestsComplete(count uint64) bool {
-	require.True(ctx.T, count > 0)
+func ingestsComplete(topicName string, desiredCount int64) bool {
+	require.True(ctx.T, desiredCount > 0)
 	stats, err := ctx.Context.NSQClient.GetStats()
 	require.Nil(ctx.T, err)
-	channelName := constants.IngestCleanup + "_worker_chan"
-	summary, err := stats.GetChannelSummary(constants.IngestCleanup, channelName)
-	require.Nil(ctx.T, err)
-	ctx.Context.Logger.Infof("In %s: %d in flight, %d finished. Want %d", channelName, summary.InFlightCount, summary.FinishCount, count)
-	return summary.InFlightCount == 0 && summary.FinishCount == count
+	allComplete := false
+	topicStats := stats.GetTopic(topicName)
+	if topicStats == nil {
+		// Topic won't exist until the first ingest/reingest is complete.
+		ctx.Context.Logger.Infof("Topic %s hasn't been created yet", topicName)
+	} else {
+		ctx.Context.Logger.Infof("Topic %s has depth %d. Want %d", topicName, topicStats.Depth, desiredCount)
+		allComplete = (topicStats.Depth == desiredCount)
+	}
+	return allComplete
 }
 
+// Returns an institution record from Pharos. Our "test.edu" institution
+// will have a different ID each time we test, so we have to look it up.
 func getInstitution(identifier string) *registry.Institution {
 	resp := ctx.Context.PharosClient.InstitutionGet(identifier)
 	assert.NotNil(ctx.T, resp)
