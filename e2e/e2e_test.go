@@ -34,4 +34,5 @@ func TestEndToEnd(t *testing.T) {
 	testGenericFiles()
 
 	// TODO: Test cleanup of staging bucket and redis.
+	testS3Cleanup()
 }
