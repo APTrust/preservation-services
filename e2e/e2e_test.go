@@ -49,7 +49,8 @@ func testIngest() {
 	testGenericFiles()
 
 	// Make sure we cleaned up all interim processing resources.
-	testS3Cleanup()
+	testS3Cleanup(ctx.Context.Config.StagingBucket)
+	testS3Cleanup(ctx.TestInstitution.ReceivingBucket)
 	testRedisCleanup()
 }
 

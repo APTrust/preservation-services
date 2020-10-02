@@ -54,16 +54,18 @@ func testS3File(storageRecord *registry.StorageRecord, gf *registry.GenericFile)
 	assert.Equal(ctx.T, sha256.Digest, objInfo.UserMetadata["Sha256"])
 }
 
-// After ingest and reingest, the staging bucket should be empty.
-func testS3Cleanup() {
+// After ingest and reingest, the staging and receiving buckets
+// should be empty.
+func testS3Cleanup(bucketName string) {
 	client := ctx.Context.S3Clients[constants.StorageProviderAWS]
 	require.NotNil(ctx.T, client)
 
-	bucket := ctx.Context.Config.StagingBucket
+	// TODO: Ensure bucket exists, so we know we're not testing the wrong one.
+
 	doneCh := make(chan struct{})
 	defer close(doneCh)
 
-	for objInfo := range client.ListObjects(bucket, "", true, doneCh) {
-		assert.Nil(ctx.T, objInfo, "%s was not deleted from staging bucket", objInfo.Key)
+	for objInfo := range client.ListObjects(bucketName, "", true, doneCh) {
+		assert.Nil(ctx.T, objInfo, "%s was not deleted from %s", objInfo.Key, bucketName)
 	}
 }
