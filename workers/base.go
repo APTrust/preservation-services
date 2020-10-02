@@ -249,6 +249,12 @@ func (b *Base) GetWorkResult(workItemID int) *service.WorkResult {
 // SaveWorkResult saves a WorkResult to Redis and logs an error if any occurs.
 // Will try three times, in case Redis is busy.
 func (b *Base) SaveWorkResult(workItemID int, result *service.WorkResult) error {
+	// Don't save, because processing is done and we don't
+	// want to leave orphan records in Redis.
+	if b.Settings.NextQueueTopic == "" {
+		b.Context.Logger.Infof("Not saving WorkResult for WorkItem %d: No next queue topic", workItemID)
+		return nil
+	}
 	for i := 0; i < 3; i++ {
 		err := b.Context.RedisClient.WorkResultSave(workItemID, result)
 		if err == nil {

@@ -32,6 +32,7 @@ func NewCleanup(context *common.Context, workItemID int, ingestObject *service.I
 func (c *Cleanup) Run() (fileCount int, errors []*service.ProcessingError) {
 	fileCount, errors = c.deleteFilesFromStaging()
 	if len(errors) == 0 {
+		c.Context.Logger.Infof("Deleting WorkItem %d from Redis", c.WorkItemID)
 		_, err := c.Context.RedisClient.WorkItemDelete(c.WorkItemID)
 		if err != nil {
 			errors = append(errors, c.Error(c.IngestObject.Identifier(), err, false))
