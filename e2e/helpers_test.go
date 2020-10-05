@@ -169,9 +169,9 @@ func getInstitution(identifier string) *registry.Institution {
 
 func createRestorationWorkItems() (err error) {
 	// create 4 file restorations
-	for _, gfIdentifier := range e2e.FilesToRestore {
-		objIdentifier := objIdentFromFileIdent(gfIdentifier)
-		err = createRestorationWorkItem(objIdentifier, gfIdentifier)
+	for _, testFile := range e2e.FilesToRestore {
+		objIdentifier := objIdentFromFileIdent(testFile.Identifier)
+		err = createRestorationWorkItem(objIdentifier, testFile.Identifier)
 		if err != nil {
 			return err
 		}
