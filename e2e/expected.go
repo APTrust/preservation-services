@@ -21,6 +21,26 @@ This file is really only used in tests, but go complains if it
 finds and e2e_test package without a corresponding e2e package.
 */
 
+var FilesToRestore = []string{
+	// Two original files
+	"test.edu/test.edu.wasabi-or/data/testbag/surfing.jpg",
+	"test.edu/test.edu.btr_good_sha256/data/netutil/listen_test.go",
+
+	// Two updated files. Checksums should match LAST ingest
+	"test.edu/test.edu.apt-001/data/files/data.xml",
+	"test.edu/test.edu.btr-001/data/files/data.json",
+}
+
+var BagsToRestore = []string{
+	// Original bags
+	"test.edu/test.edu.standard-storage",
+	"test.edu/test.edu.btr_good_sha512",
+
+	// Updated bags
+	"test.edu/test.edu.apt-002",
+	"test.edu/test.edu.btr-002",
+}
+
 type TestBag struct {
 	PathToBag        string
 	ObjectIdentifier string

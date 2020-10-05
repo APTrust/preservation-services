@@ -3,6 +3,9 @@
 package e2e_test
 
 import (
+	"fmt"
+	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -76,6 +79,15 @@ func waitForReingestCompletion() {
 	}
 }
 
+func waitForRestorationCompletion() {
+	for {
+		if restorationsComplete() {
+			break
+		}
+		time.Sleep(10 * time.Second)
+	}
+}
+
 // This returns the number of bags expected to be ingested
 // or reingested. The reingest count includes all ingests
 // plus reingests.
@@ -104,17 +116,23 @@ func expectedReingestCount() int64 {
 // Returns true if the initial version of our test bags have
 // been ingested.
 func initialIngestsComplete() bool {
-	return ingestsComplete("e2e_ingest_post_test", expectedIngestCount())
+	return allItemsInTopic(constants.TopicE2EIngest, expectedIngestCount())
 }
 
 // Returns true if the updated versions of our test bags have
 // been ingested.
 func reingestsComplete() bool {
-	return ingestsComplete("e2e_reingest_post_test", expectedReingestCount())
+	return allItemsInTopic(constants.TopicE2EReingest, expectedReingestCount())
 }
 
-// This queries NSQ to find the number of finished items in a channel.
-func ingestsComplete(topicName string, desiredCount int64) bool {
+func restorationsComplete() bool {
+	count := int64(len(e2e.FilesToRestore) + len(e2e.BagsToRestore))
+	return allItemsInTopic(constants.TopicE2ERestore, count)
+}
+
+// This queries NSQ to find the number of items that have been pushed
+// into a topic.
+func allItemsInTopic(topicName string, desiredCount int64) bool {
 	require.True(ctx.T, desiredCount > 0)
 	stats, err := ctx.Context.NSQClient.GetStats()
 	require.Nil(ctx.T, err)
@@ -130,6 +148,14 @@ func ingestsComplete(topicName string, desiredCount int64) bool {
 	return allComplete
 }
 
+func objIdentFromFileIdent(gfIdentifier string) string {
+	parts := strings.Split(gfIdentifier, "/")
+	if len(parts) < 3 {
+		return "INVALID FILE IDENTIFIER"
+	}
+	return strings.Join(parts[0:2], "/")
+}
+
 // Returns an institution record from Pharos. Our "test.edu" institution
 // will have a different ID each time we test, so we have to look it up.
 func getInstitution(identifier string) *registry.Institution {
@@ -139,4 +165,74 @@ func getInstitution(identifier string) *registry.Institution {
 	institution := resp.Institution()
 	require.NotNil(ctx.T, institution)
 	return institution
+}
+
+func createRestorationWorkItems() (err error) {
+	// create 4 file restorations
+	for _, gfIdentifier := range e2e.FilesToRestore {
+		objIdentifier := objIdentFromFileIdent(gfIdentifier)
+		err = createRestorationWorkItem(objIdentifier, gfIdentifier)
+		if err != nil {
+			return err
+		}
+	}
+
+	// create 2 APTrust and 2 BTR bag restorations
+	// one original and one updated bag from APTrust, BTR
+	for _, objIdentifier := range e2e.BagsToRestore {
+		err = createRestorationWorkItem(objIdentifier, "")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func createRestorationWorkItem(objIdentifier, gfIdentifier string) error {
+	ingestItem, err := getLastIngestRecord(objIdentifier)
+	if err != nil {
+		return err
+	}
+	utcNow := time.Now().UTC()
+	restorationItem := &registry.WorkItem{
+		Action:                constants.ActionRestore,
+		BagDate:               ingestItem.BagDate,
+		Bucket:                ingestItem.Bucket,
+		CreatedAt:             utcNow,
+		Date:                  ingestItem.Date,
+		ETag:                  ingestItem.ETag,
+		GenericFileIdentifier: gfIdentifier,
+		InstitutionID:         ingestItem.InstitutionID,
+		Name:                  ingestItem.Name,
+		Note:                  "Restoration requested",
+		ObjectIdentifier:      objIdentifier,
+		Outcome:               "Restoration requested",
+		Retry:                 true,
+		Size:                  ingestItem.Size,
+		Stage:                 constants.StageRequested,
+		Status:                constants.StatusPending,
+		User:                  "e2e@aptrust.org",
+	}
+	resp := ctx.Context.PharosClient.WorkItemSave(restorationItem)
+	return resp.Error
+}
+
+func getLastIngestRecord(objIdentifier string) (*registry.WorkItem, error) {
+	params := url.Values{}
+	params.Set("object_identifier", objIdentifier)
+	params.Set("item_action", constants.ActionIngest)
+	params.Set("stage", constants.StageCleanup)
+	params.Set("status", constants.StatusSuccess)
+	params.Set("sort", "date desc")
+	params.Set("page", "1")
+	params.Set("per_page", "1")
+	resp := ctx.Context.PharosClient.WorkItemList(params)
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	items := resp.WorkItems()
+	if len(items) < 1 {
+		return nil, fmt.Errorf("No ingest WorkItems for %s", objIdentifier)
+	}
+	return items[0], nil
 }

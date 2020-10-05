@@ -55,5 +55,8 @@ func testIngest() {
 }
 
 func testRestoration() {
-	// TODO: Write this
+	createRestorationWorkItems()
+	waitForRestorationCompletion()
+	testFileRestorations()
+	testBagRestorations()
 }
