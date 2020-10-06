@@ -236,3 +236,13 @@ func getLastIngestRecord(objIdentifier string) (*registry.WorkItem, error) {
 	}
 	return items[0], nil
 }
+
+func getRestoreWorkItems(objIdentifier, gfIdentifier string) []*registry.WorkItem {
+	params := url.Values{}
+	params.Set("object_identifier", objIdentifier)
+	params.Set("file_identifier", gfIdentifier)
+	params.Set("item_action", constants.ActionRestore)
+	resp := ctx.Context.PharosClient.WorkItemList(params)
+	require.Nil(ctx.T, resp.Error)
+	return resp.WorkItems()
+}
