@@ -73,6 +73,8 @@ func validateBag(objIdentifier string) {
 	//       After running validator, check validator.IngestObject and
 	//       RedisClient.GetBatchOfFileKeys. Check the identifiers on
 	//       all the returned ingest file objects.
+	//
+	// Requires standalone validator. See https://trello.com/c/ixLHsK0D
 	// *******************************************************************
 
 	// profileName := constants.BagItProfileDefault
