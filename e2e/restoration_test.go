@@ -4,6 +4,7 @@ package e2e_test
 
 import (
 	"fmt"
+	// "path"
 	"strings"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -41,11 +42,7 @@ func testBagRestorations() {
 		require.NotNil(ctx.T, objInfo, objIdentifier)
 
 		testWorkItemAfterRestore(objIdentifier, "")
-
-		// *******************************************************************
-		// TODO: Check that bag is valid
-		// TODO: Ensure that bag has all of the Pharos object's active files
-		// *******************************************************************
+		validateBag(objIdentifier)
 	}
 }
 
@@ -64,4 +61,24 @@ func testWorkItemAfterRestore(objIdentifier, gfIdentifier string) {
 	} else {
 		assert.True(ctx.T, strings.Contains(workItems[0].Note, objIdentifier+".tar"))
 	}
+}
+
+func validateBag(objIdentifier string) {
+	// *******************************************************************
+	// TODO: Check that bag is valid.
+	//       See, e.g., ingest/bag_validation_test/TestBag_WithFetchTxt.
+	//       Will need to make some private methods in that package
+	//       public.
+	// TODO: Ensure that bag has all of the Pharos object's active files
+	//       After running validator, check validator.IngestObject and
+	//       RedisClient.GetBatchOfFileKeys. Check the identifiers on
+	//       all the returned ingest file objects.
+	// *******************************************************************
+
+	// profileName := constants.BagItProfileDefault
+	// if strings.Contains(objIdentifier, "btr") {
+	// 	profileName = constants.BagItProfileBTR
+	// }
+	// tarFileName := strings.Split(objIdentifier, "/")[1] + ".tar"
+	// pathToBag := path.Join(ctx.Context.Config.BaseWorkingDir, "minio", "aptrust.restore.test.test.edu", tarFileName)
 }
