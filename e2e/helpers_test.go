@@ -88,6 +88,22 @@ func waitForRestorationCompletion() {
 	}
 }
 
+func waitForFixityCompletion() {
+	for {
+		if fixitiesComplete() {
+			break
+		}
+		time.Sleep(10 * time.Second)
+	}
+}
+
+func queueFixityItems() {
+	for _, testFile := range e2e.FilesForFixityCheck {
+		err := ctx.Context.NSQClient.EnqueueString(constants.TopicFixity, testFile.Identifier)
+		require.Nil(ctx.T, err, testFile.Identifier)
+	}
+}
+
 // This returns the number of bags expected to be ingested
 // or reingested. The reingest count includes all ingests
 // plus reingests.
@@ -128,6 +144,10 @@ func reingestsComplete() bool {
 func restorationsComplete() bool {
 	count := int64(len(e2e.FilesToRestore) + len(e2e.BagsToRestore))
 	return allItemsInTopic(constants.TopicE2ERestore, count)
+}
+
+func fixitiesComplete() bool {
+	return allItemsInTopic(constants.TopicE2EFixity, int64(len(e2e.FilesForFixityCheck)))
 }
 
 // This queries NSQ to find the number of items that have been pushed

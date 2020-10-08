@@ -36,7 +36,7 @@ func (tb *TestBag) TarFileName() string {
 
 type TestFile struct {
 	Identifier  string
-	FileFormat  string
+	IsReingest  bool
 	Size        int
 	Md5         string
 	Sha1        string
@@ -296,11 +296,13 @@ var FilesToRestore = []*TestFile{
 	// Two original files
 	&TestFile{
 		Identifier: "test.edu/test.edu.wasabi-or/data/testbag/surfing.jpg",
+		IsReingest: false,
 		Size:       86006,
 		Sha256:     "d3e7d17857c1d7d1e3bf47ef28f0b9b5e4359dab9a5f42aa93237347908d0425",
 	},
 	&TestFile{
 		Identifier: "test.edu/test.edu.btr_good_sha256/data/netutil/listen_test.go",
+		IsReingest: false,
 		Size:       2141,
 		Sha256:     "89c5b79f981601321d4fe9ebf49b44ac41fa1b2d0ec1cf02c2b24bb3bf12cd4a",
 	},
@@ -308,11 +310,13 @@ var FilesToRestore = []*TestFile{
 	// Two updated files. Checksums should match LAST ingest
 	&TestFile{
 		Identifier: "test.edu/test.edu.apt-001/data/files/data.xml",
+		IsReingest: true,
 		Size:       24069,
 		Sha256:     "a5cff0f39578dd62a0bf7669a1553b2b7ed10a3a8c804f6b9383b031afa9de02",
 	},
 	&TestFile{
 		Identifier: "test.edu/test.edu.btr-001/data/files/data.json",
+		IsReingest: true,
 		Size:       20556,
 		Sha256:     "03113acc50c634c28bbd9d606f356e2b58857668d160823835872acf0a0d7b9d",
 	},
@@ -327,3 +331,6 @@ var BagsToRestore = []string{
 	"test.edu/test.edu.apt-002",
 	"test.edu/test.edu.btr-002",
 }
+
+// Run fixity checks on these files.
+var FilesForFixityCheck = FilesToRestore

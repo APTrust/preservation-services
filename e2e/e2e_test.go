@@ -32,6 +32,7 @@ func TestEndToEnd(t *testing.T) {
 	initTestContext(t)
 	testIngest()
 	testRestoration()
+	testFixityChecks()
 }
 
 func testIngest() {
@@ -59,4 +60,10 @@ func testRestoration() {
 	waitForRestorationCompletion()
 	testFileRestorations()
 	testBagRestorations()
+}
+
+func testFixityChecks() {
+	queueFixityItems()
+	waitForFixityCompletion()
+	testFixityResults()
 }

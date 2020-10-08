@@ -16,6 +16,7 @@ class TestRunner
     @pids = {}
     @services_stopped = false
     @test_name = '';
+    @start_time = Time.now
     bin = self.bin_dir
     @unit_services = [
       {
@@ -400,6 +401,7 @@ class TestRunner
       stop_service(name, pid)
     end
     @services_stopped = true
+    puts "Elapsed time: #{Time.now - @start_time} seconds"
   end
 
   def print_results
