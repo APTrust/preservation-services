@@ -133,11 +133,12 @@ func (b *Base) HandleMessage(message *nsq.Message) error {
 	}
 
 	// If there's any reason to skip this, return nil to tell
-	// NSQ it's done. This function also sets some properties on
-	// the WorkItem, so admins and depositors will know the item's
-	// state. So save the WorkItem before returning.
+	// NSQ it's done. We haven't yet marked this WorkItem as
+	// started, so do not save it back to Pharos if we're going
+	// to skip it. Doing so is the likely cause of a race condition
+	// that resulted in the sporadically stalled items recorded in
+	// https://trello.com/c/AsPdzfLi
 	if b.ShouldSkipThis(workItem) {
-		b.SaveWorkItem(workItem)
 		b.Context.Logger.Infof("Skipping WorkItem %d (%s)", workItem.ID, workItem.Name)
 		return nil
 	}
