@@ -5,6 +5,7 @@ package e2e_test
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -14,7 +15,6 @@ import (
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
-	//"github.com/APTrust/preservation-services/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -67,35 +67,55 @@ func testWorkItemAfterRestore(objIdentifier, gfIdentifier string) {
 	}
 }
 
+// All we're really testing here is that the bag is present
+// and contains all the expected files.
 func validateBag(objIdentifier string) {
-	// *******************************************************************
-	// TODO: Check that bag is valid.
-	//       See, e.g., ingest/bag_validation_test/TestBag_WithFetchTxt.
-	//       Will need to make some private methods in that package
-	//       public.
-	// TODO: Ensure that bag has all of the Pharos object's active files
-	//       After running validator, check validator.IngestObject and
-	//       RedisClient.GetBatchOfFileKeys. Check the identifiers on
-	//       all the returned ingest file objects.
-	//
-	// Requires standalone validator. See https://trello.com/c/ixLHsK0D
-	// *******************************************************************
+	intelObj := getObject(objIdentifier)
+	pharosFiles := getPharosFiles(objIdentifier)
+	tarFileName := strings.Split(objIdentifier, "/")[1] + ".tar"
+	pathToBag := path.Join(ctx.Context.Config.BaseWorkingDir, "minio", "aptrust.restore.test.test.edu", "test.edu", tarFileName)
 
-	// profileName := constants.BagItProfileDefault
-	// if strings.Contains(objIdentifier, "btr") {
-	// 	profileName = constants.BagItProfileBTR
-	// }
+	// Parse the restored bag and find out which ingest files are in it.
+	ingestFiles, err := scanBag(intelObj, pathToBag)
+	require.Nil(ctx.T, err, objIdentifier)
+	assert.True(ctx.T, len(ingestFiles) > 0, objIdentifier)
 
+	for _, gf := range pharosFiles {
+
+		// Make sure file was restored with bag
+		restoredFile := ingestFiles[gf.Identifier]
+		require.NotNil(ctx.T, restoredFile, gf.Identifier)
+
+		pharosLatestSha256 := gf.GetLatestChecksum(constants.AlgSha256)
+		require.NotNil(ctx.T, pharosLatestSha256, gf.Identifier)
+		restoredFileSha256 := restoredFile.GetChecksum(constants.SourceIngest, constants.AlgSha256)
+		require.NotNil(ctx.T, restoredFileSha256, gf.Identifier)
+
+		// Make sure the restored version was the LATEST version
+		assert.Equal(ctx.T, pharosLatestSha256.Digest, restoredFileSha256.Digest, gf.Identifier)
+	}
+}
+
+func getObject(objIdentifier string) *registry.IntellectualObject {
 	resp := ctx.Context.PharosClient.IntellectualObjectGet(objIdentifier)
 	require.Nil(ctx.T, resp.Error, objIdentifier)
 	intelObj := resp.IntellectualObject()
 	require.NotNil(ctx.T, intelObj, objIdentifier)
-	tarFileName := strings.Split(objIdentifier, "/")[1] + ".tar"
-	pathToBag := path.Join(ctx.Context.Config.BaseWorkingDir, "minio", "aptrust.restore.test.test.edu", "test.edu", tarFileName)
+	return intelObj
+}
 
-	ingestFiles, err := scanBag(intelObj, pathToBag)
-	require.Nil(ctx.T, err, objIdentifier)
-	assert.True(ctx.T, len(ingestFiles) > 0, objIdentifier)
+// Get a list of files belonging to this object from Pharos
+func getPharosFiles(objIdentifier string) []*registry.GenericFile {
+	params := url.Values{}
+	params.Set("intellectual_object_identifier", objIdentifier)
+	params.Set("include_relations", "true")
+	params.Set("include_storage_records", "true")
+	params.Set("page", "1")
+	params.Set("per_page", "200")
+	resp := ctx.Context.PharosClient.GenericFileList(params)
+	require.Nil(ctx.T, resp.Error, objIdentifier)
+	require.NotEmpty(ctx.T, resp.GenericFiles())
+	return resp.GenericFiles()
 }
 
 func scanBag(intelObj *registry.IntellectualObject, pathToBag string) (map[string]*service.IngestFile, error) {
@@ -104,6 +124,7 @@ func scanBag(intelObj *registry.IntellectualObject, pathToBag string) (map[strin
 	ingestObject := &service.IngestObject{
 		S3Key:         intelObj.BagName + ".tar",
 		ID:            intelObj.ID,
+		Institution:   ctx.TestInstitution.Identifier,
 		InstitutionID: intelObj.InstitutionID,
 		StorageOption: intelObj.StorageOption,
 	}
