@@ -4,12 +4,16 @@ package e2e_test
 
 import (
 	"fmt"
-	// "path"
+	"io"
+	"os"
+	"path"
 	"strings"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/e2e"
-	//"github.com/APTrust/preservation-services/models/registry"
+	"github.com/APTrust/preservation-services/ingest"
+	"github.com/APTrust/preservation-services/models/registry"
+	"github.com/APTrust/preservation-services/models/service"
 	//"github.com/APTrust/preservation-services/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -81,6 +85,58 @@ func validateBag(objIdentifier string) {
 	// if strings.Contains(objIdentifier, "btr") {
 	// 	profileName = constants.BagItProfileBTR
 	// }
-	// tarFileName := strings.Split(objIdentifier, "/")[1] + ".tar"
-	// pathToBag := path.Join(ctx.Context.Config.BaseWorkingDir, "minio", "aptrust.restore.test.test.edu", tarFileName)
+
+	resp := ctx.Context.PharosClient.IntellectualObjectGet(objIdentifier)
+	require.Nil(ctx.T, resp.Error, objIdentifier)
+	intelObj := resp.IntellectualObject()
+	require.NotNil(ctx.T, intelObj, objIdentifier)
+	tarFileName := strings.Split(objIdentifier, "/")[1] + ".tar"
+	pathToBag := path.Join(ctx.Context.Config.BaseWorkingDir, "minio", "aptrust.restore.test.test.edu", "test.edu", tarFileName)
+
+	ingestFiles, err := scanBag(intelObj, pathToBag)
+	require.Nil(ctx.T, err, objIdentifier)
+	assert.True(ctx.T, len(ingestFiles) > 0, objIdentifier)
+}
+
+func scanBag(intelObj *registry.IntellectualObject, pathToBag string) (map[string]*service.IngestFile, error) {
+	ingestFiles := make(map[string]*service.IngestFile)
+
+	ingestObject := &service.IngestObject{
+		S3Key:         intelObj.BagName + ".tar",
+		ID:            intelObj.ID,
+		InstitutionID: intelObj.InstitutionID,
+		StorageOption: intelObj.StorageOption,
+	}
+
+	tarredBag, err := os.Open(pathToBag)
+	if err != nil {
+		return ingestFiles, err
+	}
+
+	defer tarredBag.Close()
+	scanner := ingest.NewTarredBagScanner(
+		tarredBag,
+		ingestObject,
+		ctx.Context.Config.IngestTempDir)
+
+	for {
+		ingestFile, err := scanner.ProcessNextEntry()
+		// EOF expected at end of file
+		if err == io.EOF {
+			break
+		}
+		// Any non-EOF error is a problem
+		if err != nil {
+			return ingestFiles, err
+		}
+		// ProcessNextEntry returns nil for directories,
+		// symlinks, and anything else that's not a file.
+		// We can't store these non-objects in S3, so we
+		// ignore them.
+		if ingestFile == nil {
+			continue
+		}
+		ingestFiles[ingestFile.Identifier()] = ingestFile
+	}
+	return ingestFiles, nil
 }
