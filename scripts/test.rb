@@ -154,16 +154,14 @@ class TestRunner
   end
 
 
-  # TODO: Test both initial ingest and reingest.
-  # TODO: Run end-to-end tests without "sleep". Needs reliable
-  #       triggers to say when ingest is complete and when
-  #       reingest is complete. Consider writing all the code
-  #       in go with a manager that waits for WorkItems to complete.
   # TODO: Quit if an instance of Pharos is already running on 9292.
+  # Note: Don't run apt_queue_fixity service here, because it will queue
+  # a bunch of fixture files. The e2e test will queue specific items for
+  # fixity checks when it's ready to test that functionality.
   def run_e2e_tests(arg)
     build_ingest_services
     init_for_integration
-    start_ingest_services(["ingest_bucket_reader", "apt_queue", "apt_queue_fixity"])
+    start_ingest_services(["ingest_bucket_reader", "apt_queue"])
 
     puts "Giving the workers some time to finish"
     sleep(10)
