@@ -341,6 +341,6 @@ var FilesToDelete = []string{
 }
 
 var ObjectsToDelete = []string{
-	"test.edu/test.edu.apt-002.tar",
+	"test.edu/test.edu.apt-002",
 	"test.edu/test.edu.glacier-oh",
 }

@@ -13,6 +13,10 @@ import (
 	//"github.com/stretchr/testify/require"
 )
 
+func testDeletionResults() {
+
+}
+
 // func testFileDeletion() {
 // 	for _, gfIdentifier := range e2e.FilesToDelete {
 // 		// Get GenericFile record from Pharos

@@ -21,6 +21,10 @@ import (
 // This file contains helpers to do some setup and
 // housekeeping but don't perform any actual tests.
 
+// -------------------------------------------------------
+// TODO: Refactor. There's a lot of code duplication here.
+// -------------------------------------------------------
+
 // Set up a context for testing.
 func initTestContext(t *testing.T) {
 	objects, err := e2e.LoadObjectJSON()
@@ -97,6 +101,15 @@ func waitForFixityCompletion() {
 	}
 }
 
+func waitForDeletionCompletion() {
+	for {
+		if fixitiesComplete() {
+			break
+		}
+		time.Sleep(10 * time.Second)
+	}
+}
+
 func queueFixityItems() {
 	for _, testFile := range e2e.FilesForFixityCheck {
 		err := ctx.Context.NSQClient.EnqueueString(constants.TopicFixity, testFile.Identifier)
@@ -148,6 +161,11 @@ func restorationsComplete() bool {
 
 func fixitiesComplete() bool {
 	return allItemsInTopic(constants.TopicE2EFixity, int64(len(e2e.FilesForFixityCheck)))
+}
+
+func deletionsComplete() bool {
+	count := int64(len(e2e.FilesToDelete) + len(e2e.ObjectsToDelete))
+	return allItemsInTopic(constants.TopicE2EDelete, count)
 }
 
 // This queries NSQ to find the number of items that have been pushed

@@ -33,6 +33,7 @@ func TestEndToEnd(t *testing.T) {
 	testIngest()
 	testRestoration()
 	testFixityChecks()
+	testDeletions()
 }
 
 func testIngest() {
@@ -66,4 +67,10 @@ func testFixityChecks() {
 	queueFixityItems()
 	waitForFixityCompletion()
 	testFixityResults()
+}
+
+func testDeletions() {
+	createDeletionWorkItems()
+	waitForDeletionCompletion()
+	testDeletionResults()
 }
