@@ -334,3 +334,13 @@ var BagsToRestore = []string{
 
 // Run fixity checks on these files.
 var FilesForFixityCheck = FilesToRestore
+
+var FilesToDelete = []string{
+	"test.edu/test.edu.glacier-va/data/testbag/surfing.jpg",
+	"test.edu/test.edu.standard-storage/data/testbag/surfing.jpg",
+}
+
+var ObjectsToDelete = []string{
+	"test.edu/test.edu.apt-002.tar",
+	"test.edu/test.edu.glacier-oh",
+}

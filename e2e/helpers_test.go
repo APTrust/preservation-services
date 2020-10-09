@@ -266,3 +266,45 @@ func getRestoreWorkItems(objIdentifier, gfIdentifier string) []*registry.WorkIte
 	require.Nil(ctx.T, resp.Error)
 	return resp.WorkItems()
 }
+
+func createDeletionWorkItems() {
+	for _, gfIdentifier := range e2e.FilesToDelete {
+		objIdentifier := objIdentFromFileIdent(gfIdentifier)
+		err := createDeletionWorkItem(objIdentifier, gfIdentifier)
+		assert.Nil(ctx.T, err, gfIdentifier)
+	}
+	for _, objIdentifier := range e2e.ObjectsToDelete {
+		err := createDeletionWorkItem(objIdentifier, "")
+		assert.Nil(ctx.T, err, objIdentifier)
+	}
+}
+
+func createDeletionWorkItem(objIdentifier, gfIdentifier string) error {
+	ingestItem, err := getLastIngestRecord(objIdentifier)
+	if err != nil {
+		return err
+	}
+	utcNow := time.Now().UTC()
+	deletionItem := &registry.WorkItem{
+		Action:                constants.ActionDelete,
+		BagDate:               ingestItem.BagDate,
+		Bucket:                ingestItem.Bucket,
+		CreatedAt:             utcNow,
+		Date:                  ingestItem.Date,
+		ETag:                  ingestItem.ETag,
+		GenericFileIdentifier: gfIdentifier,
+		InstApprover:          "approver@example.com",
+		InstitutionID:         ingestItem.InstitutionID,
+		Name:                  ingestItem.Name,
+		Note:                  "Deletion requested",
+		ObjectIdentifier:      objIdentifier,
+		Outcome:               "Deletion requested",
+		Retry:                 true,
+		Size:                  ingestItem.Size,
+		Stage:                 constants.StageRequested,
+		Status:                constants.StatusPending,
+		User:                  "e2e@aptrust.org",
+	}
+	resp := ctx.Context.PharosClient.WorkItemSave(deletionItem)
+	return resp.Error
+}

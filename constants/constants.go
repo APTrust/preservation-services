@@ -131,6 +131,7 @@ const (
 	StorageWasabiOR            = "Wasabi-OR"
 	StorageWasabiVA            = "Wasabi-VA"
 	TopicDelete                = "delete_item"
+	TopicE2EDelete             = "e2e_deletion_post_test"
 	TopicE2EFixity             = "e2e_fixity_post_test"
 	TopicE2EIngest             = "e2e_ingest_post_test"
 	TopicE2EReingest           = "e2e_reingest_post_test"

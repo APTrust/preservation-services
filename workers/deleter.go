@@ -90,6 +90,9 @@ func (d *Deleter) ProcessSuccessChannel() {
 
 		// Tell NSQ this b is done with this message.
 		task.NSQFinish()
+
+		// For end-to-end tests
+		QueueE2EIdentifier(d.Context, constants.TopicE2EDelete, d.getIdentifier(task.WorkItem))
 	}
 }
 
@@ -115,6 +118,7 @@ func (d *Deleter) ProcessErrorChannel() {
 			task.NSQRequeue(d.Settings.RequeueTimeout)
 		} else {
 			task.NSQFinish()
+			QueueE2EIdentifier(d.Context, constants.TopicE2EDelete, d.getIdentifier(task.WorkItem))
 		}
 	}
 }
@@ -137,6 +141,7 @@ func (d *Deleter) ProcessFatalErrorChannel() {
 
 		// Tell NSQ we're done with this message.
 		task.NSQFinish()
+		QueueE2EIdentifier(d.Context, constants.TopicE2EDelete, d.getIdentifier(task.WorkItem))
 	}
 }
 
@@ -234,4 +239,11 @@ func (d *Deleter) MissingRequiredApproval(workItem *registry.WorkItem) bool {
 		return true
 	}
 	return false
+}
+
+func (d *Deleter) getIdentifier(workItem *registry.WorkItem) string {
+	if workItem.GenericFileIdentifier != "" {
+		return workItem.GenericFileIdentifier
+	}
+	return workItem.ObjectIdentifier
 }
