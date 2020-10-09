@@ -33,7 +33,9 @@ func TestEndToEnd(t *testing.T) {
 	testIngest()
 	testRestoration()
 	testFixityChecks()
-	testDeletions()
+
+	// Can't automate deletion tests.
+	// testDeletions()
 }
 
 func testIngest() {
@@ -69,8 +71,14 @@ func testFixityChecks() {
 	testFixityResults()
 }
 
-func testDeletions() {
-	createDeletionWorkItems()
-	waitForDeletionCompletion()
-	testDeletionResults()
-}
+// Can't automate deletion tests because they require
+// email confirmations. We may try to work around this
+// later, but it's a substantial amount of work, and
+// we already test deletions in our integration tests.
+//
+// func testDeletions() {
+// 	createDeletionWorkItems()
+// 	waitForDeletionCompletion()
+// 	testFileDeletions()
+// 	testObjectDeletions()
+// }

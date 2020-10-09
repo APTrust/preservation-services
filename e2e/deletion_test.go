@@ -13,24 +13,26 @@ import (
 	//"github.com/stretchr/testify/require"
 )
 
-func testDeletionResults() {
+// -----------------------------------------------------------
+// Cannot run these tests because deletion confirmation
+// process requires email processing, secure tokens, and
+// human interaction.
+// -----------------------------------------------------------
 
+func testFileDeletions() {
+	// 	for _, gfIdentifier := range e2e.FilesToDelete {
+	// 		// Get GenericFile record from Pharos
+	// 		// Pass to verifyFileDeletion
+	// 	}
 }
 
-// func testFileDeletion() {
-// 	for _, gfIdentifier := range e2e.FilesToDelete {
-// 		// Get GenericFile record from Pharos
-// 		// Pass to verifyFileDeletion
-// 	}
-// }
-
-// func testObjectDeletion() {
-// 	for _, objIdentifier := range e2e.ObjectsToDelete {
-// 		// Verify object state changed to D
-// 		// Verify object deletion event
-// 		// Verify all files deleted
-// 	}
-// }
+func testObjectDeletions() {
+	// 	for _, objIdentifier := range e2e.ObjectsToDelete {
+	// 		// Verify object state changed to D
+	// 		// Verify object deletion event
+	// 		// Verify all files deleted
+	// 	}
+}
 
 func verifyFileDeletion(gf *registry.GenericFile) {
 	// Verify file state changed to D

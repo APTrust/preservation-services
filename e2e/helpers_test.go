@@ -103,7 +103,7 @@ func waitForFixityCompletion() {
 
 func waitForDeletionCompletion() {
 	for {
-		if fixitiesComplete() {
+		if deletionsComplete() {
 			break
 		}
 		time.Sleep(10 * time.Second)
@@ -298,6 +298,7 @@ func createDeletionWorkItems() {
 }
 
 func createDeletionWorkItem(objIdentifier, gfIdentifier string) error {
+	ctx.Context.Logger.Info("Creating deletion WorkItem for %s - %s", objIdentifier, gfIdentifier)
 	ingestItem, err := getLastIngestRecord(objIdentifier)
 	if err != nil {
 		return err
