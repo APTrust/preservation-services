@@ -32,17 +32,20 @@ export APT_ENV=test
 
 # Testing
 
+## Unit Tests
+
 To run unit tests: `ruby scripts/test.rb units`
+
+The unit tests start two lightweight services, redis and minio, Mac and Linux versions of which are included in this source repo.
+
+## Integration Tests
 
 To run integration tests: `ruby scripts/test.rb integration`
 
 Note that integration tests require the following:
 
-1. Docker
-2. A local installation of the [Pharos source](https://github.com/APTrust/pharos)
-3. An environment variable called `PHAROS_ROOT` set to the absolute path of your Pharos source code installation.
-
-The unit tests start two lightweight services, redis and minio, Mac and Linux versions of which are included in this source repo.
+1. A local installation of the [Pharos source](https://github.com/APTrust/pharos)
+2. An environment variable called `PHAROS_ROOT` set to the absolute path of your Pharos source code installation.
 
 The integration tests start all of the services that unit tests start, plus nsqd, nsqlookupd, nsqdadmin (all provided in this repo) and a Docker instance of Pharos.
 
@@ -53,15 +56,107 @@ Note: Integration test files end with `_int_test.go` and include the following b
 
 ```
 
+## End to End Tests
+
+To run integration tests: `ruby scripts/test.rb e2e`
+
+End to end tests have the same system requirements as integration tests, starting
+instances of Redis, NSQ, Minio, and Pharos. The use the `+build e2e` build tag.
+
+These tests upload a number of bags to the local Minio receiving bucket and let
+the services work from there as the would in production. The bucket reader finds
+the new bags, creates WorkItems, and queues them in NSQ.
+
+When items complete ingest, they go into NSQ topic e2e\_ingest\_post\_test. When
+all items have been ingested, updated versions of some bags go into the
+receiving bucket for reingest.
+
+After reingest, the tests initiate some file and object restorations, and some
+fixity checks.
+
+After each major step (ingest + reingest, restoration, and fixity checking), the
+tests ensure that all expected records (objects, files, checksums, storage
+records, premis events, and work items) exist in Pharos and that all files are
+in the right places in S3/Glacier/Wasabi. They also test that temporary records
+are cleaned out of Redis, and that temp files are removed from the staging
+bucket.
+
+These tests take 5-10 minutes run and are not meant to be run with every commit.
+They should be run after code refactoring, the addition of new features, and the
+updating of underlying libaries, as a sanity check __after__ all integration
+tests have passed.
+
+They do not test file and object deletion because those actions require
+multi-step email confirmation workflows that we can't easily simulate.
+
+Integration tests do cover file and object deletion, and you can test those
+actions manually using interactive testing.
+
 # Interactive Testing
 
 You can launch interactive tests with `./scripts/test.rb interactive`
 
-If you're going to tweak Pharos code during interactive tests, be sure to set `config.cache_classes = true` in the Pharos file `config/envionments/docker_integration.rb`.
+With interactive tests, you can bag items with DART and push them through the
+ingest, re-ingest, restoration and deletion processes. This can be useful for
+load testing, testing bags that cause obscure bugs, and getting a feel for the
+general user experience.
+
+If you're going to tweak Pharos code during interactive tests, be sure to set `config.cache_classes = false` in the Pharos file
+`config/envionments/integration.rb`.
+
+We do not use docker in local integration or interactive tests because it is
+abysmally slow on Mac OS, particularly when dynamically reloading Rails code.
+
+## Settings for Interactive Tests
+
+Pharos will be running at `http://localhost:9292` with login `system@aprust.org`
+and password `password`.
+
+Redis will be running on `localhost:6379`
+
+The NSQ admin panel will run at `http://localhost:4171`
+
+The Minio control panel will run at `http://localhost:9899` with login
+`minioadmin` and password `minioadmin`.
+
+If you want to push bags from DART into this locally running system, you'll need
+to follow the [settings import instructions](https://aptrust.github.io/dart-docs/users/settings/import/),
+cutting and pasting the JSON below.
+
+```json
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "appSettings": [],
+  "bagItProfiles": [],
+  "questions": [],
+  "remoteRepositories": [],
+  "storageServices": [
+    {
+      "id": "fd40a9a1-8301-45cf-9550-1d8ed6d996a0",
+      "name": "Local Minio S3 Service",
+      "description": "Minio server on localhost",
+      "protocol": "s3",
+      "host": "localhost",
+      "port": 9899,
+      "bucket": "aptrust.receiving.test.test.edu",
+      "login": "minioadmin",
+      "password": "minioadmin",
+      "loginExtra": "",
+      "allowsUpload": true,
+      "allowsDownload": true
+    }
+  ]
+}
+```
 
 # Docker Build & Deploy
 
-Wait for Travis to build the docker containers, or build locally with `make release`.
+On our staging, demo, and production systems, we wrap all services in Docker
+containers. You can build the containers locally with `make release`, or wait
+for Travis to build them after you push a commit to GitHub.
+
+Travis build the containers after each push, if the tests pass. The test +
+build process usually takes about 20 minutes.
 
 Regardless of where the container build is initiated, deploy with ansible:
 
@@ -69,9 +164,10 @@ Regardless of where the container build is initiated, deploy with ansible:
 
 # Deployment Notes
 
-Logs, NSQ, temp files and Redis aof files are in `/data/preserv`.
+On staging (and later, on demo and production) all logs, NSQ files, temp files
+and Redis aof files are in `/data/preserv`.
 
-Source tree is in `/srv/docker/preserv`
+The source tree is in `/srv/docker/preserv`
 
 To see stdout and stderr of workers:
 
