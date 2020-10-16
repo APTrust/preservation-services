@@ -163,10 +163,7 @@ func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
 		assert.True(t, gf.Size > 0)
 		assert.Equal(t, "A", gf.State)
 		assert.Equal(t, constants.StorageStandard, gf.StorageOption)
-		assert.True(t, strings.HasPrefix(gf.URI, "https://"))
-		uriParts := strings.Split(gf.URI, "/")
-		endOfURI := uriParts[len(uriParts)-1]
-		assert.True(t, util.LooksLikeUUID(endOfURI))
+		assert.True(t, util.LooksLikeUUID(gf.UUID))
 		assert.False(t, gf.UpdatedAt.IsZero())
 
 		testFileEventsInPharos(t, recorder, gf.Identifier)
@@ -443,10 +440,7 @@ func testUpdatedFilesInPharos(t *testing.T, recorder *ingest.Recorder, timestamp
 		assert.True(t, gf.Size > 0)
 		assert.Equal(t, "A", gf.State)
 		assert.Equal(t, constants.StorageStandard, gf.StorageOption)
-		assert.True(t, strings.HasPrefix(gf.URI, "https://"))
-		uriParts := strings.Split(gf.URI, "/")
-		endOfURI := uriParts[len(uriParts)-1]
-		assert.True(t, util.LooksLikeUUID(endOfURI))
+		assert.True(t, util.LooksLikeUUID(gf.UUID))
 		assert.True(t, gf.UpdatedAt.After(timestamp))
 
 		testUpdatedFileEventsInPharos(t, recorder, gf.Identifier, timestamp)

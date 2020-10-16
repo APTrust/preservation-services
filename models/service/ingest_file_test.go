@@ -304,7 +304,7 @@ func TestToGenericFile(t *testing.T) {
 	assert.Equal(t, int64(400), gf.Size)
 	assert.Equal(t, constants.StateActive, gf.State)
 	assert.Equal(t, constants.StorageStandard, gf.StorageOption)
-	assert.Equal(t, "https://example.com/preservation/0987", gf.URI)
+	assert.Equal(t, constants.EmptyUUID, gf.UUID)
 
 	require.Equal(t, 3, len(gf.Checksums))
 	assert.Equal(t, constants.AlgMd5, gf.Checksums[0].Algorithm)

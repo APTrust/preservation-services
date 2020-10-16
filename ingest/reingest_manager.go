@@ -271,7 +271,7 @@ func (r *ReingestManager) SetStorageOption(ingestFile *service.IngestFile, pharo
 func (r *ReingestManager) FlagForUpdate(ingestFile *service.IngestFile, pharosFile *registry.GenericFile) {
 	ingestFile.IsReingest = true
 	ingestFile.NeedsSave = true
-	ingestFile.UUID = pharosFile.UUID()
+	ingestFile.UUID = pharosFile.UUID
 }
 
 // FlagUnchanged marks an IngestFile as NOT needing to be saved, and sets the
@@ -279,7 +279,7 @@ func (r *ReingestManager) FlagForUpdate(ingestFile *service.IngestFile, pharosFi
 func (r *ReingestManager) FlagUnchanged(ingestFile *service.IngestFile, pharosFile *registry.GenericFile) {
 	ingestFile.IsReingest = true
 	ingestFile.NeedsSave = false
-	ingestFile.UUID = pharosFile.UUID()
+	ingestFile.UUID = pharosFile.UUID
 }
 
 func (r *ReingestManager) FlagObjectAsReingest(obj *registry.IntellectualObject) error {

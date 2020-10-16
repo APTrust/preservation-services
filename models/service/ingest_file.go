@@ -464,7 +464,7 @@ func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 		State:                        constants.StateActive,
 		StorageOption:                f.StorageOption,
 		StorageRecords:               storageRecords,
-		URI:                          f.URI(),
+		UUID:                         f.UUID,
 	}, nil
 }
 

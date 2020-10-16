@@ -202,7 +202,7 @@ func createObjectAndFiles(t *testing.T, context *common.Context) {
 				Size:                         500,
 				State:                        "A",
 				StorageOption:                constants.StorageStandard,
-				URI:                          "http://localhost/fake-uri",
+				UUID:                         uuid.NewV4().String(),
 			}
 			resp = context.PharosClient.GenericFileSave(gf)
 			require.Nil(t, resp.Error)

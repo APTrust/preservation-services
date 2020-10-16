@@ -26,7 +26,7 @@ func testStorageRecords(pharosFile, expectedFile *registry.GenericFile) {
 	}
 	for _, sr := range pharosFile.StorageRecords {
 		assert.True(t, strings.HasPrefix(sr.URL, "https://"))
-		assert.True(t, util.LooksLikeUUID(pharosFile.UUID()), pharosFile.Identifier)
+		assert.True(t, util.LooksLikeUUID(pharosFile.UUID), pharosFile.Identifier)
 		for _, b := range buckets {
 			if strings.Contains(sr.URL, b.Bucket) {
 				hasURLFor[b.Bucket] = true

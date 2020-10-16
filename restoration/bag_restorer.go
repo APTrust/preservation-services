@@ -368,7 +368,7 @@ func (r *BagRestorer) AddToTarFile(gf *registry.GenericFile) (digests map[string
 		return digests, err
 	}
 	client := r.Context.S3Clients[b.Provider]
-	obj, err := client.GetObject(b.Bucket, gf.UUID(), minio.GetObjectOptions{})
+	obj, err := client.GetObject(b.Bucket, gf.UUID, minio.GetObjectOptions{})
 	if err != nil {
 		return digests, err
 	}

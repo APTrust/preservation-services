@@ -26,7 +26,7 @@ type GenericFile struct {
 	State                        string           `json:"state,omitempty"`
 	StorageOption                string           `json:"storage_option"`
 	StorageRecords               []*StorageRecord `json:"storage_records,omitempty"`
-	URI                          string           `json:"uri,omitempty"`
+	UUID                         string           `json:"uuid,omitempty"`
 	UpdatedAt                    time.Time        `json:"updated_at,omitempty"`
 }
 
@@ -87,13 +87,6 @@ func (gf *GenericFile) SerializeForPharos() ([]byte, error) {
 	return json.Marshal(dataStruct)
 }
 
-// UUID returns this file's UUID. This is the identifier we use in
-// preservation storage.
-func (gf *GenericFile) UUID() string {
-	parts := strings.Split(gf.URI, "/")
-	return parts[len(parts)-1]
-}
-
 // GetLatestChecksum returns the most recent checksum digest for the given
 // algorithm for this file.
 func (gf *GenericFile) GetLatestChecksum(algorithm string) *Checksum {
@@ -119,7 +112,7 @@ type GenericFileForPharos struct {
 	Size                 int64            `json:"size"`
 	StorageOption        string           `json:"storage_option"`
 	StorageRecords       []*StorageRecord `json:"storage_records_attributes,omitempty"`
-	URI                  string           `json:"uri,omitempty"`
+	UUID                 string           `json:"uuid,omitempty"`
 }
 
 func NewGenericFileForPharos(gf *GenericFile) *GenericFileForPharos {
@@ -134,6 +127,6 @@ func NewGenericFileForPharos(gf *GenericFile) *GenericFileForPharos {
 		Size:                 gf.Size,
 		StorageOption:        gf.StorageOption,
 		StorageRecords:       gf.StorageRecords,
-		URI:                  gf.URI,
+		UUID:                 gf.UUID,
 	}
 }

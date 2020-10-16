@@ -163,7 +163,7 @@ func GetGenericFileForObj(obj *registry.IntellectualObject, suffix int, withChec
 		Size:                         484896,
 		State:                        constants.StateActive,
 		StorageOption:                constants.StorageStandard,
-		URI:                          fmt.Sprintf("https://example.com/00000000%d", suffix),
+		UUID:                         uuid.NewV4().String(),
 	}
 	if withChecksums {
 		gf.Checksums = []*registry.Checksum{

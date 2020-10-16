@@ -3,7 +3,6 @@
 package fixity_test
 
 import (
-	"fmt"
 	"path"
 	"testing"
 	"time"
@@ -101,7 +100,7 @@ func getGenericFile(t *testing.T, context *common.Context) *registry.GenericFile
 		Size:                         15,
 		State:                        constants.StateActive,
 		StorageOption:                constants.StorageStandard,
-		URI:                          fmt.Sprintf("https://example.com/%s", fileUUID),
+		UUID:                         fileUUID,
 	}
 }
 

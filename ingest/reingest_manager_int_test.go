@@ -3,7 +3,6 @@
 package ingest_test
 
 import (
-	"fmt"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
@@ -152,7 +151,7 @@ func TestSetStorageOption(t *testing.T) {
 func TestFlagForUpdate(t *testing.T) {
 	pharosUUID := "c445c30b-2299-4796-b803-e3c6ee43a2ae"
 	genericFile := &registry.GenericFile{
-		URI: fmt.Sprintf("https://example.com/storage/%s", pharosUUID),
+		UUID: pharosUUID,
 	}
 	ingestFile := &service.IngestFile{
 		NeedsSave: false,
@@ -167,7 +166,7 @@ func TestFlagForUpdate(t *testing.T) {
 func TestFlagUnchanged(t *testing.T) {
 	pharosUUID := "c445c30b-2299-4796-b803-e3c6ee43a2ae"
 	genericFile := &registry.GenericFile{
-		URI: fmt.Sprintf("https://example.com/storage/%s", pharosUUID),
+		UUID: pharosUUID,
 	}
 	ingestFile := &service.IngestFile{
 		NeedsSave: true,

@@ -79,7 +79,7 @@ func (r *FileRestorer) getFileFromPreservation(gf *registry.GenericFile) (*minio
 		return nil, err
 	}
 	client := r.Context.S3Clients[b.Provider]
-	obj, err := client.GetObject(b.Bucket, gf.UUID(), minio.GetObjectOptions{})
+	obj, err := client.GetObject(b.Bucket, gf.UUID, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, err
 	}

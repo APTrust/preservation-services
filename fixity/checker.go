@@ -124,10 +124,10 @@ func (c *Checker) CalculateFixity(gf *registry.GenericFile) (fixity, url string,
 		c.Context.Logger.Error(err.Error())
 		return "", "", err
 	}
-	c.Context.Logger.Infof("Checking %s for file %s with UUID %s", preservationBucket.Bucket, gf.Identifier, gf.UUID())
+	c.Context.Logger.Infof("Checking %s for file %s with UUID %s", preservationBucket.Bucket, gf.Identifier, gf.UUID)
 	obj, err := client.GetObject(
 		preservationBucket.Bucket,
-		gf.UUID(),
+		gf.UUID,
 		minio.GetObjectOptions{},
 	)
 	if err != nil {
@@ -139,7 +139,7 @@ func (c *Checker) CalculateFixity(gf *registry.GenericFile) (fixity, url string,
 	sha256Hash := sha256.New()
 	_, err = io.Copy(sha256Hash, obj)
 	if err != nil {
-		err = fmt.Errorf("Error streaming S3 file %s/%s through hash function: %v", preservationBucket.Bucket, gf.UUID(), err)
+		err = fmt.Errorf("Error streaming S3 file %s/%s through hash function: %v", preservationBucket.Bucket, gf.UUID, err)
 		return "", storageRecord.URL, err
 	}
 	fixity = fmt.Sprintf("%x", sha256Hash.Sum(nil))
