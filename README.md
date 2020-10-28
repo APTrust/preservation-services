@@ -178,6 +178,12 @@ sudo docker-compose logs -f ingest_staging_uploader
 
 ...or `sudo docker-compose logs -f` to tail all services
 
+...or `sudo docker logs <container_id>`
+
+For a simple shell inside a container:
+
+`sudo docker exec -it <container id> /bin/sh`
+
 # Staging Notes
 
 To run the Redis CLI on staging:
