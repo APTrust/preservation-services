@@ -82,9 +82,7 @@
 			"tagFile": "bag-info.txt",
 			"tagName": "Bag-Count",
 			"required": false,
-			"values": [
-				"1"
-			],
+			"values": [],
 			"defaultValue": "1",
 			"userValue": "",
 			"help": "",
