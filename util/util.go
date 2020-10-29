@@ -3,6 +3,7 @@ package util
 import (
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
 	"path"
@@ -176,4 +177,47 @@ func Min(x, y int) int {
 	} else {
 		return y
 	}
+}
+
+// EstimatedChunkSize returns the size we should use for each chunk
+// in a multipart S3 upload. If we don't tell Minio what chunk size
+// to use, and it doesn't know the size of the total upload, it
+// tries to allocate 5 GB of RAM. This causes some restorations to
+// fail with an out of memory error. https://trello.com/c/1hkP28x1
+//
+// Param totalSize is the total size of the object to upload.
+// When restoring entire objects, we only know the approximate size,
+// which will be IntellectualObject.FileSize plus one or more payload
+// manifests and tag manifests of unknown size that we'll have to
+// generate on the fly. In practice, we can guesstimate that the
+// total size of a restored object will be about 1.01 - 1.1 times
+// IntellectualObject.FileSize.
+//
+// Since S3 max upload size is 5 TB with 10k parts, the max this
+// will return is 500MB for part size. Although we could return 5 GB,
+// we don't want to because we can't allocate that much memory inside
+// of memory-limited docker instances.
+func EstimatedChunkSize(totalSize float64) int64 {
+	mb := float64(1024 * 1024)
+	gb := float64(mb * 1024)
+	minChunkSize := float64(5 * mb)
+	maxChunkSize := float64(500 * mb)
+
+	size := minChunkSize
+
+	if totalSize >= float64(500*gb) {
+		size = totalSize / 10000
+	} else if totalSize >= float64(100*gb) {
+		size = totalSize / 5000
+	} else if totalSize >= float64(10*gb) {
+		size = totalSize / 2500
+	} else {
+		size = totalSize / 500
+	}
+
+	// Size must be within bounds
+	size = math.Min(size, maxChunkSize)
+	size = math.Max(size, minChunkSize)
+
+	return int64(math.Ceil(size))
 }

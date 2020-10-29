@@ -291,3 +291,36 @@ func TestMin(t *testing.T) {
 	assert.Equal(t, 2, util.Min(2, 10))
 	assert.Equal(t, 2, util.Min(10, 2))
 }
+
+func TestEstimatedChunkSize(t *testing.T) {
+	mb := float64(1024 * 1024)
+	gb := float64(mb * 1024)
+
+	// 5 MB is min. Should not go lower than that.
+	assert.Equal(t, int64(5*mb), util.EstimatedChunkSize(float64(3000)))
+
+	// 500 MB is our max. Make sure we get that and not 800 MB here.
+	assert.Equal(t, int64(500*mb), util.EstimatedChunkSize(float64(8*1024*gb)))
+
+	// 500 MB chunks for 2 TB upload
+	assert.Equal(t, int64(500*mb), util.EstimatedChunkSize(float64(8*1024*gb)))
+
+	// 600 GB total size -> ~60 MB chunks
+	assert.Equal(t, int64(64424510), util.EstimatedChunkSize(float64(600*gb)))
+
+	// 200 GB total size -> ~40 MB chunks
+	assert.Equal(t, int64(42949673), util.EstimatedChunkSize(float64(200*gb)))
+
+	// 80 GB total size -> ~32 MB chunks
+	assert.Equal(t, int64(34359739), util.EstimatedChunkSize(float64(80*gb)))
+
+	// 8 GB total size -> ~16 MB chunks
+	assert.Equal(t, int64(17179870), util.EstimatedChunkSize(float64(8*gb)))
+
+	// 3 GB total size -> ~6 MB chunks
+	assert.Equal(t, int64(6442451), util.EstimatedChunkSize(float64(3*gb)))
+
+	// 100 MB total size -> ~5 MB chunks
+	assert.Equal(t, int64(5242880), util.EstimatedChunkSize(float64(100*mb)))
+
+}
