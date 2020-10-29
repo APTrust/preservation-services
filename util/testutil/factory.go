@@ -217,6 +217,7 @@ func GetRestorationObject() *service.RestorationObject {
 		BagItProfileIdentifier: constants.DefaultProfileIdentifier,
 		ErrorMessage:           "No error",
 		Identifier:             "test.edu/bag-name.tar",
+		ObjectSize:             int64(333000),
 		RestoredAt:             Bloomsday,
 		RestorationSource:      constants.RestorationSourceS3,
 		RestorationTarget:      "aptrust.restore.test.edu",

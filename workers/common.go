@@ -70,20 +70,40 @@ func GetRestorationObject(context *common.Context, workItem *registry.WorkItem, 
 		return nil, fmt.Errorf("Pharos returned nil for Institution %s", intelObj.Institution)
 	}
 
+	var err error
+	objectSize := intelObj.FileSize
 	restorationType := constants.RestorationTypeObject
 	identifier := workItem.ObjectIdentifier
 	if workItem.GenericFileIdentifier != "" {
 		restorationType = constants.RestorationTypeFile
 		identifier = workItem.GenericFileIdentifier
+		objectSize, err = GetFileSize(context, identifier)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &service.RestorationObject{
 		Identifier:             identifier,
 		BagItProfileIdentifier: intelObj.BagItProfileIdentifier,
+		ObjectSize:             objectSize,
 		RestorationSource:      restorationSource,
 		RestorationTarget:      institution.RestoreBucket,
 		RestorationType:        restorationType,
 	}, nil
+}
+
+// GetFileSize returns the size of the GenericFile with the specified identifier.
+func GetFileSize(context *common.Context, gfIdentifier string) (int64, error) {
+	resp := context.PharosClient.GenericFileGet(gfIdentifier)
+	if resp.Error != nil {
+		return int64(0), resp.Error
+	}
+	gf := resp.GenericFile()
+	if gf == nil {
+		return int64(0), fmt.Errorf("Pharos returned nil for file %s", gfIdentifier)
+	}
+	return gf.Size, nil
 }
 
 // QueueE2EWorkItem queues a WorkItem for post tests if the env variable

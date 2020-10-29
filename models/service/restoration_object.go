@@ -27,6 +27,12 @@ type RestorationObject struct {
 	// (from Pharos) to be restored.
 	Identifier string `json:"identifier"`
 
+	// ObjectSize is the size of the bag or file to be restored. For bags,
+	// this is actually the size of the payload. The final bag will be somewhat
+	// larger because it will include manifests and tag files in addition to
+	// the payload. The final bag may be ~ 1% - 10% larger than ObjectSize.
+	ObjectSize int64 `json:"object_size"`
+
 	// RestorationSource describes whether the item being restored is from
 	// S3 or Glacier. S3 includes any AWS or Wasabi S3 bucket. Glacier
 	// includes any Glacier or Glacier Deep Archive bucket. Items in S3

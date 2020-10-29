@@ -197,7 +197,7 @@ func Min(x, y int) int {
 // will return is 500MB for part size. Although we could return 5 GB,
 // we don't want to because we can't allocate that much memory inside
 // of memory-limited docker instances.
-func EstimatedChunkSize(totalSize float64) int64 {
+func EstimatedChunkSize(totalSize float64) uint64 {
 	mb := float64(1024 * 1024)
 	gb := float64(mb * 1024)
 	minChunkSize := float64(5 * mb)
@@ -219,5 +219,5 @@ func EstimatedChunkSize(totalSize float64) int64 {
 	size = math.Min(size, maxChunkSize)
 	size = math.Max(size, minChunkSize)
 
-	return int64(math.Ceil(size))
+	return uint64(math.Ceil(size))
 }

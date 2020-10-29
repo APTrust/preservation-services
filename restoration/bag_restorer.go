@@ -120,16 +120,35 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 // gets copied to the restoration bucket.
 func (r *BagRestorer) initUploader() {
 	r.wg.Add(1)
+
+	estimatedObjectSize := float64(r.RestorationObject.ObjectSize) * float64(1.10)
+	chunkSize := util.EstimatedChunkSize(estimatedObjectSize)
+
+	r.Context.Logger.Infof("Initializing uploader. "+
+		"Object size = %.0f. Chunk size = %d",
+		estimatedObjectSize, chunkSize)
+
 	go func() {
 		s3Client := r.Context.S3Clients[constants.StorageProviderAWS]
 		//s3Client.TraceOn(nil)
+
+		defer func() {
+			if rec := recover(); rec != nil {
+				r.Context.Logger.Errorf("Uploader panicked. "+
+					"Possible large memory allocation. "+
+					"Object size = %d. Chunk size = %d",
+					estimatedObjectSize, chunkSize)
+				r.Context.Logger.Errorf("Panic info: %v", rec)
+			}
+		}()
+
 		r.bytesWritten, r.uploadError = s3Client.PutObject(
 			r.RestorationObject.RestorationTarget,
 			r.RestorationObject.Identifier+".tar",
 			r.tarPipeWriter.GetReader(),
 			-1,
 			minio.PutObjectOptions{
-				//PartSize: 1000000,
+				PartSize: chunkSize,
 			},
 		)
 		r.Context.Logger.Infof("Finished uploading tar file %s", r.RestorationObject.Identifier)

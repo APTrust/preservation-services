@@ -118,6 +118,7 @@ func getRestorationObject(objIdentifier string) *service.RestorationObject {
 	return &service.RestorationObject{
 		Identifier:             objIdentifier,
 		BagItProfileIdentifier: profile,
+		ObjectSize:             int64(78930000),
 		RestorationSource:      constants.RestorationSourceS3,
 		RestorationTarget:      "aptrust.restore.test.test.edu",
 		RestorationType:        constants.RestorationTypeObject,
