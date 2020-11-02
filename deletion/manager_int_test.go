@@ -3,6 +3,7 @@
 package deletion_test
 
 import (
+	ctx "context"
 	"fmt"
 	"net/url"
 	"strings"
@@ -234,6 +235,7 @@ func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 		}
 		client := context.S3Clients[preservationBucket.Provider]
 		_, err := client.FPutObject(
+			ctx.Background(),
 			preservationBucket.Bucket,
 			filename,
 			pathToFile,

@@ -3,6 +3,7 @@
 package workers_test
 
 import (
+	ctx "context"
 	"net/url"
 	"path"
 	"testing"
@@ -60,6 +61,7 @@ func putBagsInTestReceiving(t *testing.T, context *common.Context) {
 	files := getFileList(t)
 	for _, file := range files {
 		_, err := context.S3Clients[constants.StorageProviderAWS].FPutObject(
+			ctx.Background(),
 			constants.TestEduReceivingBucket,
 			path.Base(file),
 			file,

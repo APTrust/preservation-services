@@ -3,6 +3,7 @@
 package restoration_test
 
 import (
+	ctx "context"
 	"fmt"
 	"io/ioutil"
 	"path"
@@ -100,6 +101,7 @@ func setup(t *testing.T, context *common.Context) {
 		fullpath := path.Join(dir, file.Name())
 		for _, bucket := range preservationBuckets {
 			_, err := s3Client.FPutObject(
+				ctx.Background(),
 				bucket,
 				file.Name(),
 				fullpath,

@@ -3,6 +3,7 @@
 package restoration_test
 
 import (
+	ctx "context"
 	"testing"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -47,6 +48,7 @@ func TestFileRestorer_Run(t *testing.T) {
 func testRestoredFile(t *testing.T, context *common.Context, restObj *service.RestorationObject) {
 	assert.NotEmpty(t, restObj.URL)
 	objInfo, err := context.S3Clients[constants.StorageProviderAWS].StatObject(
+		ctx.Background(),
 		restObj.RestorationTarget,
 		gfIdentifier,
 		minio.StatObjectOptions{})

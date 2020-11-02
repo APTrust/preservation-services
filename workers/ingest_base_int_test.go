@@ -3,6 +3,7 @@
 package workers_test
 
 import (
+	ctx "context"
 	"fmt"
 	"os"
 	"strconv"
@@ -38,6 +39,7 @@ var testInstitution *registry.Institution
 func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string) {
 	client := context.S3Clients[constants.StorageProviderAWS]
 	_, err := client.FPutObject(
+		ctx.Background(),
 		constants.TestBucketReceiving,
 		key,
 		pathToBagFile,
@@ -48,7 +50,7 @@ func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string
 	}
 	require.Nil(t, err, msg)
 
-	objInfo, err := client.StatObject(constants.TestBucketReceiving, key, minio.StatObjectOptions{})
+	objInfo, err := client.StatObject(ctx.Background(), constants.TestBucketReceiving, key, minio.StatObjectOptions{})
 	require.Nil(t, err)
 	goodbagETag = objInfo.ETag
 }

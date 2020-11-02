@@ -3,12 +3,14 @@
 package ingest_test
 
 import (
+	ctx "context"
 	"fmt"
 	"testing"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
+	"github.com/minio/minio-go/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -97,7 +99,13 @@ func stagingBucketFileCount(cleanup *ingest.Cleanup) int {
 	doneCh := make(chan struct{})
 	defer close(doneCh)
 	s3Client := cleanup.Context.S3Clients[constants.StorageProviderAWS]
-	for _ = range s3Client.ListObjects(stagingBucket, prefix, true, doneCh) {
+	for _ = range s3Client.ListObjects(
+		ctx.Background(),
+		stagingBucket,
+		minio.ListObjectsOptions{
+			Prefix:    prefix,
+			Recursive: true,
+		}) {
 		fileCount++
 	}
 	return fileCount

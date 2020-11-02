@@ -3,6 +3,7 @@
 package fixity_test
 
 import (
+	ctx "context"
 	"path"
 	"testing"
 	"time"
@@ -41,6 +42,7 @@ func copyFileToPreservation(t *testing.T, context *common.Context) (records []*r
 	for _, bucket := range buckets {
 		client := context.S3Clients[bucket.Provider]
 		_, err := client.FPutObject(
+			ctx.Background(),
 			bucket.Bucket,
 			fileUUID,
 			pathToFile,
