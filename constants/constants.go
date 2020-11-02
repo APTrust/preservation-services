@@ -81,7 +81,7 @@ const (
 	RestorationSourceS3        = "s3"
 	RestorationTypeFile        = "file"
 	RestorationTypeObject      = "object"
-	S3ClientName               = "https://github.com/minio/minio-go v6"
+	S3ClientName               = "https://github.com/minio/minio-go v7"
 	SourceIngest               = "ingest"
 	SourceManifest             = "manifest"
 	SourceRegistry             = "registry"

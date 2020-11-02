@@ -1,12 +1,13 @@
 package common_test
 
 import (
+	ctx "context"
 	"testing"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/util/testutil"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,14 +20,15 @@ func uploadTestBag(t *testing.T, context *common.Context) {
 	bucket = context.Config.StagingBucket
 	filePath := testutil.PathToPharosFixture("institutions.json")
 	client := context.S3Clients[constants.StorageProviderAWS]
-	bytesWritten, err := client.FPutObject(
+	uploadInfo, err := client.FPutObject(
+		ctx.Background(),
 		bucket,
 		key,
 		filePath,
 		minio.PutObjectOptions{},
 	)
 	require.Nil(t, err)
-	require.EqualValues(t, size, bytesWritten)
+	require.EqualValues(t, size, uploadInfo.Size)
 }
 
 func TestS3ObjectGet(t *testing.T) {

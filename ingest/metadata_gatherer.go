@@ -1,6 +1,7 @@
 package ingest
 
 import (
+	ctx "context"
 	"fmt"
 	"io"
 	"os"
@@ -13,7 +14,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -174,6 +175,7 @@ func (m *MetadataGatherer) CopyTempFilesToS3(tempFiles []string) error {
 
 		// TODO: Fatal vs. transient errors. Retries.
 		_, err := m.Context.S3Clients[constants.StorageProviderAWS].FPutObject(
+			ctx.Background(),
 			bucket,
 			key,
 			filePath,
@@ -379,7 +381,7 @@ func (m *MetadataGatherer) deleteStaleStagingItem(key string) {
 	}
 	s3Client := m.Context.S3Clients[constants.StorageProviderAWS]
 	m.Context.Logger.Infof("Deleting stale item %s staging", key)
-	err := s3Client.RemoveObject(m.Context.Config.StagingBucket, key)
+	err := s3Client.RemoveObject(ctx.Background(), m.Context.Config.StagingBucket, key, minio.RemoveObjectOptions{})
 	if err != nil && err.Error() != "The specified key does not exist." {
 		m.Context.Logger.Warningf("Error deleting stale item %s staging: %v", key, err)
 	}

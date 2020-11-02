@@ -10,7 +10,7 @@ import (
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
-	"github.com/minio/minio-go/v6/pkg/signer"
+	"github.com/minio/minio-go/v7/pkg/signer"
 )
 
 const DaysToLiveInRestoreBucket = 10

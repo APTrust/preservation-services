@@ -1,14 +1,14 @@
 package ingest
 
 import (
+	ctx "context"
 	"fmt"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
-	"github.com/APTrust/preservation-services/util/logger"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 )
 
 // PreservationUploader copies files from S3 staging to preservation storage.
@@ -116,40 +116,23 @@ func (uploader *PreservationUploader) CopyToPreservationServerSide(ingestFile *s
 	// automatically. We'll need to test specifically to ensure that's true.
 	// If not, change the last param of NewDestinationInfo to valid
 	// userMeta map[string]string, which can come from ingestFile.GetPutOptions()
-	sourceInfo := minio.NewSourceInfo(
-		uploader.Context.Config.StagingBucket,
-		uploader.S3KeyFor(ingestFile),
-		nil,
-	)
-	destInfo, err := minio.NewDestinationInfo(
-		preservationBucket.Bucket,
-		ingestFile.UUID,
-		nil,
-		nil,
-	)
-	if err != nil {
-		uploader.Context.Logger.Infof("Error getting destination info for %s (%s/%s): %v", ingestFile.Identifier(), preservationBucket.Provider, preservationBucket.Bucket, err)
-		return uploader.Error(ingestFile.Identifier(), err, false)
+	sourceOpts := minio.CopySrcOptions{
+		Bucket: uploader.Context.Config.StagingBucket,
+		Object: uploader.S3KeyFor(ingestFile),
+	}
+	destOpts := minio.CopyDestOptions{
+		Bucket: preservationBucket.Bucket,
+		Object: ingestFile.UUID,
 	}
 
 	// CopyObject handles objects only up to 5GB.
 	if ingestFile.Size <= constants.MaxServerSideCopySize {
 		uploader.Context.Logger.Infof("Copying %s from %s to %s as %s using CopyObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, preservationBucket.Bucket, ingestFile.UUID)
-		err = client.CopyObject(destInfo, sourceInfo)
+		_, err = client.CopyObject(ctx.Background(), destOpts, sourceOpts)
 	} else {
-		uploader.Context.Logger.Infof("Copying %s from %s to %s as %s using ComposeObjectWithProgress()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, preservationBucket.Bucket, ingestFile.UUID)
-		sources := []minio.SourceInfo{sourceInfo}
-		// progressLogger copies Minio's internal progress info to our log file.
-		var progressLogger = logger.NewMinioProgressLogger(
-			uploader.Context.Logger,
-			fmt.Sprintf("Uploaded part of %s to %s/%s",
-				ingestFile.Identifier(),
-				preservationBucket.Bucket,
-				ingestFile.UUID),
-			ingestFile.Size,
-		)
+		uploader.Context.Logger.Infof("Copying %s from %s to %s as %s using ComposeObject()", ingestFile.Identifier(), uploader.Context.Config.StagingBucket, preservationBucket.Bucket, ingestFile.UUID)
 		// ComposeObject handles items up to 5TB in a multipart server-to-server put.
-		err = client.ComposeObjectWithProgress(destInfo, sources, progressLogger)
+		_, err = client.ComposeObject(ctx.Background(), destOpts, sourceOpts)
 	}
 
 	if err != nil {
@@ -182,6 +165,7 @@ func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.Ing
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	srcObject, err := srcClient.GetObject(
+		ctx.Background(),
 		uploader.Context.Config.StagingBucket,
 		uploader.S3KeyFor(ingestFile),
 		minio.GetObjectOptions{},
@@ -199,7 +183,8 @@ func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.Ing
 
 	uploader.Context.Logger.Infof("Copying %s (%s) from %s to %s using PutObject()", ingestFile.Identifier(), ingestFile.UUID, uploader.Context.Config.StagingBucket, preservationBucket.Bucket)
 
-	bytesCopied, err := destClient.PutObject(
+	uploadInfo, err := destClient.PutObject(
+		ctx.Background(),
 		preservationBucket.Bucket,
 		ingestFile.UUID,
 		srcObject,
@@ -210,8 +195,8 @@ func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.Ing
 		uploader.Context.Logger.Infof("Error copying %s (%s) to %s/%s: %v", ingestFile.Identifier(), ingestFile.UUID, preservationBucket.Provider, preservationBucket.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
-	if bytesCopied != ingestFile.Size {
-		err = fmt.Errorf("Copied only %d of %d bytes from staging to preservation (UUID %s)", bytesCopied, ingestFile.Size, ingestFile.UUID)
+	if uploadInfo.Size != ingestFile.Size {
+		err = fmt.Errorf("Copied only %d of %d bytes from staging to preservation (UUID %s)", uploadInfo.Size, ingestFile.Size, ingestFile.UUID)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
 	return nil

@@ -1,6 +1,7 @@
 package fixity
 
 import (
+	ctx "context"
 	"crypto/sha256"
 	"fmt"
 	"io"
@@ -15,7 +16,7 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/network"
 	"github.com/APTrust/preservation-services/restoration"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -126,6 +127,7 @@ func (c *Checker) CalculateFixity(gf *registry.GenericFile) (fixity, url string,
 	}
 	c.Context.Logger.Infof("Checking %s for file %s with UUID %s", preservationBucket.Bucket, gf.Identifier, gf.UUID)
 	obj, err := client.GetObject(
+		ctx.Background(),
 		preservationBucket.Bucket,
 		gf.UUID,
 		minio.GetObjectOptions{},

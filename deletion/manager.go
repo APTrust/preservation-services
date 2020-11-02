@@ -1,6 +1,7 @@
 package deletion
 
 import (
+	ctx "context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -12,6 +13,7 @@ import (
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/network"
+	"github.com/minio/minio-go/v7"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -202,7 +204,7 @@ func (m *Manager) deleteFromPreservationStorage(bucket *common.PreservationBucke
 	if client == nil {
 		return fmt.Errorf("No S3 client for provider %s", bucket.Provider)
 	}
-	err := client.RemoveObject(bucket.Bucket, key)
+	err := client.RemoveObject(ctx.Background(), bucket.Bucket, key, minio.RemoveObjectOptions{})
 
 	// We can ignore this message because the item may have been deleted
 	// on a prior attempt.

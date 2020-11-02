@@ -1,13 +1,14 @@
 package restoration
 
 import (
+	ctx "context"
 	"fmt"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 )
 
 // FileRestorer restores individual files to a depositor's restoration bucket.
@@ -42,6 +43,7 @@ func (r *FileRestorer) Run() (fileCount int, errors []*service.ProcessingError) 
 	defer obj.Close()
 	r.Context.Logger.Infof("Copying %s to %s", gf.Identifier, r.RestorationObject.RestorationTarget)
 	_, err = r.Context.S3Clients[constants.StorageProviderAWS].PutObject(
+		ctx.Background(),
 		r.RestorationObject.RestorationTarget,
 		gf.Identifier,
 		obj,
@@ -79,7 +81,7 @@ func (r *FileRestorer) getFileFromPreservation(gf *registry.GenericFile) (*minio
 		return nil, err
 	}
 	client := r.Context.S3Clients[b.Provider]
-	obj, err := client.GetObject(b.Bucket, gf.UUID, minio.GetObjectOptions{})
+	obj, err := client.GetObject(ctx.Background(), b.Bucket, gf.UUID, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, err
 	}

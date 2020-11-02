@@ -2,6 +2,7 @@ package restoration
 
 import (
 	"archive/tar"
+	ctx "context"
 	"fmt"
 	"os"
 	"path"
@@ -15,7 +16,7 @@ import (
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 )
 
 // The restoration process pipes data as follows:
@@ -142,7 +143,9 @@ func (r *BagRestorer) initUploader() {
 			}
 		}()
 
-		r.bytesWritten, r.uploadError = s3Client.PutObject(
+		var uploadInfo minio.UploadInfo
+		uploadInfo, r.uploadError = s3Client.PutObject(
+			ctx.Background(),
 			r.RestorationObject.RestorationTarget,
 			r.RestorationObject.Identifier+".tar",
 			r.tarPipeWriter.GetReader(),
@@ -151,6 +154,7 @@ func (r *BagRestorer) initUploader() {
 				PartSize: chunkSize,
 			},
 		)
+		r.bytesWritten = uploadInfo.Size
 		r.Context.Logger.Infof("Finished uploading tar file %s", r.RestorationObject.Identifier)
 		r.wg.Done()
 	}()
@@ -388,7 +392,7 @@ func (r *BagRestorer) AddToTarFile(gf *registry.GenericFile) (digests map[string
 	}
 	r.Context.Logger.Infof("Getting %s from %s with UUID %s", gf.Identifier, b.Bucket, gf.UUID)
 	client := r.Context.S3Clients[b.Provider]
-	obj, err := client.GetObject(b.Bucket, gf.UUID, minio.GetObjectOptions{})
+	obj, err := client.GetObject(ctx.Background(), b.Bucket, gf.UUID, minio.GetObjectOptions{})
 	if err != nil {
 		return digests, err
 	}

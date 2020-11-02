@@ -1,11 +1,13 @@
 package common
 
 import (
+	ctx "context"
 	"fmt"
 
 	"github.com/APTrust/preservation-services/network"
 	"github.com/APTrust/preservation-services/util/logger"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/op/go-logging"
 )
 
@@ -78,9 +80,10 @@ func getS3Clients(config *Config, logger *logging.Logger) map[string]*minio.Clie
 	for provider, creds := range config.S3Credentials {
 		client, err := minio.New(
 			creds.Host,
-			creds.KeyID,
-			creds.SecretKey,
-			useSSL)
+			&minio.Options{
+				Creds:  credentials.NewStaticV4(creds.KeyID, creds.SecretKey, ""),
+				Secure: useSSL,
+			})
 		if err != nil {
 			panic(err)
 		}
@@ -96,7 +99,7 @@ func (context *Context) S3StatObject(provider, bucket, key string) (minio.Object
 		return emptyInfo, fmt.Errorf("No S3 client for provider %s", provider)
 	}
 	//client.TraceOn(GetTracer(context.Logger))
-	info, err := client.StatObject(bucket, key, minio.StatObjectOptions{})
+	info, err := client.StatObject(ctx.Background(), bucket, key, minio.StatObjectOptions{})
 	//client.TraceOff()
 	return info, err
 }
@@ -106,5 +109,5 @@ func (context *Context) S3GetObject(provider, bucket, key string) (*minio.Object
 	if client == nil {
 		return nil, fmt.Errorf("No S3 client for provider %s", provider)
 	}
-	return client.GetObject(bucket, key, minio.GetObjectOptions{})
+	return client.GetObject(ctx.Background(), bucket, key, minio.GetObjectOptions{})
 }

@@ -1,6 +1,7 @@
 package ingest
 
 import (
+	ctx "context"
 	"fmt"
 	"path"
 	"strings"
@@ -9,7 +10,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 	"github.com/richardlehane/siegfried"
 )
 
@@ -66,6 +67,7 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 
 		s3Client := fi.Context.S3Clients[constants.StorageProviderAWS]
 		s3Object, err := s3Client.GetObject(
+			ctx.Background(),
 			fi.Context.Config.StagingBucket,
 			key,
 			minio.GetObjectOptions{})

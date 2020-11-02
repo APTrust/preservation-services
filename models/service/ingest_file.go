@@ -9,7 +9,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 	uuid "github.com/satori/go.uuid"
 )
 

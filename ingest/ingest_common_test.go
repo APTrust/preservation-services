@@ -1,6 +1,7 @@
 package ingest_test
 
 import (
+	ctx "context"
 	"fmt"
 	"path"
 	"path/filepath"
@@ -14,8 +15,7 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
-	"github.com/minio/minio-go/v6"
-	"github.com/stretchr/testify/assert"
+	"github.com/minio/minio-go/v7"
 	"github.com/stretchr/testify/require"
 )
 
@@ -87,8 +87,10 @@ func clearS3Files(t *testing.T, context *common.Context) {
 	for _, filename := range goodbagS3Files {
 		key := fmt.Sprintf("9999/%s", filename)
 		_ = context.S3Clients[constants.StorageProviderAWS].RemoveObject(
+			ctx.Background(),
 			constants.TestBucketReceiving,
-			key)
+			key,
+			minio.RemoveObjectOptions{})
 		//require.Nil(t, err)
 	}
 }
@@ -99,7 +101,8 @@ func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string
 	// of the client's HTTP exchanges on Stderr.
 	//context.S3Clients[constants.StorageProviderAWS].TraceOn(os.Stderr)
 
-	bytesWritten, err := context.S3Clients[constants.StorageProviderAWS].FPutObject(
+	_, err := context.S3Clients[constants.StorageProviderAWS].FPutObject(
+		ctx.Background(),
 		constants.TestBucketReceiving,
 		key,
 		pathToBagFile,
@@ -109,7 +112,6 @@ func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string
 		msg = err.Error()
 	}
 	require.Nil(t, err, msg)
-	assert.True(t, (bytesWritten > int64(10000) && bytesWritten < int64(4800000)))
 }
 
 func deleteChecksum(list []*service.IngestChecksum, source, algorithm string) []*service.IngestChecksum {

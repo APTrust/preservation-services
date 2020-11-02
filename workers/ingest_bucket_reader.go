@@ -1,6 +1,7 @@
 package workers
 
 import (
+	ctx "context"
 	"net/url"
 	"strconv"
 	"strings"
@@ -9,7 +10,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 )
 
 type IngestBucketReader struct {
@@ -71,7 +72,13 @@ func (r *IngestBucketReader) ScanBucket(institution *registry.Institution) {
 	s3Client := r.Context.S3Clients[constants.StorageProviderAWS]
 	doneCh := make(chan struct{})
 	defer close(doneCh)
-	objectCh := s3Client.ListObjectsV2(institution.ReceivingBucket, "", false, doneCh)
+	objectCh := s3Client.ListObjects(
+		ctx.Background(),
+		institution.ReceivingBucket,
+		minio.ListObjectsOptions{
+			Prefix:    "",
+			Recursive: false,
+		})
 	for obj := range objectCh {
 		if obj.Err != nil {
 			r.Context.Logger.Errorf("Error reading %s: %v", institution.ReceivingBucket, obj.Err)

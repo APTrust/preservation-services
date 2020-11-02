@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"archive/tar"
+	ctx "context"
 	"fmt"
 	"io"
 	"strings"
@@ -11,7 +12,7 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 )
 
 // StagingUploader unpacks a tarfile from a receiving bucket and
@@ -119,6 +120,7 @@ func (s *StagingUploader) CopyFileToStaging(tarReader *tar.Reader, ingestFile *s
 	bucket := s.Context.Config.StagingBucket
 	key := s.S3KeyFor(ingestFile)
 	_, err = s.Context.S3Clients[constants.StorageProviderAWS].PutObject(
+		ctx.Background(),
 		bucket,
 		key,
 		tarReader,
