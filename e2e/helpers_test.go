@@ -3,6 +3,7 @@
 package e2e_test
 
 import (
+	s3ctx "context"
 	"fmt"
 	"net/url"
 	"strings"
@@ -51,6 +52,7 @@ func pushBagsToReceiving(testbags []*e2e.TestBag) {
 	client := ctx.Context.S3Clients[constants.StorageProviderAWS]
 	for _, tb := range testbags {
 		_, err := client.FPutObject(
+			s3ctx.Background(),
 			"aptrust.receiving.test.test.edu",
 			tb.TarFileName(),
 			tb.PathToBag,

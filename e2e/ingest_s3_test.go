@@ -3,9 +3,11 @@
 package e2e_test
 
 import (
+	s3ctx "context"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
+	"github.com/minio/minio-go/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -61,14 +63,20 @@ func testS3Cleanup(bucketName string) {
 	require.NotNil(ctx.T, client)
 
 	// Make sure we're testing an actual bucket...
-	exists, err := client.BucketExists(bucketName)
+	exists, err := client.BucketExists(s3ctx.Background(), bucketName)
 	require.Nil(ctx.T, err)
 	require.True(ctx.T, exists)
 
 	doneCh := make(chan struct{})
 	defer close(doneCh)
 
-	for objInfo := range client.ListObjects(bucketName, "", true, doneCh) {
+	for objInfo := range client.ListObjects(
+		s3ctx.Background(),
+		bucketName,
+		minio.ListObjectsOptions{
+			Prefix:    "",
+			Recursive: true,
+		}) {
 		assert.Nil(ctx.T, objInfo, "%s was not deleted from %s", objInfo.Key, bucketName)
 	}
 }
