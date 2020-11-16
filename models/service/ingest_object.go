@@ -79,6 +79,20 @@ type IngestObject struct {
 	// E.g. "bagit.txt", "bag-info.txt", etc.
 	ParsableTagFiles []string `json:"parsable_tag_files"`
 
+	// When this is set to true, we must re-check all generic file identifiers
+	// in Pharos before attempting to record metadata. This flag pertains to
+	// the ingest record phase only. It helps handle a case where we've
+	// managed to record some but not all of an object's files. Pharos sometimes
+	// does not let us know which files were properly recorded. When we make
+	// subsequent attempts to record those files as new, Pharos responds with
+	// a 422 error (which should be a 409) saying the identifier has already
+	// been taken. When the ingest recorder sees one of these errors, it should
+	// set this flag to true and requeue the WorkItem. On the next run, it should
+	// recheck all generic file identifiers with Pharos, assign the proper ID
+	// to files Pharos has already recorded, clear this flag, and then proceed
+	// as usual.
+	RecheckFileIdentifiers bool `json:"rescan_file_identifiers"`
+
 	// PremisEvents contains a list of Premis Events that will need to be
 	// recorded for this ingest. Do not write to this list directly.
 	// Use GetIngestEvents() instead. This list is public so it can be
