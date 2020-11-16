@@ -316,6 +316,21 @@ func (r *Recorder) recheckFileIdentifiers() (fileCount int, errors []*service.Pr
 			ingestFile.ID = pharosFile.ID
 			r.Context.Logger.Infof("Set GenericFile.ID %d on %s.", ingestFile.ID, ingestFile.Identifier())
 		}
+
+		// If the file exists, the storage records probably do too.
+		// Make sure our IngestFile knows that, so it doesn't try to
+		// re-post them. Doing so will cause a unique contraint error
+		// in Pharos.
+		resp = r.Context.PharosClient.StorageRecordList(ingestFile.Identifier())
+		if resp.Error != nil {
+			return append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
+		}
+		for _, sr := range resp.StorageRecords() {
+			if !ingestFile.HasRegistryURL(sr.URL) {
+				ingestFile.RegistryURLs = append(ingestFile.RegistryURLs, sr.URL)
+			}
+		}
+
 		return errors
 	}
 	options := service.IngestFileApplyOptions{
