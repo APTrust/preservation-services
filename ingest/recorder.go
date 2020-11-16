@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
@@ -38,6 +39,14 @@ func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 	if len(errors) > 0 {
 		return 0, errors
 	}
+	if r.IngestObject.RecheckFileIdentifiers {
+		_, errors = r.recheckFileIdentifiers()
+		if len(errors) > 0 {
+			return 0, errors
+		}
+		r.IngestObject.RecheckFileIdentifiers = false
+	}
+
 	fileCount, errors = r.recordFiles()
 	if len(errors) == 0 {
 		// This tells the cleanup process that it's safe to
@@ -50,6 +59,13 @@ func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 		err := r.IngestObjectSave()
 		if err != nil {
 			r.Context.Logger.Errorf("WorkItem %d. After marking ShouldDeletedFromReceiving = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
+		}
+	}
+	if r.hasDuplicateIdentityError(errors) {
+		r.IngestObject.RecheckFileIdentifiers = true
+		err := r.IngestObjectSave()
+		if err != nil {
+			r.Context.Logger.Errorf("WorkItem %d. After marking RecheckFileIdentifiers = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
 		}
 	}
 	return fileCount, errors
@@ -253,4 +269,61 @@ func (r *Recorder) markFilesAsSaved(genericFiles []*registry.GenericFile, ingest
 		errors = append(errors, r.Error(r.IngestObject.Identifier(), err, false))
 	}
 	return errors
+}
+
+// hasDuplicateIdentityError returns true if we encountered an "identity has
+// already been taken" error from Pharos. Ideally, we'd have a better way of
+// testing for this, but this error occurs during batch operations, and Pharos
+// does not report specifics about which error is a duplicate.
+//
+// This error occurs when a prior run of the ingest recorder successfully records
+// a number of generic files but does not get a response from Pharos. There are
+// several reasons for not getting a response, including proxy errors from Nginx,
+// http timeouts, disk errors on the Pharos server, etc. Whatever the cause, we
+// have to recover from it, so we set this flag. The next record worker to pick up
+// this task will ask Pharos which generic files it knows about, and will set
+// the proper ID on those files so we know to record them with a PUT/update
+// instead of a POST/create.
+func (r *Recorder) hasDuplicateIdentityError(errors []*service.ProcessingError) bool {
+	for _, err := range errors {
+		if strings.Contains(err.Message, `"identifier":["has already been taken"`) {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *Recorder) recheckFileIdentifiers() (fileCount int, errors []*service.ProcessingError) {
+	r.Context.Logger.Infof("WorkItem %d, object %s: Rechecking all GenericFile identifiers.", r.WorkItemID, r.IngestObject.Identifier())
+
+	processFile := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
+		resp := r.Context.PharosClient.GenericFileGet(ingestFile.Identifier())
+		// We expect mostly 404s, because most files haven't been recorded.
+		// We can return on 404, since there's nothing for us to do.
+		if resp.ObjectNotFound() {
+			return errors
+		}
+		if resp.Error != nil {
+			return append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
+		}
+
+		// If this file is already in Pharos, copy its ID to our
+		// IngestFile record. Note that the "SaveChanges: true"
+		// setting in IngestFileApplyOptions means we will save the
+		// updated IngestFile.ID back to Redis.
+		pharosFile := resp.GenericFile()
+		if pharosFile != nil {
+			ingestFile.ID = pharosFile.ID
+			r.Context.Logger.Infof("Set GenericFile.ID %d on %s.", ingestFile.ID, ingestFile.Identifier())
+		}
+		return errors
+	}
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   10,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: true,
+		WorkItemID:  r.WorkItemID,
+	}
+	return r.Context.RedisClient.IngestFilesApply(processFile, options)
 }
