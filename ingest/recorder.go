@@ -33,6 +33,13 @@ func NewRecorder(context *common.Context, workItemID int, ingestObject *service.
 // This returns the number of files saved, and a list of any errors that
 // occurred.
 func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
+	if r.IngestObject.RecheckPharosIdentifiers {
+		errors = r.recheckPharosIdentifiers()
+		if len(errors) > 0 {
+			return 0, errors
+		}
+		r.IngestObjectSave()
+	}
 	errors = r.recordObject()
 	if len(errors) > 0 {
 		return 0, errors
@@ -41,15 +48,6 @@ func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 	if len(errors) > 0 {
 		return 0, errors
 	}
-	if r.IngestObject.RecheckPharosIdentifiers {
-		errors = r.recheckPharosIdentifiers()
-		if len(errors) > 0 {
-			return 0, errors
-		}
-		r.IngestObject.RecheckPharosIdentifiers = false
-		r.IngestObjectSave()
-	}
-
 	fileCount, errors = r.recordFiles()
 	if len(errors) == 0 {
 		// This tells the cleanup process that it's safe to
@@ -59,6 +57,7 @@ func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 		// deleted by the bucket policy, but we want to know the
 		// error occurred.
 		r.IngestObject.ShouldDeleteFromReceiving = true
+		r.IngestObject.RecheckPharosIdentifiers = false
 		err := r.IngestObjectSave()
 		if err != nil {
 			r.Context.Logger.Errorf("WorkItem %d. After marking ShouldDeletedFromReceiving = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
@@ -318,6 +317,9 @@ func (r *Recorder) recheckPharosObject() (objectExistsInPharos bool, errors []*s
 	if r.IngestObject.ID > 0 {
 		return true, errors
 	}
+
+	r.Context.Logger.Infof("Checking for existing Pharos object %s", r.IngestObject.Identifier())
+
 	// Look up the object in Pharos
 	resp := r.Context.PharosClient.IntellectualObjectGet(r.IngestObject.Identifier())
 	if resp.Error != nil {
@@ -335,6 +337,7 @@ func (r *Recorder) recheckPharosObject() (objectExistsInPharos bool, errors []*s
 		errors = append(errors, r.Error(r.IngestObject.Identifier(), fmt.Errorf("Pharos returned nil object"), false))
 		return false, errors
 	}
+	r.Context.Logger.Infof("RecheckPharosObject: Setting object ID to %d for %s", obj.ID, obj.Identifier)
 	r.IngestObject.ID = obj.ID
 	r.recheckObjectEvents()
 	err := r.IngestObjectSave()
