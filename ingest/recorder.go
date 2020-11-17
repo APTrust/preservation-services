@@ -288,10 +288,13 @@ func (r *Recorder) markFilesAsSaved(genericFiles []*registry.GenericFile, ingest
 // the proper ID on those files so we know to record them with a PUT/update
 // instead of a POST/create.
 //
+// Pharos really should be returning 409 here, not 422.
+//
 // https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
 func (r *Recorder) hasDuplicateIdentityError(errors []*service.ProcessingError) bool {
 	for _, err := range errors {
-		if strings.Contains(err.Message, `"identifier":["has already been taken"`) {
+		if strings.Contains(err.Message, `"identifier":["has already been taken"`) ||
+			strings.Contains(err.Message, `{\"identifier\":[\"has already been taken\"`) {
 			return true
 		}
 	}
