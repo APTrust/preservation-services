@@ -36,16 +36,19 @@ func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 	if r.IngestObject.RecheckPharosIdentifiers {
 		errors = r.recheckPharosIdentifiers()
 		if len(errors) > 0 {
+			r.flagPartialRecordingIfNecessary(errors)
 			return 0, errors
 		}
 		r.IngestObjectSave()
 	}
 	errors = r.recordObject()
 	if len(errors) > 0 {
+		r.flagPartialRecordingIfNecessary(errors)
 		return 0, errors
 	}
 	errors = r.recordObjectEvents()
 	if len(errors) > 0 {
+		r.flagPartialRecordingIfNecessary(errors)
 		return 0, errors
 	}
 	fileCount, errors = r.recordFiles()
@@ -63,13 +66,7 @@ func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 			r.Context.Logger.Errorf("WorkItem %d. After marking ShouldDeletedFromReceiving = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
 		}
 	}
-	if r.hasDuplicateIdentityError(errors) {
-		r.IngestObject.RecheckPharosIdentifiers = true
-		err := r.IngestObjectSave()
-		if err != nil {
-			r.Context.Logger.Errorf("WorkItem %d. After marking RecheckPharosIdentifiers = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
-		}
-	}
+	r.flagPartialRecordingIfNecessary(errors)
 	return fileCount, errors
 }
 
@@ -411,4 +408,17 @@ func (r *Recorder) updateRedisFileAndEvents(gf *registry.GenericFile) (errors []
 		}
 	}
 	return errors
+}
+
+func (r *Recorder) flagPartialRecordingIfNecessary(errors []*service.ProcessingError) {
+	if r.hasDuplicateIdentityError(errors) {
+		r.IngestObject.RecheckPharosIdentifiers = true
+		err := r.IngestObjectSave()
+		if err != nil {
+			r.Context.Logger.Errorf("WorkItem %d. After marking RecheckPharosIdentifiers = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
+		} else {
+			r.Context.Logger.Errorf("Flagged WorkItem %d, object %s as partially recorded and in need of duplicate identifier check ", r.WorkItemID, r.IngestObject.Identifier())
+		}
+	}
+
 }
