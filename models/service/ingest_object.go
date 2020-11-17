@@ -79,20 +79,6 @@ type IngestObject struct {
 	// E.g. "bagit.txt", "bag-info.txt", etc.
 	ParsableTagFiles []string `json:"parsable_tag_files"`
 
-	// When this is set to true, we must re-check all generic file identifiers
-	// in Pharos before attempting to record metadata. This flag pertains to
-	// the ingest record phase only. It helps handle a case where we've
-	// managed to record some but not all of an object's files. Pharos sometimes
-	// does not let us know which files were properly recorded. When we make
-	// subsequent attempts to record those files as new, Pharos responds with
-	// a 422 error (which should be a 409) saying the identifier has already
-	// been taken. When the ingest recorder sees one of these errors, it should
-	// set this flag to true and requeue the WorkItem. On the next run, it should
-	// recheck all generic file identifiers with Pharos, assign the proper ID
-	// to files Pharos has already recorded, clear this flag, and then proceed
-	// as usual.
-	RecheckFileIdentifiers bool `json:"rescan_file_identifiers"`
-
 	// PremisEvents contains a list of Premis Events that will need to be
 	// recorded for this ingest. Do not write to this list directly.
 	// Use GetIngestEvents() instead. This list is public so it can be
@@ -104,6 +90,21 @@ type IngestObject struct {
 	// the ingest process, and keep it in Redis in case we have to retry
 	// the Pharos data recording step.
 	PremisEvents []*registry.PremisEvent `json:"premis_events,omitempty"`
+
+	// RecheckPharosIdentifiers: When this is set to true, we must re-check
+	// all object, file, and event identifiers in Pharos before attempting
+	// to record metadata. This flag pertains to
+	// the ingest record phase only. It helps handle a case where we've
+	// managed to record some but not all of an object's files. Pharos sometimes
+	// does not let us know which items were properly recorded. When we make
+	// subsequent attempts to record those items as new, Pharos responds with
+	// a 422 error (which should be a 409) saying the identifier has already
+	// been taken. When the ingest recorder sees one of these errors, it should
+	// set this flag to true and requeue the WorkItem. On the next run, it should
+	// recheck all identifiers with Pharos, assign the proper ID
+	// to items Pharos has already recorded, clear this flag, and then proceed
+	// as usual.
+	RecheckPharosIdentifiers bool `json:"recheck_pharos_identifiers"`
 
 	// S3Bucket is the name of the S3 bucket to which the depositor uploaded
 	// this object (tarred bag) for ingest.

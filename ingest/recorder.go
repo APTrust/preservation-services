@@ -2,6 +2,8 @@ package ingest
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/APTrust/preservation-services/models/common"
@@ -39,12 +41,13 @@ func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 	if len(errors) > 0 {
 		return 0, errors
 	}
-	if r.IngestObject.RecheckFileIdentifiers {
-		_, errors = r.recheckFileIdentifiers()
+	if r.IngestObject.RecheckPharosIdentifiers {
+		errors = r.recheckPharosIdentifiers()
 		if len(errors) > 0 {
 			return 0, errors
 		}
-		r.IngestObject.RecheckFileIdentifiers = false
+		r.IngestObject.RecheckPharosIdentifiers = false
+		r.IngestObjectSave()
 	}
 
 	fileCount, errors = r.recordFiles()
@@ -62,10 +65,10 @@ func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 		}
 	}
 	if r.hasDuplicateIdentityError(errors) {
-		r.IngestObject.RecheckFileIdentifiers = true
+		r.IngestObject.RecheckPharosIdentifiers = true
 		err := r.IngestObjectSave()
 		if err != nil {
-			r.Context.Logger.Errorf("WorkItem %d. After marking RecheckFileIdentifiers = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
+			r.Context.Logger.Errorf("WorkItem %d. After marking RecheckPharosIdentifiers = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
 		}
 	}
 	return fileCount, errors
@@ -284,6 +287,8 @@ func (r *Recorder) markFilesAsSaved(genericFiles []*registry.GenericFile, ingest
 // this task will ask Pharos which generic files it knows about, and will set
 // the proper ID on those files so we know to record them with a PUT/update
 // instead of a POST/create.
+//
+// https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
 func (r *Recorder) hasDuplicateIdentityError(errors []*service.ProcessingError) bool {
 	for _, err := range errors {
 		if strings.Contains(err.Message, `"identifier":["has already been taken"`) {
@@ -293,52 +298,112 @@ func (r *Recorder) hasDuplicateIdentityError(errors []*service.ProcessingError) 
 	return false
 }
 
-func (r *Recorder) recheckFileIdentifiers() (fileCount int, errors []*service.ProcessingError) {
-	r.Context.Logger.Infof("WorkItem %d, object %s: Rechecking all GenericFile identifiers.", r.WorkItemID, r.IngestObject.Identifier())
+// https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
+func (r *Recorder) recheckPharosIdentifiers() []*service.ProcessingError {
+	objectExistsInPharos, errors := r.recheckPharosObject()
 
-	processFile := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
-		resp := r.Context.PharosClient.GenericFileGet(ingestFile.Identifier())
-		// We expect mostly 404s, because most files haven't been recorded.
-		// We can return on 404, since there's nothing for us to do.
-		if resp.ObjectNotFound() {
-			return errors
-		}
-		if resp.Error != nil {
-			return append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
-		}
-
-		// If this file is already in Pharos, copy its ID to our
-		// IngestFile record. Note that the "SaveChanges: true"
-		// setting in IngestFileApplyOptions means we will save the
-		// updated IngestFile.ID back to Redis.
-		pharosFile := resp.GenericFile()
-		if pharosFile != nil {
-			ingestFile.ID = pharosFile.ID
-			r.Context.Logger.Infof("Set GenericFile.ID %d on %s.", ingestFile.ID, ingestFile.Identifier())
-		}
-
-		// If the file exists, the storage records probably do too.
-		// Make sure our IngestFile knows that, so it doesn't try to
-		// re-post them. Doing so will cause a unique contraint error
-		// in Pharos.
-		resp = r.Context.PharosClient.StorageRecordList(ingestFile.Identifier())
-		if resp.Error != nil {
-			return append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
-		}
-		for _, sr := range resp.StorageRecords() {
-			if !ingestFile.HasRegistryURL(sr.URL) {
-				ingestFile.RegistryURLs = append(ingestFile.RegistryURLs, sr.URL)
-			}
-		}
-
+	// Can't continue on error; don't need to if object doesn't exist
+	if len(errors) > 0 || objectExistsInPharos == false {
 		return errors
 	}
-	options := service.IngestFileApplyOptions{
-		MaxErrors:   10,
-		MaxRetries:  1,
-		RetryMs:     0,
-		SaveChanges: true,
-		WorkItemID:  r.WorkItemID,
+
+	return r.recheckPharosFiles()
+}
+
+// https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
+func (r *Recorder) recheckPharosObject() (objectExistsInPharos bool, errors []*service.ProcessingError) {
+	// If we already have the object id, no need to bother Pharos
+	if r.IngestObject.ID > 0 {
+		return true, errors
 	}
-	return r.Context.RedisClient.IngestFilesApply(processFile, options)
+	// Look up the object in Pharos
+	resp := r.Context.PharosClient.IntellectualObjectGet(r.IngestObject.Identifier())
+	if resp.Error != nil {
+		// If not found, item has not yet been recorded, and we have
+		// no work to do here.
+		if resp.Response.StatusCode == http.StatusNotFound {
+			return false, errors
+		} else {
+			errors = append(errors, r.Error(r.IngestObject.Identifier(), resp.Error, false))
+			return false, errors
+		}
+	}
+	obj := resp.IntellectualObject()
+	if obj == nil {
+		errors = append(errors, r.Error(r.IngestObject.Identifier(), fmt.Errorf("Pharos returned nil object"), false))
+		return false, errors
+	}
+	r.IngestObject.ID = obj.ID
+	r.recheckObjectEvents()
+	err := r.IngestObjectSave()
+	if err != nil {
+		errors = append(errors, r.Error(r.IngestObject.Identifier(), err, false))
+	}
+	return true, errors
+}
+
+// https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
+// If Pharos has already recorded the object-level ingest events, we need
+// to know their IDs so we don't try to re-record them.
+func (r *Recorder) recheckObjectEvents() {
+	for _, event := range r.IngestObject.PremisEvents {
+		if event.ID > 0 {
+			continue
+		}
+		resp := r.Context.PharosClient.PremisEventGet(event.Identifier)
+		if resp.Error == nil && resp.PremisEvent() != nil {
+			event.ID = resp.PremisEvent().ID
+		}
+	}
+}
+
+// https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
+// Check GenericFile records in Pharos. If they have IDs, we need to copy them
+// to our Redis records before recording. This is part of the recovery process
+// for partial ingest recording.
+func (r *Recorder) recheckPharosFiles() (errors []*service.ProcessingError) {
+	params := url.Values{}
+	params.Set("intellectual_object_identifier", r.IngestObject.Identifier())
+	params.Set("include_events", "true")
+	params.Set("page", "1")
+	params.Set("per_page", "200")
+	for {
+		resp := r.Context.PharosClient.GenericFileList(params)
+		if resp.Error != nil {
+			errors = append(errors, r.Error(r.IngestObject.Identifier(), resp.Error, false))
+			break // go to return errors
+		}
+		for _, gf := range resp.GenericFiles() {
+			r.updateRedisFileAndEvents(gf)
+		}
+		if resp.HasNextPage() {
+			params = resp.ParamsForNextPage()
+		} else {
+			break
+		}
+	}
+	return errors
+}
+
+// https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
+func (r *Recorder) updateRedisFileAndEvents(gf *registry.GenericFile) (errors []*service.ProcessingError) {
+	// Update Redis IngestFile record
+	ingestFile, _ := r.Context.RedisClient.IngestFileGet(r.WorkItemID, gf.Identifier)
+	// Pharos may have some older files for this object that are not
+	// part of this ingest. Redis will return nil for those.
+	if ingestFile != nil {
+		ingestFile.ID = gf.ID
+		for _, event := range gf.PremisEvents {
+			eventToRecord := ingestFile.FindEvent(event.Identifier)
+			if eventToRecord != nil {
+				eventToRecord.ID = event.ID
+			}
+		}
+		err := r.Context.RedisClient.IngestFileSave(r.WorkItemID, ingestFile)
+		if err != nil {
+			errors = append(errors, r.Error(r.IngestObject.Identifier(), err, false))
+			return errors
+		}
+	}
+	return errors
 }

@@ -331,7 +331,9 @@ func (client *PharosClient) GenericFileGet(identifier string) *PharosResponse {
 //   the files belong.
 // * not_checked_since [datetime] - Returns a list of files that have not
 //   had a fixity check since the specified datetime [yyyy-mm-dd]
-// * include_relations=true - Include the file's PremisEvents and Checksums
+// * include_events=true - Include the file's PremisEvents in the response.
+// * include_checksums=true - Include the file's Checksums in the response.
+// * include_relations=true - Include the file's PremisEvents AND Checksums
 //   in the response.
 // * include_storage_records=true - Include the file's StorageRecords in
 //   the response.

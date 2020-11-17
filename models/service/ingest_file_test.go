@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
@@ -470,6 +471,32 @@ func TestGetPutOptions(t *testing.T) {
 	assert.Equal(t, "12345", opts.UserMetadata["md5"])
 	assert.Equal(t, "98765", opts.UserMetadata["sha256"])
 	assert.Equal(t, "image/jpeg", opts.ContentType)
+}
+
+func TestIngestFileFindEvent(t *testing.T) {
+	//func (f *IngestFile) FindEvent(eventUUID string) *registry.PremisEvent {
+	ingestFile := &service.IngestFile{}
+	ingestFile.PremisEvents = []*registry.PremisEvent{
+		&registry.PremisEvent{
+			Identifier: "824de525-5f16-444b-8e77-3e280c25d0fb",
+			Detail:     "Event One",
+		},
+		&registry.PremisEvent{
+			Identifier: "780ee87f-c379-4e9b-913f-e5a71c514240",
+			Detail:     "Event Two",
+		},
+	}
+	event1 := ingestFile.FindEvent("824de525-5f16-444b-8e77-3e280c25d0fb")
+	event2 := ingestFile.FindEvent("780ee87f-c379-4e9b-913f-e5a71c514240")
+	event3 := ingestFile.FindEvent("aa2394ef-e6b9-4c08-a20a-8a319630c441")
+
+	require.NotNil(t, event1)
+	assert.Equal(t, "Event One", event1.Detail)
+
+	require.NotNil(t, event2)
+	assert.Equal(t, "Event Two", event2.Detail)
+
+	assert.Nil(t, event3)
 }
 
 func getFileForEvents() *service.IngestFile {

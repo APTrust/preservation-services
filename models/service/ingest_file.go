@@ -429,6 +429,17 @@ func (f *IngestFile) URI() string {
 	return uri
 }
 
+// FindEvent returns the PremisEvent whose identifier matches the
+// specified UUID, or nil.
+func (f *IngestFile) FindEvent(eventUUID string) *registry.PremisEvent {
+	for _, event := range f.PremisEvents {
+		if event.Identifier == eventUUID {
+			return event
+		}
+	}
+	return nil
+}
+
 func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 	ingestEvents, err := f.GetIngestEvents()
 	if err != nil {
