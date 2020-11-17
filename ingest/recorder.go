@@ -310,8 +310,15 @@ func (r *Recorder) recheckPharosIdentifiers() []*service.ProcessingError {
 
 // https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
 func (r *Recorder) recheckPharosObject() (objectExistsInPharos bool, errors []*service.ProcessingError) {
-	// If we already have the object id, no need to bother Pharos
+	// If we already have the object id, no need to bother Pharos,
+	// except in the edge case where Pharos has the object and
+	// only SOME of the object events.
 	if r.IngestObject.ID > 0 {
+		r.recheckObjectEvents()
+		err := r.IngestObjectSave()
+		if err != nil {
+			errors = append(errors, r.Error(r.IngestObject.Identifier(), err, false))
+		}
 		return true, errors
 	}
 
