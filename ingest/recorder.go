@@ -293,8 +293,7 @@ func (r *Recorder) markFilesAsSaved(genericFiles []*registry.GenericFile, ingest
 // https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
 func (r *Recorder) hasDuplicateIdentityError(errors []*service.ProcessingError) bool {
 	for _, err := range errors {
-		if strings.Contains(err.Message, `"identifier":["has already been taken"`) ||
-			strings.Contains(err.Message, `{\"identifier\":[\"has already been taken\"`) {
+		if strings.Contains(err.Message, "has already been taken") {
 			return true
 		}
 	}
