@@ -4,7 +4,6 @@ import (
 	ctx "context"
 	"fmt"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -83,15 +82,27 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 		identifications, err := fi.Siegfried.Identify(s3Object, ingestFile.PathInBag, "")
 
 		if err != nil {
-			// Not sure how best to identify this error,
-			// but when it occurs, we want to stick with the
+			// Siegfried can encounter a number of errors,
+			// many of which are related to mscfb parsing.
+			// (See https://github.com/richardlehane/mscfb,
+			// A reader for Microsoft's Compound File Binary File Format.)
+			// Other common errors warn (perhaps incorrectly)
+			// of invalid zip file formats.
+			// When these occur, we want to stick with the
 			// original extension-based format identification
 			// rather than letting the ingest process stall.
-			// https://trello.com/c/9ds5MYIt
-			if strings.Contains(err.Error(), "mscfb: slicer read error") {
-				fi.Context.Logger.Warningf("Got mscfb slicer read error on %s. Sticking with extension format %s", ingestFile.Identifier(), ingestFile.FileFormat)
-			}
-			errors = append(errors, fi.Error(errKey, err, false))
+			// See https://trello.com/c/9ds5MYIt and
+			// https://trello.com/c/9aIVRiM0.
+			//
+			// For now, our mission is to preserve what our
+			// depositors send, not to reject materials because
+			// our format identifier thinks the format is invalid.
+			// We may want to take up this issue at a future member
+			// meeting. Even if members wanted us to reject "invalid"
+			// files, our definition of invalid may not match their
+			// definition of invalid. So for now, log and preserve
+			// everything.
+			fi.Context.Logger.Warningf("Siegfried return error '%v' for file %s. Sticking with extension format %s", ingestFile.Identifier(), err, ingestFile.FileFormat)
 		} else {
 			mimeType := ""
 			basis := ""
