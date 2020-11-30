@@ -18,95 +18,54 @@ import (
 )
 
 type Config struct {
-	APTDeleteBufferSize                   int
-	APTDeleteMaxAttempts                  int
-	APTDeleteWorkers                      int
-	APTFixityBufferSize                   int
-	APTFixityMaxAttempts                  int
-	APTFixityWorkers                      int
-	APTQueueInterval                      time.Duration
-	BagRestorerBufferSize                 int
-	BagRestorerMaxAttempts                int
-	BagRestorerWorkers                    int
-	BaseWorkingDir                        string
-	BucketGlacierDeepOH                   string
-	BucketGlacierDeepOR                   string
-	BucketGlacierDeepVA                   string
-	BucketGlacierOH                       string
-	BucketGlacierOR                       string
-	BucketGlacierVA                       string
-	BucketStandardOR                      string
-	BucketStandardVA                      string
-	BucketWasabiOR                        string
-	BucketWasabiVA                        string
-	ConfigFilePath                        string
-	ConfigName                            string
-	FileRestorerBufferSize                int
-	FileRestorerMaxAttempts               int
-	FileRestorerWorkers                   int
-	GlacierRestorerBufferSize             int
-	GlacierRestorerMaxAttempts            int
-	GlacierRestorerWorkers                int
-	IngestBucketReaderInterval            time.Duration
-	IngestCleanupBufferSize               int
-	IngestCleanupMaxAttempts              int
-	IngestCleanupWorkers                  int
-	IngestFormatIdentifierBufferSize      int
-	IngestFormatIdentifierMaxAttempts     int
-	IngestFormatIdentifierWorkers         int
-	IngestPreFetchBufferSize              int
-	IngestPreFetchMaxAttempts             int
-	IngestPreFetchWorkers                 int
-	IngestPreservationUploaderBufferSize  int
-	IngestPreservationUploaderMaxAttempts int
-	IngestPreservationUploaderWorkers     int
-	IngestPreservationVerifierBufferSize  int
-	IngestPreservationVerifierMaxAttempts int
-	IngestPreservationVerifierWorkers     int
-	IngestRecorderBufferSize              int
-	IngestRecorderMaxAttempts             int
-	IngestRecorderWorkers                 int
-	IngestStagingUploaderBufferSize       int
-	IngestStagingUploaderMaxAttempts      int
-	IngestStagingUploaderWorkers          int
-	IngestTempDir                         string
-	IngestValidatorBufferSize             int
-	IngestValidatorMaxAttempts            int
-	IngestValidatorWorkers                int
-	LogDir                                string
-	LogLevel                              logging.Level
-	MaxDaysSinceFixityCheck               int
-	MaxFileSize                           int64
-	MaxFixityItemsPerRun                  int
-	MaxWorkerAttempts                     int
-	NsqLookupd                            string
-	NsqURL                                string
-	PharosAPIKey                          string `json:"-"`
-	PharosAPIUser                         string `json:"-"`
-	PharosAPIVersion                      string
-	PharosURL                             string
-	PreservationBuckets                   []*PreservationBucket
-	ProfilesDir                           string
-	QueueFixityInterval                   time.Duration
-	RedisDefaultDB                        int
-	RedisPassword                         string `json:"-"`
-	RedisRetries                          int
-	RedisRetryMs                          time.Duration
-	RedisURL                              string
-	RedisUser                             string `json:"-"`
-	ReingestManagerBufferSize             int
-	ReingestManagerMaxAttempts            int
-	ReingestManagerWorkers                int
-	RestoreDir                            string
-	S3AWSHost                             string
-	S3Credentials                         map[string]*S3Credentials `json:"-"`
-	S3LocalHost                           string
-	S3WasabiHostOR                        string
-	S3WasabiHostVA                        string
-	StagingBucket                         string
-	StagingUploadRetries                  int
-	StagingUploadRetryMs                  time.Duration
-	VolumeServiceURL                      string
+	APTQueueInterval           time.Duration
+	BaseWorkingDir             string
+	BucketGlacierDeepOH        string
+	BucketGlacierDeepOR        string
+	BucketGlacierDeepVA        string
+	BucketGlacierOH            string
+	BucketGlacierOR            string
+	BucketGlacierVA            string
+	BucketStandardOR           string
+	BucketStandardVA           string
+	BucketWasabiOR             string
+	BucketWasabiVA             string
+	ConfigFilePath             string
+	ConfigName                 string
+	IngestBucketReaderInterval time.Duration
+	IngestTempDir              string
+	LogDir                     string
+	LogLevel                   logging.Level
+	MaxDaysSinceFixityCheck    int
+	MaxFileSize                int64
+	MaxFixityItemsPerRun       int
+	MaxWorkerAttempts          int
+	NsqLookupd                 string
+	NsqURL                     string
+	PharosAPIKey               string `json:"-"`
+	PharosAPIUser              string `json:"-"`
+	PharosAPIVersion           string
+	PharosURL                  string
+	PreservationBuckets        []*PreservationBucket
+	ProfilesDir                string
+	QueueFixityInterval        time.Duration
+	RedisDefaultDB             int
+	RedisPassword              string `json:"-"`
+	RedisRetries               int
+	RedisRetryMs               time.Duration
+	RedisURL                   string
+	RedisUser                  string `json:"-"`
+	RestoreDir                 string
+	S3AWSHost                  string
+	S3Credentials              map[string]*S3Credentials `json:"-"`
+	S3LocalHost                string
+	S3WasabiHostOR             string
+	S3WasabiHostVA             string
+	StagingBucket              string
+	StagingUploadRetries       int
+	StagingUploadRetryMs       time.Duration
+	VolumeServiceURL           string
+	WorkerSettings             map[string]int
 }
 
 var logLevels = map[string]logging.Level{
@@ -158,73 +117,44 @@ func loadConfig() *Config {
 		util.PrintAndExit(fmt.Sprintf("Fatal error config file: %v \n", err))
 	}
 	return &Config{
-		APTQueueInterval:                      v.GetDuration("APT_QUEUE_INTERVAL"),
-		BaseWorkingDir:                        v.GetString("BASE_WORKING_DIR"),
-		BucketGlacierDeepOH:                   v.GetString("BUCKET_GLACIER_DEEP_OH"),
-		BucketGlacierDeepOR:                   v.GetString("BUCKET_GLACIER_DEEP_OR"),
-		BucketGlacierDeepVA:                   v.GetString("BUCKET_GLACIER_DEEP_VA"),
-		BucketGlacierOH:                       v.GetString("BUCKET_GLACIER_OH"),
-		BucketGlacierOR:                       v.GetString("BUCKET_GLACIER_OR"),
-		BucketGlacierVA:                       v.GetString("BUCKET_GLACIER_VA"),
-		BucketStandardOR:                      v.GetString("BUCKET_STANDARD_OR"),
-		BucketStandardVA:                      v.GetString("BUCKET_STANDARD_VA"),
-		BucketWasabiOR:                        v.GetString("BUCKET_WASABI_OR"),
-		BucketWasabiVA:                        v.GetString("BUCKET_WASABI_VA"),
-		ConfigFilePath:                        path.Join(configDir, configFile),
-		ConfigName:                            strings.Replace(configFile, ".env.", "", 1),
-		GlacierRestorerMaxAttempts:            v.GetInt("GLACIER_RESTORER_MAX_ATTEMPTS"),
-		GlacierRestorerWorkers:                v.GetInt("GLACIER_RESTORER_WORKERS"),
-		IngestBucketReaderInterval:            v.GetDuration("INGEST_BUCKET_READER_INTERVAL"),
-		IngestCleanupBufferSize:               v.GetInt("INGEST_CLEANUP_BUFFER_SIZE"),
-		IngestCleanupMaxAttempts:              v.GetInt("INGEST_CLEANUP_MAX_ATTEMPTS"),
-		IngestCleanupWorkers:                  v.GetInt("INGEST_CLEANUP_WORKERS"),
-		IngestFormatIdentifierBufferSize:      v.GetInt("INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE"),
-		IngestFormatIdentifierMaxAttempts:     v.GetInt("INGEST_FORMAT_IDENTIFIER_MAX_ATTEMPTS"),
-		IngestFormatIdentifierWorkers:         v.GetInt("INGEST_FORMAT_IDENTIFIER_WORKERS"),
-		IngestPreFetchBufferSize:              v.GetInt("INGEST_PRE_FETCH_BUFFER_SIZE"),
-		IngestPreFetchMaxAttempts:             v.GetInt("INGEST_PRE_FETCH_MAX_ATTEMPTS"),
-		IngestPreFetchWorkers:                 v.GetInt("INGEST_PRE_FETCH_WORKERS"),
-		IngestPreservationUploaderBufferSize:  v.GetInt("INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE"),
-		IngestPreservationUploaderMaxAttempts: v.GetInt("INGEST_PRESERVATION_UPLOADER_MAX_ATTEMPTS"),
-		IngestPreservationUploaderWorkers:     v.GetInt("INGEST_PRESERVATION_UPLOADER_WORKERS"),
-		IngestPreservationVerifierBufferSize:  v.GetInt("INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE"),
-		IngestPreservationVerifierMaxAttempts: v.GetInt("INGEST_PRESERVATION_VERIFIER_MAX_ATTEMPTS"),
-		IngestPreservationVerifierWorkers:     v.GetInt("INGEST_PRESERVATION_VERIFIER_WORKERS"),
-		IngestRecorderBufferSize:              v.GetInt("INGEST_RECORDER_BUFFER_SIZE"),
-		IngestRecorderMaxAttempts:             v.GetInt("INGEST_RECORDER_MAX_ATTEMPTS"),
-		IngestRecorderWorkers:                 v.GetInt("INGEST_RECORDER_WORKERS"),
-		IngestStagingUploaderBufferSize:       v.GetInt("INGEST_STAGING_UPLOADER_BUFFER_SIZE"),
-		IngestStagingUploaderMaxAttempts:      v.GetInt("INGEST_STAGING_UPLOADER_MAX_ATTEMPTS"),
-		IngestStagingUploaderWorkers:          v.GetInt("INGEST_STAGING_UPLOADER_WORKERS"),
-		IngestTempDir:                         v.GetString("INGEST_TEMP_DIR"),
-		IngestValidatorBufferSize:             v.GetInt("INGEST_VALIDATOR_BUFFER_SIZE"),
-		IngestValidatorMaxAttempts:            v.GetInt("INGEST_VALIDATOR_MAX_ATTEMPTS"),
-		IngestValidatorWorkers:                v.GetInt("INGEST_VALIDATOR_WORKERS"),
-		LogDir:                                v.GetString("LOG_DIR"),
-		LogLevel:                              getLogLevel(v.GetString("LOG_LEVEL")),
-		MaxDaysSinceFixityCheck:               v.GetInt("MAX_DAYS_SINCE_LAST_FIXITY"),
-		MaxFileSize:                           v.GetInt64("MAX_FILE_SIZE"),
-		MaxFixityItemsPerRun:                  v.GetInt("MAX_FIXITY_ITEMS_PER_RUN"),
-		MaxWorkerAttempts:                     v.GetInt("MAX_WORKER_ATTEMPTS"),
-		NsqLookupd:                            v.GetString("NSQ_LOOKUPD"),
-		NsqURL:                                v.GetString("NSQ_URL"),
-		PharosAPIKey:                          v.GetString("PHAROS_API_KEY"),
-		PharosAPIUser:                         v.GetString("PHAROS_API_USER"),
-		PharosAPIVersion:                      v.GetString("PHAROS_API_VERSION"),
-		PharosURL:                             v.GetString("PHAROS_URL"),
-		ProfilesDir:                           v.GetString("PROFILES_DIR"),
-		QueueFixityInterval:                   v.GetDuration("QUEUE_FIXITY_INTERVAL"),
-		RedisDefaultDB:                        v.GetInt("REDIS_DEFAULT_DB"),
-		RedisPassword:                         v.GetString("REDIS_PASSWORD"),
-		RedisRetries:                          v.GetInt("REDIS_RETRIES"),
-		RedisRetryMs:                          v.GetDuration("REDIS_RETRY_MS"),
-		RedisURL:                              v.GetString("REDIS_URL"),
-		RedisUser:                             v.GetString("REDIS_USER"),
-		ReingestManagerBufferSize:             v.GetInt("REINGEST_MANAGER_BUFFER_SIZE"),
-		ReingestManagerMaxAttempts:            v.GetInt("REINGEST_MANAGER_MAX_ATTEMPTS"),
-		ReingestManagerWorkers:                v.GetInt("REINGEST_MANAGER_WORKERS"),
-		RestoreDir:                            v.GetString("RESTORE_DIR"),
-		S3AWSHost:                             v.GetString("S3_AWS_HOST"),
+		APTQueueInterval:           v.GetDuration("APT_QUEUE_INTERVAL"),
+		BaseWorkingDir:             v.GetString("BASE_WORKING_DIR"),
+		BucketGlacierDeepOH:        v.GetString("BUCKET_GLACIER_DEEP_OH"),
+		BucketGlacierDeepOR:        v.GetString("BUCKET_GLACIER_DEEP_OR"),
+		BucketGlacierDeepVA:        v.GetString("BUCKET_GLACIER_DEEP_VA"),
+		BucketGlacierOH:            v.GetString("BUCKET_GLACIER_OH"),
+		BucketGlacierOR:            v.GetString("BUCKET_GLACIER_OR"),
+		BucketGlacierVA:            v.GetString("BUCKET_GLACIER_VA"),
+		BucketStandardOR:           v.GetString("BUCKET_STANDARD_OR"),
+		BucketStandardVA:           v.GetString("BUCKET_STANDARD_VA"),
+		BucketWasabiOR:             v.GetString("BUCKET_WASABI_OR"),
+		BucketWasabiVA:             v.GetString("BUCKET_WASABI_VA"),
+		ConfigFilePath:             path.Join(configDir, configFile),
+		ConfigName:                 strings.Replace(configFile, ".env.", "", 1),
+		IngestBucketReaderInterval: v.GetDuration("INGEST_BUCKET_READER_INTERVAL"),
+		IngestTempDir:              v.GetString("INGEST_TEMP_DIR"),
+		LogDir:                     v.GetString("LOG_DIR"),
+		LogLevel:                   getLogLevel(v.GetString("LOG_LEVEL")),
+		MaxDaysSinceFixityCheck:    v.GetInt("MAX_DAYS_SINCE_LAST_FIXITY"),
+		MaxFileSize:                v.GetInt64("MAX_FILE_SIZE"),
+		MaxFixityItemsPerRun:       v.GetInt("MAX_FIXITY_ITEMS_PER_RUN"),
+		MaxWorkerAttempts:          v.GetInt("MAX_WORKER_ATTEMPTS"),
+		NsqLookupd:                 v.GetString("NSQ_LOOKUPD"),
+		NsqURL:                     v.GetString("NSQ_URL"),
+		PharosAPIKey:               v.GetString("PHAROS_API_KEY"),
+		PharosAPIUser:              v.GetString("PHAROS_API_USER"),
+		PharosAPIVersion:           v.GetString("PHAROS_API_VERSION"),
+		PharosURL:                  v.GetString("PHAROS_URL"),
+		ProfilesDir:                v.GetString("PROFILES_DIR"),
+		QueueFixityInterval:        v.GetDuration("QUEUE_FIXITY_INTERVAL"),
+		RedisDefaultDB:             v.GetInt("REDIS_DEFAULT_DB"),
+		RedisPassword:              v.GetString("REDIS_PASSWORD"),
+		RedisRetries:               v.GetInt("REDIS_RETRIES"),
+		RedisRetryMs:               v.GetDuration("REDIS_RETRY_MS"),
+		RedisURL:                   v.GetString("REDIS_URL"),
+		RedisUser:                  v.GetString("REDIS_USER"),
+		RestoreDir:                 v.GetString("RESTORE_DIR"),
+		S3AWSHost:                  v.GetString("S3_AWS_HOST"),
 		S3Credentials: map[string]*S3Credentials{
 			constants.StorageProviderAWS: &S3Credentials{
 				Host:      v.GetString("S3_AWS_HOST"),
@@ -254,6 +184,50 @@ func loadConfig() *Config {
 		StagingUploadRetries: v.GetInt("STAGING_UPLOAD_RETRIES"),
 		StagingUploadRetryMs: v.GetDuration("STAGING_UPLOAD_RETRY_MS"),
 		VolumeServiceURL:     v.GetString("VOLUME_SERVICE_URL"),
+		WorkerSettings: map[string]int{
+			constants.TopicDelete + "BufferSize":                 v.GetInt("APT_DELETE_BUFFER_SIZE"),
+			constants.TopicDelete + "MaxAttempts":                v.GetInt("APT_DELETE_MAX_ATTEMPTS"),
+			constants.TopicDelete + "Workers":                    v.GetInt("APT_DELETE_WORKERS"),
+			constants.TopicFixity + "BufferSize":                 v.GetInt("APT_FIXITY_BUFFER_SIZE"),
+			constants.TopicFixity + "MaxAttempts":                v.GetInt("APT_FIXITY_MAX_ATTEMPTS"),
+			constants.TopicFixity + "Workers":                    v.GetInt("APT_FIXITY_WORKERS"),
+			constants.TopicObjectRestore + "BufferSize":          v.GetInt("BAG_RESTORER_BUFFER_SIZE"),
+			constants.TopicObjectRestore + "MaxAttempts":         v.GetInt("BAG_RESTORER_MAX_ATTEMPTS"),
+			constants.TopicObjectRestore + "Workers":             v.GetInt("BAG_RESTORER_WORKERS"),
+			constants.TopicFileRestore + "BufferSize":            v.GetInt("FILE_RESTORER_BUFFER_SIZE"),
+			constants.TopicFileRestore + "MaxAttempts":           v.GetInt("FILE_RESTORER_MAX_ATTEMPTS"),
+			constants.TopicFileRestore + "Workers":               v.GetInt("FILE_RESTORER_WORKERS"),
+			constants.TopicGlacierRestore + "BufferSize":         v.GetInt("GLACIER_RESTORER_BUFFER_SIZE"),
+			constants.TopicGlacierRestore + "MaxAttempts":        v.GetInt("GLACIER_RESTORER_MAX_ATTEMPTS"),
+			constants.TopicGlacierRestore + "Workers":            v.GetInt("GLACIER_RESTORER_WORKERS"),
+			constants.IngestCleanup + "BufferSize":               v.GetInt("INGEST_CLEANUP_BUFFER_SIZE"),
+			constants.IngestCleanup + "MaxAttempts":              v.GetInt("INGEST_CLEANUP_MAX_ATTEMPTS"),
+			constants.IngestCleanup + "Workers":                  v.GetInt("INGEST_CLEANUP_WORKERS"),
+			constants.IngestFormatIdentification + "BufferSize":  v.GetInt("INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE"),
+			constants.IngestFormatIdentification + "MaxAttempts": v.GetInt("INGEST_FORMAT_IDENTIFIER_MAX_ATTEMPTS"),
+			constants.IngestFormatIdentification + "Workers":     v.GetInt("INGEST_FORMAT_IDENTIFIER_WORKERS"),
+			constants.IngestPreFetch + "BufferSize":              v.GetInt("INGEST_PRE_FETCH_BUFFER_SIZE"),
+			constants.IngestPreFetch + "MaxAttempts":             v.GetInt("INGEST_PRE_FETCH_MAX_ATTEMPTS"),
+			constants.IngestPreFetch + "Workers":                 v.GetInt("INGEST_PRE_FETCH_WORKERS"),
+			constants.IngestStorage + "BufferSize":               v.GetInt("INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE"),
+			constants.IngestStorage + "MaxAttempts":              v.GetInt("INGEST_PRESERVATION_UPLOADER_MAX_ATTEMPTS"),
+			constants.IngestStorage + "Workers":                  v.GetInt("INGEST_PRESERVATION_UPLOADER_WORKERS"),
+			constants.IngestStorageValidation + "BufferSize":     v.GetInt("INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE"),
+			constants.IngestStorageValidation + "MaxAttempts":    v.GetInt("INGEST_PRESERVATION_VERIFIER_MAX_ATTEMPTS"),
+			constants.IngestStorageValidation + "Workers":        v.GetInt("INGEST_PRESERVATION_VERIFIER_WORKERS"),
+			constants.IngestRecord + "BufferSize":                v.GetInt("INGEST_RECORDER_BUFFER_SIZE"),
+			constants.IngestRecord + "MaxAttempts":               v.GetInt("INGEST_RECORDER_MAX_ATTEMPTS"),
+			constants.IngestRecord + "Workers":                   v.GetInt("INGEST_RECORDER_WORKERS"),
+			constants.IngestStaging + "BufferSize":               v.GetInt("INGEST_STAGING_UPLOADER_BUFFER_SIZE"),
+			constants.IngestStaging + "MaxAttempts":              v.GetInt("INGEST_STAGING_UPLOADER_MAX_ATTEMPTS"),
+			constants.IngestStaging + "Workers":                  v.GetInt("INGEST_STAGING_UPLOADER_WORKERS"),
+			constants.IngestValidation + "BufferSize":            v.GetInt("INGEST_VALIDATOR_BUFFER_SIZE"),
+			constants.IngestValidation + "MaxAttempts":           v.GetInt("INGEST_VALIDATOR_MAX_ATTEMPTS"),
+			constants.IngestValidation + "Workers":               v.GetInt("INGEST_VALIDATOR_WORKERS"),
+			constants.IngestReingestCheck + "BufferSize":         v.GetInt("REINGEST_MANAGER_BUFFER_SIZE"),
+			constants.IngestReingestCheck + "MaxAttempts":        v.GetInt("REINGEST_MANAGER_MAX_ATTEMPTS"),
+			constants.IngestReingestCheck + "Workers":            v.GetInt("REINGEST_MANAGER_WORKERS"),
+		},
 	}
 }
 

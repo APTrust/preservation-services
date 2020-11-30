@@ -66,6 +66,12 @@ func TestNewConfig(t *testing.T) {
 		assert.Equal(t, "minioadmin", provider.KeyID)
 		assert.Equal(t, "minioadmin", provider.SecretKey)
 	}
+
+	assert.Equal(t, 42, len(config.WorkerSettings))
+	for _, value := range config.WorkerSettings {
+		assert.True(t, value > 0)
+		assert.True(t, value < 100)
+	}
 }
 
 func TestPreservationBucketsFor(t *testing.T) {
