@@ -16,6 +16,8 @@ type IngestValidator struct {
 
 // NewIngestValidator creates a new IngestValidator worker.
 func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
+	_context := common.NewContext()
+	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.IngestValidation, bufSize, numWorkers, maxAttempts)
 	settings := &Settings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        true,
@@ -33,7 +35,7 @@ func NewIngestValidator(bufSize, numWorkers, maxAttempts int) *IngestValidator {
 	}
 	worker := &IngestValidator{
 		IngestBase: NewIngestBase(
-			common.NewContext(),
+			_context,
 			createMetadataValidator,
 			settings,
 		),

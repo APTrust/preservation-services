@@ -26,6 +26,8 @@ type GlacierRestorer struct {
 // NewGlacierRestorer creates a new GlacierRestorer worker. Param context is a
 // Context object with connections to S3, Redis, Pharos, and NSQ.
 func NewGlacierRestorer(bufSize, numWorkers, maxAttempts int) *GlacierRestorer {
+	_context := common.NewContext()
+	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.TopicGlacierRestore, bufSize, numWorkers, maxAttempts)
 	settings := &Settings{
 		ChannelBufferSize: bufSize,
 		MaxAttempts:       maxAttempts,
@@ -38,7 +40,7 @@ func NewGlacierRestorer(bufSize, numWorkers, maxAttempts int) *GlacierRestorer {
 	}
 	restorer := &GlacierRestorer{
 		Base: Base{
-			Context:           common.NewContext(),
+			Context:           _context,
 			Settings:          settings,
 			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize),
 			ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),

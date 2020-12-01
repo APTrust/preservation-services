@@ -17,6 +17,8 @@ type IngestPreFetch struct {
 // NewIngestPreFetch creates a new IngestPreFetch worker. The worker starts
 // handling NSQ messages as soon as it's instantiated.
 func NewIngestPreFetch(bufSize, numWorkers, maxAttempts int) *IngestPreFetch {
+	_context := common.NewContext()
+	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.IngestPreFetch, bufSize, numWorkers, maxAttempts)
 	settings := &Settings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
@@ -34,7 +36,7 @@ func NewIngestPreFetch(bufSize, numWorkers, maxAttempts int) *IngestPreFetch {
 	}
 	worker := &IngestPreFetch{
 		IngestBase: NewIngestBase(
-			common.NewContext(),
+			_context,
 			createMetadataGatherer,
 			settings,
 		),

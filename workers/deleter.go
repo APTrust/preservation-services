@@ -20,6 +20,8 @@ type Deleter struct {
 // NewDeleter creates a new Deleter worker. Param context is a
 // Context object with connections to S3, Redis, Pharos, and NSQ.
 func NewDeleter(bufSize, numWorkers, maxAttempts int) *Deleter {
+	_context := common.NewContext()
+	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.TopicDelete, bufSize, numWorkers, maxAttempts)
 	settings := &Settings{
 		ChannelBufferSize: bufSize,
 		MaxAttempts:       maxAttempts,
@@ -32,7 +34,7 @@ func NewDeleter(bufSize, numWorkers, maxAttempts int) *Deleter {
 	}
 	deleter := &Deleter{
 		Base: Base{
-			Context:           common.NewContext(),
+			Context:           _context,
 			Settings:          settings,
 			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize),
 			ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),

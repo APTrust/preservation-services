@@ -32,6 +32,8 @@ type FixityChecker struct {
 // NewFixityChecker creates a new FixityChecker worker. Param context is a
 // Context object with connections to S3, Redis, Pharos, and NSQ.
 func NewFixityChecker(bufSize, numWorkers, maxAttempts int) *FixityChecker {
+	_context := common.NewContext()
+	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.TopicFixity, bufSize, numWorkers, maxAttempts)
 	settings := &Settings{
 		ChannelBufferSize: bufSize,
 		MaxAttempts:       maxAttempts,
@@ -43,7 +45,7 @@ func NewFixityChecker(bufSize, numWorkers, maxAttempts int) *FixityChecker {
 		RequeueTimeout:    (20 * time.Second),
 	}
 	checker := &FixityChecker{
-		Context:           common.NewContext(),
+		Context:           _context,
 		Settings:          settings,
 		ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),
 		SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),

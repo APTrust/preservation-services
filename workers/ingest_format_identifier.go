@@ -16,6 +16,8 @@ type FormatIdentifier struct {
 
 // NewFormatIdentifier creates a new FormatIdentifier worker.
 func NewIngestFormatIdentifier(bufSize, numWorkers, maxAttempts int) *FormatIdentifier {
+	_context := common.NewContext()
+	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.IngestFormatIdentification, bufSize, numWorkers, maxAttempts)
 	settings := &Settings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
@@ -33,7 +35,7 @@ func NewIngestFormatIdentifier(bufSize, numWorkers, maxAttempts int) *FormatIden
 	}
 	worker := &FormatIdentifier{
 		IngestBase: NewIngestBase(
-			common.NewContext(),
+			_context,
 			createFormatIdentifier,
 			settings,
 		),

@@ -19,6 +19,8 @@ type BagRestorer struct {
 // NewBagRestorer creates a new BagRestorer worker. Param context is a
 // Context object with connections to S3, Redis, Pharos, and NSQ.
 func NewBagRestorer(bufSize, numWorkers, maxAttempts int) *BagRestorer {
+	_context := common.NewContext()
+	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.TopicObjectRestore, bufSize, numWorkers, maxAttempts)
 	settings := &Settings{
 		ChannelBufferSize: bufSize,
 		MaxAttempts:       maxAttempts,
@@ -31,7 +33,7 @@ func NewBagRestorer(bufSize, numWorkers, maxAttempts int) *BagRestorer {
 	}
 	restorer := &BagRestorer{
 		Base: Base{
-			Context:           common.NewContext(),
+			Context:           _context,
 			Settings:          settings,
 			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize),
 			ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),

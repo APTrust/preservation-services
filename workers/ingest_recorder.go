@@ -16,6 +16,8 @@ type IngestRecorder struct {
 
 // NewIngestRecorder creates a new IngestRecorder worker.
 func NewIngestRecorder(bufSize, numWorkers, maxAttempts int) *IngestRecorder {
+	_context := common.NewContext()
+	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.IngestRecord, bufSize, numWorkers, maxAttempts)
 	settings := &Settings{
 		ChannelBufferSize:                         bufSize,
 		DeleteFromReceivingAfterFatalError:        false,
@@ -33,7 +35,7 @@ func NewIngestRecorder(bufSize, numWorkers, maxAttempts int) *IngestRecorder {
 	}
 	worker := &IngestRecorder{
 		IngestBase: NewIngestBase(
-			common.NewContext(),
+			_context,
 			createIngestRecorder,
 			settings,
 		),

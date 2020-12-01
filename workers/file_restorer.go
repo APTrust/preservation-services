@@ -19,6 +19,8 @@ type FileRestorer struct {
 // NewFileRestorer creates a new FileRestorer worker. Param context is a
 // Context object with connections to S3, Redis, Pharos, and NSQ.
 func NewFileRestorer(bufSize, numWorkers, maxAttempts int) *FileRestorer {
+	_context := common.NewContext()
+	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.TopicFileRestore, bufSize, numWorkers, maxAttempts)
 	settings := &Settings{
 		ChannelBufferSize: bufSize,
 		MaxAttempts:       maxAttempts,
@@ -31,7 +33,7 @@ func NewFileRestorer(bufSize, numWorkers, maxAttempts int) *FileRestorer {
 	}
 	restorer := &FileRestorer{
 		Base: Base{
-			Context:           common.NewContext(),
+			Context:           _context,
 			Settings:          settings,
 			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize),
 			ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),
