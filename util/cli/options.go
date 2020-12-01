@@ -13,10 +13,15 @@ type Options struct {
 	RequeueTimeout    time.Duration
 }
 
+// Note that if items whose defaults are set to -1 below are
+// not specified on the command line, they will be pulled from
+// the .env file. See util.GetWorkerSettings, which decides
+// whether to use command-line or .env settings for attempts,
+// bufSize and workers.
 var opts = Options{}
-var defaultAttempts = 3
-var defaultBufSize = 20
-var defaultWorkers = 2
+var defaultAttempts = -1
+var defaultBufSize = -1
+var defaultWorkers = -1
 var defaultTimeout = 1 * time.Minute
 
 var EnvMessage = `

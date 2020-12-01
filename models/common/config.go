@@ -231,6 +231,40 @@ func loadConfig() *Config {
 	}
 }
 
+// GetWorkerSettings returns the buffer size, max attempts and number
+// of workers (go routines) for the specified worker. The params
+// bufSize, numWorkers, and maxAttempts CAN be passed in from the
+// command line. When they have not been specified on the command line,
+// they will have the value -1, and this method will return the value
+// from the .env file instead. If they were specified on the command line
+// (i.e. they're greater than zero), this will return the command line
+// values instead. This allows the user to override the .env settings
+// on the command line, if desired, or to just go with .env by not
+// specifying overrides.
+//
+// Param workerName is actually a worker or queue topic name from the
+// constants file. If you pass an invalid name, the system will panic
+// at startup, which is preferable to running a service with undefined
+// or invalid params.
+func (config *Config) GetWorkerSettings(workerName string, bufSizeArg, numWorkersArg, maxAttemptsArg int) (bufSize, numWorkers, maxAttempts int) {
+	if bufSizeArg > 0 {
+		bufSize = bufSizeArg
+	} else {
+		bufSize = config.WorkerSettings[workerName+"BufferSize"]
+	}
+	if numWorkersArg > 0 {
+		numWorkers = numWorkersArg
+	} else {
+		numWorkers = config.WorkerSettings[workerName+"Workers"]
+	}
+	if maxAttemptsArg > 0 {
+		maxAttempts = maxAttemptsArg
+	} else {
+		maxAttempts = config.WorkerSettings[workerName+"MaxAttempts"]
+	}
+	return bufSize, numWorkers, maxAttempts
+}
+
 // CredentialsForS3Host returns the credentials for the specifed
 // S3 host, or nil if no credentials exist for that host.
 func (config *Config) CredentialsForS3Host(host string) (credentials *S3Credentials) {

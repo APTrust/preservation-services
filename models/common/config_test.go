@@ -87,6 +87,33 @@ func TestPreservationBucketsFor(t *testing.T) {
 	assert.Equal(t, constants.StorageWasabiVA, preservationBuckets[0].OptionName)
 }
 
+func TestGetWorkerSettings(t *testing.T) {
+	config := common.NewConfig()
+
+	// When params are > 0, should return params as-is.
+	// Params > 0 were passed in on the command line.
+	bufSize, numWorkers, maxAttempts := config.GetWorkerSettings(
+		constants.IngestReingestCheck,
+		30,
+		20,
+		10)
+	assert.Equal(t, 30, bufSize)
+	assert.Equal(t, 20, numWorkers)
+	assert.Equal(t, 10, maxAttempts)
+
+	// Params <= 0 means the arg was not specified on the command line.
+	// When params are <= 0, should return values from .env file.
+	// In testing, these values come from .env.test
+	bufSize, numWorkers, maxAttempts = config.GetWorkerSettings(
+		constants.IngestReingestCheck,
+		-1,
+		-1,
+		-1)
+	assert.Equal(t, 20, bufSize)    // REINGEST_MANAGER_BUFFER_SIZE
+	assert.Equal(t, 3, numWorkers)  // REINGEST_MANAGER_WORKERS
+	assert.Equal(t, 3, maxAttempts) // REINGEST_MANAGER_MAX_ATTEMPTS
+}
+
 func TestToJson(t *testing.T) {
 	config := common.NewConfig()
 	jsonString := config.ToJSON()
@@ -111,6 +138,7 @@ func TestToJson(t *testing.T) {
 		"PharosAPIVersion",
 		"PharosURL",
 		"RedisDefaultDB",
+		"WorkerSettings",
 	}
 	for _, key := range expectedKeys {
 		assert.True(t, strings.Contains(jsonString, key))
