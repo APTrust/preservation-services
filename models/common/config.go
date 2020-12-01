@@ -62,7 +62,6 @@ type Config struct {
 	S3WasabiHostOR             string
 	S3WasabiHostVA             string
 	StagingBucket              string
-	StagingUploadRetries       int
 	StagingUploadRetryMs       time.Duration
 	VolumeServiceURL           string
 	WorkerSettings             map[string]int
@@ -181,7 +180,6 @@ func loadConfig() *Config {
 		S3WasabiHostOR:       v.GetString("S3_WASABI_HOST_OR"),
 		S3WasabiHostVA:       v.GetString("S3_WASABI_HOST_VA"),
 		StagingBucket:        v.GetString("STAGING_BUCKET"),
-		StagingUploadRetries: v.GetInt("STAGING_UPLOAD_RETRIES"),
 		StagingUploadRetryMs: v.GetDuration("STAGING_UPLOAD_RETRY_MS"),
 		VolumeServiceURL:     v.GetString("VOLUME_SERVICE_URL"),
 		WorkerSettings: map[string]int{
@@ -448,9 +446,6 @@ func (config *Config) checkBasicSettings() {
 	}
 	if config.StagingBucket == "" {
 		util.PrintAndExit("Config is missing StagingBucket")
-	}
-	if config.StagingUploadRetries < 1 {
-		util.PrintAndExit("Config is missing StagingUploadRetries")
 	}
 	if config.StagingUploadRetryMs < time.Duration(1*time.Millisecond) {
 		util.PrintAndExit("Config is missing StagingUploadRetryMs (be sure format is like 200ms)")

@@ -52,7 +52,6 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, "", config.RedisUser)
 	assert.Equal(t, restoreDir, config.RestoreDir)
 	assert.Equal(t, "staging", config.StagingBucket)
-	assert.Equal(t, 3, config.StagingUploadRetries)
 	assert.Equal(t, time.Duration(250*time.Millisecond), config.StagingUploadRetryMs)
 	assert.Equal(t, "http://localhost:8898", config.VolumeServiceURL)
 
