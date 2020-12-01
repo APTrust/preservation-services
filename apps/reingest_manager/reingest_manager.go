@@ -21,13 +21,8 @@ func main() {
 	// Otherwise, it starts handling NSQ messages immediately.
 	worker := workers.NewReingestManager(
 		opts.ChannelBufferSize,
-		// TODO: Remove hard-coded values once we can
-		// pass values in on docker command line or
-		// through .env file. See https://trello.com/c/SwLGgehH
-		// For now, stick with a single worker, so we don't
-		// overwhelm the staging server.
-		1, //opts.NumWorkers,
-		3, //opts.MaxAttempts,
+		opts.NumWorkers,
+		opts.MaxAttempts,
 	)
 
 	// This channel blocks until we get an interrupt,
