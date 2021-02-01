@@ -7,6 +7,9 @@
 # Redis db files
 *.rdb
 
+# rbenv file
+.ruby-version
+
 # This file is left over after integration tests.
 # It can be useful for post-mortem debugging, but it
 # doesn't belong in the repo.
