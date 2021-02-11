@@ -1,0 +1,1 @@
+if [ ! -z "" ]; then echo  | docker login --username  --password-stdin || docker login hub.docker.com; fi
