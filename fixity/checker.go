@@ -16,8 +16,8 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/network"
 	"github.com/APTrust/preservation-services/restoration"
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
-	uuid "github.com/satori/go.uuid"
 )
 
 type Checker struct {
@@ -165,7 +165,7 @@ func (c *Checker) RecordFixityEvent(gf *registry.GenericFile, url, expectedFixit
 }
 
 func (c *Checker) GetFixityEvent(gf *registry.GenericFile, url, expectedFixity, actualFixity string) *registry.PremisEvent {
-	eventId := uuid.NewV4()
+	eventId := uuid.New()
 	object := "Go language crypto/sha256"
 	agent := "http://golang.org/pkg/crypto/sha256/"
 	outcomeInformation := fmt.Sprintf("Fixity matches at %s: %s", url, actualFixity)

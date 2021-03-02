@@ -17,7 +17,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
 // TarredBagScanner reads a tarred BagIt file to collect metadata for
@@ -108,7 +108,7 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 	ingestFile.IntellectualObjectID = scanner.IngestObject.ID
 	ingestFile.Size = header.Size
 	ingestFile.StorageOption = scanner.IngestObject.StorageOption
-	ingestFile.UUID = uuid.NewV4().String()
+	ingestFile.UUID = uuid.New().String()
 
 	ingestFile.FileFormat = constants.MimeTypeForExtension[filepath.Ext(pathInBag)]
 	if ingestFile.FileFormat == "" {

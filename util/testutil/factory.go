@@ -8,7 +8,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
 var Bloomsday, _ = time.Parse(time.RFC3339, "1904-06-16T15:04:05Z")
@@ -163,7 +163,7 @@ func GetGenericFileForObj(obj *registry.IntellectualObject, suffix int, withChec
 		Size:                         484896,
 		State:                        constants.StateActive,
 		StorageOption:                constants.StorageStandard,
-		UUID:                         uuid.NewV4().String(),
+		UUID:                         uuid.New().String(),
 	}
 	if withChecksums {
 		gf.Checksums = []*registry.Checksum{
@@ -200,7 +200,7 @@ func GetPremisEvent(gf *registry.GenericFile, eventType string) *registry.Premis
 		EventType:                    eventType,
 		GenericFileID:                gf.ID,
 		GenericFileIdentifier:        gf.Identifier,
-		Identifier:                   uuid.NewV4().String(),
+		Identifier:                   uuid.New().String(),
 		InstitutionID:                gf.InstitutionID,
 		IntellectualObjectID:         gf.IntellectualObjectID,
 		IntellectualObjectIdentifier: gf.IntellectualObjectIdentifier,

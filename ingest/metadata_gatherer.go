@@ -14,8 +14,8 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
-	uuid "github.com/satori/go.uuid"
 )
 
 // MetadataGatherer scans a tarred bag, collects metadata such as
@@ -303,7 +303,7 @@ func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum, sourceT
 
 func (m *MetadataGatherer) newIngestFile(relFilePath string) *service.IngestFile {
 	ingestFile := service.NewIngestFile(m.IngestObject.Identifier(), relFilePath)
-	ingestFile.UUID = uuid.NewV4().String()
+	ingestFile.UUID = uuid.New().String()
 	return ingestFile
 }
 

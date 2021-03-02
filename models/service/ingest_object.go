@@ -12,7 +12,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
 // IngestObject contains information about an object being ingested.
@@ -448,7 +448,7 @@ func (obj *IngestObject) initIngestEvents() {
 // creation of a new IntellectualObject. We generate this event the first
 // time an object is ingested, but not when it is updated.
 func (obj *IngestObject) NewObjectCreationEvent() *registry.PremisEvent {
-	eventId := uuid.NewV4()
+	eventId := uuid.New()
 	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),
@@ -470,7 +470,7 @@ func (obj *IngestObject) NewObjectCreationEvent() *registry.PremisEvent {
 // ingest of this IntellectualObject. We generate this event each time
 // an object is ingested.
 func (obj *IngestObject) NewObjectIngestEvent() *registry.PremisEvent {
-	eventId := uuid.NewV4()
+	eventId := uuid.New()
 	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),
@@ -492,7 +492,7 @@ func (obj *IngestObject) NewObjectIngestEvent() *registry.PremisEvent {
 // assignment of this object's identifier. We generate this event the first
 // time an object is ingested, but not when it is updated.
 func (obj *IngestObject) NewObjectIdentifierEvent() *registry.PremisEvent {
-	eventId := uuid.NewV4()
+	eventId := uuid.New()
 	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),
@@ -514,7 +514,7 @@ func (obj *IngestObject) NewObjectIdentifierEvent() *registry.PremisEvent {
 // assignment of this object's access rights. This event is generated
 // on initial ingest, and on any re-ingest when access rights change.
 func (obj *IngestObject) NewObjectRightsEvent() *registry.PremisEvent {
-	eventId := uuid.NewV4()
+	eventId := uuid.New()
 	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),

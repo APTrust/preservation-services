@@ -16,8 +16,8 @@ import (
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
-	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -203,7 +203,7 @@ func createObjectAndFiles(t *testing.T, context *common.Context) {
 				Size:                         500,
 				State:                        "A",
 				StorageOption:                constants.StorageStandard,
-				UUID:                         uuid.NewV4().String(),
+				UUID:                         uuid.New().String(),
 			}
 			resp = context.PharosClient.GenericFileSave(gf)
 			require.Nil(t, resp.Error)
@@ -300,7 +300,7 @@ func getInstId(t *testing.T, context *common.Context) int {
 // Sigh... Pharos internal logic requires that this record exist
 // before it will allow a deletion to be marked complete.
 func getFileIngestEvent(gf *registry.GenericFile) *registry.PremisEvent {
-	eventId := uuid.NewV4()
+	eventId := uuid.New()
 	timestamp := time.Now().UTC().Add(-1 * time.Minute)
 	return &registry.PremisEvent{
 		Identifier:                   eventId.String(),

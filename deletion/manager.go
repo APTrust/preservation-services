@@ -13,8 +13,8 @@ import (
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/network"
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
-	uuid "github.com/satori/go.uuid"
 )
 
 // Manager deletes files from preservation and ensures that Pharos
@@ -244,7 +244,7 @@ func (m *Manager) deleteStorageRecordFromPharos(gf *registry.GenericFile, sr *re
 // exist. Note that we cannot call GenericFileFinishDelete until at least
 // of these deletion events has been record in Pharos.
 func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.StorageRecord) error {
-	eventId := uuid.NewV4()
+	eventId := uuid.New()
 	now := time.Now().UTC()
 	outcomeDetail := m.RequestedBy
 	outcomeInfo := fmt.Sprintf("File deleted at the request of %s.", m.RequestedBy)
