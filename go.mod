@@ -3,7 +3,7 @@ module github.com/APTrust/preservation-services
 go 1.13
 
 require (
-	github.com/go-redis/redis/v7 v7.4.0
+	github.com/go-redis/redis/v7 v7.4.1
 	github.com/google/uuid v1.3.0
 	github.com/minio/minio-go/v7 v7.0.12
 	github.com/mitchellh/go-ps v1.0.0
