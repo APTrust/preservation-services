@@ -167,6 +167,14 @@ Regardless of where the container build is initiated, deploy with ansible:
 On staging (and later, on demo and production) all logs, NSQ files, temp files
 and Redis aof files are in `/data/preserv`.
 
+However, you can direct worker logs to STDOUT by setting the following in the .env file:
+
+```
+LOG_DIR="STDOUT"
+```
+
+This can help when running workers in containers that don't have disk access. NSQ and Redis still require disk access for persistence.
+
 The source tree is in `/srv/docker/preserv`
 
 To see stdout and stderr of workers:
