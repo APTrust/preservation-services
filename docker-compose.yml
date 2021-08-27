@@ -14,11 +14,9 @@ services:
         #- type: bind
         #  source: /Users/acr7d/logs # "${DOCKER_DATA_PATH:-./docker}"
         #  target: /app/logs
-        #- type: bind
-        #  source: ".env.docker"
-        #  target: /app/.env
-      env_file:
-         - .env.docker
+        - type: bind
+          source: ".env.docker"
+          target: /app/.env
    ingest_bucket_reader:
       image: aptrust/ingest_bucket_reader:c4dac87-master
       restart: always
