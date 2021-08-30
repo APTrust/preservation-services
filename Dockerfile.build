@@ -33,7 +33,7 @@ ARG PSERVICE
 ENV PSERVICE=${PSERVICE}
 
 WORKDIR /app
-VOLUME ["/app/data"]
+VOLUME ["/app"]
 
 # Note: Using main as app name because CMD doesn't support env expansion and
 # Docker images are tagged with app names already.
