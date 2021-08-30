@@ -1,9 +1,9 @@
 ---
 version: '3.7'
-x-aws-vpc: "vpc-4bd09e2c"
+#x-aws-vpc: "vpc-4bd09e2c"
 services:
    ingest_cleanup: &default
-      image: aptrust/ingest_cleanup:c4dac87-master
+      image: aptrust/ingest_cleanup:e0e7b32-compose-test
       restart: always
       volumes:
         #- data:/app/data
@@ -18,11 +18,11 @@ services:
           source: ".env.docker"
           target: /app/.env
    ingest_bucket_reader:
-      image: aptrust/ingest_bucket_reader:c4dac87-master
+      image: aptrust/ingest_bucket_reader:e0e7b32-compose-test
       restart: always
       <<: *default
    ingest_format_identifier:
-      image: aptrust/ingest_format_identifier:c4dac87-master
+      image: aptrust/ingest_format_identifier:e0e7b32-compose-test
       <<: *default
 #   ingest_pre_fetch:
 #      image: aptrust/ingest_pre_fetch:c2f095e-master
@@ -45,26 +45,26 @@ services:
 #   reingest_manager:
 #      image: aptrust/reingest_manager:c2f095e-master
 #      <<: *default
-   apt_queue:
-      image: aptrust/apt_queue:c2f095e-master
-      <<: *default
-   apt_queue_fixity:
-      image: aptrust/apt_queue_fixity:c2f095e-master
-      <<: *default
-   apt_delete:
-      image: aptrust/apt_delete:c2f095e-master
-      <<: *default
-   apt_fixity:
-      image: aptrust/apt_fixity:c2f095e-master
-      <<: *default
-   bag_restorer:
-      image: aptrust/bag_restorer:c2f095e-master
-      <<: *default
-   file_restorer:
-      image: aptrust/file_restorer:c2f095e-master
-      <<: *default
-   glacier_restorer:
-      image: aptrust/glacier_restorer:c2f095e-master
-      <<: *default
-volumes:
-  data:
+#   apt_queue:
+#      image: aptrust/apt_queue:c2f095e-master
+#      <<: *default
+#   apt_queue_fixity:
+#      image: aptrust/apt_queue_fixity:c2f095e-master
+#      <<: *default
+#   apt_delete:
+#      image: aptrust/apt_delete:c2f095e-master
+#      <<: *default
+#   apt_fixity:
+#      image: aptrust/apt_fixity:c2f095e-master
+#      <<: *default
+#   bag_restorer:
+#      image: aptrust/bag_restorer:c2f095e-master
+#      <<: *default
+#   file_restorer:
+#      image: aptrust/file_restorer:c2f095e-master
+#      <<: *default
+#   glacier_restorer:
+#      image: aptrust/glacier_restorer:c2f095e-master
+#      <<: *default
+#volumes:
+#  data:
