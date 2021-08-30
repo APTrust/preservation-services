@@ -500,8 +500,10 @@ func (config *Config) sanityCheck() {
 func (config *Config) makeDirs() error {
 	dirs := []string{
 		config.IngestTempDir,
-		config.LogDir,
 		config.RestoreDir,
+	}
+	if config.LogDir != "STDOUT" {
+		dirs = append(dirs, config.LogDir)
 	}
 	for _, dir := range dirs {
 		err := os.MkdirAll(dir, 0755)
