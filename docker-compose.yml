@@ -3,68 +3,68 @@ version: '3.7'
 #x-aws-vpc: "vpc-4bd09e2c"
 services:
    ingest_cleanup: &default
-      image: aptrust/ingest_cleanup:e0e7b32-compose-test
+      image: aptrust/ingest_cleanup:fd6f783-compose-test
       restart: always
-      volumes:
-        #- data:/app/data
+      #volumes:
+        #- data:/app
         #- data:/app/logs
-        - type: bind
-          source: /Users/acr7d/logs # "${DOCKER_DATA_PATH:-./docker}"
-          target: /app/data
+        #- type: bind
+        #  source: /Users/acr7d/logs # "${DOCKER_DATA_PATH:-./docker}"
+        #  target: /app
         #- type: bind
         #  source: /Users/acr7d/logs # "${DOCKER_DATA_PATH:-./docker}"
         #  target: /app/logs
-        - type: bind
-          source: ".env.docker"
-          target: /app/.env
+        #- type: bind
+        #  source: "~/logs/.env"
+        #  target: /app/.env
    ingest_bucket_reader:
-      image: aptrust/ingest_bucket_reader:e0e7b32-compose-test
+      image: aptrust/ingest_bucket_reader:fd6f783-compose-test
       restart: always
       <<: *default
    ingest_format_identifier:
-      image: aptrust/ingest_format_identifier:e0e7b32-compose-test
+      image: aptrust/ingest_format_identifier:fd6f783-compose-test
       <<: *default
-#   ingest_pre_fetch:
-#      image: aptrust/ingest_pre_fetch:c2f095e-master
-#      <<: *default
-#   ingest_preservation_uploader:
-#      image: aptrust/ingest_preservation_uploader:c2f095e-master
-#      <<: *default
-#   ingest_preservation_verifier:
-#      image: aptrust/ingest_preservation_verifier:c2f095e-master
-#      <<: *default
-#   ingest_recorder:
-#      image: aptrust/ingest_recorder:c2f095e-master
-#      <<: *default
-#   ingest_staging_uploader:
-#      image: aptrust/ingest_staging_uploader:c2f095e-master
-#      <<: *default
-#   ingest_validator:
-#      image: aptrust/ingest_validator:c2f095e-master
-#      <<: *default
-#   reingest_manager:
-#      image: aptrust/reingest_manager:c2f095e-master
-#      <<: *default
-#   apt_queue:
-#      image: aptrust/apt_queue:c2f095e-master
-#      <<: *default
-#   apt_queue_fixity:
-#      image: aptrust/apt_queue_fixity:c2f095e-master
-#      <<: *default
-#   apt_delete:
-#      image: aptrust/apt_delete:c2f095e-master
-#      <<: *default
-#   apt_fixity:
-#      image: aptrust/apt_fixity:c2f095e-master
-#      <<: *default
-#   bag_restorer:
-#      image: aptrust/bag_restorer:c2f095e-master
-#      <<: *default
-#   file_restorer:
-#      image: aptrust/file_restorer:c2f095e-master
-#      <<: *default
-#   glacier_restorer:
-#      image: aptrust/glacier_restorer:c2f095e-master
-#      <<: *default
+   ingest_pre_fetch:
+      image: aptrust/ingest_pre_fetch:fd6f783-compose-test
+      <<: *default
+   ingest_preservation_uploader:
+      image: aptrust/ingest_preservation_uploader:fd6f783-compose-test
+      <<: *default
+   ingest_preservation_verifier:
+      image: aptrust/ingest_preservation_verifier:fd6f783-compose-test
+      <<: *default
+   ingest_recorder:
+      image: aptrust/ingest_recorder:fd6f783-compose-test
+      <<: *default
+   ingest_staging_uploader:
+      image: aptrust/ingest_staging_uploader:fd6f783-compose-test
+      <<: *default
+   ingest_validator:
+      image: aptrust/ingest_validator:fd6f783-compose-test
+      <<: *default
+   reingest_manager:
+      image: aptrust/reingest_manager:fd6f783-compose-test
+      <<: *default
+   apt_queue:
+      image: aptrust/apt_queue:fd6f783-compose-test
+      <<: *default
+   apt_queue_fixity:
+      image: aptrust/apt_queue_fixity:fd6f783-compose-test
+      <<: *default
+   apt_delete:
+      image: aptrust/apt_delete:fd6f783-compose-test
+      <<: *default
+   apt_fixity:
+      image: aptrust/apt_fixity:fd6f783-compose-test
+      <<: *default
+   bag_restorer:
+      image: aptrust/bag_restorer:fd6f783-compose-test
+      <<: *default
+   file_restorer:
+      image: aptrust/file_restorer:fd6f783-compose-test
+      <<: *default
+   glacier_restorer:
+      image: aptrust/glacier_restorer:fd6f783-compose-test
+      <<: *default
 #volumes:
 #  data:
