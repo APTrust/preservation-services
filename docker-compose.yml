@@ -1,9 +1,9 @@
 ---
 version: '3.7'
-#x-aws-vpc: "vpc-4bd09e2c"
+x-aws-vpc: "vpc-4bd09e2c"
 services:
    ingest_cleanup: &default
-      image: aptrust/ingest_cleanup:fd6f783-compose-test
+      image: aptrust/ingest_cleanup:dba8a3a-compose-test
       restart: always
       #volumes:
         #- data:/app
@@ -18,53 +18,53 @@ services:
         #  source: "~/logs/.env"
         #  target: /app/.env
    ingest_bucket_reader:
-      image: aptrust/ingest_bucket_reader:fd6f783-compose-test
+      image: aptrust/ingest_bucket_reader:dba8a3a-compose-test
       restart: always
       <<: *default
    ingest_format_identifier:
-      image: aptrust/ingest_format_identifier:fd6f783-compose-test
+      image: aptrust/ingest_format_identifier:dba8a3a-compose-test
       <<: *default
    ingest_pre_fetch:
-      image: aptrust/ingest_pre_fetch:fd6f783-compose-test
+      image: aptrust/ingest_pre_fetch:dba8a3a-compose-test
       <<: *default
    ingest_preservation_uploader:
-      image: aptrust/ingest_preservation_uploader:fd6f783-compose-test
+      image: aptrust/ingest_preservation_uploader:dba8a3a-compose-test
       <<: *default
    ingest_preservation_verifier:
-      image: aptrust/ingest_preservation_verifier:fd6f783-compose-test
+      image: aptrust/ingest_preservation_verifier:dba8a3a-compose-test
       <<: *default
    ingest_recorder:
-      image: aptrust/ingest_recorder:fd6f783-compose-test
+      image: aptrust/ingest_recorder:dba8a3a-compose-test
       <<: *default
    ingest_staging_uploader:
-      image: aptrust/ingest_staging_uploader:fd6f783-compose-test
+      image: aptrust/ingest_staging_uploader:dba8a3a-compose-test
       <<: *default
    ingest_validator:
-      image: aptrust/ingest_validator:fd6f783-compose-test
+      image: aptrust/ingest_validator:dba8a3a-compose-test
       <<: *default
    reingest_manager:
-      image: aptrust/reingest_manager:fd6f783-compose-test
+      image: aptrust/reingest_manager:dba8a3a-compose-test
       <<: *default
    apt_queue:
-      image: aptrust/apt_queue:fd6f783-compose-test
+      image: aptrust/apt_queue:dba8a3a-compose-test
       <<: *default
    apt_queue_fixity:
-      image: aptrust/apt_queue_fixity:fd6f783-compose-test
+      image: aptrust/apt_queue_fixity:dba8a3a-compose-test
       <<: *default
    apt_delete:
-      image: aptrust/apt_delete:fd6f783-compose-test
+      image: aptrust/apt_delete:dba8a3a-compose-test
       <<: *default
    apt_fixity:
-      image: aptrust/apt_fixity:fd6f783-compose-test
+      image: aptrust/apt_fixity:dba8a3a-compose-test
       <<: *default
    bag_restorer:
-      image: aptrust/bag_restorer:fd6f783-compose-test
+      image: aptrust/bag_restorer:dba8a3a-compose-test
       <<: *default
    file_restorer:
-      image: aptrust/file_restorer:fd6f783-compose-test
+      image: aptrust/file_restorer:dba8a3a-compose-test
       <<: *default
    glacier_restorer:
-      image: aptrust/glacier_restorer:fd6f783-compose-test
+      image: aptrust/glacier_restorer:dba8a3a-compose-test
       <<: *default
 #volumes:
 #  data:
