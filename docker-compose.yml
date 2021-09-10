@@ -3,7 +3,7 @@ version: '3.7'
 x-aws-vpc: "vpc-4bd09e2c"
 services:
    ingest_cleanup: &default
-      image: aptrust/ingest_cleanup:dba8a3a-compose-test
+      image: aptrust/ingest_cleanup:a196a7f-compose-test
       restart: always
       #volumes:
         #- data:/app
@@ -17,54 +17,94 @@ services:
         #- type: bind
         #  source: "~/logs/.env"
         #  target: /app/.env
+      networks:
+         - default
+         - gateway
    ingest_bucket_reader:
-      image: aptrust/ingest_bucket_reader:dba8a3a-compose-test
+      image: aptrust/ingest_bucket_reader:a196a7f-compose-test
       restart: always
       <<: *default
    ingest_format_identifier:
-      image: aptrust/ingest_format_identifier:dba8a3a-compose-test
+      image: aptrust/ingest_format_identifier:a196a7f-compose-test
       <<: *default
    ingest_pre_fetch:
-      image: aptrust/ingest_pre_fetch:dba8a3a-compose-test
+      image: aptrust/ingest_pre_fetch:a196a7f-compose-test
       <<: *default
    ingest_preservation_uploader:
-      image: aptrust/ingest_preservation_uploader:dba8a3a-compose-test
+      image: aptrust/ingest_preservation_uploader:a196a7f-compose-test
       <<: *default
    ingest_preservation_verifier:
-      image: aptrust/ingest_preservation_verifier:dba8a3a-compose-test
+      image: aptrust/ingest_preservation_verifier:a196a7f-compose-test
       <<: *default
    ingest_recorder:
-      image: aptrust/ingest_recorder:dba8a3a-compose-test
+      image: aptrust/ingest_recorder:a196a7f-compose-test
       <<: *default
    ingest_staging_uploader:
-      image: aptrust/ingest_staging_uploader:dba8a3a-compose-test
+      image: aptrust/ingest_staging_uploader:a196a7f-compose-test
       <<: *default
    ingest_validator:
-      image: aptrust/ingest_validator:dba8a3a-compose-test
+      image: aptrust/ingest_validator:a196a7f-compose-test
       <<: *default
    reingest_manager:
-      image: aptrust/reingest_manager:dba8a3a-compose-test
+      image: aptrust/reingest_manager:a196a7f-compose-test
       <<: *default
    apt_queue:
-      image: aptrust/apt_queue:dba8a3a-compose-test
+      image: aptrust/apt_queue:a196a7f-compose-test
       <<: *default
    apt_queue_fixity:
-      image: aptrust/apt_queue_fixity:dba8a3a-compose-test
+      image: aptrust/apt_queue_fixity:a196a7f-compose-test
       <<: *default
    apt_delete:
-      image: aptrust/apt_delete:dba8a3a-compose-test
+      image: aptrust/apt_delete:a196a7f-compose-test
       <<: *default
    apt_fixity:
-      image: aptrust/apt_fixity:dba8a3a-compose-test
+      image: aptrust/apt_fixity:a196a7f-compose-test
       <<: *default
    bag_restorer:
-      image: aptrust/bag_restorer:dba8a3a-compose-test
+      image: aptrust/bag_restorer:a196a7f-compose-test
       <<: *default
    file_restorer:
-      image: aptrust/file_restorer:dba8a3a-compose-test
+      image: aptrust/file_restorer:a196a7f-compose-test
       <<: *default
    glacier_restorer:
-      image: aptrust/glacier_restorer:dba8a3a-compose-test
+      image: aptrust/glacier_restorer:a196a7f-compose-test
       <<: *default
+   nsqlookupd:
+      image: nsqio/nsq:v1.2.0
+      restart: always
+      hostname: nsqlookupd
+      command: /nsqlookupd -broadcast-address localhost:4160
+      ports:
+        - "4160:4160"
+        - "4161:4161"
+      networks:
+         - default
+         - gateway
+   nsqd:
+      image: nsqio/nsq
+      command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
+      depends_on:
+        - nsqlookupd
+      ports:
+        - "4150:4150"
+        - "4151:4151"
+      networks:
+         - default
+         - gateway 
+   nsqadmin:
+      image: nsqio/nsq
+      command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+      depends_on:
+        - nsqlookupd
+      ports:
+        - "4171:4171"
+      networks:
+         - default
+         - gateway
+networks:
+   gateway:
+      external:
+         name: gateway
+   default:
 #volumes:
 #  data:

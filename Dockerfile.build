@@ -33,7 +33,7 @@ ARG PSERVICE
 ENV PSERVICE=${PSERVICE}
 
 WORKDIR /app
-VOLUME ["/app/tmp"]
+#VOLUME ["/app/tmp"]
 
 # Note: Using main as app name because CMD doesn't support env expansion and
 # Docker images are tagged with app names already.
@@ -42,8 +42,9 @@ COPY --from=builder /app/${OUTPUT_DIR}/${PSERVICE} /app/${PSERVICE}
 COPY --from=builder /app/.env.test /app/.env
 COPY --from=builder /app/profiles/ /app/profiles
 
-RUN addgroup -S somegroup -g 1000 && adduser -S -G somegroup somebody -u 1000
-RUN chown -R somebody:somegroup /app
-USER somebody
+# Commenting out the user below to run as root in container
+#RUN addgroup -S somegroup -g 1000 && adduser -S -G somegroup somebody -u 1000
+#RUN chown -R somebody:somegroup /app
+#USER somebody
 
 CMD ["sh", "-c", "./${PSERVICE}"]
