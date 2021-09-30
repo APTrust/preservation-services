@@ -111,6 +111,7 @@ func loadConfig() *Config {
 	v.AddConfigPath(configDir)
 	v.SetConfigName(configFile)
 	v.SetConfigType("env")
+	v.AutomaticEnv() // so env vars override file vars
 	err := v.ReadInConfig()
 	if err != nil {
 		util.PrintAndExit(fmt.Sprintf("Fatal error config file: %v \n", err))
@@ -140,10 +141,10 @@ func loadConfig() *Config {
 		MaxWorkerAttempts:          v.GetInt("MAX_WORKER_ATTEMPTS"),
 		NsqLookupd:                 v.GetString("NSQ_LOOKUPD"),
 		NsqURL:                     v.GetString("NSQ_URL"),
-		PharosAPIKey:               v.GetString("PHAROS_API_KEY"),
-		PharosAPIUser:              v.GetString("PHAROS_API_USER"),
-		PharosAPIVersion:           v.GetString("PHAROS_API_VERSION"),
-		PharosURL:                  v.GetString("PHAROS_URL"),
+		PharosAPIKey:               v.GetString("PRESERV_PHAROS_API_KEY"),
+		PharosAPIUser:              v.GetString("PRESERV_PHAROS_API_USER"),
+		PharosAPIVersion:           v.GetString("PRESERV_PHAROS_API_VERSION"),
+		PharosURL:                  v.GetString("PRESERV_PHAROS_URL"),
 		ProfilesDir:                v.GetString("PROFILES_DIR"),
 		QueueFixityInterval:        v.GetDuration("QUEUE_FIXITY_INTERVAL"),
 		RedisDefaultDB:             v.GetInt("REDIS_DEFAULT_DB"),
