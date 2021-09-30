@@ -111,6 +111,7 @@ func loadConfig() *Config {
 	v.AddConfigPath(configDir)
 	v.SetConfigName(configFile)
 	v.SetConfigType("env")
+	v.AutomaticEnv() // so env vars override file vars
 	err := v.ReadInConfig()
 	if err != nil {
 		util.PrintAndExit(fmt.Sprintf("Fatal error config file: %v \n", err))
