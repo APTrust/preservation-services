@@ -21,53 +21,53 @@ services:
          - default
          - gateway
    ingest_bucket_reader:
-      image: aptrust/ingest_bucket_reader:a68f9cb-compose-test
+      image: aptrust/ingest_bucket_reader:3ae2663-compose-test
       restart: always
       <<: *default
    ingest_format_identifier:
-      image: aptrust/ingest_format_identifier:a68f9cb-compose-test
+      image: aptrust/ingest_format_identifier:3ae2663-compose-test
       <<: *default
    ingest_pre_fetch:
-      image: aptrust/ingest_pre_fetch:a68f9cb-compose-test
+      image: aptrust/ingest_pre_fetch:3ae2663-compose-test
       <<: *default
    ingest_preservation_uploader:
-      image: aptrust/ingest_preservation_uploader:a68f9cb-compose-test
+      image: aptrust/ingest_preservation_uploader:3ae2663-compose-test
       <<: *default
    ingest_preservation_verifier:
-      image: aptrust/ingest_preservation_verifier:a68f9cb-compose-test
+      image: aptrust/ingest_preservation_verifier:3ae2663-compose-test
       <<: *default
    ingest_recorder:
-      image: aptrust/ingest_recorder:a68f9cb-compose-test
+      image: aptrust/ingest_recorder:3ae2663-compose-test
       <<: *default
    ingest_staging_uploader:
-      image: aptrust/ingest_staging_uploader:a68f9cb-compose-test
+      image: aptrust/ingest_staging_uploader:3ae2663-compose-test
       <<: *default
    ingest_validator:
-      image: aptrust/ingest_validator:a68f9cb-compose-test
+      image: aptrust/ingest_validator:3ae2663-compose-test
       <<: *default
    reingest_manager:
-      image: aptrust/reingest_manager:a68f9cb-compose-test
+      image: aptrust/reingest_manager:3ae2663-compose-test
       <<: *default
    apt_queue:
-      image: aptrust/apt_queue:a68f9cb-compose-test
+      image: aptrust/apt_queue:3ae2663-compose-test
       <<: *default
    apt_queue_fixity:
-      image: aptrust/apt_queue_fixity:a68f9cb-compose-test
+      image: aptrust/apt_queue_fixity:3ae2663-compose-test
       <<: *default
    apt_delete:
-      image: aptrust/apt_delete:a68f9cb-compose-test
+      image: aptrust/apt_delete:3ae2663-compose-test
       <<: *default
    apt_fixity:
-      image: aptrust/apt_fixity:a68f9cb-compose-test
+      image: aptrust/apt_fixity:3ae2663-compose-test
       <<: *default
    bag_restorer:
-      image: aptrust/bag_restorer:a68f9cb-compose-test
+      image: aptrust/bag_restorer:3ae2663-compose-test
       <<: *default
    file_restorer:
-      image: aptrust/file_restorer:a68f9cb-compose-test
+      image: aptrust/file_restorer:3ae2663-compose-test
       <<: *default
    glacier_restorer:
-      image: aptrust/glacier_restorer:a68f9cb-compose-test
+      image: aptrust/glacier_restorer:3ae2663-compose-test
       <<: *default
    nsqlookupd:
       image: nsqio/nsq:v1.2.0
