@@ -3,7 +3,7 @@ version: '3.7'
 x-aws-vpc: "vpc-4bd09e2c"
 services:
    ingest_cleanup: &default
-      image: aptrust/ingest_cleanup:a196a7f-compose-test
+      image: aptrust/ingest_cleanup:3ae2663-compose-test
       restart: always
       #volumes:
         #- data:/app
@@ -19,7 +19,7 @@ services:
         #  target: /app/.env
       networks:
          - default
-         - gateway
+#         - gateway
    ingest_bucket_reader:
       image: aptrust/ingest_bucket_reader:3ae2663-compose-test
       restart: always
@@ -69,42 +69,42 @@ services:
    glacier_restorer:
       image: aptrust/glacier_restorer:3ae2663-compose-test
       <<: *default
-   nsqlookupd:
-      image: nsqio/nsq:v1.2.0
-      restart: always
-      hostname: nsqlookupd
-      command: /nsqlookupd -broadcast-address localhost:4160
-      ports:
-        - "4160:4160"
-        - "4161:4161"
-      networks:
-         - default
-         - gateway
-   nsqd:
-      image: nsqio/nsq
-      command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
-      depends_on:
-        - nsqlookupd
-      ports:
-        - "4150:4150"
-        - "4151:4151"
-      networks:
-         - default
-         - gateway 
-   nsqadmin:
-      image: nsqio/nsq
-      command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
-      depends_on:
-        - nsqlookupd
-      ports:
-        - "4171:4171"
-      networks:
-         - default
-         - gateway
+#   nsqlookupd:
+#      image: nsqio/nsq:v1.2.0
+#      restart: always
+#      hostname: nsqlookupd
+#      command: /nsqlookupd -broadcast-address localhost:4160
+#      ports:
+#        - "4160:4160"
+#        - "4161:4161"
+#      networks:
+#         - default
+#         - gateway
+#   nsqd:
+#      image: nsqio/nsq
+#      command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
+#      depends_on:
+#        - nsqlookupd
+#      ports:
+#        - "4150:4150"
+#        - "4151:4151"
+#      networks:
+#         - default
+#         - gateway 
+#   nsqadmin:
+#      image: nsqio/nsq
+#      command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+#      depends_on:
+#        - nsqlookupd
+#      ports:
+#        - "4171:4171"
+#      networks:
+#         - default
+#         - gateway
 networks:
-   gateway:
-      external:
-         name: gateway
+#   gateway:
+#      external:
+#         name: gateway
    default:
 #volumes:
 #  data:
