@@ -31,8 +31,16 @@ ARG OUTPUT_DIR=go-bin
 ARG PSERVICE
 
 ENV PSERVICE=${PSERVICE}
+ENV S3_AWS_HOST="localhost:9899"
+ENV S3_AWS_KEY="minioadmin"
+ENV S3_AWS_SECRET="minioadmin"
+ENV S3_WASABI_HOST_OR="localhost:9899"
+ENV S3_WASABI_HOST_VA="localhost:9899"
+ENV S3_WASABI_KEY="minioadmin"
+ENV S3_WASABI_SECRET="minioadmin"
 
 WORKDIR /app
+
 #VOLUME ["/app/tmp"]
 
 # Note: Using main as app name because CMD doesn't support env expansion and
@@ -41,6 +49,7 @@ COPY --from=builder /app/${OUTPUT_DIR}/${PSERVICE} /app/main
 COPY --from=builder /app/${OUTPUT_DIR}/${PSERVICE} /app/${PSERVICE}
 COPY --from=builder /app/.env.fargate /app/.env
 COPY --from=builder /app/profiles/ /app/profiles
+
 
 # Commenting out the user below to run as root in container
 #RUN addgroup -S somegroup -g 1000 && adduser -S -G somegroup somebody -u 1000
