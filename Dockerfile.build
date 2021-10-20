@@ -31,13 +31,13 @@ ARG OUTPUT_DIR=go-bin
 ARG PSERVICE
 
 ENV PSERVICE=${PSERVICE}
-ENV S3_AWS_HOST="localhost:9899"
-ENV S3_AWS_KEY="minioadmin"
-ENV S3_AWS_SECRET="minioadmin"
-ENV S3_WASABI_HOST_OR="localhost:9899"
-ENV S3_WASABI_HOST_VA="localhost:9899"
-ENV S3_WASABI_KEY="minioadmin"
-ENV S3_WASABI_SECRET="minioadmin"
+ENV S3_AWS_HOST=localhost:9899
+ENV S3_AWS_KEY=minioadmin
+ENV S3_AWS_SECRET=minioadmin
+ENV S3_WASABI_HOST_OR=localhost:9899
+ENV S3_WASABI_HOST_VA=localhost:9899
+ENV S3_WASABI_KEY=minioadmin
+ENV S3_WASABI_SECRET=minioadmin
 
 WORKDIR /app
 
