@@ -31,6 +31,8 @@ ARG OUTPUT_DIR=go-bin
 ARG PSERVICE
 
 ENV PSERVICE=${PSERVICE}
+
+# default non global env variables 
 ENV S3_AWS_HOST=localhost:9899
 ENV S3_AWS_KEY=minioadmin
 ENV S3_AWS_SECRET=minioadmin
@@ -38,6 +40,27 @@ ENV S3_WASABI_HOST_OR=localhost:9899
 ENV S3_WASABI_HOST_VA=localhost:9899
 ENV S3_WASABI_KEY=minioadmin
 ENV S3_WASABI_SECRET=minioadmin
+ENV REDIS_URL=localhost:6379
+ENV RESTORE_DIR=~/tmp/pres-serv/restore
+ENV STAGING_BUCKET=staging
+ENV NSQ_LOOKUPD=localhost:4161
+ENV NSQ_URL=http://localhost:4151
+ENV PRESERV_PHAROS_API_KEY=c3958c7b09e40af1d065020484dafa9b2a35cea0
+ENV PRESERV_PHAROS_API_USER=system@aptrust.org
+ENV PRESERV_PHAROS_API_VERSION=v2 
+ENV PRESERV_PHAROS_URL=http://localhost:9292
+
+# Default buckets - test build
+ENV BUCKET_STANDARD_OR=preservation-or
+ENV BUCKET_STANDARD_VA=preservation-va
+ENV BUCKET_GLACIER_OH=glacier-oh
+ENV BUCKET_GLACIER_OR=glacier-or
+ENV BUCKET_GLACIER_VA=glacier-va
+ENV BUCKET_GLACIER_DEEP_OH=glacier-deep-oh
+ENV BUCKET_GLACIER_DEEP_OR=glacier-deep-or
+ENV BUCKET_GLACIER_DEEP_VA=glacier-deep-va
+ENV BUCKET_WASABI_OR=wasabi-or
+ENV BUCKET_WASABI_VA=wasabi-va
 
 WORKDIR /app
 
