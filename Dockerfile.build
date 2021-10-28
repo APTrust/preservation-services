@@ -1,8 +1,8 @@
-ARG ALPINE_VERSION=3.11
+ARG ALPINE_VERSION=3.13
 ARG OUTPUT_DIR=go-bin/
 ARG PSERVICE
 
-FROM golang:1.13.10-alpine${ALPINE_VERSION} AS builder
+FROM golang:1.16-alpine${ALPINE_VERSION} AS builder
 
 RUN apk update && \
     apk add --no-cache upx make build-base bash git
