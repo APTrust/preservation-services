@@ -1,0 +1,2743 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  AptdeleteService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - AptdeleteServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: apt_delete
+      TaskDefinition:
+        Ref: AptdeleteTaskDefinition
+    Type: AWS::ECS::Service
+  AptdeleteServiceDiscoveryEntry:
+    Properties:
+      Description: '"apt_delete" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: apt_delete
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  AptdeleteTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Aptdelete_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Aptdelete_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: apt_delete
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: AptdeleteTaskExecutionRole
+      Family: preservation-services-apt_delete
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  AptdeleteTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: apt_delete
+    Type: AWS::IAM::Role
+  AptfixityService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - AptfixityServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: apt_fixity
+      TaskDefinition:
+        Ref: AptfixityTaskDefinition
+    Type: AWS::ECS::Service
+  AptfixityServiceDiscoveryEntry:
+    Properties:
+      Description: '"apt_fixity" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: apt_fixity
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  AptfixityTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Aptfixity_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Aptfixity_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: apt_fixity
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: AptfixityTaskExecutionRole
+      Family: preservation-services-apt_fixity
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  AptfixityTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: apt_fixity
+    Type: AWS::IAM::Role
+  AptqueueService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - AptqueueServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: apt_queue
+      TaskDefinition:
+        Ref: AptqueueTaskDefinition
+    Type: AWS::ECS::Service
+  AptqueueServiceDiscoveryEntry:
+    Properties:
+      Description: '"apt_queue" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: apt_queue
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  AptqueueTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Aptqueue_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Aptqueue_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: apt_queue
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: AptqueueTaskExecutionRole
+      Family: preservation-services-apt_queue
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  AptqueueTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: apt_queue
+    Type: AWS::IAM::Role
+  AptqueuefixityService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - AptqueuefixityServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: apt_queue_fixity
+      TaskDefinition:
+        Ref: AptqueuefixityTaskDefinition
+    Type: AWS::ECS::Service
+  AptqueuefixityServiceDiscoveryEntry:
+    Properties:
+      Description: '"apt_queue_fixity" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: apt_queue_fixity
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  AptqueuefixityTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Aptqueuefixity_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Aptqueuefixity_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: apt_queue_fixity
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: AptqueuefixityTaskExecutionRole
+      Family: preservation-services-apt_queue_fixity
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  AptqueuefixityTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: apt_queue_fixity
+    Type: AWS::IAM::Role
+  BagrestorerService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - BagrestorerServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: bag_restorer
+      TaskDefinition:
+        Ref: BagrestorerTaskDefinition
+    Type: AWS::ECS::Service
+  BagrestorerServiceDiscoveryEntry:
+    Properties:
+      Description: '"bag_restorer" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: bag_restorer
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  BagrestorerTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Bagrestorer_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Bagrestorer_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: bag_restorer
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: BagrestorerTaskExecutionRole
+      Family: preservation-services-bag_restorer
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  BagrestorerTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: bag_restorer
+    Type: AWS::IAM::Role
+  CloudMap:
+    Properties:
+      Description: Service Map for Docker Compose project preservation-services
+      Name: preservation-services
+      Vpc: vpc-4bd09e2c
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+  Cluster:
+    Properties:
+      ClusterName: preservation-services
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+    Type: AWS::ECS::Cluster
+  DefaultNetwork:
+    Properties:
+      GroupDescription: preservation-services Security Group for default network
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.network
+        Value: preservation-services_default
+      VpcId: vpc-4bd09e2c
+    Type: AWS::EC2::SecurityGroup
+  DefaultNetworkIngress:
+    Properties:
+      Description: Allow communication within network default
+      GroupId:
+        Ref: DefaultNetwork
+      IpProtocol: "-1"
+      SourceSecurityGroupId:
+        Ref: DefaultNetwork
+    Type: AWS::EC2::SecurityGroupIngress
+  FilerestorerService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - FilerestorerServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: file_restorer
+      TaskDefinition:
+        Ref: FilerestorerTaskDefinition
+    Type: AWS::ECS::Service
+  FilerestorerServiceDiscoveryEntry:
+    Properties:
+      Description: '"file_restorer" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: file_restorer
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  FilerestorerTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services.local
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Filerestorer_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Filerestorer_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: file_restorer
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: FilerestorerTaskExecutionRole
+      Family: preservation-services-file_restorer
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  FilerestorerTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: file_restorer
+    Type: AWS::IAM::Role
+  GlacierrestorerService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - GlacierrestorerServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: glacier_restorer
+      TaskDefinition:
+        Ref: GlacierrestorerTaskDefinition
+    Type: AWS::ECS::Service
+  GlacierrestorerServiceDiscoveryEntry:
+    Properties:
+      Description: '"glacier_restorer" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: glacier_restorer
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  GlacierrestorerTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Glacierrestorer_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Glacierrestorer_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: glacier_restorer
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: GlacierrestorerTaskExecutionRole
+      Family: preservation-services-glacier_restorer
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  GlacierrestorerTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: glacier_restorer
+    Type: AWS::IAM::Role
+  IngestbucketreaderService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - IngestbucketreaderServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_bucket_reader
+      TaskDefinition:
+        Ref: IngestbucketreaderTaskDefinition
+    Type: AWS::ECS::Service
+  IngestbucketreaderServiceDiscoveryEntry:
+    Properties:
+      Description: '"ingest_bucket_reader" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: ingest_bucket_reader
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  IngestbucketreaderTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Ingestbucketreader_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Ingestbucketreader_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: ingest_bucket_reader
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: IngestbucketreaderTaskExecutionRole
+      Family: preservation-services-ingest_bucket_reader
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  IngestbucketreaderTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_bucket_reader
+    Type: AWS::IAM::Role
+  IngestcleanupService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - IngestcleanupServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_cleanup
+      TaskDefinition:
+        Ref: IngestcleanupTaskDefinition
+    Type: AWS::ECS::Service
+  IngestcleanupServiceDiscoveryEntry:
+    Properties:
+      Description: '"ingest_cleanup" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: ingest_cleanup
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  IngestcleanupTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Ingestcleanup_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Ingestcleanup_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: ingest_cleanup
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: IngestcleanupTaskExecutionRole
+      Family: preservation-services-ingest_cleanup
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  IngestcleanupTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_cleanup
+    Type: AWS::IAM::Role
+  IngestformatidentifierService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - IngestformatidentifierServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_format_identifier
+      TaskDefinition:
+        Ref: IngestformatidentifierTaskDefinition
+    Type: AWS::ECS::Service
+  IngestformatidentifierServiceDiscoveryEntry:
+    Properties:
+      Description: '"ingest_format_identifier" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: ingest_format_identifier
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  IngestformatidentifierTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Ingestformatidentifier_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Ingestformatidentifier_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: ingest_format_identifier
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: IngestformatidentifierTaskExecutionRole
+      Family: preservation-services-ingest_format_identifier
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  IngestformatidentifierTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_format_identifier
+    Type: AWS::IAM::Role
+  IngestprefetchService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - IngestprefetchServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_pre_fetch
+      TaskDefinition:
+        Ref: IngestprefetchTaskDefinition
+    Type: AWS::ECS::Service
+  IngestprefetchServiceDiscoveryEntry:
+    Properties:
+      Description: '"ingest_pre_fetch" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: ingest_pre_fetch
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  IngestprefetchTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Ingestprefetch_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Ingestprefetch_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: ingest_pre_fetch
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: IngestprefetchTaskExecutionRole
+      Family: preservation-services-ingest_pre_fetch
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  IngestprefetchTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_pre_fetch
+    Type: AWS::IAM::Role
+  IngestpreservationuploaderService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - IngestpreservationuploaderServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_preservation_uploader
+      TaskDefinition:
+        Ref: IngestpreservationuploaderTaskDefinition
+    Type: AWS::ECS::Service
+  IngestpreservationuploaderServiceDiscoveryEntry:
+    Properties:
+      Description: '"ingest_preservation_uploader" service discovery entry in Cloud
+        Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: ingest_preservation_uploader
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  IngestpreservationuploaderTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Ingestpreservationuploader_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Ingestpreservationuploader_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: ingest_preservation_uploader
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: IngestpreservationuploaderTaskExecutionRole
+      Family: preservation-services-ingest_preservation_uploader
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  IngestpreservationuploaderTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_preservation_uploader
+    Type: AWS::IAM::Role
+  IngestpreservationverifierService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - IngestpreservationverifierServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_preservation_verifier
+      TaskDefinition:
+        Ref: IngestpreservationverifierTaskDefinition
+    Type: AWS::ECS::Service
+  IngestpreservationverifierServiceDiscoveryEntry:
+    Properties:
+      Description: '"ingest_preservation_verifier" service discovery entry in Cloud
+        Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: ingest_preservation_verifier
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  IngestpreservationverifierTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Ingestpreservationverifier_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Ingestpreservationverifier_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: ingest_preservation_verifier
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: IngestpreservationverifierTaskExecutionRole
+      Family: preservation-services-ingest_preservation_verifier
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  IngestpreservationverifierTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_preservation_verifier
+    Type: AWS::IAM::Role
+  IngestrecorderService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - IngestrecorderServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_recorder
+      TaskDefinition:
+        Ref: IngestrecorderTaskDefinition
+    Type: AWS::ECS::Service
+  IngestrecorderServiceDiscoveryEntry:
+    Properties:
+      Description: '"ingest_recorder" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: ingest_recorder
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  IngestrecorderTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Ingestrecorder_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Ingestrecorder_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: ingest_recorder
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: IngestrecorderTaskExecutionRole
+      Family: preservation-services-ingest_recorder
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  IngestrecorderTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_recorder
+    Type: AWS::IAM::Role
+  IngeststaginguploaderService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - IngeststaginguploaderServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_staging_uploader
+      TaskDefinition:
+        Ref: IngeststaginguploaderTaskDefinition
+    Type: AWS::ECS::Service
+  IngeststaginguploaderServiceDiscoveryEntry:
+    Properties:
+      Description: '"ingest_staging_uploader" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: ingest_staging_uploader
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  IngeststaginguploaderTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Ingeststaginguploader_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Ingeststaginguploader_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: ingest_staging_uploader
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: IngeststaginguploaderTaskExecutionRole
+      Family: preservation-services-ingest_staging_uploader
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  IngeststaginguploaderTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_staging_uploader
+    Type: AWS::IAM::Role
+  IngestvalidatorService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - IngestvalidatorServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_validator
+      TaskDefinition:
+        Ref: IngestvalidatorTaskDefinition
+    Type: AWS::ECS::Service
+  IngestvalidatorServiceDiscoveryEntry:
+    Properties:
+      Description: '"ingest_validator" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: ingest_validator
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  IngestvalidatorTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Ingestvalidator_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Ingestvalidator_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: ingest_validator
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: IngestvalidatorTaskExecutionRole
+      Family: preservation-services-ingest_validator
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  IngestvalidatorTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: ingest_validator
+    Type: AWS::IAM::Role
+  LogGroup:
+    Properties:
+      LogGroupName: /docker-compose/preservation-services
+    Type: AWS::Logs::LogGroup
+  ReingestmanagerService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+        - Cluster
+        - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - Ref: DefaultNetwork
+          Subnets:
+          - subnet-316bbe78
+          - subnet-a53ee38b
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - ReingestmanagerServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: reingest_manager
+      TaskDefinition:
+        Ref: ReingestmanagerTaskDefinition
+    Type: AWS::ECS::Service
+  ReingestmanagerServiceDiscoveryEntry:
+    Properties:
+      Description: '"reingest_manager" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: reingest_manager
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  ReingestmanagerTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - us-east-1.compute.internal
+        - preservation-services
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: Reingestmanager_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Reingestmanager_ResolvConf_InitContainer
+        Environment:
+        - Name: BUCKET_GLACIER_DEEP_OH
+          Value: aptrust.staging.preservation.glacier-deep.oh
+        - Name: BUCKET_GLACIER_DEEP_OR
+          Value: aptrust.staging.preservation.glacier-deep.or
+        - Name: BUCKET_GLACIER_DEEP_VA
+          Value: aptrust.staging.preservation.glacier-deep.va
+        - Name: BUCKET_GLACIER_OH
+          Value: aptrust.staging.preservation.glacier.oh
+        - Name: BUCKET_GLACIER_OR
+          Value: aptrust.staging.preservation.glacier.or
+        - Name: BUCKET_GLACIER_VA
+          Value: aptrust.staging.preservation.glacier.va
+        - Name: BUCKET_STANDARD_OR
+          Value: aptrust.staging.preservation.oregon
+        - Name: BUCKET_STANDARD_VA
+          Value: aptrust.staging.preservation
+        - Name: BUCKET_WASABI_OR
+          Value: aptrust-staging-wasabi-or
+        - Name: BUCKET_WASABI_VA
+          Value: aptrust-staging-wasabi-va
+        - Name: NSQ_LOOKUPD
+          Value: nsqlookupd.nsqdocker:4161
+        - Name: NSQ_URL
+          Value: http://nsqd.nsqdocker:4151
+        - Name: PRESERV_PHAROS_API_KEY
+          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
+        - Name: PRESERV_PHAROS_URL
+          Value: http://staging.aptrust.org:9292
+        - Name: REDIS_URL
+          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
+        - Name: S3_AWS_HOST
+          Value: s3.amazonaws.com
+        - Name: S3_AWS_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
+        - Name: S3_AWS_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
+        - Name: S3_WASABI_HOST_OR
+          Value: s3.us-west-1.wasabisys.com
+        - Name: S3_WASABI_HOST_VA
+          Value: s3.us-east-1.wasabisys.com
+        - Name: S3_WASABI_KEY
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
+        - Name: S3_WASABI_SECRET
+          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+        - Name: STAGING_BUCKET
+          Value: aptrust.staging.staging
+        Essential: true
+        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: preservation-services
+        Name: reingest_manager
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: ReingestmanagerTaskExecutionRole
+      Family: preservation-services-reingest_manager
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  ReingestmanagerTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: preservation-services
+      - Key: com.docker.compose.service
+        Value: reingest_manager
+    Type: AWS::IAM::Role
