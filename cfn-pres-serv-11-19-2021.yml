@@ -71,53 +71,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Aptdelete_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -230,53 +186,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Aptfixity_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -389,53 +301,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Aptqueue_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -548,53 +416,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Aptqueuefixity_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -707,53 +531,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Bagrestorer_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -898,53 +678,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Filerestorer_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -1057,53 +793,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Glacierrestorer_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -1216,53 +908,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Ingestbucketreader_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -1375,53 +1023,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Ingestcleanup_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -1534,53 +1138,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Ingestformatidentifier_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -1693,53 +1253,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Ingestprefetch_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -1853,53 +1369,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Ingestpreservationuploader_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -2013,53 +1485,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Ingestpreservationverifier_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -2172,53 +1600,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Ingestrecorder_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -2331,53 +1715,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Ingeststaginguploader_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -2490,53 +1830,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Ingestvalidator_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
@@ -2653,53 +1949,9 @@ Resources:
       - DependsOn:
         - Condition: SUCCESS
           ContainerName: Reingestmanager_ResolvConf_InitContainer
-        Environment:
-        - Name: BUCKET_GLACIER_DEEP_OH
-          Value: aptrust.staging.preservation.glacier-deep.oh
-        - Name: BUCKET_GLACIER_DEEP_OR
-          Value: aptrust.staging.preservation.glacier-deep.or
-        - Name: BUCKET_GLACIER_DEEP_VA
-          Value: aptrust.staging.preservation.glacier-deep.va
-        - Name: BUCKET_GLACIER_OH
-          Value: aptrust.staging.preservation.glacier.oh
-        - Name: BUCKET_GLACIER_OR
-          Value: aptrust.staging.preservation.glacier.or
-        - Name: BUCKET_GLACIER_VA
-          Value: aptrust.staging.preservation.glacier.va
-        - Name: BUCKET_STANDARD_OR
-          Value: aptrust.staging.preservation.oregon
-        - Name: BUCKET_STANDARD_VA
-          Value: aptrust.staging.preservation
-        - Name: BUCKET_WASABI_OR
-          Value: aptrust-staging-wasabi-or
-        - Name: BUCKET_WASABI_VA
-          Value: aptrust-staging-wasabi-va
-        - Name: NSQ_LOOKUPD
-          Value: nsqlookupd.nsqdocker:4161
-        - Name: NSQ_URL
-          Value: http://nsqd.nsqdocker:4151
-        - Name: PRESERV_PHAROS_API_KEY
-          Value: c3958c7b09e40af1d065020484dafa9b2a35cea0
-        - Name: PRESERV_PHAROS_URL
-          Value: http://staging.aptrust.org:9292
-        - Name: REDIS_URL
-          Value: redis-poc.2sxrrw.ng.0001.use1.cache.amazonaws.com:6379
-        - Name: S3_AWS_HOST
-          Value: s3.amazonaws.com
-        - Name: S3_AWS_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
-        - Name: S3_AWS_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          Value: s3.us-west-1.wasabisys.com
-        - Name: S3_WASABI_HOST_VA
-          Value: s3.us-east-1.wasabisys.com
-        - Name: S3_WASABI_KEY
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          Value: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
-        - Name: STAGING_BUCKET
-          Value: aptrust.staging.staging
+        EnvironmentFiles:
+        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+          Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
         LinuxParameters: {}
