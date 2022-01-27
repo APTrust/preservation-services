@@ -72,7 +72,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Aptdelete_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -187,7 +187,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Aptfixity_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -302,7 +302,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Aptqueue_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -417,7 +417,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Aptqueuefixity_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -532,7 +532,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Bagrestorer_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -679,7 +679,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Filerestorer_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -794,7 +794,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Glacierrestorer_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -909,7 +909,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestbucketreader_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -1024,7 +1024,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestcleanup_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -1139,7 +1139,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestformatidentifier_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -1254,7 +1254,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestprefetch_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -1370,7 +1370,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestpreservationuploader_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -1486,7 +1486,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestpreservationverifier_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
         - Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -1601,7 +1601,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestrecorder_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -1716,7 +1716,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingeststaginguploader_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -1831,7 +1831,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestvalidator_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
@@ -1950,7 +1950,7 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Reingestmanager_ResolvConf_InitContainer
         EnvironmentFiles:
-        - Value: arn:aws:s3:::flavsbucket/.env.staging-ecs-vars
+        - Value: arn:aws:s3:::flavsbucket/staging.env
           Type: s3
         Essential: true
         Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
