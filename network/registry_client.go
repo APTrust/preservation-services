@@ -16,9 +16,9 @@ import (
 	"github.com/op/go-logging"
 )
 
-// PharosClient supports basic calls to the Pharos Admin REST API.
+// RegistryClient supports basic calls to the Registry Admin REST API.
 // This client does not support the Member API.
-type PharosClient struct {
+type RegistryClient struct {
 	HostURL    string
 	APIVersion string
 	APIUser    string
@@ -28,9 +28,9 @@ type PharosClient struct {
 	transport  *http.Transport
 }
 
-// NewPharosClient creates a new pharos client. Param HostUrl should
+// NewRegistryClient creates a new registry client. Param HostUrl should
 // come from the config.json file.
-func NewPharosClient(HostURL, APIVersion, APIUser, APIKey string, logger *logging.Logger) (*PharosClient, error) {
+func NewRegistryClient(HostURL, APIVersion, APIUser, APIKey string, logger *logging.Logger) (*RegistryClient, error) {
 	if !util.TestsAreRunning() && (APIUser == "" || APIKey == "") {
 		panic("Env vars PHAROS_API_USER and PHAROS_API_KEY cannot be empty.")
 	}
@@ -51,7 +51,7 @@ func NewPharosClient(HostURL, APIVersion, APIUser, APIKey string, logger *loggin
 		ForceAttemptHTTP2: true,
 	}
 	httpClient := &http.Client{Jar: cookieJar, Transport: transport}
-	return &PharosClient{
+	return &RegistryClient{
 		HostURL:    HostURL,
 		APIVersion: APIVersion,
 		APIUser:    APIUser,
@@ -62,9 +62,9 @@ func NewPharosClient(HostURL, APIVersion, APIUser, APIKey string, logger *loggin
 }
 
 // InstitutionGet returns the institution with the specified identifier.
-func (client *PharosClient) InstitutionGet(identifier string) *PharosResponse {
+func (client *RegistryClient) InstitutionGet(identifier string) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosInstitution)
+	resp := NewRegistryResponse(RegistryInstitution)
 	resp.institutions = make([]*registry.Institution, 1)
 
 	// Build the url and the request object
@@ -87,9 +87,9 @@ func (client *PharosClient) InstitutionGet(identifier string) *PharosResponse {
 }
 
 // InstitutionList returns a list of APTrust depositor institutions.
-func (client *PharosClient) InstitutionList(params url.Values) *PharosResponse {
+func (client *RegistryClient) InstitutionList(params url.Values) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosInstitution)
+	resp := NewRegistryResponse(RegistryInstitution)
 	resp.institutions = make([]*registry.Institution, 0)
 
 	// Build the url and the request object
@@ -111,9 +111,9 @@ func (client *PharosClient) InstitutionList(params url.Values) *PharosResponse {
 // IntellectualObjectGet returns the object with the specified identifier,
 // if it exists. Param identifier is an IntellectualObject identifier
 // in the format "institution.edu/object_name".
-func (client *PharosClient) IntellectualObjectGet(identifier string) *PharosResponse {
+func (client *RegistryClient) IntellectualObjectGet(identifier string) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosIntellectualObject)
+	resp := NewRegistryResponse(RegistryIntellectualObject)
 	resp.objects = make([]*registry.IntellectualObject, 1)
 
 	// Build the url and the request object
@@ -145,9 +145,9 @@ func (client *PharosClient) IntellectualObjectGet(identifier string) *PharosResp
 // * state = 'A' for active records, 'D' for deleted. Default is 'A'
 // * storage_option - "Standard", "Glacier-OH", "Glacier-OR", "Glacier-VA",
 // *                  "Glacier-Deep-OH", "Glacier-Deep-OR", "Glacier-Deep-VA"
-func (client *PharosClient) IntellectualObjectList(params url.Values) *PharosResponse {
+func (client *RegistryClient) IntellectualObjectList(params url.Values) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosIntellectualObject)
+	resp := NewRegistryResponse(RegistryIntellectualObject)
 	resp.objects = make([]*registry.IntellectualObject, 0)
 
 	institution := params.Get("institution")
@@ -169,14 +169,14 @@ func (client *PharosClient) IntellectualObjectList(params url.Values) *PharosRes
 	return resp
 }
 
-// IntellectualObjectSave saves the intellectual object to Pharos. If the
+// IntellectualObjectSave saves the intellectual object to Registry. If the
 // object has an ID of zero, this performs a POST to create a new
 // Intellectual Object. If the ID is non-zero, this updates the existing
 // object with a PUT. The response object will contain a new copy of the
 // IntellectualObject if it was successfully saved.
-func (client *PharosClient) IntellectualObjectSave(obj *registry.IntellectualObject) *PharosResponse {
+func (client *RegistryClient) IntellectualObjectSave(obj *registry.IntellectualObject) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosIntellectualObject)
+	resp := NewRegistryResponse(RegistryIntellectualObject)
 	resp.objects = make([]*registry.IntellectualObject, 1)
 
 	// URL and method
@@ -192,7 +192,7 @@ func (client *PharosClient) IntellectualObjectSave(obj *registry.IntellectualObj
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Prepare the JSON data
-	postData, err := obj.SerializeForPharos()
+	postData, err := obj.ToJSON()
 	if err != nil {
 		resp.Error = err
 	}
@@ -212,14 +212,14 @@ func (client *PharosClient) IntellectualObjectSave(obj *registry.IntellectualObj
 	return resp
 }
 
-// IntellectualObjectRequestRestore creates a restore request in Pharos for
+// IntellectualObjectRequestRestore creates a restore request in Registry for
 // the object with the specified identifier. This is used in integration
 // testing to create restore requests. Note that this call should issue
-// to requests to Pharos. The first creates the restore request, and the
+// to requests to Registry. The first creates the restore request, and the
 // second returns the WorkItem for the restore request.
-func (client *PharosClient) IntellectualObjectRequestRestore(identifier string) *PharosResponse {
+func (client *RegistryClient) IntellectualObjectRequestRestore(identifier string) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosWorkItem)
+	resp := NewRegistryResponse(RegistryWorkItem)
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
@@ -238,20 +238,20 @@ func (client *PharosClient) IntellectualObjectRequestRestore(identifier string) 
 		return client.WorkItemGet(acknowledgment.WorkItemID)
 	}
 	if acknowledgment.Message != "" {
-		resp.Error = fmt.Errorf("Pharos returned status %s: %s",
+		resp.Error = fmt.Errorf("Registry returned status %s: %s",
 			acknowledgment.Status, acknowledgment.Message)
 	}
 	return resp
 }
 
-// IntellectualObjectRequestDelete creates a delete request in Pharos for
+// IntellectualObjectRequestDelete creates a delete request in Registry for
 // the object with the specified identifier. This is used in integration
 // testing to create a set of file deletion requests. This call returns no
 // data.
-func (client *PharosClient) IntellectualObjectRequestDelete(identifier string) *PharosResponse {
+func (client *RegistryClient) IntellectualObjectRequestDelete(identifier string) *RegistryResponse {
 	// Set up the response object, but note that this call returns
 	// no data.
-	resp := NewPharosResponse(PharosIntellectualObject)
+	resp := NewRegistryResponse(RegistryIntellectualObject)
 	resp.objects = make([]*registry.IntellectualObject, 0)
 
 	// Build the url and the request object
@@ -265,17 +265,17 @@ func (client *PharosClient) IntellectualObjectRequestDelete(identifier string) *
 	}
 	if resp.Response.StatusCode != 200 && resp.Response.StatusCode != 204 {
 		bytes, _ := resp.RawResponseData()
-		resp.Error = fmt.Errorf("Pharos returned response code %d. Response: %s",
+		resp.Error = fmt.Errorf("Registry returned response code %d. Response: %s",
 			resp.Response.StatusCode, string(bytes))
 	}
 	return resp
 }
 
-// IntellectualObjectFinishDelete tells Pharos to mark an IntellectualObject
+// IntellectualObjectFinishDelete tells Registry to mark an IntellectualObject
 // as deleted, once we've finished deleting it.
-func (client *PharosClient) IntellectualObjectFinishDelete(identifier string) *PharosResponse {
+func (client *RegistryClient) IntellectualObjectFinishDelete(identifier string) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosIntellectualObject)
+	resp := NewRegistryResponse(RegistryIntellectualObject)
 	resp.objects = make([]*registry.IntellectualObject, 0)
 
 	// Build the url and the request object
@@ -299,9 +299,9 @@ func (client *PharosClient) IntellectualObjectFinishDelete(identifier string) *P
 // GenericFileGet returns the GenericFile having the specified identifier.
 // The identifier should be in the format
 // "institution.edu/object_name/path/to/file.ext"
-func (client *PharosClient) GenericFileGet(identifier string) *PharosResponse {
+func (client *RegistryClient) GenericFileGet(identifier string) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosGenericFile)
+	resp := NewRegistryResponse(RegistryGenericFile)
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// Build the url and the request object
@@ -340,10 +340,10 @@ func (client *PharosClient) GenericFileGet(identifier string) *PharosResponse {
 // * storage_option - "Standard", "Glacier-OH", "Glacier-OR", "Glacier-VA",
 //                    "Glacier-Deep-OH", "Glacier-Deep-OR", "Glacier-Deep-VA"
 //
-// Because of an implementation quirk in Pharos,
-func (client *PharosClient) GenericFileList(params url.Values) *PharosResponse {
+// Because of an implementation quirk in Registry,
+func (client *RegistryClient) GenericFileList(params url.Values) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosGenericFile)
+	resp := NewRegistryResponse(RegistryGenericFile)
 	resp.files = make([]*registry.GenericFile, 0)
 
 	//institutionIdentifier := params.Get("institution_identifier")
@@ -368,14 +368,14 @@ func (client *PharosClient) GenericFileList(params url.Values) *PharosResponse {
 	return resp
 }
 
-// GenericFileSave saves a Generic File record to Pharos. If the Generic
+// GenericFileSave saves a Generic File record to Registry. If the Generic
 // File's ID is zero, this performs a POST to create a new record.
 // For non-zero IDs, this performs a PUT to update the existing record.
 // Either way, the record must have an IntellectualObject ID. The response
 // object will have a new copy of the GenericFile if the save was successful.
-func (client *PharosClient) GenericFileSave(obj *registry.GenericFile) *PharosResponse {
+func (client *RegistryClient) GenericFileSave(obj *registry.GenericFile) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosGenericFile)
+	resp := NewRegistryResponse(RegistryGenericFile)
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// URL and method
@@ -389,7 +389,7 @@ func (client *PharosClient) GenericFileSave(obj *registry.GenericFile) *PharosRe
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Prepare the JSON data
-	postData, err := obj.SerializeForPharos()
+	postData, err := obj.ToJSON()
 	if err != nil {
 		resp.Error = err
 	}
@@ -409,18 +409,18 @@ func (client *PharosClient) GenericFileSave(obj *registry.GenericFile) *PharosRe
 	return resp
 }
 
-// GenericFileSaveBatch saves a batch of Generic File records to Pharos.
+// GenericFileSaveBatch saves a batch of Generic File records to Registry.
 // This performs a POST to create a new records, so all of the GenericFiles
 // passed in param objList should have Ids of zero. Each record
 // must also have an IntellectualObject ID. The response object will
 // be a list containing a new copy of each GenericFile that was saved.
-// The new copies have correct ids and timestamps. On the Pharos end,
+// The new copies have correct ids and timestamps. On the Registry end,
 // the batch insert is run as a transaction, so either all inserts
 // succeed, or the whole transaction is rolled back and no inserts
 // occur.
-func (client *PharosClient) GenericFileSaveBatch(objList []*registry.GenericFile) *PharosResponse {
+func (client *RegistryClient) GenericFileSaveBatch(objList []*registry.GenericFile) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosGenericFile)
+	resp := NewRegistryResponse(RegistryGenericFile)
 	resp.files = make([]*registry.GenericFile, len(objList))
 
 	if len(objList) == 0 {
@@ -442,15 +442,15 @@ func (client *PharosClient) GenericFileSaveBatch(objList []*registry.GenericFile
 	httpMethod := "POST"
 	absoluteURL := client.BuildURL(relativeURL)
 
-	// Transform into a set of objects that serialize in a way Pharos
+	// Transform into a set of objects that serialize in a way Registry
 	// will accept.
-	batch := make([]*registry.GenericFileForPharos, len(objList))
-	for i, gf := range objList {
-		batch[i] = registry.NewGenericFileForPharos(gf)
-	}
+	//batch := make([]*registry.GenericFileForRegistry, len(objList))
+	//for i, gf := range objList {
+	//	batch[i] = registry.NewGenericFileForRegistry(gf)
+	//}
 
 	// Prepare the JSON data
-	postData, err := json.Marshal(batch)
+	postData, err := json.Marshal(objList)
 	if err != nil {
 		resp.Error = fmt.Errorf("Error marshalling GenericFile batch to JSON: %v", err)
 		return resp
@@ -466,16 +466,16 @@ func (client *PharosClient) GenericFileSaveBatch(objList []*registry.GenericFile
 	return resp
 }
 
-// GenericFileRequestRestore creates a restore request in Pharos for
+// GenericFileRequestRestore creates a restore request in Registry for
 // the file with the specified identifier. This is used in integration
 // testing to create restore requests. This call generally issues two
-// requests: one asking Pharos to create a WorkItem, and a second to
-// return the WorkItem. Ideally, Pharos should redirecto so we don't have
+// requests: one asking Registry to create a WorkItem, and a second to
+// return the WorkItem. Ideally, Registry should redirecto so we don't have
 // to make two calls.
-// This is logged as a Pharos issue in https://trello.com/c/uE1CFNji
-func (client *PharosClient) GenericFileRequestRestore(identifier string) *PharosResponse {
+// This is logged as a Registry issue in https://trello.com/c/uE1CFNji
+func (client *RegistryClient) GenericFileRequestRestore(identifier string) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosWorkItem)
+	resp := NewRegistryResponse(RegistryWorkItem)
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
@@ -494,19 +494,19 @@ func (client *PharosClient) GenericFileRequestRestore(identifier string) *Pharos
 		return client.WorkItemGet(acknowledgment.WorkItemID)
 	}
 	if acknowledgment.Message != "" {
-		resp.Error = fmt.Errorf("Pharos returned status %s: %s",
+		resp.Error = fmt.Errorf("Registry returned status %s: %s",
 			acknowledgment.Status, acknowledgment.Message)
 	}
 	return resp
 }
 
-// GenericFileFinishDelete tells Pharos we've finished deleting a
+// GenericFileFinishDelete tells Registry we've finished deleting a
 // generic file. We have to create the deletion PREMIS event
 // before calling this. This call returns no data. If response.Error
 // is nil, it succeeded.
-func (client *PharosClient) GenericFileFinishDelete(identifier string) *PharosResponse {
+func (client *RegistryClient) GenericFileFinishDelete(identifier string) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosGenericFile)
+	resp := NewRegistryResponse(RegistryGenericFile)
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// Build the url and the request object
@@ -528,9 +528,9 @@ func (client *PharosClient) GenericFileFinishDelete(identifier string) *PharosRe
 }
 
 // ChecksumGet returns the checksum with the specified id
-func (client *PharosClient) ChecksumGet(id int) *PharosResponse {
+func (client *RegistryClient) ChecksumGet(id int) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosChecksum)
+	resp := NewRegistryResponse(RegistryChecksum)
 	resp.checksums = make([]*registry.Checksum, 1)
 
 	// Build the url and the request object
@@ -558,11 +558,11 @@ func (client *PharosClient) ChecksumGet(id int) *PharosResponse {
 //   the checksum belongs.
 // * algorithm - The checksum algorithm (constants.AldMd5, constants.AlgSha256)
 //
-// Pharos should support order and limit for this call, but it doesn't.
+// Registry should support order and limit for this call, but it doesn't.
 // Order is "datetime desc" by default, and limit cannot be set.
-func (client *PharosClient) ChecksumList(params url.Values) *PharosResponse {
+func (client *RegistryClient) ChecksumList(params url.Values) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosChecksum)
+	resp := NewRegistryResponse(RegistryChecksum)
 	resp.checksums = make([]*registry.Checksum, 0)
 
 	// Build the url and the request object
@@ -581,14 +581,14 @@ func (client *PharosClient) ChecksumList(params url.Values) *PharosResponse {
 	return resp
 }
 
-// ChecksumSave saves a Checksum to Pharos. The checksum Id should be
+// ChecksumSave saves a Checksum to Registry. The checksum Id should be
 // zero, since we can create but not update Checksums. Param gfIdentifier
 // is the identifier of the GenericFile to which the checksum belongs.
 // The response object will have a new copy of the Checksum if the
 // save was successful.
-func (client *PharosClient) ChecksumSave(obj *registry.Checksum, gfIdentifier string) *PharosResponse {
+func (client *RegistryClient) ChecksumSave(obj *registry.Checksum, gfIdentifier string) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosChecksum)
+	resp := NewRegistryResponse(RegistryChecksum)
 	resp.checksums = make([]*registry.Checksum, 1)
 
 	// URL and method
@@ -598,7 +598,7 @@ func (client *PharosClient) ChecksumSave(obj *registry.Checksum, gfIdentifier st
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Prepare the JSON data
-	postData, err := obj.SerializeForPharos()
+	postData, err := obj.ToJSON()
 	if err != nil {
 		resp.Error = err
 	}
@@ -621,9 +621,9 @@ func (client *PharosClient) ChecksumSave(obj *registry.Checksum, gfIdentifier st
 // PremisEventGet returns the PREMIS event with the specified identifier.
 // The identifier should be a UUID in string format, with dashes. E.g.
 // "49a7d6b5-cdc1-4912-812e-885c08e90c68"
-func (client *PharosClient) PremisEventGet(identifier string) *PharosResponse {
+func (client *RegistryClient) PremisEventGet(identifier string) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosPremisEvent)
+	resp := NewRegistryResponse(RegistryPremisEvent)
 	resp.events = make([]*registry.PremisEvent, 1)
 
 	// Build the url and the request object
@@ -652,14 +652,14 @@ func (client *PharosClient) PremisEventGet(identifier string) *PharosResponse {
 //   the specified intellectual object (but not its generic files).
 // * file_identifier - (string) Return events associated with the
 //   specified generic file. NOTE THAT THIS DIFFERS FROM OTHER CALLS,
-//   WHICH use generic_file_identifier. (!$?!#! Pharos!)
+//   WHICH use generic_file_identifier. (!$?!#! Registry!)
 // * event_type - (string) Return events of the specified type. See the
 //   event types listed in contants/constants.go
 // * created_after - (iso 8601 datetime string) Return events created
 //   on or after the specified datetime.
-func (client *PharosClient) PremisEventList(params url.Values) *PharosResponse {
+func (client *RegistryClient) PremisEventList(params url.Values) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosPremisEvent)
+	resp := NewRegistryResponse(RegistryPremisEvent)
 	resp.events = make([]*registry.PremisEvent, 0)
 
 	// Build the url and the request object
@@ -678,27 +678,27 @@ func (client *PharosClient) PremisEventList(params url.Values) *PharosResponse {
 	return resp
 }
 
-// PremisEventSave saves a PREMIS event to Pharos. If the event ID is zero,
+// PremisEventSave saves a PREMIS event to Registry. If the event ID is zero,
 // this issues a POST request to create a new event record. If the ID is
 // non-zero, this issues a PUT to update the existing event. The response
 // object will have a new copy of the Premis event if the save was successful.
-func (client *PharosClient) PremisEventSave(obj *registry.PremisEvent) *PharosResponse {
+func (client *RegistryClient) PremisEventSave(obj *registry.PremisEvent) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosPremisEvent)
+	resp := NewRegistryResponse(RegistryPremisEvent)
 	resp.events = make([]*registry.PremisEvent, 1)
 
 	// URL and method
 	relativeURL := fmt.Sprintf("/api/%s/events/", client.APIVersion)
 	httpMethod := "POST"
 	if obj.ID > 0 {
-		// PUT is not even implemented in Pharos, and never will be
+		// PUT is not even implemented in Registry, and never will be
 		relativeURL = fmt.Sprintf("%s/%s", relativeURL, url.QueryEscape(obj.Identifier))
 		httpMethod = "PUT"
 	}
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Prepare the JSON data
-	postData, err := obj.SerializeForPharos()
+	postData, err := obj.ToJSON()
 	if err != nil {
 		resp.Error = err
 	}
@@ -720,9 +720,9 @@ func (client *PharosClient) PremisEventSave(obj *registry.PremisEvent) *PharosRe
 
 // StorageRecordList returns a list of StorageRecords.
 // Param genericFileIdentifier is required.
-func (client *PharosClient) StorageRecordList(genericFileIdentifier string) *PharosResponse {
+func (client *RegistryClient) StorageRecordList(genericFileIdentifier string) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosStorageRecord)
+	resp := NewRegistryResponse(RegistryStorageRecord)
 	resp.storageRecords = make([]*registry.StorageRecord, 0)
 
 	// Build the url and the request object
@@ -743,11 +743,11 @@ func (client *PharosClient) StorageRecordList(genericFileIdentifier string) *Pha
 	return resp
 }
 
-// StorageRecordSave saves a StorageRecord to Pharos. Note that
+// StorageRecordSave saves a StorageRecord to Registry. Note that
 // StorageRecords can be created but not updated.
-func (client *PharosClient) StorageRecordSave(obj *registry.StorageRecord, gfIdentifier string) *PharosResponse {
+func (client *RegistryClient) StorageRecordSave(obj *registry.StorageRecord, gfIdentifier string) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosStorageRecord)
+	resp := NewRegistryResponse(RegistryStorageRecord)
 	resp.storageRecords = make([]*registry.StorageRecord, 1)
 
 	// URL and method
@@ -757,7 +757,7 @@ func (client *PharosClient) StorageRecordSave(obj *registry.StorageRecord, gfIde
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Prepare the JSON data
-	postData, err := obj.SerializeForPharos()
+	postData, err := obj.ToJSON()
 	if err != nil {
 		resp.Error = err
 	}
@@ -778,9 +778,9 @@ func (client *PharosClient) StorageRecordSave(obj *registry.StorageRecord, gfIde
 }
 
 // StorageRecordDelete deletes the storage record with the specified ID.
-func (client *PharosClient) StorageRecordDelete(id int) *PharosResponse {
+func (client *RegistryClient) StorageRecordDelete(id int) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosStorageRecord)
+	resp := NewRegistryResponse(RegistryStorageRecord)
 	resp.storageRecords = make([]*registry.StorageRecord, 1)
 
 	// URL and method
@@ -794,9 +794,9 @@ func (client *PharosClient) StorageRecordDelete(id int) *PharosResponse {
 }
 
 // WorkItemGet returns the WorkItem with the specified ID.
-func (client *PharosClient) WorkItemGet(id int) *PharosResponse {
+func (client *RegistryClient) WorkItemGet(id int) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosWorkItem)
+	resp := NewRegistryResponse(RegistryWorkItem)
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
@@ -840,9 +840,9 @@ func (client *PharosClient) WorkItemGet(id int) *PharosResponse {
 // access - String enum value from constants.AccessRights.
 // state - "A" for active items, "D" for deleted items.
 // institution_id - Int: id of institution
-func (client *PharosClient) WorkItemList(params url.Values) *PharosResponse {
+func (client *RegistryClient) WorkItemList(params url.Values) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosWorkItem)
+	resp := NewRegistryResponse(RegistryWorkItem)
 	resp.workItems = make([]*registry.WorkItem, 0)
 
 	// Build the url and the request object
@@ -861,13 +861,13 @@ func (client *PharosClient) WorkItemList(params url.Values) *PharosResponse {
 	return resp
 }
 
-// WorkItemSave saves a WorkItem record to Pharos. If the WorkItems's ID
+// WorkItemSave saves a WorkItem record to Registry. If the WorkItems's ID
 // is zero, this performs a POST to create a new record. For non-zero IDs, this
 // performs a PUT to update the existing record. The response object
 // will include a new copy of the WorkItem if it was saved successfully.
-func (client *PharosClient) WorkItemSave(obj *registry.WorkItem) *PharosResponse {
+func (client *RegistryClient) WorkItemSave(obj *registry.WorkItem) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosWorkItem)
+	resp := NewRegistryResponse(RegistryWorkItem)
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// URL and method
@@ -881,7 +881,7 @@ func (client *PharosClient) WorkItemSave(obj *registry.WorkItem) *PharosResponse
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Prepare the JSON data
-	postData, err := obj.SerializeForPharos()
+	postData, err := obj.ToJSON()
 	if err != nil {
 		resp.Error = err
 	}
@@ -901,12 +901,12 @@ func (client *PharosClient) WorkItemSave(obj *registry.WorkItem) *PharosResponse
 	return resp
 }
 
-// FinishRestorationSpotTest tells Pharos to send an email to institutional
+// FinishRestorationSpotTest tells Registry to send an email to institutional
 // admins saying APTrust has randomly restored one of their bags as part of a
 // spot test.
-func (client *PharosClient) FinishRestorationSpotTest(workItemID int) *PharosResponse {
+func (client *RegistryClient) FinishRestorationSpotTest(workItemID int) *RegistryResponse {
 	// Set up the response object
-	resp := NewPharosResponse(PharosWorkItem)
+	resp := NewRegistryResponse(RegistryWorkItem)
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
@@ -936,14 +936,14 @@ func (client *PharosClient) FinishRestorationSpotTest(workItemID int) *PharosRes
 // relativeURL to create an absolute URL. For example, if client.HostUrl
 // is "http://localhost:3456", then client.BuildURL("/path/to/action.json")
 // would return "http://localhost:3456/path/to/action.json".
-func (client *PharosClient) BuildURL(relativeURL string) string {
+func (client *RegistryClient) BuildURL(relativeURL string) string {
 	return client.HostURL + relativeURL
 }
 
 // NewJSONRequest returns a new request with headers indicating
 // JSON request and response formats.
 //
-// Param method can be "GET", "POST", or "PUT". The Pharos service
+// Param method can be "GET", "POST", or "PUT". The Registry service
 // currently only supports those three.
 //
 // Param absoluteURL should be the absolute URL. For get requests,
@@ -952,9 +952,9 @@ func (client *PharosClient) BuildURL(relativeURL string) string {
 //
 // Param requestData will be nil for GET requests, and can be
 // constructed from bytes.NewBuffer([]byte) for POST and PUT.
-// For the PharosClient, we're typically sending JSON data in
+// For the RegistryClient, we're typically sending JSON data in
 // the request body.
-func (client *PharosClient) NewJSONRequest(method, absoluteURL string, requestData io.Reader) (*http.Request, error) {
+func (client *RegistryClient) NewJSONRequest(method, absoluteURL string, requestData io.Reader) (*http.Request, error) {
 	req, err := http.NewRequest(method, absoluteURL, requestData)
 	if err != nil {
 		return nil, err
@@ -962,8 +962,8 @@ func (client *PharosClient) NewJSONRequest(method, absoluteURL string, requestDa
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-	req.Header.Add("X-Pharos-API-User", client.APIUser)
-	req.Header.Add("X-Pharos-API-Key", client.APIKey)
+	req.Header.Add("X-Registry-API-User", client.APIUser)
+	req.Header.Add("X-Registry-API-Key", client.APIKey)
 	req.Header.Add("Connection", "Keep-Alive")
 
 	// Unfix the URL that golang net/url "fixes" for us.
@@ -992,12 +992,12 @@ func (client *PharosClient) NewJSONRequest(method, absoluteURL string, requestDa
 // DoRequest issues an HTTP request, reads the response, and closes the
 // connection to the remote server.
 //
-// Param resp should be a PharosResponse.
+// Param resp should be a RegistryResponse.
 //
 // For a description of the other params, see NewJsonRequest.
 //
 // If an error occurs, it will be recorded in resp.Error.
-func (client *PharosClient) DoRequest(resp *PharosResponse, method, absoluteURL string, requestData io.Reader) {
+func (client *RegistryClient) DoRequest(resp *RegistryResponse, method, absoluteURL string, requestData io.Reader) {
 	// Build the request
 	request, err := client.NewJSONRequest(method, absoluteURL, requestData)
 	resp.Request = request
@@ -1031,25 +1031,25 @@ func (client *PharosClient) DoRequest(resp *PharosResponse, method, absoluteURL 
 	}
 }
 
-// func EscapeFileIdentifier(identifier string) string {
-// 	encoded := url.QueryEscape(identifier)
-// 	return strings.Replace(encoded, "+", "%20", -1)
-// }
+func EscapeFileIdentifier(identifier string) string {
+	encoded := url.QueryEscape(identifier)
+	return strings.Replace(encoded, "+", "%20", -1)
+}
 
-// func encodeParams(params url.Values) string {
-// 	if params == nil {
-// 		return ""
-// 	}
-// 	return params.Encode()
-// }
+func encodeParams(params url.Values) string {
+	if params == nil {
+		return ""
+	}
+	return params.Encode()
+}
 
-// // Acknowledgement is an ad-hoc JSON struct that Pharos returns to
-// // tell us if it did or did not create a WorkItem for our request.
-// // TODO: Pharos should return consistent stuct formats,
-// // so we don't have to handle special cases inline like this.
-// // This is logged as a Pharos issue in https://trello.com/c/uE1CFNji
-// type Acknowledgment struct {
-// 	Status     string `json:"status"`
-// 	Message    string `json:"message"`
-// 	WorkItemID int    `json:"work_item_id"`
-// }
+// Acknowledgement is an ad-hoc JSON struct that Registry returns to
+// tell us if it did or did not create a WorkItem for our request.
+// TODO: Registry should return consistent stuct formats,
+// so we don't have to handle special cases inline like this.
+// This is logged as a Registry issue in https://trello.com/c/uE1CFNji
+type Acknowledgment struct {
+	Status     string `json:"status"`
+	Message    string `json:"message"`
+	WorkItemID int    `json:"work_item_id"`
+}
