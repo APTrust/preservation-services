@@ -61,14 +61,23 @@ func NewRegistryClient(HostURL, APIVersion, APIUser, APIKey string, logger *logg
 		transport:  transport}, nil
 }
 
-// InstitutionGet returns the institution with the specified identifier.
-func (client *RegistryClient) InstitutionGet(identifier string) *RegistryResponse {
+// InstitutionByIdentifier returns the institution with the specified identifier.
+func (client *RegistryClient) InstitutionByIdentifier(identifier string) *RegistryResponse {
+	relativeURL := fmt.Sprintf("/admin_api/%s/institutions/show/%s", client.APIVersion, url.QueryEscape(identifier))
+	return client.institutionGet(relativeURL)
+}
+
+// InstitutionByID returns the institution with the specified id.
+func (client *RegistryClient) InstitutionById(id int) *RegistryResponse {
+	relativeURL := fmt.Sprintf("/admin_api/%s/institutions/show/%d", client.APIVersion, id)
+	return client.institutionGet(relativeURL)
+}
+
+func (client *RegistryClient) institutionGet(relativeURL string) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryInstitution)
 	resp.institutions = make([]*registry.Institution, 1)
 
-	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/api/%s/institutions/%s/", client.APIVersion, url.QueryEscape(identifier))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -93,7 +102,7 @@ func (client *RegistryClient) InstitutionList(params url.Values) *RegistryRespon
 	resp.institutions = make([]*registry.Institution, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/api/%s/institutions/?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/admin_api/%s/institutions/?%s", client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -108,16 +117,27 @@ func (client *RegistryClient) InstitutionList(params url.Values) *RegistryRespon
 	return resp
 }
 
-// IntellectualObjectGet returns the object with the specified identifier,
+// IntellectualObjectByIdentifier returns the object with the specified identifier,
 // if it exists. Param identifier is an IntellectualObject identifier
 // in the format "institution.edu/object_name".
-func (client *RegistryClient) IntellectualObjectGet(identifier string) *RegistryResponse {
+func (client *RegistryClient) IntellectualObjectByIdentifier(identifier string) *RegistryResponse {
+	relativeURL := fmt.Sprintf("/admin_api/%s/objects/show/%s", client.APIVersion, EscapeFileIdentifier(identifier))
+	return client.intellectualObjectGet(relativeURL)
+}
+
+// IntellectualObjectByID returns the object with the specified id,
+// if it exists.
+func (client *RegistryClient) IntellectualObjectByID(id int) *RegistryResponse {
+	relativeURL := fmt.Sprintf("/admin_api/%s/objects/show/%d", client.APIVersion, id)
+	return client.intellectualObjectGet(relativeURL)
+}
+
+func (client *RegistryClient) intellectualObjectGet(relativeURL string) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryIntellectualObject)
 	resp.objects = make([]*registry.IntellectualObject, 1)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/api/%s/objects/%s", client.APIVersion, EscapeFileIdentifier(identifier))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -235,7 +255,7 @@ func (client *RegistryClient) IntellectualObjectRequestRestore(identifier string
 	acknowledgment := Acknowledgment{}
 	resp.Error = json.Unmarshal(resp.data, &acknowledgment)
 	if resp.Error == nil && acknowledgment.WorkItemID != 0 {
-		return client.WorkItemGet(acknowledgment.WorkItemID)
+		return client.WorkItemByID(acknowledgment.WorkItemID)
 	}
 	if acknowledgment.Message != "" {
 		resp.Error = fmt.Errorf("Registry returned status %s: %s",
@@ -296,16 +316,26 @@ func (client *RegistryClient) IntellectualObjectFinishDelete(identifier string) 
 	return resp
 }
 
-// GenericFileGet returns the GenericFile having the specified identifier.
+// GenericFileByIdentifier returns the GenericFile having the specified identifier.
 // The identifier should be in the format
 // "institution.edu/object_name/path/to/file.ext"
-func (client *RegistryClient) GenericFileGet(identifier string) *RegistryResponse {
+func (client *RegistryClient) GenericFileByIdentifier(identifier string) *RegistryResponse {
+	relativeURL := fmt.Sprintf("/admin_api/%s/files/%s?include_storage_records=true", client.APIVersion, EscapeFileIdentifier(identifier))
+	return client.genericFileGet(relativeURL)
+}
+
+// GenericFileByID returns the GenericFile having the specified id.
+func (client *RegistryClient) GenericFileByID(id int) *RegistryResponse {
+	relativeURL := fmt.Sprintf("/admin_api/%s/files/show/%d?include_storage_records=true", client.APIVersion, id)
+	return client.genericFileGet(relativeURL)
+}
+
+func (client *RegistryClient) genericFileGet(relativeURL string) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryGenericFile)
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/api/%s/files/%s?include_storage_records=true", client.APIVersion, EscapeFileIdentifier(identifier))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -491,7 +521,7 @@ func (client *RegistryClient) GenericFileRequestRestore(identifier string) *Regi
 	acknowledgment := Acknowledgment{}
 	resp.Error = json.Unmarshal(resp.data, &acknowledgment)
 	if resp.Error == nil && acknowledgment.WorkItemID != 0 {
-		return client.WorkItemGet(acknowledgment.WorkItemID)
+		return client.WorkItemByID(acknowledgment.WorkItemID)
 	}
 	if acknowledgment.Message != "" {
 		resp.Error = fmt.Errorf("Registry returned status %s: %s",
@@ -527,8 +557,8 @@ func (client *RegistryClient) GenericFileFinishDelete(identifier string) *Regist
 	return resp
 }
 
-// ChecksumGet returns the checksum with the specified id
-func (client *RegistryClient) ChecksumGet(id int) *RegistryResponse {
+// ChecksumByID returns the checksum with the specified id
+func (client *RegistryClient) ChecksumByID(id int) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryChecksum)
 	resp.checksums = make([]*registry.Checksum, 1)
@@ -618,25 +648,29 @@ func (client *RegistryClient) ChecksumSave(obj *registry.Checksum, gfIdentifier 
 	return resp
 }
 
-// PremisEventGet returns the PREMIS event with the specified identifier.
+// PremisEventByIdentifier returns the PREMIS event with the specified identifier.
 // The identifier should be a UUID in string format, with dashes. E.g.
 // "49a7d6b5-cdc1-4912-812e-885c08e90c68"
-func (client *RegistryClient) PremisEventGet(identifier string) *RegistryResponse {
+func (client *RegistryClient) PremisEventByIdentifier(identifier string) *RegistryResponse {
+	relativeURL := fmt.Sprintf("/admin_api/%s/events/show/%s", client.APIVersion, url.QueryEscape(identifier))
+	return client.premisEventGet(relativeURL)
+}
+
+// PremisEventByID returns the PREMIS event with the specified id.
+func (client *RegistryClient) PremisEventByID(id int) *RegistryResponse {
 	// Set up the response object
+	relativeURL := fmt.Sprintf("/admmin_api/%s/events/show/%d", client.APIVersion, id)
+	return client.premisEventGet(relativeURL)
+}
+
+func (client *RegistryClient) premisEventGet(relativeURL string) *RegistryResponse {
 	resp := NewRegistryResponse(RegistryPremisEvent)
 	resp.events = make([]*registry.PremisEvent, 1)
-
-	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/api/%s/events/%s/", client.APIVersion, url.QueryEscape(identifier))
 	absoluteURL := client.BuildURL(relativeURL)
-
-	// Run the request
 	client.DoRequest(resp, "GET", absoluteURL, nil)
 	if resp.Error != nil {
 		return resp
 	}
-
-	// Parse the JSON from the response body
 	event := &registry.PremisEvent{}
 	resp.Error = json.Unmarshal(resp.data, event)
 	if resp.Error == nil {
@@ -793,8 +827,8 @@ func (client *RegistryClient) StorageRecordDelete(id int) *RegistryResponse {
 	return resp
 }
 
-// WorkItemGet returns the WorkItem with the specified ID.
-func (client *RegistryClient) WorkItemGet(id int) *RegistryResponse {
+// WorkItemByID returns the WorkItem with the specified ID.
+func (client *RegistryClient) WorkItemByID(id int) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryWorkItem)
 	resp.workItems = make([]*registry.WorkItem, 1)
