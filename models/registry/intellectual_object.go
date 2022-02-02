@@ -8,27 +8,32 @@ import (
 )
 
 type IntellectualObject struct {
-	Access                    string    `json:"access,omitempty"`
-	AltIdentifier             string    `json:"alt_identifier,omitempty"`
-	BagGroupIdentifier        string    `json:"bag_group_identifier,omitempty"`
-	BagItProfileIdentifier    string    `json:"bagit_profile_identifier,omitempty"`
-	BagName                   string    `json:"bag_name,omitempty"`
-	CreatedAt                 time.Time `json:"created_at,omitempty"`
-	Description               string    `json:"description,omitempty"`
-	ETag                      string    `json:"etag,omitempty"`
-	FileCount                 int       `json:"file_count,omitempty"`
-	FileSize                  int64     `json:"file_size,omitempty"`
-	ID                        int       `json:"id,omitempty"`
-	Identifier                string    `json:"identifier,omitempty"`
-	InternalSenderDescription string    `json:"internal_sender_description,omitempty"`
-	InternalSenderIdentifier  string    `json:"internal_sender_identifier,omitempty"`
-	Institution               string    `json:"institution,omitempty"`
-	InstitutionID             int       `json:"institution_id,omitempty"`
-	SourceOrganization        string    `json:"source_organization,omitempty"`
-	State                     string    `json:"state"`
-	StorageOption             string    `json:"storage_option"`
-	Title                     string    `json:"title,omitempty"`
-	UpdatedAt                 time.Time `json:"updated_at,omitempty"`
+	Access                 string    `json:"access,omitempty"`
+	AltIdentifier          string    `json:"alt_identifier,omitempty"`
+	BagGroupIdentifier     string    `json:"bag_group_identifier,omitempty"`
+	BagItProfileIdentifier string    `json:"bagit_profile_identifier,omitempty"`
+	BagName                string    `json:"bag_name,omitempty"`
+	CreatedAt              time.Time `json:"created_at,omitempty"`
+	Description            string    `json:"description,omitempty"`
+	ETag                   string    `json:"etag,omitempty"`
+	FileCount              int       `json:"file_count,omitempty"`
+
+	// TODO: Replace with Size, as in Registry
+	FileSize                  int64  `json:"file_size,omitempty"`
+	ID                        int    `json:"id,omitempty"`
+	Identifier                string `json:"identifier,omitempty"`
+	InternalSenderDescription string `json:"internal_sender_description,omitempty"`
+	InternalSenderIdentifier  string `json:"internal_sender_identifier,omitempty"`
+
+	// TODO: This should probably change to InstitutionIdentifier,
+	// but double-check to make sure.
+	Institution        string    `json:"institution,omitempty"`
+	InstitutionID      int       `json:"institution_id,omitempty"`
+	SourceOrganization string    `json:"source_organization,omitempty"`
+	State              string    `json:"state"`
+	StorageOption      string    `json:"storage_option"`
+	Title              string    `json:"title,omitempty"`
+	UpdatedAt          time.Time `json:"updated_at,omitempty"`
 }
 
 func IntellectualObjectFromJSON(jsonData []byte) (*IntellectualObject, error) {

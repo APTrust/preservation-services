@@ -41,13 +41,10 @@ func NewRegistryClient(HostURL, APIVersion, APIUser, APIKey string, logger *logg
 		return nil, fmt.Errorf("Can't create cookie jar for HTTP client: %v", err)
 	}
 
-	// A.D. 2019-11-18: Disable keep alives because Puma 4 seems to be
-	// very aggressive about closing idle connections. This leads to
-	// 'connection reset by peer' errors on localhost during integration
-	// tests, and to numerous connection reset errors in production.
+	// Try to use KeepAlive now that we are off of Puma.
 	transport := &http.Transport{
 		//MaxIdleConnsPerHost: 2,
-		DisableKeepAlives: true,
+		DisableKeepAlives: false,
 		ForceAttemptHTTP2: true,
 	}
 	httpClient := &http.Client{Jar: cookieJar, Transport: transport}
@@ -1043,7 +1040,7 @@ func (client *RegistryClient) DoRequest(resp *RegistryResponse, method, absolute
 	// Issue the HTTP request
 	reqTime := time.Now()
 	resp.Response, resp.Error = client.httpClient.Do(request)
-	client.logger.Infof("%s %s completed in %s", method, absoluteURL, time.Now().Sub(reqTime))
+	client.logger.Infof("%s %s completed in %s", method, absoluteURL, time.Since(reqTime))
 	if resp.Error != nil {
 		resp.Error = fmt.Errorf("%s %s: %s", method, absoluteURL, resp.Error.Error())
 		return

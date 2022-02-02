@@ -12,32 +12,36 @@ import (
 // WorkItem is a Pharos WorkItem that describes a task to be completed
 // and its current stage and status.
 type WorkItem struct {
-	APTrustApprover       string    `json:"aptrust_approver"`
-	Action                string    `json:"action"`
-	BagDate               time.Time `json:"bag_date"`
-	Bucket                string    `json:"bucket"`
-	CreatedAt             time.Time `json:"created_at,omitempty"`
-	Date                  time.Time `json:"date"`
-	ETag                  string    `json:"etag"`
-	GenericFileIdentifier string    `json:"generic_file_identifier"`
-	ID                    int       `json:"id,omitempty"`
-	InstApprover          string    `json:"inst_approver"`
-	InstitutionID         int       `json:"institution_id"`
-	Name                  string    `json:"name"`
-	NeedsAdminReview      bool      `json:"needs_admin_review"`
-	Node                  string    `json:"node"`
-	Note                  string    `json:"note"`
-	ObjectIdentifier      string    `json:"object_identifier"`
-	Outcome               string    `json:"outcome"`
-	Pid                   int       `json:"pid"`
-	QueuedAt              time.Time `json:"queued_at,omitempty"`
-	Retry                 bool      `json:"retry"`
-	Size                  int64     `json:"size"`
-	Stage                 string    `json:"stage"`
-	StageStartedAt        time.Time `json:"stage_started_at"`
-	Status                string    `json:"status"`
-	UpdatedAt             time.Time `json:"updated_at,omitempty"`
-	User                  string    `json:"user"`
+	APTrustApprover string    `json:"aptrust_approver"`
+	Action          string    `json:"action"`
+	BagDate         time.Time `json:"bag_date"`
+	Bucket          string    `json:"bucket"`
+	CreatedAt       time.Time `json:"created_at,omitempty"`
+	Date            time.Time `json:"date"`
+	ETag            string    `json:"etag"`
+
+	// Read-only, from view.
+	GenericFileIdentifier string `json:"generic_file_identifier"`
+	ID                    int    `json:"id,omitempty"`
+	InstApprover          string `json:"inst_approver"`
+	InstitutionID         int    `json:"institution_id"`
+	Name                  string `json:"name"`
+	NeedsAdminReview      bool   `json:"needs_admin_review"`
+	Node                  string `json:"node"`
+	Note                  string `json:"note"`
+
+	// Read-only, from view.
+	ObjectIdentifier string    `json:"object_identifier"`
+	Outcome          string    `json:"outcome"`
+	Pid              int       `json:"pid"`
+	QueuedAt         time.Time `json:"queued_at,omitempty"`
+	Retry            bool      `json:"retry"`
+	Size             int64     `json:"size"`
+	Stage            string    `json:"stage"`
+	StageStartedAt   time.Time `json:"stage_started_at"`
+	Status           string    `json:"status"`
+	UpdatedAt        time.Time `json:"updated_at,omitempty"`
+	User             string    `json:"user"`
 }
 
 // WorkItemFromJSON converts a JSON representation of a WorkItem to
