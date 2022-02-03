@@ -32,7 +32,7 @@ type RegistryClient struct {
 // come from the config.json file.
 func NewRegistryClient(HostURL, APIVersion, APIUser, APIKey string, logger *logging.Logger) (*RegistryClient, error) {
 	if !util.TestsAreRunning() && (APIUser == "" || APIKey == "") {
-		panic("Env vars PHAROS_API_USER and PHAROS_API_KEY cannot be empty.")
+		panic("Env vars REGISTRY_API_USER and REGISTRY_API_KEY cannot be empty.")
 	}
 	// see security warning on nil PublicSuffixList here:
 	// http://gotour.golang.org/src/pkg/net/http/cookiejar/jar.go?s=1011:1492#L24
@@ -877,7 +877,7 @@ func (client *RegistryClient) WorkItemList(params url.Values) *RegistryResponse 
 	resp.workItems = make([]*registry.WorkItem, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/api/%s/items/?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/admin_api/%s/items?%s", client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -991,10 +991,12 @@ func (client *RegistryClient) NewJSONRequest(method, absoluteURL string, request
 		return nil, err
 	}
 
+	// Registry is still using old Pharos auth headers.
+	// Maybe we should change to Registry headers?
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-	req.Header.Add("X-Registry-API-User", client.APIUser)
-	req.Header.Add("X-Registry-API-Key", client.APIKey)
+	req.Header.Add("X-Pharos-API-User", client.APIUser)
+	req.Header.Add("X-Pharos-API-Key", client.APIKey)
 	req.Header.Add("Connection", "Keep-Alive")
 
 	// Unfix the URL that golang net/url "fixes" for us.
