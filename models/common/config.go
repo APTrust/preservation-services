@@ -55,6 +55,10 @@ type Config struct {
 	RedisRetryMs               time.Duration
 	RedisURL                   string
 	RedisUser                  string `json:"-"`
+	RegistryAPIKey             string `json:"-"`
+	RegistryAPIUser            string `json:"-"`
+	RegistryAPIVersion         string
+	RegistryURL                string
 	RestoreDir                 string
 	S3AWSHost                  string
 	S3Credentials              map[string]*S3Credentials `json:"-"`
@@ -153,6 +157,10 @@ func loadConfig() *Config {
 		RedisRetryMs:               v.GetDuration("REDIS_RETRY_MS"),
 		RedisURL:                   v.GetString("REDIS_URL"),
 		RedisUser:                  v.GetString("REDIS_USER"),
+		RegistryAPIKey:             v.GetString("PRESERV_REGISTRY_API_KEY"),
+		RegistryAPIUser:            v.GetString("PRESERV_REGISTRY_API_USER"),
+		RegistryAPIVersion:         v.GetString("PRESERV_REGISTRY_API_VERSION"),
+		RegistryURL:                v.GetString("PRESERV_REGISTRY_URL"),
 		RestoreDir:                 v.GetString("RESTORE_DIR"),
 		S3AWSHost:                  v.GetString("S3_AWS_HOST"),
 		S3Credentials: map[string]*S3Credentials{
@@ -341,6 +349,9 @@ func (config *Config) checkHostSafety() {
 		if !isLocalHost(config.PharosURL) {
 			util.PrintAndExit(fmt.Sprintf("Dev/Test setup cannot point to external Pharos instance %s", config.PharosURL))
 		}
+		if !isLocalHost(config.RegistryURL) {
+			util.PrintAndExit(fmt.Sprintf("Dev/Test setup cannot point to external Registry instance %s", config.RegistryURL))
+		}
 		if !isLocalHost(config.RedisURL) {
 			util.PrintAndExit(fmt.Sprintf("Dev/Test setup cannot point to external Redis instance %s", config.RedisURL))
 		}
@@ -442,6 +453,18 @@ func (config *Config) checkBasicSettings() {
 	// if c.RedisUser == "" {
 	// 	util.PrintAndExit("Config is missing RedisUser")
 	// }
+	if config.RegistryAPIKey == "" {
+		util.PrintAndExit("Config is missing RegistryAPIKey")
+	}
+	if config.RegistryAPIUser == "" {
+		util.PrintAndExit("Config is missing RegistryAPIUser")
+	}
+	if config.RegistryAPIVersion == "" {
+		util.PrintAndExit("Config is missing RegistryAPIVersion")
+	}
+	if config.RegistryURL == "" {
+		util.PrintAndExit("Config is missing RegistryURL")
+	}
 	if config.RestoreDir == "" {
 		util.PrintAndExit("Config is missing RestoreDir")
 	}

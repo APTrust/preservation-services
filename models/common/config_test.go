@@ -50,6 +50,10 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, time.Duration(250*time.Millisecond), config.RedisRetryMs)
 	assert.Equal(t, "localhost:6379", config.RedisURL)
 	assert.Equal(t, "", config.RedisUser)
+	assert.Equal(t, "c3958c7b09e40af1d065020484dafa9b2a35cea0", config.RegistryAPIKey)
+	assert.Equal(t, "system@aptrust.org", config.RegistryAPIUser)
+	assert.Equal(t, "v3", config.RegistryAPIVersion)
+	assert.Equal(t, "http://localhost:8080", config.RegistryURL)
 	assert.Equal(t, restoreDir, config.RestoreDir)
 	assert.Equal(t, "staging", config.StagingBucket)
 	assert.Equal(t, time.Duration(250*time.Millisecond), config.StagingUploadRetryMs)
@@ -137,6 +141,8 @@ func TestToJson(t *testing.T) {
 		"PharosAPIVersion",
 		"PharosURL",
 		"RedisDefaultDB",
+		"RegistryAPIVersion",
+		"RegistryURL",
 		"WorkerSettings",
 	}
 	for _, key := range expectedKeys {
@@ -147,11 +153,13 @@ func TestToJson(t *testing.T) {
 		"PharosAPIKey",
 		"PharosAPIUser",
 		"RedisPassword",
+		"RegistryAPIKey",
+		"RegistryAPIUser",
 		"RedisUser",
 		"S3Credentials",
 	}
 	for _, key := range sensitiveKeys {
-		assert.False(t, strings.Contains(jsonString, key))
+		assert.False(t, strings.Contains(jsonString, key), key)
 	}
 }
 
