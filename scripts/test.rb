@@ -182,6 +182,7 @@ class TestRunner
     clean_test_cache
     make_test_dirs
     self.pharos_start
+    self.registry_start
     sleep(5)
     # Start NSQ, Minio, Redis, and Docker/Pharos
     @all_services.each do |svc|
@@ -275,6 +276,7 @@ class TestRunner
     if self.test_name != 'units'
       env['PHAROS_ROOT'] = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
 	  env['RBENV_VERSION'] = `cat #{ENV['PHAROS_ROOT']}/.ruby-version`.chomp
+      env['REGISTRY_ROOT'] = ENV['REGISTRY_ROOT'] || abort("Set env var REGISTRY_ROOT")
     end
     if self.test_name == 'e2e'
       env['APT_E2E'] = 'true'
@@ -354,6 +356,22 @@ class TestRunner
 	  Process.detach pharos_pid
       @pids['pharos'] = pharos_pid
 	  puts "Started Pharos with command '#{cmd}' and pid #{pharos_pid}"
+	end
+  end
+
+  def registry_start
+	if !@pids['registry']
+	  env = env_hash
+	  cmd = './registry serve'
+	  log_file = log_file_path('registry')
+	  registry_pid = Process.spawn(env,
+								 cmd,
+								 chdir: env['REGISTRY_ROOT'],
+								 out: [log_file, 'w'],
+								 err: [log_file, 'w'])
+	  Process.detach registry_pid
+      @pids['registry'] = registry_pid
+	  puts "Started Registry with command '#{cmd}' and pid #{registry_pid}"
 	end
   end
 
