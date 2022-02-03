@@ -183,7 +183,7 @@ class TestRunner
     make_test_dirs
     self.pharos_start
     self.registry_start
-    sleep(5)
+    sleep(8)
     # Start NSQ, Minio, Redis, and Docker/Pharos
     @all_services.each do |svc|
       start_service(svc)
@@ -340,6 +340,9 @@ class TestRunner
     File.join(project_root, "bin", os)
   end
 
+  # Assumes you have the Pharos source tree on your machine.
+  # I pity the fool!
+  # https://github.com/APTrust/pharos
   def pharos_start
 	if !@pids['pharos']
       pharos_reset_db
@@ -359,9 +362,13 @@ class TestRunner
 	end
   end
 
+  # Note: This assumes you have the registry repo source tree
+  # on your machine. It's on GitHub at https://github.com/APTrust/registry
   def registry_start
 	if !@pids['registry']
-	  env = env_hash
+	  env = {}.merge(env_hash)
+	  # Force copy of env to integration so that registry fixtures load.
+	  env['APT_ENV'] = 'integration'
 	  cmd = './registry serve'
 	  log_file = log_file_path('registry')
 	  registry_pid = Process.spawn(env,
