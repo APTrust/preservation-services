@@ -18,8 +18,9 @@ type IntellectualObject struct {
 	ETag                   string    `json:"etag,omitempty"`
 	FileCount              int       `json:"file_count,omitempty"`
 
-	// TODO: Replace with Size, as in Registry
+	// TODO: Remove Pharos-legacy FileSize and use only Registry's Size
 	FileSize                  int64  `json:"file_size,omitempty"`
+	Size                      int64  `json:"size,omitempty"`
 	ID                        int    `json:"id,omitempty"`
 	Identifier                string `json:"identifier,omitempty"`
 	InternalSenderDescription string `json:"internal_sender_description,omitempty"`

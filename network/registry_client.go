@@ -561,7 +561,7 @@ func (client *RegistryClient) ChecksumByID(id int) *RegistryResponse {
 	resp.checksums = make([]*registry.Checksum, 1)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/checksums/%d/", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/admin-api/%s/checksums/show/%d", client.APIVersion, id)
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -831,7 +831,7 @@ func (client *RegistryClient) WorkItemByID(id int) *RegistryResponse {
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/items/%d/", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/admin-api/%s/items/show/%d", client.APIVersion, id)
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request

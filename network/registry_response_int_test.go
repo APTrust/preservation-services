@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/network"
 	"github.com/stretchr/testify/assert"
 )
@@ -120,6 +121,8 @@ func TestRegistryIntellectualObject(t *testing.T) {
 	// Obj identifier is from testdata/registry/intellectual_objects.json
 	client := GetRegistryClient(t)
 	resp := client.IntellectualObjectByIdentifier("institution2.edu/chocolate")
+	d, _ := resp.RawResponseData()
+	fmt.Println(string(d))
 	assert.Nil(t, resp.Error)
 	assert.NotNil(t, resp.IntellectualObject())
 }
@@ -146,28 +149,21 @@ func TestRegistryGenericFiles(t *testing.T) {
 	assert.NotEmpty(t, resp.GenericFiles())
 }
 
-// TODO: Re-enable this when registry checksum endpoint is
-//       working, and when we can access GetChecksums(),
-//       which is currently in the Pharos controller test.
-//
-// func TestRegistryChecksum(t *testing.T) {
-// 	// We have to get the checksums from the db first,
-// 	// because we don't know their ids.
-// 	checksums := GetChecksums(t)
-// 	client := GetRegistryClient(t)
-
-// 	for _, checksum := range checksums {
-// 		resp := client.ChecksumByID(checksum.ID)
-// 		assert.Nil(t, resp.Error)
-// 		assert.NotNil(t, resp.Checksum())
-// 	}
-// }
+func testRegistryGetChecksum(t *testing.T, client *network.RegistryClient, checksum *registry.Checksum) {
+	resp := client.ChecksumByID(checksum.ID)
+	assert.Nil(t, resp.Error)
+	assert.NotNil(t, resp.Checksum(), checksum.ID)
+}
 
 func TestRegistryChecksums(t *testing.T) {
 	client := GetRegistryClient(t)
 	resp := client.ChecksumList(nil)
 	assert.Nil(t, resp.Error)
-	assert.NotEmpty(t, resp.Checksums())
+	checksums := resp.Checksums()
+	assert.NotEmpty(t, checksums)
+	for _, checksum := range checksums {
+		testRegistryGetChecksum(t, client, checksum)
+	}
 }
 
 func TestRegistryPremisEvent(t *testing.T) {
@@ -185,24 +181,22 @@ func TestRegistryPremisEvents(t *testing.T) {
 	assert.NotEmpty(t, resp.PremisEvents())
 }
 
-// TODO: Re-enable this when we can access GetWorkItem(),
-//       which is currently in the Pharos controller test.
-//
-// func TestRegistryWorkItem(t *testing.T) {
-// 	// ETag comes from fixture data
-// 	etag := "01010101010101010101"
-// 	item := GetWorkItem(t, etag)
-
-// 	client := GetRegistryClient(t)
-// 	resp := client.WorkItemByID(item.ID)
-// 	assert.Nil(t, resp.Error)
-// 	assert.NotNil(t, resp.WorkItem())
-// }
+func testRegistryWorkItem(t *testing.T, client *network.RegistryClient, item *registry.WorkItem) {
+	resp := client.WorkItemByID(item.ID)
+	assert.Nil(t, resp.Error)
+	workItem := resp.WorkItem()
+	assert.NotNil(t, workItem)
+	assert.Equal(t, item.ID, workItem.ID)
+}
 
 func TestRegistryWorkItems(t *testing.T) {
 	client := GetRegistryClient(t)
 	resp := client.WorkItemList(nil)
 	fmt.Println(resp.Request)
 	assert.Nil(t, resp.Error)
-	assert.NotEmpty(t, resp.WorkItems())
+	items := resp.WorkItems()
+	assert.NotEmpty(t, items)
+	for _, item := range items {
+		testRegistryWorkItem(t, client, item)
+	}
 }
