@@ -26,15 +26,16 @@ type IntellectualObject struct {
 	InternalSenderDescription string `json:"internal_sender_description,omitempty"`
 	InternalSenderIdentifier  string `json:"internal_sender_identifier,omitempty"`
 
-	// TODO: This should probably change to InstitutionIdentifier,
-	// but double-check to make sure.
-	Institution        string    `json:"institution,omitempty"`
-	InstitutionID      int       `json:"institution_id,omitempty"`
-	SourceOrganization string    `json:"source_organization,omitempty"`
-	State              string    `json:"state"`
-	StorageOption      string    `json:"storage_option"`
-	Title              string    `json:"title,omitempty"`
-	UpdatedAt          time.Time `json:"updated_at,omitempty"`
+	// TODO: Delete Institution when we get rid of Pharos client.
+	// Registry uses InstitutionIdentifier instead.
+	Institution           string    `json:"institution,omitempty"`
+	InstitutionIdentifier string    `json:"institution_identifier,omitempty"`
+	InstitutionID         int64     `json:"institution_id,omitempty"`
+	SourceOrganization    string    `json:"source_organization,omitempty"`
+	State                 string    `json:"state"`
+	StorageOption         string    `json:"storage_option"`
+	Title                 string    `json:"title,omitempty"`
+	UpdatedAt             time.Time `json:"updated_at,omitempty"`
 }
 
 func IntellectualObjectFromJSON(jsonData []byte) (*IntellectualObject, error) {
@@ -81,7 +82,7 @@ type IntellectualObjectForPharos struct {
 	Identifier                string `json:"identifier"`
 	InternalSenderDescription string `json:"internal_sender_description"`
 	InternalSenderIdentifier  string `json:"internal_sender_identifier"`
-	InstitutionID             int    `json:"institution_id"`
+	InstitutionID             int64  `json:"institution_id"`
 	SourceOrganization        string `json:"source_organization"`
 	State                     string `json:"state"`
 	StorageOption             string `json:"storage_option"`

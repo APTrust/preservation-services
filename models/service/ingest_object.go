@@ -63,7 +63,7 @@ type IngestObject struct {
 	Institution string `json:"institution,omitempty"`
 
 	// InstitutionID is the ID of the institution depositing this object.
-	InstitutionID int `json:"institution_id,omitempty"`
+	InstitutionID int64 `json:"institution_id,omitempty"`
 
 	// IsReingest will be set to true by the reingest manager if the bag
 	// being ingested is an update to an existing bag.
@@ -171,7 +171,7 @@ type IngestObject struct {
 // where the tarred bag can be found. eTag is the bag's eTag. The institution
 // and institutionID describe who owns the bag. The size is the size of the
 // tarred bag in the receiving bucket.
-func NewIngestObject(s3Bucket, s3Key, eTag, institution string, institutionID int, size int64) *IngestObject {
+func NewIngestObject(s3Bucket, s3Key, eTag, institution string, institutionID, size int64) *IngestObject {
 	return &IngestObject{
 		ETag:                      strings.Replace(eTag, "\"", "", -1),
 		HasFetchTxt:               false,

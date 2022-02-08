@@ -11,7 +11,7 @@ import (
 	//	"strings"
 	"testing"
 
-	//	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	//	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/network"
@@ -112,4 +112,42 @@ func TestRegistryInstitutionList(t *testing.T) {
 		assert.NotEmpty(t, inst.ReceivingBucket)
 		assert.NotEmpty(t, inst.RestoreBucket)
 	}
+}
+
+func TestRegistryIntellectualObjectGet(t *testing.T) {
+	identifier := "institution1.edu/photos"
+	expectedURL := fmt.Sprintf("/admin-api/v3/objects/show/%s", network.EscapeFileIdentifier(identifier))
+	client := GetRegistryClient(t)
+	resp := client.IntellectualObjectByIdentifier(identifier)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, expectedURL, resp.Request.URL.Opaque)
+	testRegistryObjectResponse(t, resp)
+
+	obj := resp.IntellectualObject()
+	expectedURL = fmt.Sprintf("/admin-api/v3/objects/show/%d", obj.ID)
+	resp = client.IntellectualObjectByID(obj.ID)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, expectedURL, resp.Request.URL.Opaque)
+	testRegistryObjectResponse(t, resp)
+}
+
+func testRegistryObjectResponse(t *testing.T, resp *network.RegistryResponse) {
+	obj := resp.IntellectualObject()
+	assert.NotNil(t, obj)
+	assert.Equal(t, "institution1.edu/photos", obj.Identifier)
+	assert.Equal(t, "First Object for Institution One", obj.Title)
+	assert.Equal(t, "A bag of photos", obj.Description)
+	assert.Equal(t, "photos_from_the_1960s", obj.AltIdentifier)
+	assert.Equal(t, "photos.tar", obj.BagName)
+	assert.Equal(t, constants.AccessInstitution, obj.Access)
+	assert.Equal(t, "institution1.edu", obj.InstitutionIdentifier)
+	assert.Equal(t, int64(2), obj.InstitutionID)
+	assert.Equal(t, constants.StateActive, obj.State)
+	assert.Equal(t, "etagforinst1photos", obj.ETag)
+	assert.Equal(t, "Institution One", obj.SourceOrganization)
+	assert.Equal(t, "https://example.com/profile.json", obj.BagItProfileIdentifier)
+	assert.Equal(t, "First internal identifier", obj.InternalSenderIdentifier)
+	assert.Equal(t, "First internal description", obj.InternalSenderDescription)
 }
