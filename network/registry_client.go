@@ -65,7 +65,7 @@ func (client *RegistryClient) InstitutionByIdentifier(identifier string) *Regist
 }
 
 // InstitutionByID returns the institution with the specified id.
-func (client *RegistryClient) InstitutionById(id int) *RegistryResponse {
+func (client *RegistryClient) InstitutionById(id int64) *RegistryResponse {
 	relativeURL := fmt.Sprintf("/admin-api/%s/institutions/show/%d", client.APIVersion, id)
 	return client.institutionGet(relativeURL)
 }

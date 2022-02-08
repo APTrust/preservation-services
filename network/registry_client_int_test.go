@@ -6,8 +6,8 @@ package network_test
 import (
 	//	"bytes"
 	//	"encoding/json"
-	//	"fmt"
-	//	"net/url"
+	"fmt"
+	"net/url"
 	//	"strings"
 	"testing"
 
@@ -45,4 +45,71 @@ func GetRegistryClient(t *testing.T) *network.RegistryClient {
 	require.Nil(t, err)
 	require.NotNil(t, client)
 	return client
+}
+
+func TestEscapeFileIdentifier(t *testing.T) {
+	identifier := "institution2.edu/toads/Prakash_ 39 Harv. J.L. & Pub. Pol’y 341 .pdf"
+	expected := "institution2.edu%2Ftoads%2FPrakash_%2039%20Harv.%20J.L.%20%26%20Pub.%20Pol%E2%80%99y%20341%20.pdf"
+	assert.Equal(t, expected, network.EscapeFileIdentifier(identifier))
+	assert.Equal(t, "test.edu%2Fobj%2Ffile%20name%3F.txt", network.EscapeFileIdentifier("test.edu/obj/file name?.txt"))
+}
+
+func TestRegistryInstitutionByIdentifier(t *testing.T) {
+	// LoadRegistryFixtures(t)
+	institutions := []string{
+		"institution1.edu",
+		"institution2.edu",
+		"test.edu",
+	}
+	client := GetRegistryClient(t)
+	for _, identifier := range institutions {
+		resp := client.InstitutionByIdentifier(identifier)
+		assert.NotNil(t, resp)
+		require.Nil(t, resp.Error)
+		assert.Equal(t,
+			fmt.Sprintf("/admin-api/v3/institutions/show/%s", identifier),
+			resp.Request.URL.Opaque)
+		institution := resp.Institution()
+		assert.NotNil(t, institution)
+		assert.Equal(t, identifier, institution.Identifier)
+	}
+}
+
+func TestRegistryInstitutionByID(t *testing.T) {
+	// LoadRegistryFixtures(t)
+	client := GetRegistryClient(t)
+	for i := 1; i < 5; i++ {
+		resp := client.InstitutionById(int64(i))
+		assert.NotNil(t, resp)
+		require.Nil(t, resp.Error)
+		assert.Equal(t,
+			fmt.Sprintf("/admin-api/v3/institutions/show/%d", i),
+			resp.Request.URL.Opaque)
+		institution := resp.Institution()
+		assert.NotNil(t, institution)
+		assert.Equal(t, i, institution.ID)
+	}
+}
+
+func TestRegistryInstitutionList(t *testing.T) {
+	// LoadRegistryFixtures(t)
+	client := GetRegistryClient(t)
+	v := url.Values{}
+	v.Add("order", "name")
+	v.Add("per_page", "20")
+	resp := client.InstitutionList(v)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	assert.Equal(t,
+		fmt.Sprintf("/admin-api/v3/institutions/?%s", v.Encode()),
+		resp.Request.URL.Opaque)
+	institutions := resp.Institutions()
+	assert.Equal(t, 5, len(institutions))
+	for _, inst := range institutions {
+		assert.NotEmpty(t, inst.ID)
+		assert.NotEmpty(t, inst.Name)
+		assert.NotEmpty(t, inst.Identifier)
+		assert.NotEmpty(t, inst.ReceivingBucket)
+		assert.NotEmpty(t, inst.RestoreBucket)
+	}
 }

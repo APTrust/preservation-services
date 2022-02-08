@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package network_test
@@ -152,15 +153,18 @@ func GetChecksums(t *testing.T) []*registry.Checksum {
 	return checksums
 }
 
-func TestEscapeFileIdentifier(t *testing.T) {
-	identifier := "institution2.edu/toads/Prakash_ 39 Harv. J.L. & Pub. Pol’y 341 .pdf"
-	expected := "institution2.edu%2Ftoads%2FPrakash_%2039%20Harv.%20J.L.%20%26%20Pub.%20Pol%E2%80%99y%20341%20.pdf"
-	assert.Equal(t, expected, network.EscapeFileIdentifier(identifier))
+//
+// Moved to registry int test.
+//
+// func TestEscapeFileIdentifier(t *testing.T) {
+// 	identifier := "institution2.edu/toads/Prakash_ 39 Harv. J.L. & Pub. Pol’y 341 .pdf"
+// 	expected := "institution2.edu%2Ftoads%2FPrakash_%2039%20Harv.%20J.L.%20%26%20Pub.%20Pol%E2%80%99y%20341%20.pdf"
+// 	assert.Equal(t, expected, network.EscapeFileIdentifier(identifier))
 
-	assert.Equal(t,
-		"test.edu%2Fobj%2Ffile%20name%3F.txt",
-		network.EscapeFileIdentifier("test.edu/obj/file name?.txt"))
-}
+// 	assert.Equal(t,
+// 		"test.edu%2Fobj%2Ffile%20name%3F.txt",
+// 		network.EscapeFileIdentifier("test.edu/obj/file name?.txt"))
+// }
 
 func TestPharosInstitutionGet(t *testing.T) {
 	LoadPharosFixtures(t)
