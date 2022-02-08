@@ -131,6 +131,7 @@ Resources:
         Name: apt_delete
       Cpu: "256"
       ExecutionRoleArn: !GetAtt AptdeleteTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-apt_delete
       Memory: "512"
       NetworkMode: awsvpc
@@ -290,6 +291,7 @@ Resources:
         Name: apt_fixity
       Cpu: "256"
       ExecutionRoleArn: !GetAtt AptfixityTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-apt_fixity
       Memory: "512"
       NetworkMode: awsvpc
@@ -449,6 +451,7 @@ Resources:
         Name: apt_queue
       Cpu: "256"
       ExecutionRoleArn: !GetAtt AptqueueTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-apt_queue
       Memory: "512"
       NetworkMode: awsvpc
@@ -767,6 +770,7 @@ Resources:
         Name: bag_restorer
       Cpu: "256"
       ExecutionRoleArn: !GetAtt BagrestorerTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-bag_restorer
       Memory: "512"
       NetworkMode: awsvpc
@@ -798,7 +802,8 @@ Resources:
     Properties:
       Description: Service Map for Docker Compose project preservation-services
       Name: preservation-services
-      Vpc: vpc-02e8855fe923089cc
+      #Vpc: vpc-02e8855fe923089cc
+      Vpc: vpc-4bd09e2c
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
   Cluster:
     Properties:
@@ -958,6 +963,7 @@ Resources:
         Name: file_restorer
       Cpu: "256"
       ExecutionRoleArn: !GetAtt FilerestorerTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-file_restorer
       Memory: "512"
       NetworkMode: awsvpc
@@ -1117,6 +1123,7 @@ Resources:
         Name: glacier_restorer
       Cpu: "256"
       ExecutionRoleArn: !GetAtt GlacierrestorerTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-glacier_restorer
       Memory: "512"
       NetworkMode: awsvpc
@@ -1276,6 +1283,7 @@ Resources:
         Name: ingest_bucket_reader
       Cpu: "256"
       ExecutionRoleArn: !GetAtt IngestbucketreaderTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-ingest_bucket_reader
       Memory: "512"
       NetworkMode: awsvpc
@@ -1435,6 +1443,7 @@ Resources:
         Name: ingest_cleanup
       Cpu: "256"
       ExecutionRoleArn: !GetAtt IngestcleanupTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-ingest_cleanup
       Memory: "512"
       NetworkMode: awsvpc
@@ -1753,6 +1762,7 @@ Resources:
         Name: ingest_pre_fetch
       Cpu: "256"
       ExecutionRoleArn: !GetAtt IngestprefetchTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-ingest_pre_fetch
       Memory: "512"
       NetworkMode: awsvpc
@@ -1913,6 +1923,7 @@ Resources:
         Name: ingest_preservation_uploader
       Cpu: "256"
       ExecutionRoleArn: !GetAtt IngestpreservationuploaderTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-ingest_preservation_uploader
       Memory: "512"
       NetworkMode: awsvpc
@@ -2073,6 +2084,7 @@ Resources:
         Name: ingest_preservation_verifier
       Cpu: "256"
       ExecutionRoleArn: !GetAtt IngestpreservationverifierTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-ingest_preservation_verifier
       Memory: "512"
       NetworkMode: awsvpc
@@ -2232,6 +2244,7 @@ Resources:
         Name: ingest_recorder
       Cpu: "256"
       ExecutionRoleArn: !GetAtt IngestrecorderTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-ingest_recorder
       Memory: "512"
       NetworkMode: awsvpc
@@ -2391,6 +2404,7 @@ Resources:
         Name: ingest_staging_uploader
       Cpu: "256"
       ExecutionRoleArn: !GetAtt IngeststaginguploaderTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-ingest_staging_uploader
       Memory: "512"
       NetworkMode: awsvpc
@@ -2550,6 +2564,7 @@ Resources:
         Name: ingest_validator
       Cpu: "256"
       ExecutionRoleArn: !GetAtt IngestvalidatorTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-ingest_validator
       Memory: "512"
       NetworkMode: awsvpc
@@ -2713,6 +2728,7 @@ Resources:
         Name: reingest_manager
       Cpu: "256"
       ExecutionRoleArn: !GetAtt ReingestmanagerTaskExecutionRole.Arn
+      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
       Family: preservation-services-reingest_manager
       Memory: "512"
       NetworkMode: awsvpc
