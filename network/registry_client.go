@@ -155,13 +155,29 @@ func (client *RegistryClient) intellectualObjectGet(relativeURL string) *Registr
 // IntellectualObjectList returns a list of IntellectualObjects matching
 // the filter criteria specified in params. Params include:
 //
-// * institution - Return objects belonging to this institution.
-// * updated_since - Return object updated since this date.
-// * name_contains - Return objects whose name contains the specified string.
-// * name_exact - Return only object with the exact name specified.
-// * state = 'A' for active records, 'D' for deleted. Default is 'A'
-// * storage_option - "Standard", "Glacier-OH", "Glacier-OR", "Glacier-VA",
-// *                  "Glacier-Deep-OH", "Glacier-Deep-OR", "Glacier-Deep-VA"
+// access
+// alt_identifier
+// bag_group_identifier
+// bag_name
+// bagit_profile_identifier
+// created_at__lteq
+// created_at__gteq
+// etag
+// file_count__gteq
+// file_count__lteq
+// identifier
+// institution_id
+// institution_parent_id
+// internal_sender_description
+// internal_sender_identifier
+// size__gteq
+// size__lteq
+// source_organization
+// state
+// storage_option
+// updated_at__gteq
+// updated_at__lteq
+//
 func (client *RegistryClient) IntellectualObjectList(params url.Values) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryIntellectualObject)

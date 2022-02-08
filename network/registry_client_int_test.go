@@ -55,7 +55,6 @@ func TestEscapeFileIdentifier(t *testing.T) {
 }
 
 func TestRegistryInstitutionByIdentifier(t *testing.T) {
-	// LoadRegistryFixtures(t)
 	institutions := []string{
 		"institution1.edu",
 		"institution2.edu",
@@ -76,7 +75,6 @@ func TestRegistryInstitutionByIdentifier(t *testing.T) {
 }
 
 func TestRegistryInstitutionByID(t *testing.T) {
-	// LoadRegistryFixtures(t)
 	client := GetRegistryClient(t)
 	for i := 1; i < 5; i++ {
 		resp := client.InstitutionById(int64(i))
@@ -92,7 +90,6 @@ func TestRegistryInstitutionByID(t *testing.T) {
 }
 
 func TestRegistryInstitutionList(t *testing.T) {
-	// LoadRegistryFixtures(t)
 	client := GetRegistryClient(t)
 	v := url.Values{}
 	v.Add("order", "name")
@@ -150,4 +147,28 @@ func testRegistryObjectResponse(t *testing.T, resp *network.RegistryResponse) {
 	assert.Equal(t, "https://example.com/profile.json", obj.BagItProfileIdentifier)
 	assert.Equal(t, "First internal identifier", obj.InternalSenderIdentifier)
 	assert.Equal(t, "First internal description", obj.InternalSenderDescription)
+}
+
+func TestRegistryIntellectualObjectList(t *testing.T) {
+	client := GetRegistryClient(t)
+	v := url.Values{}
+	v.Add("order", "identifier")
+	v.Add("per_page", "20")
+	v.Add("storage_option", constants.StorageClassStandard)
+	v.Add("state", constants.StateActive)
+	resp := client.IntellectualObjectList(v)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	assert.Equal(t, fmt.Sprintf("/admin-api/v3/objects/?%s", v.Encode()), resp.Request.URL.Opaque)
+	objects := resp.IntellectualObjects()
+	assert.Equal(t, 8, len(objects))
+	for _, obj := range objects {
+		assert.NotEmpty(t, obj.ID)
+		assert.NotEmpty(t, obj.FileCount)
+		assert.NotEmpty(t, obj.Identifier)
+		assert.NotEmpty(t, obj.Size)
+		assert.NotEmpty(t, obj.SourceOrganization)
+		assert.Equal(t, constants.StateActive, obj.State)
+		assert.Equal(t, constants.StorageClassStandard, obj.StorageOption)
+	}
 }
