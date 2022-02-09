@@ -22,9 +22,9 @@ type IngestFile struct {
 	FormatIdentifiedAt   time.Time               `json:"format_identified_at,omitempty"`
 	FormatMatchType      string                  `json:"format_match_type,omitempty"`
 	FileModified         time.Time               `json:"file_modified,omitempty"`
-	ID                   int                     `json:"id,omitempty"`
-	InstitutionID        int                     `json:"institution_id,omitempty"`
-	IntellectualObjectID int                     `json:"intellectual_object_id,omitempty"`
+	ID                   int64                   `json:"id,omitempty"`
+	InstitutionID        int64                   `json:"institution_id,omitempty"`
+	IntellectualObjectID int64                   `json:"intellectual_object_id,omitempty"`
 	IsReingest           bool                    `json:"is_reingest"`
 	NeedsSave            bool                    `json:"needs_save"`
 	ObjectIdentifier     string                  `json:"object_identifier"`

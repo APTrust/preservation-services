@@ -7,7 +7,7 @@ import (
 
 type Checksum struct {
 	// ID is the checksum's unique identifier in the database.
-	ID int `json:"id,omitempty"`
+	ID int64 `json:"id,omitempty"`
 
 	// Algorithm is the digest algorithm. E.g. "md5", "sha256", etc.
 	// See constants.DigestAlgorithms.
@@ -22,7 +22,7 @@ type Checksum struct {
 
 	// GenericFileID is the ID of the GenericFile to which this
 	// checksum belongs.
-	GenericFileID int `json:"generic_file_id"`
+	GenericFileID int64 `json:"generic_file_id"`
 
 	// CreatedAt is a legacy timestamp from the old Rails app.
 	// Ignore this and use DateTime instead.

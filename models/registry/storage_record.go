@@ -10,8 +10,8 @@ import (
 // See common.Config.BucketAndKeyFor(url) to extract
 // provider, bucket and key info from the URL.
 type StorageRecord struct {
-	GenericFileID int    `json:"generic_file_id"`
-	ID            int    `json:"id,omitempty"`
+	GenericFileID int64  `json:"generic_file_id"`
+	ID            int64  `json:"id,omitempty"`
 	URL           string `json:"url"`
 }
 

@@ -4,7 +4,7 @@
 package network_test
 
 import (
-	"fmt"
+	// "fmt"
 	"net/http"
 	"testing"
 
@@ -121,8 +121,8 @@ func TestRegistryIntellectualObject(t *testing.T) {
 	// Obj identifier is from testdata/registry/intellectual_objects.json
 	client := GetRegistryClient(t)
 	resp := client.IntellectualObjectByIdentifier("institution2.edu/chocolate")
-	d, _ := resp.RawResponseData()
-	fmt.Println(string(d))
+	//d, _ := resp.RawResponseData()
+	//fmt.Println(string(d))
 	assert.Nil(t, resp.Error)
 	assert.NotNil(t, resp.IntellectualObject())
 }
@@ -192,7 +192,7 @@ func testRegistryWorkItem(t *testing.T, client *network.RegistryClient, item *re
 func TestRegistryWorkItems(t *testing.T) {
 	client := GetRegistryClient(t)
 	resp := client.WorkItemList(nil)
-	fmt.Println(resp.Request)
+	//fmt.Println(resp.Request)
 	assert.Nil(t, resp.Error)
 	items := resp.WorkItems()
 	assert.NotEmpty(t, items)

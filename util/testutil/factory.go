@@ -144,7 +144,7 @@ func GetIntellectualObject() *registry.IntellectualObject {
 		Identifier:             "test.edu/TestBag001",
 		Institution:            "test.edu",
 		InstitutionID:          0,
-		SourceOrganization:     "Test Univerisity Library",
+		SourceOrganization:     "Test University Library",
 		State:                  constants.StateActive,
 		StorageOption:          constants.StorageStandard,
 		Title:                  "Test Bag from Factory",

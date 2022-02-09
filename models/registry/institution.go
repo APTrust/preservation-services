@@ -8,9 +8,9 @@ import (
 type Institution struct {
 	CreatedAt           time.Time `json:"created_at"`
 	DeactivatedAt       time.Time `json:"deactivated_at,omitempty"`
-	ID                  int       `json:"id"`
+	ID                  int64     `json:"id"`
 	Identifier          string    `json:"identifier"`
-	MemberInstitutionID int       `json:"member_institution_id"`
+	MemberInstitutionID int64     `json:"member_institution_id"`
 	Name                string    `json:"name"`
 	OTPEnabled          bool      `json:"otp_enabled"`
 	ReceivingBucket     string    `json:"receiving_bucket"`

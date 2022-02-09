@@ -65,7 +65,7 @@ func (client *RegistryClient) InstitutionByIdentifier(identifier string) *Regist
 }
 
 // InstitutionByID returns the institution with the specified id.
-func (client *RegistryClient) InstitutionById(id int64) *RegistryResponse {
+func (client *RegistryClient) InstitutionByID(id int64) *RegistryResponse {
 	relativeURL := fmt.Sprintf("/admin-api/%s/institutions/show/%d", client.APIVersion, id)
 	return client.institutionGet(relativeURL)
 }
@@ -124,7 +124,7 @@ func (client *RegistryClient) IntellectualObjectByIdentifier(identifier string) 
 
 // IntellectualObjectByID returns the object with the specified id,
 // if it exists.
-func (client *RegistryClient) IntellectualObjectByID(id int) *RegistryResponse {
+func (client *RegistryClient) IntellectualObjectByID(id int64) *RegistryResponse {
 	relativeURL := fmt.Sprintf("/admin-api/%s/objects/show/%d", client.APIVersion, id)
 	return client.intellectualObjectGet(relativeURL)
 }
@@ -215,11 +215,11 @@ func (client *RegistryClient) IntellectualObjectSave(obj *registry.IntellectualO
 	// URL and method
 	// Note that POST URL takes an institution identifier, while
 	// the PUT URL takes an object identifier.
-	relativeURL := fmt.Sprintf("/admin-api/%s/objects/%s", client.APIVersion, obj.Institution)
+	relativeURL := fmt.Sprintf("/admin-api/%s/objects/create/%d", client.APIVersion, obj.InstitutionID)
 	httpMethod := "POST"
 	if obj.ID > 0 {
-		// PUT URL looks like /admin-api/v2/objects/college.edu%2Fobject_name
-		relativeURL = fmt.Sprintf("/admin-api/%s/objects/%s", client.APIVersion, EscapeFileIdentifier(obj.Identifier))
+		// PUT URL
+		relativeURL = fmt.Sprintf("/admin-api/%s/objects/update/%d", client.APIVersion, obj.ID)
 		httpMethod = "PUT"
 	}
 	absoluteURL := client.BuildURL(relativeURL)
@@ -239,6 +239,7 @@ func (client *RegistryClient) IntellectualObjectSave(obj *registry.IntellectualO
 	// Parse the JSON from the response body
 	intelObj := &registry.IntellectualObject{}
 	resp.Error = json.Unmarshal(resp.data, intelObj)
+
 	if resp.Error == nil {
 		resp.objects[0] = intelObj
 	}
@@ -571,7 +572,7 @@ func (client *RegistryClient) GenericFileFinishDelete(identifier string) *Regist
 }
 
 // ChecksumByID returns the checksum with the specified id
-func (client *RegistryClient) ChecksumByID(id int) *RegistryResponse {
+func (client *RegistryClient) ChecksumByID(id int64) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryChecksum)
 	resp.checksums = make([]*registry.Checksum, 1)
@@ -841,7 +842,7 @@ func (client *RegistryClient) StorageRecordDelete(id int) *RegistryResponse {
 }
 
 // WorkItemByID returns the WorkItem with the specified ID.
-func (client *RegistryClient) WorkItemByID(id int) *RegistryResponse {
+func (client *RegistryClient) WorkItemByID(id int64) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryWorkItem)
 	resp.workItems = make([]*registry.WorkItem, 1)
@@ -1100,5 +1101,5 @@ func encodeParams(params url.Values) string {
 type Acknowledgment struct {
 	Status     string `json:"status"`
 	Message    string `json:"message"`
-	WorkItemID int    `json:"work_item_id"`
+	WorkItemID int64  `json:"work_item_id"`
 }

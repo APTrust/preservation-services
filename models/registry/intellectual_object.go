@@ -8,34 +8,36 @@ import (
 )
 
 type IntellectualObject struct {
-	Access                 string    `json:"access,omitempty"`
-	AltIdentifier          string    `json:"alt_identifier,omitempty"`
-	BagGroupIdentifier     string    `json:"bag_group_identifier,omitempty"`
-	BagItProfileIdentifier string    `json:"bagit_profile_identifier,omitempty"`
-	BagName                string    `json:"bag_name,omitempty"`
-	CreatedAt              time.Time `json:"created_at,omitempty"`
-	Description            string    `json:"description,omitempty"`
-	ETag                   string    `json:"etag,omitempty"`
-	FileCount              int       `json:"file_count,omitempty"`
+	Access                 string    `json:"access"`
+	AltIdentifier          string    `json:"alt_identifier"`
+	BagGroupIdentifier     string    `json:"bag_group_identifier"`
+	BagItProfileIdentifier string    `json:"bagit_profile_identifier"`
+	BagName                string    `json:"bag_name"`
+	CreatedAt              time.Time `json:"created_at"`
+	Description            string    `json:"description"`
+	ETag                   string    `json:"etag"`
+	FileCount              int64     `json:"file_count"`
 
 	// TODO: Remove Pharos-legacy FileSize and use only Registry's Size
-	FileSize                  int64  `json:"file_size,omitempty"`
-	Size                      int64  `json:"size,omitempty"`
-	ID                        int    `json:"id,omitempty"`
-	Identifier                string `json:"identifier,omitempty"`
-	InternalSenderDescription string `json:"internal_sender_description,omitempty"`
-	InternalSenderIdentifier  string `json:"internal_sender_identifier,omitempty"`
+	FileSize                  int64  `json:"file_size"`
+	Size                      int64  `json:"size"`
+	ID                        int64  `json:"id"`
+	Identifier                string `json:"identifier"`
+	InternalSenderDescription string `json:"internal_sender_description"`
+	InternalSenderIdentifier  string `json:"internal_sender_identifier"`
 
 	// TODO: Delete Institution when we get rid of Pharos client.
-	// Registry uses InstitutionIdentifier instead.
-	Institution           string    `json:"institution,omitempty"`
-	InstitutionIdentifier string    `json:"institution_identifier,omitempty"`
-	InstitutionID         int64     `json:"institution_id,omitempty"`
-	SourceOrganization    string    `json:"source_organization,omitempty"`
+	// Registry uses InstitutionIdentifier instead. This trips up
+	// the registry client, so we're not serializing it for now.
+	// Again, remove when Pharos client is gone.
+	Institution           string    `json:"-"`
+	InstitutionIdentifier string    `json:"institution_identifier"`
+	InstitutionID         int64     `json:"institution_id"`
+	SourceOrganization    string    `json:"source_organization"`
 	State                 string    `json:"state"`
 	StorageOption         string    `json:"storage_option"`
-	Title                 string    `json:"title,omitempty"`
-	UpdatedAt             time.Time `json:"updated_at,omitempty"`
+	Title                 string    `json:"title"`
+	UpdatedAt             time.Time `json:"updated_at"`
 }
 
 func IntellectualObjectFromJSON(jsonData []byte) (*IntellectualObject, error) {

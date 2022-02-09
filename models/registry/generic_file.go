@@ -15,10 +15,10 @@ type GenericFile struct {
 	CreatedAt            time.Time   `json:"created_at,omitempty"`
 	FileFormat           string      `json:"file_format,omitempty"`
 	FileModified         time.Time   `json:"file_modified,omitempty"`
-	ID                   int         `json:"id,omitempty"`
+	ID                   int64       `json:"id,omitempty"`
 	Identifier           string      `json:"identifier,omitempty"`
-	InstitutionID        int         `json:"institution_id,omitempty"`
-	IntellectualObjectID int         `json:"intellectual_object_id,omitempty"`
+	InstitutionID        int64       `json:"institution_id,omitempty"`
+	IntellectualObjectID int64       `json:"intellectual_object_id,omitempty"`
 
 	// TODO: Change json to object_identifier to match Registry
 	// Also note that this is read-only.
@@ -118,10 +118,10 @@ func (gf *GenericFile) GetLatestChecksum(algorithm string) *Checksum {
 type GenericFileForPharos struct {
 	Checksums            []*Checksum      `json:"checksums_attributes,omitempty"`
 	FileFormat           string           `json:"file_format"`
-	ID                   int              `json:"id,omitempty"`
+	ID                   int64            `json:"id,omitempty"`
 	Identifier           string           `json:"identifier,omitempty"`
-	InstitutionID        int              `json:"institution_id"`
-	IntellectualObjectID int              `json:"intellectual_object_id"`
+	InstitutionID        int64            `json:"institution_id"`
+	IntellectualObjectID int64            `json:"intellectual_object_id"`
 	PremisEvents         []*PremisEvent   `json:"premis_events_attributes,omitempty"`
 	Size                 int64            `json:"size"`
 	StorageOption        string           `json:"storage_option"`

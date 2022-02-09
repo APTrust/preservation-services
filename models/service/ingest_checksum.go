@@ -15,7 +15,7 @@ type IngestChecksum struct {
 
 // ToRegistryChecksum converts this checksum to a registry.Checksum,
 // which is the format used in Pharos.
-func (cs *IngestChecksum) ToRegistryChecksum(genericFileID int) *registry.Checksum {
+func (cs *IngestChecksum) ToRegistryChecksum(genericFileID int64) *registry.Checksum {
 	return &registry.Checksum{
 		Algorithm:     cs.Algorithm,
 		DateTime:      cs.DateTime,

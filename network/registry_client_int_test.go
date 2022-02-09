@@ -16,7 +16,7 @@ import (
 	//	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/network"
 	"github.com/APTrust/preservation-services/util/logger"
-	//	"github.com/APTrust/preservation-services/util/testutil"
+	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -77,7 +77,7 @@ func TestRegistryInstitutionByIdentifier(t *testing.T) {
 func TestRegistryInstitutionByID(t *testing.T) {
 	client := GetRegistryClient(t)
 	for i := 1; i < 5; i++ {
-		resp := client.InstitutionById(int64(i))
+		resp := client.InstitutionByID(int64(i))
 		assert.NotNil(t, resp)
 		require.Nil(t, resp.Error)
 		assert.Equal(t,
@@ -85,7 +85,7 @@ func TestRegistryInstitutionByID(t *testing.T) {
 			resp.Request.URL.Opaque)
 		institution := resp.Institution()
 		assert.NotNil(t, institution)
-		assert.Equal(t, i, institution.ID)
+		assert.EqualValues(t, i, institution.ID)
 	}
 }
 
@@ -171,4 +171,86 @@ func TestRegistryIntellectualObjectList(t *testing.T) {
 		assert.Equal(t, constants.StateActive, obj.State)
 		assert.Equal(t, constants.StorageClassStandard, obj.StorageOption)
 	}
+}
+
+func TestRegistryIntellectualObjectSave_Create(t *testing.T) {
+	intelObj := testutil.GetIntellectualObject()
+	// Id of zero means it's never been saved.
+	intelObj.ID = 0
+
+	// Make sure we're using an institution id that was
+	// loaded with the test fixtures
+	client := GetRegistryClient(t)
+	resp := client.InstitutionByIdentifier("test.edu")
+	require.Nil(t, resp.Error)
+	testInst := resp.Institution()
+	require.NotNil(t, testInst)
+	intelObj.InstitutionID = testInst.ID
+
+	resp = client.IntellectualObjectSave(intelObj)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	assert.Equal(t, "/admin-api/v3/objects/create/4", resp.Request.URL.Opaque)
+	obj := resp.IntellectualObject()
+	require.NotNil(t, obj)
+
+	assert.Equal(t, intelObj.Identifier, obj.Identifier)
+	assert.NotEqual(t, 0, obj.ID)
+	assert.NotEqual(t, intelObj.CreatedAt, obj.CreatedAt)
+	assert.NotEqual(t, intelObj.UpdatedAt, obj.UpdatedAt)
+	assert.Equal(t, intelObj.Title, obj.Title)
+	assert.Equal(t, intelObj.Description, obj.Description)
+	assert.Equal(t, intelObj.AltIdentifier, obj.AltIdentifier)
+	assert.Equal(t, intelObj.BagName, obj.BagName)
+	assert.Equal(t, intelObj.Access, obj.Access)
+	assert.EqualValues(t, 4, obj.InstitutionID)
+	assert.Equal(t, intelObj.State, obj.State)
+	assert.Equal(t, intelObj.ETag, obj.ETag)
+	assert.Equal(t, intelObj.SourceOrganization, obj.SourceOrganization)
+	assert.Equal(t, intelObj.BagItProfileIdentifier, obj.BagItProfileIdentifier)
+	assert.Equal(t, intelObj.InternalSenderIdentifier, obj.InternalSenderIdentifier)
+	assert.Equal(t, intelObj.InternalSenderDescription, obj.InternalSenderDescription)
+}
+
+func TestRegistryIntellectualObjectSave_Update(t *testing.T) {
+	client := GetRegistryClient(t)
+
+	// Get the most recently created object for test.edu
+	v := url.Values{}
+	v.Add("institution_id", "4") // 4 = test.edu in fixture data
+	v.Add("per_page", "1")
+	v.Add("sort", "created_at__desc")
+	resp := client.IntellectualObjectList(v)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	existingObj := resp.IntellectualObject()
+	require.NotNil(t, existingObj)
+
+	newDesc := fmt.Sprintf("** Updated description of test object **")
+	existingObj.Description = newDesc
+	resp = client.IntellectualObjectSave(existingObj)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	assert.Equal(t,
+		fmt.Sprintf("/admin-api/v3/objects/update/%d", existingObj.ID),
+		resp.Request.URL.Opaque)
+	obj := resp.IntellectualObject()
+	assert.NotNil(t, obj)
+	assert.Equal(t, existingObj.Identifier, obj.Identifier)
+	assert.Equal(t, newDesc, obj.Description)
+	assert.NotEqual(t, existingObj.UpdatedAt, obj.UpdatedAt)
+
+	assert.Equal(t, existingObj.Title, obj.Title)
+	assert.Equal(t, existingObj.Description, obj.Description)
+	assert.Equal(t, existingObj.AltIdentifier, obj.AltIdentifier)
+	assert.Equal(t, existingObj.BagName, obj.BagName)
+	assert.Equal(t, existingObj.Access, obj.Access)
+	assert.Equal(t, existingObj.Institution, obj.Institution)
+	assert.Equal(t, existingObj.State, obj.State)
+	assert.Equal(t, existingObj.ETag, obj.ETag)
+	assert.Equal(t, existingObj.SourceOrganization, obj.SourceOrganization)
+	assert.Equal(t, existingObj.BagItProfileIdentifier, obj.BagItProfileIdentifier)
+	assert.Equal(t, existingObj.InternalSenderIdentifier, obj.InternalSenderIdentifier)
+	assert.Equal(t, existingObj.InternalSenderDescription, obj.InternalSenderDescription)
+
 }

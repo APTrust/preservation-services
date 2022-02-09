@@ -56,7 +56,7 @@ type IngestObject struct {
 	// ID will be set to the ID of the newly saved IntellectualObject, and
 	// ingest services will be sure to stamp any new GenericFiles with this
 	// object ID before saving them to Pharos.
-	ID int `json:"id,omitempty"`
+	ID int64 `json:"id,omitempty"`
 
 	// Institution is the identifier of the institution that is depositing
 	// this object. E.g. "test.edu", "virginia.edu", etc.

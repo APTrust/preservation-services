@@ -794,7 +794,7 @@ func (client *PharosClient) StorageRecordDelete(id int) *PharosResponse {
 }
 
 // WorkItemGet returns the WorkItem with the specified ID.
-func (client *PharosClient) WorkItemGet(id int) *PharosResponse {
+func (client *PharosClient) WorkItemGet(id int64) *PharosResponse {
 	// Set up the response object
 	resp := NewPharosResponse(PharosWorkItem)
 	resp.workItems = make([]*registry.WorkItem, 1)

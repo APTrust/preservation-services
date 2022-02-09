@@ -11,12 +11,12 @@ type PremisEvent struct {
 	DateTime                     time.Time `json:"date_time"`
 	Detail                       string    `json:"detail"`
 	EventType                    string    `json:"event_type"`
-	GenericFileID                int       `json:"generic_file_id,omitempty"`
+	GenericFileID                int64     `json:"generic_file_id,omitempty"`
 	GenericFileIdentifier        string    `json:"generic_file_identifier,omitempty"`
-	ID                           int       `json:"id,omitempty"`
+	ID                           int64     `json:"id,omitempty"`
 	Identifier                   string    `json:"identifier"`
-	InstitutionID                int       `json:"institution_id"`
-	IntellectualObjectID         int       `json:"intellectual_object_id"`
+	InstitutionID                int64     `json:"institution_id"`
+	IntellectualObjectID         int64     `json:"intellectual_object_id"`
 	IntellectualObjectIdentifier string    `json:"intellectual_object_identifier"`
 	Object                       string    `json:"object"`
 	OutcomeDetail                string    `json:"outcome_detail"`
