@@ -254,3 +254,30 @@ func TestRegistryIntellectualObjectSave_Update(t *testing.T) {
 	assert.Equal(t, existingObj.InternalSenderDescription, obj.InternalSenderDescription)
 
 }
+
+func TestRegistryGenericFileGet(t *testing.T) {
+	// From fixture data.
+	identifier := "institution1.edu/photos/picture1"
+	id := int64(1)
+
+	client := GetRegistryClient(t)
+	resp := client.GenericFileByIdentifier(identifier)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, fmt.Sprintf("/admin-api/v3/files/show/%s", network.EscapeFileIdentifier(identifier)), resp.Request.URL.Opaque)
+	gf := resp.GenericFile()
+	require.NotNil(t, gf)
+	assert.Equal(t, identifier, gf.Identifier)
+	assert.Equal(t, id, gf.ID)
+	assert.Equal(t, id, gf.IntellectualObjectID) // happens to belong to obj 1
+	assert.Equal(t, int64(243855000), gf.Size)
+	assert.Equal(t, "image/jpeg", gf.FileFormat)
+	assert.Equal(t, constants.StorageStandard, gf.StorageOption)
+
+	// TODO: Update GF object? Or get view from API?
+	//require.NotNil(t, gf.IntellectualObject)
+	//assert.Equal(t, "institution1.edu/photos", gf.IntellectualObject.Identifier)
+	assert.Equal(t, 2, len(gf.Checksums))
+	assert.Equal(t, 4, len(gf.PremisEvents))
+	assert.Equal(t, 2, len(gf.StorageRecords))
+}

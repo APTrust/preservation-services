@@ -246,101 +246,109 @@ func (client *RegistryClient) IntellectualObjectSave(obj *registry.IntellectualO
 	return resp
 }
 
-// IntellectualObjectRequestRestore creates a restore request in Registry for
-// the object with the specified identifier. This is used in integration
-// testing to create restore requests. Note that this call should issue
-// to requests to Registry. The first creates the restore request, and the
-// second returns the WorkItem for the restore request.
-func (client *RegistryClient) IntellectualObjectRequestRestore(identifier string) *RegistryResponse {
-	// Set up the response object
-	resp := NewRegistryResponse(RegistryWorkItem)
-	resp.workItems = make([]*registry.WorkItem, 1)
+/**********************************************************************
 
-	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/objects/%s/restore", client.APIVersion, EscapeFileIdentifier(identifier))
-	absoluteURL := client.BuildURL(relativeURL)
+Commented functions below will be needed later for integration and
+end-to-end tests. Implement these after the core functionality is
+complete.
 
-	// Run the request.
-	client.DoRequest(resp, "PUT", absoluteURL, nil)
-	if resp.Error != nil {
-		return resp
-	}
+***********************************************************************/
 
-	acknowledgment := Acknowledgment{}
-	resp.Error = json.Unmarshal(resp.data, &acknowledgment)
-	if resp.Error == nil && acknowledgment.WorkItemID != 0 {
-		return client.WorkItemByID(acknowledgment.WorkItemID)
-	}
-	if acknowledgment.Message != "" {
-		resp.Error = fmt.Errorf("Registry returned status %s: %s",
-			acknowledgment.Status, acknowledgment.Message)
-	}
-	return resp
-}
+// // IntellectualObjectRequestRestore creates a restore request in Registry for
+// // the object with the specified identifier. This is used in integration
+// // testing to create restore requests. Note that this call should issue
+// // to requests to Registry. The first creates the restore request, and the
+// // second returns the WorkItem for the restore request.
+// func (client *RegistryClient) IntellectualObjectRequestRestore(identifier string) *RegistryResponse {
+// 	// Set up the response object
+// 	resp := NewRegistryResponse(RegistryWorkItem)
+// 	resp.workItems = make([]*registry.WorkItem, 1)
 
-// IntellectualObjectRequestDelete creates a delete request in Registry for
-// the object with the specified identifier. This is used in integration
-// testing to create a set of file deletion requests. This call returns no
-// data.
-func (client *RegistryClient) IntellectualObjectRequestDelete(identifier string) *RegistryResponse {
-	// Set up the response object, but note that this call returns
-	// no data.
-	resp := NewRegistryResponse(RegistryIntellectualObject)
-	resp.objects = make([]*registry.IntellectualObject, 0)
+// 	// Build the url and the request object
+// 	relativeURL := fmt.Sprintf("/admin-api/%s/objects/%s/restore", client.APIVersion, EscapeFileIdentifier(identifier))
+// 	absoluteURL := client.BuildURL(relativeURL)
 
-	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/objects/%s/delete", client.APIVersion, EscapeFileIdentifier(identifier))
-	absoluteURL := client.BuildURL(relativeURL)
+// 	// Run the request.
+// 	client.DoRequest(resp, "PUT", absoluteURL, nil)
+// 	if resp.Error != nil {
+// 		return resp
+// 	}
 
-	// Run the request.
-	client.DoRequest(resp, "DELETE", absoluteURL, nil)
-	if resp.Error != nil {
-		return resp
-	}
-	if resp.Response.StatusCode != 200 && resp.Response.StatusCode != 204 {
-		bytes, _ := resp.RawResponseData()
-		resp.Error = fmt.Errorf("Registry returned response code %d. Response: %s",
-			resp.Response.StatusCode, string(bytes))
-	}
-	return resp
-}
+// 	acknowledgment := Acknowledgment{}
+// 	resp.Error = json.Unmarshal(resp.data, &acknowledgment)
+// 	if resp.Error == nil && acknowledgment.WorkItemID != 0 {
+// 		return client.WorkItemByID(acknowledgment.WorkItemID)
+// 	}
+// 	if acknowledgment.Message != "" {
+// 		resp.Error = fmt.Errorf("Registry returned status %s: %s",
+// 			acknowledgment.Status, acknowledgment.Message)
+// 	}
+// 	return resp
+// }
 
-// IntellectualObjectFinishDelete tells Registry to mark an IntellectualObject
-// as deleted, once we've finished deleting it.
-func (client *RegistryClient) IntellectualObjectFinishDelete(identifier string) *RegistryResponse {
-	// Set up the response object
-	resp := NewRegistryResponse(RegistryIntellectualObject)
-	resp.objects = make([]*registry.IntellectualObject, 0)
+// // IntellectualObjectRequestDelete creates a delete request in Registry for
+// // the object with the specified identifier. This is used in integration
+// // testing to create a set of file deletion requests. This call returns no
+// // data.
+// func (client *RegistryClient) IntellectualObjectRequestDelete(identifier string) *RegistryResponse {
+// 	// Set up the response object, but note that this call returns
+// 	// no data.
+// 	resp := NewRegistryResponse(RegistryIntellectualObject)
+// 	resp.objects = make([]*registry.IntellectualObject, 0)
 
-	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/objects/%s/finish_delete", client.APIVersion,
-		EscapeFileIdentifier(identifier))
-	absoluteURL := client.BuildURL(relativeURL)
+// 	// Build the url and the request object
+// 	relativeURL := fmt.Sprintf("/admin-api/%s/objects/%s/delete", client.APIVersion, EscapeFileIdentifier(identifier))
+// 	absoluteURL := client.BuildURL(relativeURL)
 
-	// Run the request
-	client.DoRequest(resp, "GET", absoluteURL, nil)
-	if resp.Error != nil {
-		return resp
-	}
+// 	// Run the request.
+// 	client.DoRequest(resp, "DELETE", absoluteURL, nil)
+// 	if resp.Error != nil {
+// 		return resp
+// 	}
+// 	if resp.Response.StatusCode != 200 && resp.Response.StatusCode != 204 {
+// 		bytes, _ := resp.RawResponseData()
+// 		resp.Error = fmt.Errorf("Registry returned response code %d. Response: %s",
+// 			resp.Response.StatusCode, string(bytes))
+// 	}
+// 	return resp
+// }
 
-	// This call has no response body. We're just looking for 200 or 204.
-	if resp.Response.StatusCode != 200 && resp.Response.StatusCode != 204 {
-		resp.Error = fmt.Errorf("IntellectualObject finish_delete failed with message: %s", string(resp.data))
-	}
-	return resp
-}
+// // IntellectualObjectFinishDelete tells Registry to mark an IntellectualObject
+// // as deleted, once we've finished deleting it.
+// func (client *RegistryClient) IntellectualObjectFinishDelete(identifier string) *RegistryResponse {
+// 	// Set up the response object
+// 	resp := NewRegistryResponse(RegistryIntellectualObject)
+// 	resp.objects = make([]*registry.IntellectualObject, 0)
 
-// GenericFileByIdentifier returns the GenericFile having the specified identifier.
-// The identifier should be in the format
+// 	// Build the url and the request object
+// 	relativeURL := fmt.Sprintf("/admin-api/%s/objects/%s/finish_delete", client.APIVersion,
+// 		EscapeFileIdentifier(identifier))
+// 	absoluteURL := client.BuildURL(relativeURL)
+
+// 	// Run the request
+// 	client.DoRequest(resp, "GET", absoluteURL, nil)
+// 	if resp.Error != nil {
+// 		return resp
+// 	}
+
+// 	// This call has no response body. We're just looking for 200 or 204.
+// 	if resp.Response.StatusCode != 200 && resp.Response.StatusCode != 204 {
+// 		resp.Error = fmt.Errorf("IntellectualObject finish_delete failed with message: %s", string(resp.data))
+// 	}
+// 	return resp
+// }
+
+// GenericFileByIdentifier returns the GenericFile having the specified
+// identifier. The identifier should be in the format
 // "institution.edu/object_name/path/to/file.ext"
 func (client *RegistryClient) GenericFileByIdentifier(identifier string) *RegistryResponse {
-	relativeURL := fmt.Sprintf("/admin-api/%s/files/show/%s?include_storage_records=true", client.APIVersion, EscapeFileIdentifier(identifier))
+	relativeURL := fmt.Sprintf("/admin-api/%s/files/show/%s", client.APIVersion, EscapeFileIdentifier(identifier))
 	return client.genericFileGet(relativeURL)
 }
 
 // GenericFileByID returns the GenericFile having the specified id.
 func (client *RegistryClient) GenericFileByID(id int) *RegistryResponse {
-	relativeURL := fmt.Sprintf("/admin-api/%s/files/show/%d?include_storage_records=true", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/admin-api/%s/files/show/%d", client.APIVersion, id)
 	return client.genericFileGet(relativeURL)
 }
 

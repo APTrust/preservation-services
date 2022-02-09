@@ -11,26 +11,23 @@ import (
 // GenericFile represents a Pharos GenericFile object.
 // Note that FileModified is currently not being stored in Pharos.
 type GenericFile struct {
-	Checksums            []*Checksum `json:"checksums,omitempty"`
-	CreatedAt            time.Time   `json:"created_at,omitempty"`
-	FileFormat           string      `json:"file_format,omitempty"`
-	FileModified         time.Time   `json:"file_modified,omitempty"`
-	ID                   int64       `json:"id,omitempty"`
-	Identifier           string      `json:"identifier,omitempty"`
-	InstitutionID        int64       `json:"institution_id,omitempty"`
-	IntellectualObjectID int64       `json:"intellectual_object_id,omitempty"`
-
-	// TODO: Change json to object_identifier to match Registry
-	// Also note that this is read-only.
-	IntellectualObjectIdentifier string `json:"intellectual_object_identifier,omitempty"`
-
-	LastFixityCheck time.Time        `json:"last_fixity_check,omitempty"`
-	PremisEvents    []*PremisEvent   `json:"premis_events,omitempty"`
-	Size            int64            `json:"size"`
-	State           string           `json:"state,omitempty"`
-	StorageOption   string           `json:"storage_option"`
-	StorageRecords  []*StorageRecord `json:"storage_records,omitempty"`
-	UUID            string           `json:"uuid,omitempty"`
+	Checksums            []*Checksum `json:"checksums"`
+	CreatedAt            time.Time   `json:"created_at"`
+	FileFormat           string      `json:"file_format"`
+	FileModified         time.Time   `json:"file_modified"`
+	ID                   int64       `json:"id"`
+	Identifier           string      `json:"identifier"`
+	InstitutionID        int64       `json:"institution_id"`
+	IntellectualObjectID int64       `json:"intellectual_object_id"`
+	// TODO: This field isn't part of registry record
+	IntellectualObjectIdentifier string           `json:"object_identifier"`
+	LastFixityCheck              time.Time        `json:"last_fixity_check"`
+	PremisEvents                 []*PremisEvent   `json:"premis_events"`
+	Size                         int64            `json:"size"`
+	State                        string           `json:"state"`
+	StorageOption                string           `json:"storage_option"`
+	StorageRecords               []*StorageRecord `json:"storage_records"`
+	UUID                         string           `json:"uuid"`
 
 	// Md5 is read-only, from Registry's GenericFileView
 	Md5 string `json:"md5"`
@@ -41,7 +38,7 @@ type GenericFile struct {
 	// Sha512 is read-only, from Registry's GenericFileView
 	Sha512 string `json:"sha512"`
 
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // GenericFileFromJSON converts a JSON representation of a GenericFile
