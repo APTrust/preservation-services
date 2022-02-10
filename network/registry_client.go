@@ -426,23 +426,22 @@ func (client *RegistryClient) GenericFileList(params url.Values) *RegistryRespon
 // For non-zero IDs, this performs a PUT to update the existing record.
 // Either way, the record must have an IntellectualObject ID. The response
 // object will have a new copy of the GenericFile if the save was successful.
-func (client *RegistryClient) GenericFileSave(obj *registry.GenericFile) *RegistryResponse {
+func (client *RegistryClient) GenericFileSave(gf *registry.GenericFile) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryGenericFile)
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/files/%s", client.APIVersion, EscapeFileIdentifier(obj.IntellectualObjectIdentifier))
+	relativeURL := fmt.Sprintf("/admin-api/%s/files/create/%d", client.APIVersion, gf.InstitutionID)
 	httpMethod := "POST"
-	if obj.ID > 0 {
-		// PUT URL looks like /admin-api/v2/files/college.edu%2Fobject_name%2Ffile.xml
-		relativeURL = fmt.Sprintf("/admin-api/%s/files/%s", client.APIVersion, EscapeFileIdentifier(obj.Identifier))
+	if gf.ID > 0 {
+		relativeURL = fmt.Sprintf("/admin-api/%s/files/update/%d", client.APIVersion, gf.ID)
 		httpMethod = "PUT"
 	}
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Prepare the JSON data
-	postData, err := obj.ToJSON()
+	postData, err := gf.ToJSON()
 	if err != nil {
 		resp.Error = err
 	}
@@ -454,10 +453,10 @@ func (client *RegistryClient) GenericFileSave(obj *registry.GenericFile) *Regist
 	}
 
 	// Parse the JSON from the response body
-	gf := &registry.GenericFile{}
-	resp.Error = json.Unmarshal(resp.data, gf)
+	savedFile := &registry.GenericFile{}
+	resp.Error = json.Unmarshal(resp.data, savedFile)
 	if resp.Error == nil {
-		resp.files[0] = gf
+		resp.files[0] = savedFile
 	}
 	return resp
 }
@@ -471,16 +470,16 @@ func (client *RegistryClient) GenericFileSave(obj *registry.GenericFile) *Regist
 // the batch insert is run as a transaction, so either all inserts
 // succeed, or the whole transaction is rolled back and no inserts
 // occur.
-func (client *RegistryClient) GenericFileSaveBatch(objList []*registry.GenericFile) *RegistryResponse {
+func (client *RegistryClient) GenericFileSaveBatch(gfList []*registry.GenericFile) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryGenericFile)
-	resp.files = make([]*registry.GenericFile, len(objList))
+	resp.files = make([]*registry.GenericFile, len(gfList))
 
-	if len(objList) == 0 {
+	if len(gfList) == 0 {
 		resp.Error = fmt.Errorf("GenericFileSaveBatch was asked to save an empty list.")
 		return resp
 	}
-	for _, gf := range objList {
+	for _, gf := range gfList {
 		if gf.ID != 0 {
 			resp.Error = fmt.Errorf("One or more GenericFiles in the list " +
 				"passed to GenericFileSaveBatch has a non-zero id. This call " +
@@ -491,19 +490,19 @@ func (client *RegistryClient) GenericFileSaveBatch(objList []*registry.GenericFi
 
 	// URL and method
 	relativeURL := fmt.Sprintf("/admin-api/%s/files/%d/create_batch",
-		client.APIVersion, objList[0].IntellectualObjectID)
+		client.APIVersion, gfList[0].IntellectualObjectID)
 	httpMethod := "POST"
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Transform into a set of objects that serialize in a way Registry
 	// will accept.
-	//batch := make([]*registry.GenericFileForRegistry, len(objList))
-	//for i, gf := range objList {
+	//batch := make([]*registry.GenericFileForRegistry, len(gfList))
+	//for i, gf := range gfList {
 	//	batch[i] = registry.NewGenericFileForRegistry(gf)
 	//}
 
 	// Prepare the JSON data
-	postData, err := json.Marshal(objList)
+	postData, err := json.Marshal(gfList)
 	if err != nil {
 		resp.Error = fmt.Errorf("Error marshalling GenericFile batch to JSON: %v", err)
 		return resp

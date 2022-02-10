@@ -92,7 +92,7 @@ func TestRegistryInstitutionByID(t *testing.T) {
 func TestRegistryInstitutionList(t *testing.T) {
 	client := GetRegistryClient(t)
 	v := url.Values{}
-	v.Add("order", "name")
+	v.Add("sort", "name__asc")
 	v.Add("per_page", "20")
 	resp := client.InstitutionList(v)
 	assert.NotNil(t, resp)
@@ -152,7 +152,7 @@ func testRegistryObjectResponse(t *testing.T, resp *network.RegistryResponse) {
 func TestRegistryIntellectualObjectList(t *testing.T) {
 	client := GetRegistryClient(t)
 	v := url.Values{}
-	v.Add("order", "identifier")
+	v.Add("sort", "identifier__asc")
 	v.Add("per_page", "20")
 	v.Add("storage_option", constants.StorageClassStandard)
 	v.Add("state", constants.StateActive)
@@ -309,5 +309,65 @@ func TestGenericFileList(t *testing.T) {
 		assert.Equal(t, constants.StorageClassStandard, gf.StorageOption)
 		assert.True(t, gf.Identifier > lastIdentifier)
 		lastIdentifier = gf.Identifier
+	}
+}
+
+func TestRegistryGenericFileSave_Create(t *testing.T) {
+	client := GetRegistryClient(t)
+
+	v := url.Values{}
+	v.Add("sord", "identifier__asc")
+	v.Add("per_page", "1")
+	resp := client.IntellectualObjectList(v)
+	require.Nil(t, resp.Error)
+	require.True(t, len(resp.IntellectualObjects()) > 0)
+	obj := resp.IntellectualObject()
+
+	gf := testutil.GetGenericFileForObj(obj, 1, false, false)
+	require.Equal(t, obj.InstitutionID, gf.InstitutionID)
+	resp = client.GenericFileSave(gf)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	assert.Equal(t, fmt.Sprintf("/admin-api/v3/files/create/%d", gf.InstitutionID), resp.Request.URL.Opaque)
+	gfSaved := resp.GenericFile()
+	require.NotNil(t, gfSaved)
+	assert.Equal(t, gf.Identifier, gfSaved.Identifier)
+	assert.NotEqual(t, 0, gfSaved.ID)
+	assert.NotEqual(t, gf.UpdatedAt, gfSaved.UpdatedAt)
+
+	// Make sure we can save zero-size file.
+	// Specific problems with this in testing, as Registry
+	// interprets zero as blank or missing value.
+	gf = testutil.GetGenericFileForObj(obj, 1, false, false)
+	gf.Size = int64(0)
+	gf.Identifier = gf.Identifier + "002"
+	resp = client.GenericFileSave(gf)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+}
+
+func TestRegistryGenericFileSave_Update(t *testing.T) {
+	client := GetRegistryClient(t)
+	v := url.Values{}
+	v.Add("sort", "identifier__asc")
+	v.Add("per_page", "4")
+	v.Add("institution_identifier", "aptrust.org")
+	resp := client.GenericFileList(v)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	files := resp.GenericFiles()
+
+	for _, gf := range files {
+		newSize := gf.Size + 2
+		gf.Size = newSize
+		resp := client.GenericFileSave(gf)
+		assert.NotNil(t, resp)
+		assert.Nil(t, resp.Error)
+		assert.Equal(t, fmt.Sprintf("/admin-api/v3/files/update/%d", gf.ID), resp.Request.URL.Opaque)
+		gfSaved := resp.GenericFile()
+		require.NotNil(t, gfSaved)
+		assert.Equal(t, gf.Identifier, gfSaved.Identifier)
+		assert.Equal(t, newSize, gfSaved.Size)
+		assert.NotEqual(t, gf.UpdatedAt, gfSaved.UpdatedAt)
 	}
 }
