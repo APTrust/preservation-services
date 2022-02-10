@@ -461,7 +461,7 @@ func (client *RegistryClient) GenericFileSave(gf *registry.GenericFile) *Registr
 	return resp
 }
 
-// GenericFileSaveBatch saves a batch of Generic File records to Registry.
+// GenericFileCreateBatch creates a batch of Generic Files in the Registry.
 // This performs a POST to create a new records, so all of the GenericFiles
 // passed in param objList should have Ids of zero. Each record
 // must also have an IntellectualObject ID. The response object will
@@ -470,7 +470,7 @@ func (client *RegistryClient) GenericFileSave(gf *registry.GenericFile) *Registr
 // the batch insert is run as a transaction, so either all inserts
 // succeed, or the whole transaction is rolled back and no inserts
 // occur.
-func (client *RegistryClient) GenericFileSaveBatch(gfList []*registry.GenericFile) *RegistryResponse {
+func (client *RegistryClient) GenericFileCreateBatch(gfList []*registry.GenericFile) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryGenericFile)
 	resp.files = make([]*registry.GenericFile, len(gfList))
@@ -482,15 +482,14 @@ func (client *RegistryClient) GenericFileSaveBatch(gfList []*registry.GenericFil
 	for _, gf := range gfList {
 		if gf.ID != 0 {
 			resp.Error = fmt.Errorf("One or more GenericFiles in the list " +
-				"passed to GenericFileSaveBatch has a non-zero id. This call " +
-				"is for creating new GenericFiles only.")
+				"passed to GenericFileSaveBatch has a non-zero id. " +
+				"This call is for creating new GenericFiles only.")
 			return resp
 		}
 	}
 
 	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/files/%d/create_batch",
-		client.APIVersion, gfList[0].IntellectualObjectID)
+	relativeURL := fmt.Sprintf("/admin-api/%s/files/create_batch/%d", client.APIVersion, gfList[0].InstitutionID)
 	httpMethod := "POST"
 	absoluteURL := client.BuildURL(relativeURL)
 

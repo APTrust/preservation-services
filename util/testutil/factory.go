@@ -207,7 +207,7 @@ func GetPremisEvent(gf *registry.GenericFile, eventType string) *registry.Premis
 		Object:                       "Fake event object",
 		OutcomeDetail:                constants.OutcomeSuccess,
 		OutcomeInformation:           "Fake outcome information",
-		Outcome:                      "Fake outcome",
+		Outcome:                      constants.OutcomeSuccess,
 	}
 }
 

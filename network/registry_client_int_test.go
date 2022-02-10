@@ -13,7 +13,7 @@ import (
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
-	//	"github.com/APTrust/preservation-services/models/registry"
+	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/network"
 	"github.com/APTrust/preservation-services/util/logger"
 	"github.com/APTrust/preservation-services/util/testutil"
@@ -369,5 +369,70 @@ func TestRegistryGenericFileSave_Update(t *testing.T) {
 		assert.Equal(t, gf.Identifier, gfSaved.Identifier)
 		assert.Equal(t, newSize, gfSaved.Size)
 		assert.NotEqual(t, gf.UpdatedAt, gfSaved.UpdatedAt)
+	}
+}
+
+func TestRegistryGenericFileSaveBatch(t *testing.T) {
+	intelObj := testutil.GetIntellectualObject()
+
+	intelObj.Identifier = "test.edu/TestBag002"
+	intelObj.InstitutionID = int64(4) // test.edu id
+	client := GetRegistryClient(t)
+
+	resp := client.IntellectualObjectSave(intelObj)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	savedObj := resp.IntellectualObject()
+	require.NotNil(t, savedObj)
+
+	// Create 10 new files. Make sure their object ID and institution ID
+	// match the parent object.
+	files := make([]*registry.GenericFile, 10)
+	for i := 0; i < 10; i++ {
+		gf := testutil.GetGenericFileForObj(savedObj, i, true, true)
+		gf.InstitutionID = intelObj.InstitutionID
+		files[i] = gf
+	}
+
+	resp = client.GenericFileCreateBatch(files)
+	require.Nil(t, resp.Error)
+
+	savedFiles := resp.GenericFiles()
+	assert.Equal(t, len(files), len(savedFiles))
+
+	// Make sure Registry actually saved everything
+	for i := 0; i < 10; i++ {
+		// GenericFiles
+		identifier := fmt.Sprintf("%s/object/data/file_%d.txt", savedObj.Identifier, i)
+		resp := client.GenericFileByIdentifier(identifier)
+		assert.Nil(t, resp.Error)
+		assert.NotNil(t, resp.GenericFile(), identifier)
+
+		gf := resp.GenericFile()
+		require.NotNil(t, gf)
+
+		// Checksums - can also filter by generic file ID
+		v := url.Values{}
+		v.Add("generic_file_identifier", gf.Identifier)
+		v.Add("per_page", "20")
+		resp = client.ChecksumList(v)
+		assert.Nil(t, resp.Error)
+		checksums := resp.Checksums()
+		assert.Equal(t, 2, len(checksums))
+		for _, cs := range checksums {
+			assert.True(t, cs.ID > 0)
+		}
+
+		// PremisEvents - can also filter by generic file ID
+		v = url.Values{}
+		v.Add("generic_file_identifier", gf.Identifier)
+		v.Add("per_page", "20")
+		resp = client.PremisEventList(v)
+		assert.Nil(t, resp.Error)
+		events := resp.PremisEvents()
+		assert.Equal(t, 5, len(events))
+		for _, event := range events {
+			assert.True(t, event.ID > 0)
+		}
 	}
 }
