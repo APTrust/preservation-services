@@ -265,6 +265,16 @@ func TestRegistryGenericFileGet(t *testing.T) {
 	assert.NotNil(t, resp)
 	require.Nil(t, resp.Error)
 	assert.Equal(t, fmt.Sprintf("/admin-api/v3/files/show/%s", network.EscapeFileIdentifier(identifier)), resp.Request.URL.Opaque)
+	testRegistryGenericFile(t, resp, identifier, id)
+
+	resp = client.GenericFileByID(id)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, fmt.Sprintf("/admin-api/v3/files/show/%d", id), resp.Request.URL.Opaque)
+	testRegistryGenericFile(t, resp, identifier, id)
+}
+
+func testRegistryGenericFile(t *testing.T, resp *network.RegistryResponse, identifier string, id int64) {
 	gf := resp.GenericFile()
 	require.NotNil(t, gf)
 	assert.Equal(t, identifier, gf.Identifier)
@@ -274,10 +284,30 @@ func TestRegistryGenericFileGet(t *testing.T) {
 	assert.Equal(t, "image/jpeg", gf.FileFormat)
 	assert.Equal(t, constants.StorageStandard, gf.StorageOption)
 
-	// TODO: Update GF object? Or get view from API?
-	//require.NotNil(t, gf.IntellectualObject)
-	//assert.Equal(t, "institution1.edu/photos", gf.IntellectualObject.Identifier)
 	assert.Equal(t, 2, len(gf.Checksums))
 	assert.Equal(t, 4, len(gf.PremisEvents))
 	assert.Equal(t, 2, len(gf.StorageRecords))
+}
+
+func TestGenericFileList(t *testing.T) {
+	client := GetRegistryClient(t)
+	v := url.Values{}
+	v.Add("sort", "identifier__asc")
+	v.Add("per_page", "100")
+	v.Add("institution_id", "2")
+	v.Add("storage_option", constants.StorageClassStandard)
+	resp := client.GenericFileList(v)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, fmt.Sprintf("/admin-api/v3/files/?%s", v.Encode()), resp.Request.URL.Opaque)
+	files := resp.GenericFiles()
+
+	lastIdentifier := ""
+	assert.Equal(t, 11, len(files))
+	for _, gf := range files {
+		assert.EqualValues(t, 2, gf.InstitutionID)
+		assert.Equal(t, constants.StorageClassStandard, gf.StorageOption)
+		assert.True(t, gf.Identifier > lastIdentifier)
+		lastIdentifier = gf.Identifier
+	}
 }

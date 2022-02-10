@@ -347,7 +347,7 @@ func (client *RegistryClient) GenericFileByIdentifier(identifier string) *Regist
 }
 
 // GenericFileByID returns the GenericFile having the specified id.
-func (client *RegistryClient) GenericFileByID(id int) *RegistryResponse {
+func (client *RegistryClient) GenericFileByID(id int64) *RegistryResponse {
 	relativeURL := fmt.Sprintf("/admin-api/%s/files/show/%d", client.APIVersion, id)
 	return client.genericFileGet(relativeURL)
 }
@@ -375,24 +375,25 @@ func (client *RegistryClient) genericFileGet(relativeURL string) *RegistryRespon
 	return resp
 }
 
-// GenericFileList returns a list of Generic Files. Params include:
+// GenericFileList returns a list of Generic Files. Filter params include:
 //
-// * institution_identifier - The identifier of the institution to which
-//   the files belong.
-// * intellectual_object_identifier - The identifier of the object to which
-//   the files belong.
-// * not_checked_since [datetime] - Returns a list of files that have not
-//   had a fixity check since the specified datetime [yyyy-mm-dd]
-// * include_events=true - Include the file's PremisEvents in the response.
-// * include_checksums=true - Include the file's Checksums in the response.
-// * include_relations=true - Include the file's PremisEvents AND Checksums
-//   in the response.
-// * include_storage_records=true - Include the file's StorageRecords in
-//   the response.
-// * storage_option - "Standard", "Glacier-OH", "Glacier-OR", "Glacier-VA",
-//                    "Glacier-Deep-OH", "Glacier-Deep-OR", "Glacier-Deep-VA"
+// identifier
+// uuid
+// intellectual_object_id
+// institution_id
+// state
+// storage_option
+// size__gteq
+// size__lteq
+// created_at__gteq
+// created_at__lteq
+// updated_at__gteq
+// updated_at__lteq
+// last_fixity_check__gteq
+// last_fixity_check__lteq
 //
-// Because of an implementation quirk in Registry,
+// Also supports sort, with fields like size__asc, created_at__desc, etc.
+// And, of course, page and per_page.
 func (client *RegistryClient) GenericFileList(params url.Values) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryGenericFile)
