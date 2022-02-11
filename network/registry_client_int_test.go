@@ -4,12 +4,11 @@
 package network_test
 
 import (
-	//	"bytes"
-	//	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
-	//	"strings"
 	"testing"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
@@ -446,4 +445,78 @@ func TestRegistryGenericFileDelete(t *testing.T) {
 	// TODO: This requires considerable setup.
 	// See the comments on RegistryClient.GenericFileDelete.
 	// Come back to it later, when we're further into integration tests.
+}
+
+func TestRegistryChecksumByID(t *testing.T) {
+	client := GetRegistryClient(t)
+	resp := client.ChecksumByID(1)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	cs := resp.Checksum()
+	require.NotNil(t, cs)
+	assert.EqualValues(t, 1, cs.ID)
+	assert.Equal(t, "md5", cs.Algorithm)
+	assert.Equal(t, "12345678", cs.Digest)
+	assert.EqualValues(t, 1, cs.GenericFileID)
+}
+
+func TestChecksumList(t *testing.T) {
+	client := GetRegistryClient(t)
+	v := url.Values{}
+	v.Add("sort", "generic_file_id__asc")
+	v.Add("per_page", "100")
+	v.Add("institution_id", "2")
+	v.Add("algorithm", constants.AlgSha256)
+	resp := client.ChecksumList(v)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, fmt.Sprintf("/admin-api/v3/checksums/?%s", v.Encode()), resp.Request.URL.Opaque)
+	checksums := resp.Checksums()
+	lastGFID := int64(0)
+	assert.Equal(t, 2, len(checksums))
+	for _, cs := range checksums {
+		assert.EqualValues(t, 2, cs.InstitutionID)
+		assert.Equal(t, constants.AlgSha256, cs.Algorithm)
+		assert.True(t, cs.GenericFileID > lastGFID)
+		lastGFID = cs.GenericFileID
+	}
+}
+
+func TestChecksumSave(t *testing.T) {
+	client := GetRegistryClient(t)
+	timestamp := time.Now().UTC()
+	checksum := &registry.Checksum{
+		ID:            0,
+		Algorithm:     constants.AlgSha1,
+		Digest:        "12345123451234512345",
+		DateTime:      timestamp,
+		GenericFileID: 11,
+		InstitutionID: 3, //belongs to institution2.edu
+	}
+	resp := client.ChecksumCreate(checksum)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, http.StatusCreated, resp.Response.StatusCode)
+	savedChecksum := resp.Checksum()
+	require.NotNil(t, savedChecksum)
+
+	assert.True(t, savedChecksum.ID > 0)
+	assert.Equal(t, checksum.Algorithm, savedChecksum.Algorithm)
+	assert.Equal(t, checksum.Digest, savedChecksum.Digest)
+	assert.Equal(t, checksum.GenericFileID, savedChecksum.GenericFileID)
+	assert.Equal(t, timestamp, savedChecksum.DateTime)
+
+	// Make sure this now shows as the generic file's official Sha1
+	resp = client.GenericFileByID(11)
+	require.Nil(t, resp.Error)
+	gf := resp.GenericFile()
+	require.NotNil(t, gf)
+
+	foundChecksum := false
+	for _, cs := range gf.Checksums {
+		if cs.Digest == checksum.Digest {
+			foundChecksum = true
+			break
+		}
+	}
+	assert.True(t, foundChecksum)
 }

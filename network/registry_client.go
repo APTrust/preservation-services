@@ -577,7 +577,7 @@ Consider removing this. It's used only for integration tests.
 // 4. There must be a valid deletion work item for this file or its
 //    parent object.
 //
-func (client *RegistryClient) GenericFileFinishDelete(identifier string) *RegistryResponse {
+func (client *RegistryClient) GenericFileDelete(identifier string) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryGenericFile)
 	resp.files = make([]*registry.GenericFile, 1)
@@ -627,12 +627,16 @@ func (client *RegistryClient) ChecksumByID(id int64) *RegistryResponse {
 
 // ChecksumList returns a list of checksums. Params include:
 //
-// * generic_file_identifier - The identifier of the file to which
-//   the checksum belongs.
-// * algorithm - The checksum algorithm (constants.AldMd5, constants.AlgSha256)
+// algorithm
+// date_time__gteq
+// date_time__lteq
+// digest
+// generic_file_id
+// generic_file_identifier
+// institution_id
+// intellectual_object_id
+// state
 //
-// Registry should support order and limit for this call, but it doesn't.
-// Order is "datetime desc" by default, and limit cannot be set.
 func (client *RegistryClient) ChecksumList(params url.Values) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryChecksum)
@@ -654,19 +658,18 @@ func (client *RegistryClient) ChecksumList(params url.Values) *RegistryResponse 
 	return resp
 }
 
-// ChecksumSave saves a Checksum to Registry. The checksum Id should be
-// zero, since we can create but not update Checksums. Param gfIdentifier
-// is the identifier of the GenericFile to which the checksum belongs.
+// ChecksumCreate creates a new Checksum to Registry. The checksum Id
+// should be zero, since we can create but not update checksums.
 // The response object will have a new copy of the Checksum if the
-// save was successful.
-func (client *RegistryClient) ChecksumSave(obj *registry.Checksum, gfIdentifier string) *RegistryResponse {
+// save was successful. We should only call this when ingesting a new
+// version of a previously ingested file.
+func (client *RegistryClient) ChecksumCreate(obj *registry.Checksum) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryChecksum)
 	resp.checksums = make([]*registry.Checksum, 1)
 
 	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/checksums/%s", client.APIVersion,
-		url.QueryEscape(gfIdentifier))
+	relativeURL := fmt.Sprintf("/admin-api/%s/checksums/create/%d", client.APIVersion, obj.InstitutionID)
 	httpMethod := "POST"
 	absoluteURL := client.BuildURL(relativeURL)
 
