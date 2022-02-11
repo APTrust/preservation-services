@@ -70,7 +70,7 @@ WORKDIR /app
 # Docker images are tagged with app names already.
 COPY --from=builder /app/${OUTPUT_DIR}/${PSERVICE} /app/main
 COPY --from=builder /app/${OUTPUT_DIR}/${PSERVICE} /app/${PSERVICE}
-COPY --from=builder /app/.env.fargate /app/.env
+COPY --from=builder /app/.env.test /app/.env
 COPY --from=builder /app/profiles/ /app/profiles
 
 
