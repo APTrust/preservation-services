@@ -252,7 +252,12 @@ func TestRegistryIntellectualObjectSave_Update(t *testing.T) {
 	assert.Equal(t, existingObj.BagItProfileIdentifier, obj.BagItProfileIdentifier)
 	assert.Equal(t, existingObj.InternalSenderIdentifier, obj.InternalSenderIdentifier)
 	assert.Equal(t, existingObj.InternalSenderDescription, obj.InternalSenderDescription)
+}
 
+func TestRegistryIntellectualObjectDelete(t *testing.T) {
+	// TODO: This requires considerable setup.
+	// See the comments on RegistryClient.IntellectualObjectDelete.
+	// Come back to it later, when we're further into integration tests.
 }
 
 func TestRegistryGenericFileGet(t *testing.T) {
@@ -435,4 +440,10 @@ func TestRegistryGenericFileSaveBatch(t *testing.T) {
 			assert.True(t, event.ID > 0)
 		}
 	}
+}
+
+func TestRegistryGenericFileDelete(t *testing.T) {
+	// TODO: This requires considerable setup.
+	// See the comments on RegistryClient.GenericFileDelete.
+	// Come back to it later, when we're further into integration tests.
 }

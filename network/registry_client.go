@@ -252,6 +252,10 @@ Commented functions below will be needed later for integration and
 end-to-end tests. Implement these after the core functionality is
 complete.
 
+Or, since these are used only for integration tests, consider
+creating restoration and deletion requests through fixtures during
+testing.
+
 ***********************************************************************/
 
 // // IntellectualObjectRequestRestore creates a restore request in Registry for
@@ -313,30 +317,40 @@ complete.
 // 	return resp
 // }
 
-// // IntellectualObjectFinishDelete tells Registry to mark an IntellectualObject
-// // as deleted, once we've finished deleting it.
-// func (client *RegistryClient) IntellectualObjectFinishDelete(identifier string) *RegistryResponse {
-// 	// Set up the response object
-// 	resp := NewRegistryResponse(RegistryIntellectualObject)
-// 	resp.objects = make([]*registry.IntellectualObject, 0)
+// IntellectualObjectDelete tells Registry to mark an IntellectualObject
+// as deleted. There are a number of preconditions for this to succeed:
+//
+// 1. The registry must contain a valid deletion request for this object.
+// 2. The deletion request must be approved by an admin at the institution
+//    that owns the object.
+// 3. There must be a valid ingest work item for this object.
+// 4. There must be a valid deletion work item for this object.
+// 5. All files belonging to this object must be deleted (that is, state =
+//    "D").
+//
+// Call this method only after you've deleted all the files that make up
+// the object.
+func (client *RegistryClient) IntellectualObjectDelete(objId int64) *RegistryResponse {
+	// Set up the response object
+	resp := NewRegistryResponse(RegistryIntellectualObject)
+	resp.objects = make([]*registry.IntellectualObject, 0)
 
-// 	// Build the url and the request object
-// 	relativeURL := fmt.Sprintf("/admin-api/%s/objects/%s/finish_delete", client.APIVersion,
-// 		EscapeFileIdentifier(identifier))
-// 	absoluteURL := client.BuildURL(relativeURL)
+	// Build the url and the request object
+	relativeURL := fmt.Sprintf("/admin-api/%s/objects/delete/%d", client.APIVersion, objId)
+	absoluteURL := client.BuildURL(relativeURL)
 
-// 	// Run the request
-// 	client.DoRequest(resp, "GET", absoluteURL, nil)
-// 	if resp.Error != nil {
-// 		return resp
-// 	}
+	// Run the request
+	client.DoRequest(resp, "GET", absoluteURL, nil)
+	if resp.Error != nil {
+		return resp
+	}
 
-// 	// This call has no response body. We're just looking for 200 or 204.
-// 	if resp.Response.StatusCode != 200 && resp.Response.StatusCode != 204 {
-// 		resp.Error = fmt.Errorf("IntellectualObject finish_delete failed with message: %s", string(resp.data))
-// 	}
-// 	return resp
-// }
+	// This call has no response body. We're just looking for 200 or 204.
+	if resp.Response.StatusCode != 200 && resp.Response.StatusCode != 204 {
+		resp.Error = fmt.Errorf("IntellectualObject finish_delete failed with message: %s", string(resp.data))
+	}
+	return resp
+}
 
 // GenericFileByIdentifier returns the GenericFile having the specified
 // identifier. The identifier should be in the format
@@ -493,13 +507,6 @@ func (client *RegistryClient) GenericFileCreateBatch(gfList []*registry.GenericF
 	httpMethod := "POST"
 	absoluteURL := client.BuildURL(relativeURL)
 
-	// Transform into a set of objects that serialize in a way Registry
-	// will accept.
-	//batch := make([]*registry.GenericFileForRegistry, len(gfList))
-	//for i, gf := range gfList {
-	//	batch[i] = registry.NewGenericFileForRegistry(gf)
-	//}
-
 	// Prepare the JSON data
 	postData, err := json.Marshal(gfList)
 	if err != nil {
@@ -517,44 +524,59 @@ func (client *RegistryClient) GenericFileCreateBatch(gfList []*registry.GenericF
 	return resp
 }
 
-// GenericFileRequestRestore creates a restore request in Registry for
-// the file with the specified identifier. This is used in integration
-// testing to create restore requests. This call generally issues two
-// requests: one asking Registry to create a WorkItem, and a second to
-// return the WorkItem. Ideally, Registry should redirecto so we don't have
-// to make two calls.
-// This is logged as a Registry issue in https://trello.com/c/uE1CFNji
-func (client *RegistryClient) GenericFileRequestRestore(identifier string) *RegistryResponse {
-	// Set up the response object
-	resp := NewRegistryResponse(RegistryWorkItem)
-	resp.workItems = make([]*registry.WorkItem, 1)
+/***********************************************************************
 
-	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/files/restore/%s", client.APIVersion, url.QueryEscape(identifier))
-	absoluteURL := client.BuildURL(relativeURL)
+Consider removing this. It's used only for integration tests.
 
-	// Run the request.
-	client.DoRequest(resp, "PUT", absoluteURL, nil)
-	if resp.Error != nil {
-		return resp
-	}
+************************************************************************/
 
-	acknowledgment := Acknowledgment{}
-	resp.Error = json.Unmarshal(resp.data, &acknowledgment)
-	if resp.Error == nil && acknowledgment.WorkItemID != 0 {
-		return client.WorkItemByID(acknowledgment.WorkItemID)
-	}
-	if acknowledgment.Message != "" {
-		resp.Error = fmt.Errorf("Registry returned status %s: %s",
-			acknowledgment.Status, acknowledgment.Message)
-	}
-	return resp
-}
+// // GenericFileRequestRestore creates a restore request in Registry for
+// // the file with the specified identifier. This is used in integration
+// // testing to create restore requests. This call generally issues two
+// // requests: one asking Registry to create a WorkItem, and a second to
+// // return the WorkItem. Ideally, Registry should redirecto so we don't have
+// // to make two calls.
+// // This is logged as a Registry issue in https://trello.com/c/uE1CFNji
+// func (client *RegistryClient) GenericFileRequestRestore(identifier string) *RegistryResponse {
+// 	// Set up the response object
+// 	resp := NewRegistryResponse(RegistryWorkItem)
+// 	resp.workItems = make([]*registry.WorkItem, 1)
 
-// GenericFileFinishDelete tells Registry we've finished deleting a
-// generic file. We have to create the deletion PREMIS event
-// before calling this. This call returns no data. If response.Error
-// is nil, it succeeded.
+// 	// Build the url and the request object
+// 	relativeURL := fmt.Sprintf("/admin-api/%s/files/restore/%s", client.APIVersion, url.QueryEscape(identifier))
+// 	absoluteURL := client.BuildURL(relativeURL)
+
+// 	// Run the request.
+// 	client.DoRequest(resp, "PUT", absoluteURL, nil)
+// 	if resp.Error != nil {
+// 		return resp
+// 	}
+
+// 	acknowledgment := Acknowledgment{}
+// 	resp.Error = json.Unmarshal(resp.data, &acknowledgment)
+// 	if resp.Error == nil && acknowledgment.WorkItemID != 0 {
+// 		return client.WorkItemByID(acknowledgment.WorkItemID)
+// 	}
+// 	if acknowledgment.Message != "" {
+// 		resp.Error = fmt.Errorf("Registry returned status %s: %s",
+// 			acknowledgment.Status, acknowledgment.Message)
+// 	}
+// 	return resp
+// }
+
+// GenericFileDelete deletes a file, creating the necessary deletion
+// Premis Event along the way. Remember to mark the WorkItem done afterwards.
+//
+// The following preconditions must exist for this to succeed:
+//
+// 1. The registry must contain a valid deletion request for this file,
+//    or for its parent object, if this is part of an object deletion.
+// 2. The deletion request must be approved by an admin at the institution
+//    that owns the object/file.
+// 3. There must be a vaild ingest work item for this file's parent object.
+// 4. There must be a valid deletion work item for this file or its
+//    parent object.
+//
 func (client *RegistryClient) GenericFileFinishDelete(identifier string) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryGenericFile)
