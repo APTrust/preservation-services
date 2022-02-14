@@ -22,14 +22,67 @@ import (
 
 func setupObjectDeleteTest(t *testing.T, client *network.RegistryClient) {
 	// Create an object with four files.
+	obj := testutil.GetIntellectualObject()
+	obj.Identifier = "test.edu/ObjForDeletion01"
+	obj.BagName = "ObjForDeletion01"
+	obj.FileCount = 4
+	resp := client.IntellectualObjectSave(obj)
+	require.Nil(t, resp.Error)
+	obj = resp.IntellectualObject()
+	require.NotNil(t, obj)
+	require.NotEmpty(t, obj.ID)
+
+	// Add some files to the object, complete with checksums,
+	// events, and storage records.
+	files := make([]*registry.GenericFile, 4)
+	for i := 0; i < 4; i++ {
+		gf := testutil.GetGenericFileForObj(obj, i, true, true)
+		gf.StorageRecords = append(
+			gf.StorageRecords,
+			&registry.StorageRecord{
+				URL: fmt.Sprintf("https://example.com/storage/record/%d", gf.UUID),
+			})
+		files[i] = gf
+	}
+	resp := client.GenericFileCreateBatch(files)
+
 	// Create an ingest work item for that object.
-	// Save the object and files to Registry.
-	// Mark the work item complete.
-	// Create a deletion request with requestor.
-	// Save deletion request to Registry.
+	now := time.Now().UTC()
+	yesterday := now.Add(-24 * time.Hour)
+	item := &registry.WorkItem{
+		Action:        constants.ActionIngest,
+		BagDate:       yesterday,
+		Bucket:        "buckeypoo",
+		Date:          now,
+		ETag:          obj.ETag,
+		InstitutionID: obj.InstitutionID,
+		Name:          obj.BagName,
+		Note:          "Item was successfully ingested",
+		Outcome:       constants.OutcomeSuccess,
+		Retry:         true,
+		Size:          int64(9999000),
+		Stage:         constants.StageCleanup,
+		Status:        constants.StatusSuccess,
+		User:          "test@test.edu",
+	}
+	resp = client.WorkItemSave(item)
+	require.Nil(t, resp.Error)
+	item = resp.WorkItem()
+	require.NotNil(t, item)
+	requier.NotEmpty(t, item.ID)
+
+	// Create a deletion request with requester.
+	// This will require a special endpoint in Registry, and a special
+	// method on the Registry client.
+
 	// Approve the deletion request in registry.
+	// This creates the deletion work item, most of whose attributes
+	// are cloned from the ingest work item we created above.
+
 	// Make sure WorkItem was created.
-	// Return the IntellectualObjectID
+
+	// Return IntellectualObjectID to caller, so it knows which item
+	// it can delete.
 
 	// Initial deletion attempt will fail.
 	// Caller will have to mark all files with State="D"
