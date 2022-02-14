@@ -246,77 +246,6 @@ func (client *RegistryClient) IntellectualObjectSave(obj *registry.IntellectualO
 	return resp
 }
 
-/**********************************************************************
-
-Commented functions below will be needed later for integration and
-end-to-end tests. Implement these after the core functionality is
-complete.
-
-Or, since these are used only for integration tests, consider
-creating restoration and deletion requests through fixtures during
-testing.
-
-***********************************************************************/
-
-// // IntellectualObjectRequestRestore creates a restore request in Registry for
-// // the object with the specified identifier. This is used in integration
-// // testing to create restore requests. Note that this call should issue
-// // to requests to Registry. The first creates the restore request, and the
-// // second returns the WorkItem for the restore request.
-// func (client *RegistryClient) IntellectualObjectRequestRestore(identifier string) *RegistryResponse {
-// 	// Set up the response object
-// 	resp := NewRegistryResponse(RegistryWorkItem)
-// 	resp.workItems = make([]*registry.WorkItem, 1)
-
-// 	// Build the url and the request object
-// 	relativeURL := fmt.Sprintf("/admin-api/%s/objects/%s/restore", client.APIVersion, EscapeFileIdentifier(identifier))
-// 	absoluteURL := client.BuildURL(relativeURL)
-
-// 	// Run the request.
-// 	client.DoRequest(resp, "PUT", absoluteURL, nil)
-// 	if resp.Error != nil {
-// 		return resp
-// 	}
-
-// 	acknowledgment := Acknowledgment{}
-// 	resp.Error = json.Unmarshal(resp.data, &acknowledgment)
-// 	if resp.Error == nil && acknowledgment.WorkItemID != 0 {
-// 		return client.WorkItemByID(acknowledgment.WorkItemID)
-// 	}
-// 	if acknowledgment.Message != "" {
-// 		resp.Error = fmt.Errorf("Registry returned status %s: %s",
-// 			acknowledgment.Status, acknowledgment.Message)
-// 	}
-// 	return resp
-// }
-
-// // IntellectualObjectRequestDelete creates a delete request in Registry for
-// // the object with the specified identifier. This is used in integration
-// // testing to create a set of file deletion requests. This call returns no
-// // data.
-// func (client *RegistryClient) IntellectualObjectRequestDelete(identifier string) *RegistryResponse {
-// 	// Set up the response object, but note that this call returns
-// 	// no data.
-// 	resp := NewRegistryResponse(RegistryIntellectualObject)
-// 	resp.objects = make([]*registry.IntellectualObject, 0)
-
-// 	// Build the url and the request object
-// 	relativeURL := fmt.Sprintf("/admin-api/%s/objects/%s/delete", client.APIVersion, EscapeFileIdentifier(identifier))
-// 	absoluteURL := client.BuildURL(relativeURL)
-
-// 	// Run the request.
-// 	client.DoRequest(resp, "DELETE", absoluteURL, nil)
-// 	if resp.Error != nil {
-// 		return resp
-// 	}
-// 	if resp.Response.StatusCode != 200 && resp.Response.StatusCode != 204 {
-// 		bytes, _ := resp.RawResponseData()
-// 		resp.Error = fmt.Errorf("Registry returned response code %d. Response: %s",
-// 			resp.Response.StatusCode, string(bytes))
-// 	}
-// 	return resp
-// }
-
 // IntellectualObjectDelete tells Registry to mark an IntellectualObject
 // as deleted. There are a number of preconditions for this to succeed:
 //
@@ -412,9 +341,6 @@ func (client *RegistryClient) GenericFileList(params url.Values) *RegistryRespon
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryGenericFile)
 	resp.files = make([]*registry.GenericFile, 0)
-
-	//institutionIdentifier := params.Get("institution_identifier")
-	//params.Del("institution_identifier")
 
 	// Build the url and the request object
 	relativeURL := fmt.Sprintf("/admin-api/%s/files/?%s",
@@ -523,46 +449,6 @@ func (client *RegistryClient) GenericFileCreateBatch(gfList []*registry.GenericF
 	resp.UnmarshalJSONList()
 	return resp
 }
-
-/***********************************************************************
-
-Consider removing this. It's used only for integration tests.
-
-************************************************************************/
-
-// // GenericFileRequestRestore creates a restore request in Registry for
-// // the file with the specified identifier. This is used in integration
-// // testing to create restore requests. This call generally issues two
-// // requests: one asking Registry to create a WorkItem, and a second to
-// // return the WorkItem. Ideally, Registry should redirecto so we don't have
-// // to make two calls.
-// // This is logged as a Registry issue in https://trello.com/c/uE1CFNji
-// func (client *RegistryClient) GenericFileRequestRestore(identifier string) *RegistryResponse {
-// 	// Set up the response object
-// 	resp := NewRegistryResponse(RegistryWorkItem)
-// 	resp.workItems = make([]*registry.WorkItem, 1)
-
-// 	// Build the url and the request object
-// 	relativeURL := fmt.Sprintf("/admin-api/%s/files/restore/%s", client.APIVersion, url.QueryEscape(identifier))
-// 	absoluteURL := client.BuildURL(relativeURL)
-
-// 	// Run the request.
-// 	client.DoRequest(resp, "PUT", absoluteURL, nil)
-// 	if resp.Error != nil {
-// 		return resp
-// 	}
-
-// 	acknowledgment := Acknowledgment{}
-// 	resp.Error = json.Unmarshal(resp.data, &acknowledgment)
-// 	if resp.Error == nil && acknowledgment.WorkItemID != 0 {
-// 		return client.WorkItemByID(acknowledgment.WorkItemID)
-// 	}
-// 	if acknowledgment.Message != "" {
-// 		resp.Error = fmt.Errorf("Registry returned status %s: %s",
-// 			acknowledgment.Status, acknowledgment.Message)
-// 	}
-// 	return resp
-// }
 
 // GenericFileDelete deletes a file, creating the necessary deletion
 // Premis Event along the way. Remember to mark the WorkItem done afterwards.
@@ -703,9 +589,9 @@ func (client *RegistryClient) PremisEventByIdentifier(identifier string) *Regist
 }
 
 // PremisEventByID returns the PREMIS event with the specified id.
-func (client *RegistryClient) PremisEventByID(id int) *RegistryResponse {
+func (client *RegistryClient) PremisEventByID(id int64) *RegistryResponse {
 	// Set up the response object
-	relativeURL := fmt.Sprintf("/admmin_api/%s/events/show/%d", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/admin-api/%s/events/show/%d", client.APIVersion, id)
 	return client.premisEventGet(relativeURL)
 }
 
@@ -728,15 +614,17 @@ func (client *RegistryClient) premisEventGet(relativeURL string) *RegistryRespon
 // PremisEventList returns a list of PREMIS events matching the specified
 // criteria. Parameters include:
 //
-// * object_identifier - (string) Return events associated with
-//   the specified intellectual object (but not its generic files).
-// * file_identifier - (string) Return events associated with the
-//   specified generic file. NOTE THAT THIS DIFFERS FROM OTHER CALLS,
-//   WHICH use generic_file_identifier. (!$?!#! Registry!)
-// * event_type - (string) Return events of the specified type. See the
-//   event types listed in contants/constants.go
-// * created_after - (iso 8601 datetime string) Return events created
-//   on or after the specified datetime.
+// date_time__gteq
+// date_time__lteq
+// event_type
+// generic_file_id
+// generic_file_identifier
+// identifier
+// institution_id
+// intellectual_object_id
+// intellectual_object_identifier
+// outcome
+//
 func (client *RegistryClient) PremisEventList(params url.Values) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryPremisEvent)

@@ -20,15 +20,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Registry rules say we can't restore an item that's being deleted
-// or delete an item that's being restored. To avoid errors in our
-// integration tests, make sure we test different object for restore
-// and delete. These ids come from the integration test fixtures.
-// const ObjIdToDelete = "institution2.edu/coal"
-// const ObjIdToRestore = "institution2.edu/toads"
-// const FileIdToRestore = "institution2.edu/coal/doc3"
-// const FileIdWithChecksums = "institution1.edu/photos/picture1"
-
 func GetRegistryClient(t *testing.T) *network.RegistryClient {
 	config := common.NewConfig()
 	assert.Equal(t, "test", config.ConfigName)
@@ -253,12 +244,6 @@ func TestRegistryIntellectualObjectSave_Update(t *testing.T) {
 	assert.Equal(t, existingObj.InternalSenderDescription, obj.InternalSenderDescription)
 }
 
-func TestRegistryIntellectualObjectDelete(t *testing.T) {
-	// TODO: This requires considerable setup.
-	// See the comments on RegistryClient.IntellectualObjectDelete.
-	// Come back to it later, when we're further into integration tests.
-}
-
 func TestRegistryGenericFileGet(t *testing.T) {
 	// From fixture data.
 	identifier := "institution1.edu/photos/picture1"
@@ -441,12 +426,6 @@ func TestRegistryGenericFileSaveBatch(t *testing.T) {
 	}
 }
 
-func TestRegistryGenericFileDelete(t *testing.T) {
-	// TODO: This requires considerable setup.
-	// See the comments on RegistryClient.GenericFileDelete.
-	// Come back to it later, when we're further into integration tests.
-}
-
 func TestRegistryChecksumByID(t *testing.T) {
 	client := GetRegistryClient(t)
 	resp := client.ChecksumByID(1)
@@ -519,4 +498,52 @@ func TestChecksumSave(t *testing.T) {
 		}
 	}
 	assert.True(t, foundChecksum)
+}
+
+func TestPremisEventGet(t *testing.T) {
+	// These values come from registry fixtures in premis_events.csv
+	id := int64(1)
+	identifier := "a966ca54-ee5b-4606-81bd-7653dd5f3a63"
+
+	client := GetRegistryClient(t)
+	resp := client.PremisEventByIdentifier(identifier)
+	require.Nil(t, resp.Error)
+	event := resp.PremisEvent()
+	require.NotNil(t, event)
+	testPremisEvent(t, event, id, identifier)
+
+	resp = client.PremisEventByID(id)
+	require.Nil(t, resp.Error)
+	event = resp.PremisEvent()
+	require.NotNil(t, event)
+	testPremisEvent(t, event, id, identifier)
+}
+
+func testPremisEvent(t *testing.T, event *registry.PremisEvent, id int64, identifier string) {
+	require.NotNil(t, event)
+	assert.Equal(t, id, event.ID)
+	assert.Equal(t, identifier, event.Identifier)
+	assert.Equal(t, constants.EventIngestion, event.EventType)
+	assert.NotEmpty(t, event.DateTime)
+}
+
+func TestPremisEventList(t *testing.T) {
+	client := GetRegistryClient(t)
+	v := url.Values{}
+	v.Add("sort", "identifier__asc")
+	v.Add("per_page", "100")
+	v.Add("institution_id", "2")
+	resp := client.PremisEventList(v)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, fmt.Sprintf("/admin-api/v3/events/?%s", v.Encode()), resp.Request.URL.Opaque)
+	events := resp.PremisEvents()
+
+	lastIdentifier := ""
+	assert.Equal(t, 27, len(events))
+	for _, event := range events {
+		assert.EqualValues(t, 2, event.InstitutionID)
+		assert.True(t, event.Identifier > lastIdentifier)
+		lastIdentifier = event.Identifier
+	}
 }
