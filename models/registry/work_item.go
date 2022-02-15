@@ -17,7 +17,7 @@ type WorkItem struct {
 	BagDate         time.Time `json:"bag_date"`
 	Bucket          string    `json:"bucket"`
 	CreatedAt       time.Time `json:"created_at,omitempty"`
-	Date            time.Time `json:"date"`
+	DateProcessed   time.Time `json:"date_processed"`
 	ETag            string    `json:"etag"`
 
 	// Read-only, from view.
@@ -127,7 +127,7 @@ func NewWorkItemForPharos(item *WorkItem) *WorkItemForPharos {
 		Action:                item.Action,
 		BagDate:               item.BagDate,
 		Bucket:                item.Bucket,
-		Date:                  item.Date,
+		Date:                  item.DateProcessed,
 		ETag:                  item.ETag,
 		GenericFileIdentifier: item.GenericFileIdentifier,
 		InstApprover:          item.InstApprover,

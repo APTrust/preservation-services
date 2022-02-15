@@ -570,13 +570,84 @@ func TestRegistryStorageRecordList(t *testing.T) {
 }
 
 func TestWorkItemByID(t *testing.T) {
-
+	client := GetRegistryClient(t)
+	resp := client.WorkItemByID(1)
+	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Error)
+	item := resp.WorkItem()
+	require.NotNil(t, item)
+	assert.EqualValues(t, 1, item.ID)
+	assert.Equal(t, constants.ActionIngest, item.Action)
+	assert.EqualValues(t, 2, item.InstitutionID)
+	assert.EqualValues(t, "fake_bag_01.tar", item.Name)
+	assert.NotEmpty(t, item.BagDate)
+	assert.Equal(t, "", item.ObjectIdentifier)
 }
 
 func TestWorkItemList(t *testing.T) {
-
+	client := GetRegistryClient(t)
+	v := url.Values{}
+	v.Add("sort", "name__desc")
+	v.Add("per_page", "100")
+	v.Add("institution_id", "2")
+	v.Add("action", constants.ActionIngest)
+	resp := client.WorkItemList(v)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, fmt.Sprintf("/admin-api/v3/items/?%s", v.Encode()), resp.Request.URL.Opaque)
+	items := resp.WorkItems()
+	lastName := "zzzzzz"
+	assert.Equal(t, 14, len(items))
+	for _, item := range items {
+		assert.EqualValues(t, 2, item.InstitutionID)
+		assert.Equal(t, constants.ActionIngest, item.Action)
+		assert.True(t, item.Name < lastName, item.Name)
+		lastName = item.Name
+	}
 }
 
 func TestWorkItemSave(t *testing.T) {
+	client := GetRegistryClient(t)
 
+	item := &registry.WorkItem{
+		Action:        constants.ActionIngest,
+		BagDate:       time.Now().Add(-24 * time.Hour),
+		Bucket:        "aptrust.receiving.test.edu",
+		DateProcessed: time.Now().UTC(),
+		ETag:          "oldmacdonaldhadafarmeieioandonhisfarm",
+		InstitutionID: 4,
+		Name:          "spongebob.tar",
+		Note:          "Item is in receiving bucket",
+		Outcome:       "Item is awaiting ingest",
+		Retry:         true,
+		Size:          38012337,
+		Stage:         constants.StageReceive,
+		Status:        constants.StatusPending,
+		User:          "system@aptrust.org",
+	}
+
+	resp := client.WorkItemSave(item)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, http.StatusCreated, resp.Response.StatusCode)
+	savedWorkItem := resp.WorkItem()
+	require.NotNil(t, savedWorkItem)
+	assert.True(t, savedWorkItem.ID > 0)
+	assert.Equal(t, item.Action, savedWorkItem.Action)
+	assert.Equal(t, item.ETag, savedWorkItem.ETag)
+	assert.Equal(t, item.Name, savedWorkItem.Name)
+	assert.Equal(t, item.InstitutionID, savedWorkItem.InstitutionID)
+
+	// Make sure we can update the item
+	savedWorkItem.Status = constants.StatusCancelled
+	savedWorkItem.Outcome = "Krabby Patties"
+	savedWorkItem.Note = "Patrick Star"
+	resp = client.WorkItemSave(savedWorkItem)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, http.StatusOK, resp.Response.StatusCode)
+	updatedWorkItem := resp.WorkItem()
+	require.NotNil(t, updatedWorkItem)
+	assert.True(t, updatedWorkItem.ID > 0)
+	assert.Equal(t, savedWorkItem.Status, updatedWorkItem.Status)
+	assert.Equal(t, savedWorkItem.Outcome, updatedWorkItem.Outcome)
+	assert.Equal(t, savedWorkItem.Note, updatedWorkItem.Note)
 }

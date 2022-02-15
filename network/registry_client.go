@@ -739,32 +739,36 @@ func (client *RegistryClient) WorkItemByID(id int64) *RegistryResponse {
 // WorkItemList lists the work items meeting the specified filters, or
 // all work items if no filter params are set. Params include:
 //
-// created_before - DateTime in RFC3339 format
-// created_after - DateTime in RFC3339 format
-// updated_before - DateTime in RFC3339 format
-// updated_after - DateTime in RFC3339 format
-// bag_date - DateTime in RFC3339 format
-// name - Name of the tar file that appeared in the receiving bucket.
-// name_contains - Match on partial tar file name
-// etag - The etag of the file uploaded to the receiving bucket.
-// etag_contains - Match on partial etag.
-// object_identifier - The IntellectualObject identifier (null in some WorkItems)
-// object_identifier_contains - Match on partial IntelObj
-// file_identifier - The GenericFile identifier (null on most WorkItems)
-// file_identifier_contains - Match on partiak GenericFile identifier
-// status - String enum value from constants. StatusFetch, StatusUnpack, etc.
-// stage - String enum value from constants. StageReceive, StageCleanup, etc.
-// item_action - String enum value from constants. ActionIngest, ActionRestore, etc.
-// access - String enum value from constants.AccessRights.
-// state - "A" for active items, "D" for deleted items.
-// institution_id - Int: id of institution
+// action
+// alt_identifier
+// bag_date__gteq
+// bag_date__lteq
+// bag_group_identifier
+// bagit_profile_identifier
+// bucket
+// date_processed__gteq
+// date_processed__lteq
+// etag
+// generic_file_identifier
+// institution_id
+// name
+// needs_admin_review
+// node__not_null
+// object_identifier
+// size__gteq
+// size__lteq
+// stage
+// status
+// storage_option
+// user - user's email address
+//
 func (client *RegistryClient) WorkItemList(params url.Values) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryWorkItem)
 	resp.workItems = make([]*registry.WorkItem, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/items?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/admin-api/%s/items/?%s", client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -789,11 +793,10 @@ func (client *RegistryClient) WorkItemSave(obj *registry.WorkItem) *RegistryResp
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/items/", client.APIVersion)
+	relativeURL := fmt.Sprintf("/admin-api/%s/items/create/%d", client.APIVersion, obj.InstitutionID)
 	httpMethod := "POST"
 	if obj.ID > 0 {
-		// URL should look like /admin-api/v2/items/46956/
-		relativeURL = fmt.Sprintf("%s%d/", relativeURL, obj.ID)
+		relativeURL = fmt.Sprintf("/admin-api/%s/items/update/%d", client.APIVersion, obj.ID)
 		httpMethod = "PUT"
 	}
 	absoluteURL := client.BuildURL(relativeURL)
