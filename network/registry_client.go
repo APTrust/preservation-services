@@ -686,17 +686,17 @@ func (client *RegistryClient) PremisEventSave(obj *registry.PremisEvent) *Regist
 	return resp
 }
 
-// StorageRecordList returns a list of StorageRecords.
-// Param genericFileIdentifier is required.
-func (client *RegistryClient) StorageRecordList(genericFileIdentifier string) *RegistryResponse {
+// StorageRecordList returns a list of StorageRecords. The only supported
+// filter param is generic_file_identifier. This also supports the usual
+// page, per_page, and sort params. The main use case for this is to get
+// all storage records for a single generic file.
+func (client *RegistryClient) StorageRecordList(params url.Values) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryStorageRecord)
 	resp.storageRecords = make([]*registry.StorageRecord, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/storage_records/%s",
-		client.APIVersion,
-		EscapeFileIdentifier(genericFileIdentifier))
+	relativeURL := fmt.Sprintf("/admin-api/%s/storage_records/?%s", client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -708,56 +708,6 @@ func (client *RegistryClient) StorageRecordList(genericFileIdentifier string) *R
 	// Parse the JSON from the response body.
 	// If there's an error, it will be recorded in resp.Error
 	resp.UnmarshalJSONList()
-	return resp
-}
-
-// StorageRecordSave saves a StorageRecord to Registry. Note that
-// StorageRecords can be created but not updated.
-func (client *RegistryClient) StorageRecordSave(obj *registry.StorageRecord, gfIdentifier string) *RegistryResponse {
-	// Set up the response object
-	resp := NewRegistryResponse(RegistryStorageRecord)
-	resp.storageRecords = make([]*registry.StorageRecord, 1)
-
-	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/storage_records/%s", client.APIVersion,
-		url.QueryEscape(gfIdentifier))
-	httpMethod := "POST"
-	absoluteURL := client.BuildURL(relativeURL)
-
-	// Prepare the JSON data
-	postData, err := obj.ToJSON()
-	if err != nil {
-		resp.Error = err
-	}
-
-	// Run the request
-	client.DoRequest(resp, httpMethod, absoluteURL, bytes.NewBuffer(postData))
-	if resp.Error != nil {
-		return resp
-	}
-
-	// Parse the JSON from the response body
-	cs := &registry.StorageRecord{}
-	resp.Error = json.Unmarshal(resp.data, cs)
-	if resp.Error == nil {
-		resp.storageRecords[0] = cs
-	}
-	return resp
-}
-
-// StorageRecordDelete deletes the storage record with the specified ID.
-func (client *RegistryClient) StorageRecordDelete(id int) *RegistryResponse {
-	// Set up the response object
-	resp := NewRegistryResponse(RegistryStorageRecord)
-	resp.storageRecords = make([]*registry.StorageRecord, 1)
-
-	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/storage_records/%d", client.APIVersion, id)
-	httpMethod := "DELETE"
-	absoluteURL := client.BuildURL(relativeURL)
-
-	// Run the request
-	client.DoRequest(resp, httpMethod, absoluteURL, nil)
 	return resp
 }
 
@@ -856,33 +806,6 @@ func (client *RegistryClient) WorkItemSave(obj *registry.WorkItem) *RegistryResp
 
 	// Run the request
 	client.DoRequest(resp, httpMethod, absoluteURL, bytes.NewBuffer(postData))
-	if resp.Error != nil {
-		return resp
-	}
-
-	// Parse the JSON from the response body
-	workItem := &registry.WorkItem{}
-	resp.Error = json.Unmarshal(resp.data, workItem)
-	if resp.Error == nil {
-		resp.workItems[0] = workItem
-	}
-	return resp
-}
-
-// FinishRestorationSpotTest tells Registry to send an email to institutional
-// admins saying APTrust has randomly restored one of their bags as part of a
-// spot test.
-func (client *RegistryClient) FinishRestorationSpotTest(workItemID int) *RegistryResponse {
-	// Set up the response object
-	resp := NewRegistryResponse(RegistryWorkItem)
-	resp.workItems = make([]*registry.WorkItem, 1)
-
-	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/notifications/spot_test_restoration/%d/", client.APIVersion, workItemID)
-	absoluteURL := client.BuildURL(relativeURL)
-
-	// Run the request
-	client.DoRequest(resp, "GET", absoluteURL, nil)
 	if resp.Error != nil {
 		return resp
 	}

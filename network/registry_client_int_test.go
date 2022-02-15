@@ -439,7 +439,7 @@ func TestRegistryChecksumByID(t *testing.T) {
 	assert.EqualValues(t, 1, cs.GenericFileID)
 }
 
-func TestChecksumList(t *testing.T) {
+func TestRegistryChecksumList(t *testing.T) {
 	client := GetRegistryClient(t)
 	v := url.Values{}
 	v.Add("sort", "generic_file_id__asc")
@@ -461,7 +461,7 @@ func TestChecksumList(t *testing.T) {
 	}
 }
 
-func TestChecksumSave(t *testing.T) {
+func TestRegistryChecksumSave(t *testing.T) {
 	client := GetRegistryClient(t)
 	timestamp := time.Now().UTC()
 	checksum := &registry.Checksum{
@@ -500,7 +500,7 @@ func TestChecksumSave(t *testing.T) {
 	assert.True(t, foundChecksum)
 }
 
-func TestPremisEventGet(t *testing.T) {
+func TestRegistryPremisEventGet(t *testing.T) {
 	// These values come from registry fixtures in premis_events.csv
 	id := int64(1)
 	identifier := "a966ca54-ee5b-4606-81bd-7653dd5f3a63"
@@ -527,7 +527,7 @@ func testPremisEvent(t *testing.T, event *registry.PremisEvent, id int64, identi
 	assert.NotEmpty(t, event.DateTime)
 }
 
-func TestPremisEventList(t *testing.T) {
+func TestRegistryPremisEventList(t *testing.T) {
 	client := GetRegistryClient(t)
 	v := url.Values{}
 	v.Add("sort", "identifier__asc")
@@ -546,4 +546,37 @@ func TestPremisEventList(t *testing.T) {
 		assert.True(t, event.Identifier > lastIdentifier)
 		lastIdentifier = event.Identifier
 	}
+}
+
+func TestRegistryStorageRecordList(t *testing.T) {
+	client := GetRegistryClient(t)
+	v := url.Values{}
+	v.Add("sort", "url__asc")
+	v.Add("per_page", "100")
+	v.Add("generic_file_id", "1")
+	resp := client.StorageRecordList(v)
+	assert.NotNil(t, resp)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, "/admin-api/v3/storage_records/?generic_file_id=1&per_page=100&sort=url__asc", resp.Request.URL.Opaque)
+	records := resp.StorageRecords()
+
+	lastUrl := ""
+	assert.Equal(t, 2, len(records))
+	for _, sr := range records {
+		assert.EqualValues(t, 1, sr.GenericFileID)
+		assert.True(t, sr.URL > lastUrl)
+		lastUrl = sr.URL
+	}
+}
+
+func TestWorkItemByID(t *testing.T) {
+
+}
+
+func TestWorkItemList(t *testing.T) {
+
+}
+
+func TestWorkItemSave(t *testing.T) {
+
 }
