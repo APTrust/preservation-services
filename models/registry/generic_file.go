@@ -8,8 +8,8 @@ import (
 	"github.com/APTrust/preservation-services/util"
 )
 
-// GenericFile represents a Pharos GenericFile object.
-// Note that FileModified is currently not being stored in Pharos.
+// GenericFile represents a Registry GenericFile object.
+// Note that FileModified is currently not being stored in Registry.
 type GenericFile struct {
 	Checksums            []*Checksum `json:"checksums"`
 	CreatedAt            time.Time   `json:"created_at"`
@@ -90,14 +90,6 @@ func (gf *GenericFile) IsTagFile() bool {
 	return !strings.HasPrefix(pathInBag, "data") && !util.LooksLikeManifest(pathInBag) && !util.LooksLikeTagManifest(pathInBag)
 }
 
-// JSON format for Pharos post/put is {"generic_file": <object>}
-// Also note that we don't serialize fields that Pharos doesn't accept.
-func (gf *GenericFile) SerializeForPharos() ([]byte, error) {
-	dataStruct := make(map[string]*GenericFileForPharos)
-	dataStruct["generic_file"] = NewGenericFileForPharos(gf)
-	return json.Marshal(dataStruct)
-}
-
 // GetLatestChecksum returns the most recent checksum digest for the given
 // algorithm for this file.
 func (gf *GenericFile) GetLatestChecksum(algorithm string) *Checksum {
@@ -110,34 +102,4 @@ func (gf *GenericFile) GetLatestChecksum(algorithm string) *Checksum {
 		}
 	}
 	return checksum
-}
-
-type GenericFileForPharos struct {
-	Checksums            []*Checksum      `json:"checksums_attributes,omitempty"`
-	FileFormat           string           `json:"file_format"`
-	ID                   int64            `json:"id,omitempty"`
-	Identifier           string           `json:"identifier,omitempty"`
-	InstitutionID        int64            `json:"institution_id"`
-	IntellectualObjectID int64            `json:"intellectual_object_id"`
-	PremisEvents         []*PremisEvent   `json:"premis_events_attributes,omitempty"`
-	Size                 int64            `json:"size"`
-	StorageOption        string           `json:"storage_option"`
-	StorageRecords       []*StorageRecord `json:"storage_records_attributes,omitempty"`
-	UUID                 string           `json:"uuid,omitempty"`
-}
-
-func NewGenericFileForPharos(gf *GenericFile) *GenericFileForPharos {
-	return &GenericFileForPharos{
-		Checksums:            gf.Checksums,
-		FileFormat:           gf.FileFormat,
-		ID:                   gf.ID,
-		Identifier:           gf.Identifier,
-		InstitutionID:        gf.InstitutionID,
-		IntellectualObjectID: gf.IntellectualObjectID,
-		PremisEvents:         gf.PremisEvents,
-		Size:                 gf.Size,
-		StorageOption:        gf.StorageOption,
-		StorageRecords:       gf.StorageRecords,
-		UUID:                 gf.UUID,
-	}
 }

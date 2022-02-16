@@ -162,7 +162,9 @@ func testObjectDeletionEvent(t *testing.T, context *common.Context) {
 	values.Set("per_page", "100")
 	resp := context.RegistryClient.PremisEventList(values)
 	require.Nil(t, resp.Error)
-	// Pharos doesn't filter these results properly
+	// TODO: Can we delete this?
+	// Pharos did't filter these results properly,
+	// Registry probably does.
 	count := 0
 	for _, event := range resp.PremisEvents() {
 		if event.GenericFileIdentifier == "" {
@@ -253,6 +255,9 @@ func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 	}
 }
 
+// TODO: Can we delete this?
+// It looks like Registry may create the WorkItem
+//
 // We have to create a deletion WorkItem for this object,
 // or Pharos returns the following error when we call the
 // object's finish_delete endpoint:
@@ -298,7 +303,7 @@ func getInstId(t *testing.T, context *common.Context) int {
 	return resp.Institution().ID
 }
 
-// Sigh... Pharos internal logic requires that this record exist
+// Registry internal logic requires that this record exist
 // before it will allow a deletion to be marked complete.
 func getFileIngestEvent(gf *registry.GenericFile) *registry.PremisEvent {
 	eventId := uuid.New()

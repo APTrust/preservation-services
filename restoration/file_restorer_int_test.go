@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package restoration_test
@@ -15,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// This generic file is loaded as part of the Pharos integration
+// This generic file is loaded as part of the Registry integration
 // text fixture set.
 var gfIdentifier = "test.edu/apt-test-restore/data/sample.xml"
 var gfWorkItemID = 56338

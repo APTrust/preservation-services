@@ -47,15 +47,15 @@ type IngestObject struct {
 	// and its presence automatically invalidates the bag.
 	HasFetchTxt bool `json:"has_fetch_txt"`
 
-	// ID is the ID of an IntellectualObject in Pharos. This will be zero
+	// ID is the ID of an IntellectualObject in the Registry. This will be zero
 	// for objects that have never before been ingested (which is 99% of
 	// the bags depositors upload). If we're ingesting a newer version of
 	// an existing object, this ID will be set to the ID of the original
 	// object early in the ingest process so that we update the right records
-	// in Pharos when ingest is complete. If we're ingesting a new bag, this
+	// in the Registry when ingest is complete. If we're ingesting a new bag, this
 	// ID will be set to the ID of the newly saved IntellectualObject, and
 	// ingest services will be sure to stamp any new GenericFiles with this
-	// object ID before saving them to Pharos.
+	// object ID before saving them to the Registry.
 	ID int64 `json:"id,omitempty"`
 
 	// Institution is the identifier of the institution that is depositing
@@ -85,26 +85,26 @@ type IngestObject struct {
 	// serialized to JSON and persisted to Redis. We need to maintain a
 	// single list of Premis Events for each ingest, with one fixed set
 	// of UUIDs. If we regenerate this list between retries, each event
-	// will get a new UUID and will be recorded as a new event in Pharos,
+	// will get a new UUID and will be recorded as a new event in Registry,
 	// even when it shouldn't be. So we generate the list once, late in
 	// the ingest process, and keep it in Redis in case we have to retry
-	// the Pharos data recording step.
+	// the Registry data recording step.
 	PremisEvents []*registry.PremisEvent `json:"premis_events,omitempty"`
 
-	// RecheckPharosIdentifiers: When this is set to true, we must re-check
-	// all object, file, and event identifiers in Pharos before attempting
+	// RecheckRegistryIdentifiers: When this is set to true, we must re-check
+	// all object, file, and event identifiers in Registry before attempting
 	// to record metadata. This flag pertains to
 	// the ingest record phase only. It helps handle a case where we've
-	// managed to record some but not all of an object's files. Pharos sometimes
+	// managed to record some but not all of an object's files. Registry sometimes
 	// does not let us know which items were properly recorded. When we make
-	// subsequent attempts to record those items as new, Pharos responds with
+	// subsequent attempts to record those items as new, Registry responds with
 	// a 422 error (which should be a 409) saying the identifier has already
 	// been taken. When the ingest recorder sees one of these errors, it should
 	// set this flag to true and requeue the WorkItem. On the next run, it should
-	// recheck all identifiers with Pharos, assign the proper ID
-	// to items Pharos has already recorded, clear this flag, and then proceed
+	// recheck all identifiers with Registry, assign the proper ID
+	// to items Registry has already recorded, clear this flag, and then proceed
 	// as usual.
-	RecheckPharosIdentifiers bool `json:"recheck_pharos_identifiers"`
+	RecheckRegistryIdentifiers bool `json:"recheck_registry_identifiers"`
 
 	// S3Bucket is the name of the S3 bucket to which the depositor uploaded
 	// this object (tarred bag) for ingest.
@@ -114,7 +114,7 @@ type IngestObject struct {
 	S3Key string `json:"s3_key,omitempty"`
 
 	// SavedToRegistryAt is a timestamp describing when this object's ingest
-	// data was saved to Pharos.
+	// data was saved to Registry.
 	SavedToRegistryAt time.Time `json:"saved_to_registry_at,omitempty"`
 
 	// Serialization describes if and how this bag was serialized in the
@@ -145,7 +145,7 @@ type IngestObject struct {
 	// which we still accept.)
 	//
 	// Note that the ingest process may change the value of StorageOption to
-	// match the storage option of the existing object in Pharos. This behavior
+	// match the storage option of the existing object in Registry. This behavior
 	// is documented on the storage options page (url above). We do this to
 	// avoid having multiple inconsistent versions of a file in different
 	// storage locations.
@@ -383,9 +383,9 @@ func (obj *IngestObject) BestAvailableDescription() string {
 }
 
 // ToIntellectualObject returns an IntellectualObject version of this
-// IngestObject. Pharos understands the IntellectualObject, but not
+// IngestObject. Registry understands the IntellectualObject, but not
 // the IngestObject, so we have to convert before we can save data to
-// Pharos.
+// Registry.
 func (obj *IngestObject) ToIntellectualObject() *registry.IntellectualObject {
 	return &registry.IntellectualObject{
 		Access:                    obj.Access(),
@@ -414,7 +414,7 @@ func (obj *IngestObject) ToIntellectualObject() *registry.IntellectualObject {
 // Note that this list should be generated only once, and the events
 // should be preserved in Redis so that if any part of registry data
 // recording process fails, we can retry and know that we are not
-// creating new PremisEvents in Pharos. When Pharos sees these event
+// creating new PremisEvents in Registry. When Registry sees these event
 // UUIDs already exist, it will not create duplicate entries. If we
 // don't persist events with their UUIDs in Redis intermediate storage,
 // we will be sending new events with new UUIDs each time we retry

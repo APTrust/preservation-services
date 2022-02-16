@@ -18,7 +18,7 @@ var size = 1161
 
 func uploadTestBag(t *testing.T, context *common.Context) {
 	bucket = context.Config.StagingBucket
-	filePath := testutil.PathToPharosFixture("institutions.json")
+	filePath := testutil.PathToRegistryFixture("institutions.json")
 	client := context.S3Clients[constants.StorageProviderAWS]
 	uploadInfo, err := client.FPutObject(
 		ctx.Background(),

@@ -72,10 +72,6 @@ var genericFile = &registry.GenericFile{
 
 var gfJson = `{"checksums":[{"algorithm":"md5","digest":"1234","datetime":"1904-06-16T15:04:05Z","generic_file_id":5432,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","generic_file_identifier":"","intellectual_object_id":0,"institution_id":0},{"algorithm":"sha256","digest":"5678","datetime":"1904-06-16T15:04:05Z","generic_file_id":5432,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","generic_file_identifier":"","intellectual_object_id":0,"institution_id":0}],"created_at":"1904-06-16T15:04:05Z","file_format":"text/html","file_modified":"1904-06-16T15:04:05Z","id":5432,"identifier":"test.edu.bag/data/index.html","institution_id":9355,"intellectual_object_id":1000,"intellectual_object_identifier":"test.edu.bag","last_fixity_check":"1904-06-16T15:04:05Z","premis_events":[{"agent":"Maxwell Smart","created_at":"1904-06-16T15:04:05Z","date_time":"1904-06-16T15:04:05Z","detail":"detail?","event_type":"accession","generic_file_id":5432,"generic_file_identifier":"test.edu.bag/data/index.html","identifier":"you you eye dee","institution_id":9355,"intellectual_object_id":1000,"intellectual_object_identifier":"test.edu.bag","object":"scissors","outcome_detail":"just fine","outcome_information":"fine I say","outcome":"stop asking","updated_at":"1904-06-16T15:04:05Z"}],"size":8900,"state":"A","storage_option":"Standard","storage_records":[{"generic_file_id":0,"url":"https://example.com/preservation/76038bae-48f9-487b-8579-bcc48d70e64f"},{"generic_file_id":0,"url":"https://example.com/replication/76038bae-48f9-487b-8579-bcc48d70e64f"}],"uuid":"76038bae-48f9-487b-8579-bcc48d70e64f","md5":"my-md5","sha1":"my-sha1","sha256":"my-sha256","sha512":"my-sha512","updated_at":"1904-06-16T15:04:05Z"}`
 
-// JSON format for Pharos post/put is {"generic_file": <object>}
-// Also note that we don't serialize fields that Pharos doesn't accept.
-var gfJsonForPharos = `{"generic_file":{"checksums_attributes":[{"algorithm":"md5","digest":"1234","datetime":"1904-06-16T15:04:05Z","generic_file_id":5432,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","generic_file_identifier":"","intellectual_object_id":0,"institution_id":0},{"algorithm":"sha256","digest":"5678","datetime":"1904-06-16T15:04:05Z","generic_file_id":5432,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","generic_file_identifier":"","intellectual_object_id":0,"institution_id":0}],"file_format":"text/html","id":5432,"identifier":"test.edu.bag/data/index.html","institution_id":9355,"intellectual_object_id":1000,"premis_events_attributes":[{"agent":"Maxwell Smart","created_at":"1904-06-16T15:04:05Z","date_time":"1904-06-16T15:04:05Z","detail":"detail?","event_type":"accession","generic_file_id":5432,"generic_file_identifier":"test.edu.bag/data/index.html","identifier":"you you eye dee","institution_id":9355,"intellectual_object_id":1000,"intellectual_object_identifier":"test.edu.bag","object":"scissors","outcome_detail":"just fine","outcome_information":"fine I say","outcome":"stop asking","updated_at":"1904-06-16T15:04:05Z"}],"size":8900,"storage_option":"Standard","storage_records_attributes":[{"generic_file_id":0,"url":"https://example.com/preservation/76038bae-48f9-487b-8579-bcc48d70e64f"},{"generic_file_id":0,"url":"https://example.com/replication/76038bae-48f9-487b-8579-bcc48d70e64f"}],"uuid":"76038bae-48f9-487b-8579-bcc48d70e64f"}}`
-
 func TestGenericFileFromJson(t *testing.T) {
 	gf, err := registry.GenericFileFromJSON([]byte(gfJson))
 	require.Nil(t, err)
@@ -86,12 +82,6 @@ func TestGenericFileToJson(t *testing.T) {
 	actualJson, err := genericFile.ToJSON()
 	require.Nil(t, err)
 	assert.Equal(t, gfJson, string(actualJson))
-}
-
-func TestGenericFileSerializeForPharos(t *testing.T) {
-	actualJson, err := genericFile.SerializeForPharos()
-	require.Nil(t, err)
-	assert.Equal(t, gfJsonForPharos, string(actualJson))
 }
 
 func TestGenericFileUUID(t *testing.T) {

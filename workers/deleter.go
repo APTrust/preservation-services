@@ -18,7 +18,7 @@ type Deleter struct {
 }
 
 // NewDeleter creates a new Deleter worker. Param context is a
-// Context object with connections to S3, Redis, Pharos, and NSQ.
+// Context object with connections to S3, Redis, Registry, and NSQ.
 func NewDeleter(bufSize, numWorkers, maxAttempts int) *Deleter {
 	_context := common.NewContext()
 	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.TopicDelete, bufSize, numWorkers, maxAttempts)
@@ -77,7 +77,7 @@ func (d *Deleter) ProcessSuccessChannel() {
 		d.Context.Logger.Infof("WorkItem %d (%s) is in success channel",
 			task.WorkItem.ID, task.WorkItem.Name)
 
-		// Tell Pharos item succeeded.
+		// Tell Registry item succeeded.
 		note := fmt.Sprintf("Deletion completed at the request of %s, approved by %s.", task.WorkItem.User, task.WorkItem.InstApprover)
 		if task.WorkItem.APTrustApprover != "" {
 			note += fmt.Sprintf(" APTrust approver: %s.", task.WorkItem.APTrustApprover)
@@ -107,7 +107,7 @@ func (d *Deleter) ProcessErrorChannel() {
 			task.WorkItem.ID, task.WorkItem.Name,
 			task.WorkResult.NonFatalErrorMessage())
 
-		// Update WorkItem in Pharos
+		// Update WorkItem in Registry
 		task.WorkItem.Note = task.WorkResult.NonFatalErrorMessage()
 		if task.WorkResult.Attempt >= d.Settings.MaxAttempts {
 			task.WorkItem.Note += fmt.Sprintf(" Will not retry: failed %d times. Interim processing data persists.", task.WorkResult.Attempt)
@@ -133,12 +133,12 @@ func (d *Deleter) ProcessFatalErrorChannel() {
 			task.WorkItem.ID, task.WorkItem.Name,
 			task.WorkResult.FatalErrorMessage())
 
-		// Update WorkItem for Pharos
+		// Update WorkItem for Registry
 		task.WorkItem.Note = task.WorkResult.FatalErrorMessage()
 		task.WorkItem.Retry = false
 		task.WorkItem.NeedsAdminReview = true
 
-		// Update Pharos and Redis
+		// Update Registry and Redis
 		d.FinishItem(task)
 
 		// Tell NSQ we're done with this message.

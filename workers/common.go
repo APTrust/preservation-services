@@ -59,7 +59,7 @@ func GetRestorationObject(context *common.Context, workItem *registry.WorkItem, 
 	}
 	intelObj := resp.IntellectualObject()
 	if intelObj == nil {
-		return nil, fmt.Errorf("Pharos returned nil for IntellectualObject %s", workItem.ObjectIdentifier)
+		return nil, fmt.Errorf("Registry returned nil for IntellectualObject %s", workItem.ObjectIdentifier)
 	}
 	resp = context.RegistryClient.InstitutionByIdentifier(intelObj.Institution)
 	if resp.Error != nil {
@@ -67,7 +67,7 @@ func GetRestorationObject(context *common.Context, workItem *registry.WorkItem, 
 	}
 	institution := resp.Institution()
 	if intelObj == nil {
-		return nil, fmt.Errorf("Pharos returned nil for Institution %s", intelObj.Institution)
+		return nil, fmt.Errorf("Registry returned nil for Institution %s", intelObj.Institution)
 	}
 
 	var err error
@@ -101,7 +101,7 @@ func GetFileSize(context *common.Context, gfIdentifier string) (int64, error) {
 	}
 	gf := resp.GenericFile()
 	if gf == nil {
-		return int64(0), fmt.Errorf("Pharos returned nil for file %s", gfIdentifier)
+		return int64(0), fmt.Errorf("Registry returned nil for file %s", gfIdentifier)
 	}
 	return gf.Size, nil
 }

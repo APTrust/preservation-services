@@ -16,7 +16,7 @@ type APTQueue struct {
 }
 
 // NewAPTQueue creates a new queue worker to push WorkItems from
-// Pharos into NSQ, and marked them as queued.
+// Registry into NSQ, and marked them as queued.
 func NewAPTQueue() *APTQueue {
 	return &APTQueue{
 		Context: common.NewContext(),
@@ -43,7 +43,7 @@ func (q *APTQueue) logStartup() {
 		q.Context.Config.APTQueueInterval.String())
 }
 
-// Run retrieves all unqueued work items from Pharos and pushes
+// Run retrieves all unqueued work items from Registry and pushes
 // them into the appropriate NSQ topic.
 func (q *APTQueue) run() {
 	params := url.Values{}
@@ -56,7 +56,7 @@ func (q *APTQueue) run() {
 	for {
 		resp := q.Context.RegistryClient.WorkItemList(params)
 		if resp.Error != nil {
-			q.Context.Logger.Errorf("Error getting WorkItem list from Pharos: %s", resp.Error)
+			q.Context.Logger.Errorf("Error getting WorkItem list from Registry: %s", resp.Error)
 		}
 		q.Context.Logger.Infof("Found %d items", len(resp.WorkItems()))
 		for _, item := range resp.WorkItems() {
@@ -112,15 +112,15 @@ func (q *APTQueue) markAsQueued(workItem *registry.WorkItem) *registry.WorkItem 
 		return nil
 	}
 	if resp.Response.StatusCode != 200 {
-		q.processPharosError(resp)
+		q.processRegistryError(resp)
 		return nil
 	}
-	q.Context.Logger.Infof("Marked WorkItem id %d (%s/%s/%s) as queued in Pharos",
+	q.Context.Logger.Infof("Marked WorkItem id %d (%s/%s/%s) as queued in Registry",
 		workItem.ID, workItem.Action, workItem.Stage, workItem.Status)
 	return resp.WorkItem()
 }
 
-func (q *APTQueue) processPharosError(resp *network.RegistryResponse) {
+func (q *APTQueue) processRegistryError(resp *network.RegistryResponse) {
 	respBody := ""
 	bytesRead, aptQueuer := resp.RawResponseData()
 	if aptQueuer == nil {

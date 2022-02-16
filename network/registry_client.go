@@ -854,8 +854,10 @@ func (client *RegistryClient) NewJSONRequest(method, absoluteURL string, request
 		return nil, err
 	}
 
+	// TODO: Review Registry auth headers
 	// Registry is still using old Pharos auth headers.
 	// Maybe we should change to Registry headers?
+	// But keep in mind that depositors are using these auth headers as well.
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("X-Pharos-API-User", client.APIUser)

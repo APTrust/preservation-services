@@ -72,7 +72,7 @@ func testWorkItemAfterRestore(objIdentifier, gfIdentifier string) {
 // and contains all the expected files.
 func validateBag(objIdentifier string) {
 	intelObj := getObject(objIdentifier)
-	pharosFiles := getPharosFiles(objIdentifier)
+	registryFiles := getregistryFiles(objIdentifier)
 	tarFileName := strings.Split(objIdentifier, "/")[1] + ".tar"
 	pathToBag := path.Join(ctx.Context.Config.BaseWorkingDir, "minio", "aptrust.restore.test.test.edu", "test.edu", tarFileName)
 
@@ -81,19 +81,19 @@ func validateBag(objIdentifier string) {
 	require.Nil(ctx.T, err, objIdentifier)
 	assert.True(ctx.T, len(ingestFiles) > 0, objIdentifier)
 
-	for _, gf := range pharosFiles {
+	for _, gf := range registryFiles {
 
 		// Make sure file was restored with bag
 		restoredFile := ingestFiles[gf.Identifier]
 		require.NotNil(ctx.T, restoredFile, gf.Identifier)
 
-		pharosLatestSha256 := gf.GetLatestChecksum(constants.AlgSha256)
-		require.NotNil(ctx.T, pharosLatestSha256, gf.Identifier)
+		RegistryLatestSha256 := gf.GetLatestChecksum(constants.AlgSha256)
+		require.NotNil(ctx.T, RegistryLatestSha256, gf.Identifier)
 		restoredFileSha256 := restoredFile.GetChecksum(constants.SourceIngest, constants.AlgSha256)
 		require.NotNil(ctx.T, restoredFileSha256, gf.Identifier)
 
 		// Make sure the restored version was the LATEST version
-		assert.Equal(ctx.T, pharosLatestSha256.Digest, restoredFileSha256.Digest, gf.Identifier)
+		assert.Equal(ctx.T, RegistryLatestSha256.Digest, restoredFileSha256.Digest, gf.Identifier)
 	}
 }
 
@@ -105,8 +105,8 @@ func getObject(objIdentifier string) *registry.IntellectualObject {
 	return intelObj
 }
 
-// Get a list of files belonging to this object from Pharos
-func getPharosFiles(objIdentifier string) []*registry.GenericFile {
+// Get a list of files belonging to this object from Registry
+func getregistryFiles(objIdentifier string) []*registry.GenericFile {
 	params := url.Values{}
 	params.Set("intellectual_object_identifier", objIdentifier)
 	params.Set("include_relations", "true")

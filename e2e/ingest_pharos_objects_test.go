@@ -10,8 +10,8 @@ import (
 )
 
 // Make sure that all expected IntellectualObjects with expected
-// atributes are in Pharos.
-func testPharosObjects() {
+// atributes are in Registry.
+func testRegistryObjects() {
 	for _, expectedObj := range ctx.ExpectedObjects {
 		testObject(expectedObj)
 	}
@@ -20,27 +20,27 @@ func testPharosObjects() {
 func testObject(expectedObj *registry.IntellectualObject) {
 	resp := ctx.Context.RegistryClient.IntellectualObjectByIdentifier(expectedObj.Identifier)
 	require.Nil(ctx.T, resp.Error)
-	pharosObj := resp.IntellectualObject()
-	require.NotNil(ctx.T, pharosObj, "Pharos is missing %s", expectedObj.Identifier)
-	testObjAgainstExpected(pharosObj, expectedObj)
+	RegistryObj := resp.IntellectualObject()
+	require.NotNil(ctx.T, RegistryObj, "Registry is missing %s", expectedObj.Identifier)
+	testObjAgainstExpected(RegistryObj, expectedObj)
 }
 
-func testObjAgainstExpected(pharosObj, expectedObj *registry.IntellectualObject) {
+func testObjAgainstExpected(RegistryObj, expectedObj *registry.IntellectualObject) {
 	t := ctx.T
-	assert.Equal(t, pharosObj.Title, expectedObj.Title, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.Description, expectedObj.Description, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.Identifier, expectedObj.Identifier, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.AltIdentifier, expectedObj.AltIdentifier, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.Access, expectedObj.Access, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.BagName, expectedObj.BagName, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.State, expectedObj.State, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.BagGroupIdentifier, expectedObj.BagGroupIdentifier, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.StorageOption, expectedObj.StorageOption, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.BagItProfileIdentifier, expectedObj.BagItProfileIdentifier, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.SourceOrganization, expectedObj.SourceOrganization, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.InternalSenderIdentifier, expectedObj.InternalSenderIdentifier, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.InternalSenderDescription, expectedObj.InternalSenderDescription, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.FileCount, expectedObj.FileCount, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.FileSize, expectedObj.FileSize, expectedObj.Identifier)
-	assert.Equal(t, pharosObj.Institution, expectedObj.Institution, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.Title, expectedObj.Title, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.Description, expectedObj.Description, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.Identifier, expectedObj.Identifier, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.AltIdentifier, expectedObj.AltIdentifier, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.Access, expectedObj.Access, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.BagName, expectedObj.BagName, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.State, expectedObj.State, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.BagGroupIdentifier, expectedObj.BagGroupIdentifier, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.StorageOption, expectedObj.StorageOption, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.BagItProfileIdentifier, expectedObj.BagItProfileIdentifier, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.SourceOrganization, expectedObj.SourceOrganization, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.InternalSenderIdentifier, expectedObj.InternalSenderIdentifier, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.InternalSenderDescription, expectedObj.InternalSenderDescription, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.FileCount, expectedObj.FileCount, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.FileSize, expectedObj.FileSize, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.Institution, expectedObj.Institution, expectedObj.Identifier)
 }

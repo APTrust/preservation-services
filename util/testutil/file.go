@@ -26,16 +26,16 @@ func PathToE2EFile(filename string) string {
 	return path.Join(util.ProjectRoot(), "testdata", "e2e_results", filename)
 }
 
-func PathToPharosFixture(filename string) string {
-	return path.Join(PathToTestData(), "pharos", filename)
+func PathToRegistryFixture(filename string) string {
+	return path.Join(PathToTestData(), "registry", filename)
 }
 
 func PathToUnitTestBag(filename string) string {
 	return path.Join(PathToUnitTestBags(), filename)
 }
 
-func ReadPharosFixture(filename string) ([]byte, error) {
-	return ReadFile(PathToPharosFixture(filename))
+func ReadRegistryFixture(filename string) ([]byte, error) {
+	return ReadFile(PathToRegistryFixture(filename))
 }
 
 func ReadE2EFile(filename string) ([]byte, error) {

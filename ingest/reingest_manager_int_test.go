@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-// Existing ids, loaded in Pharos integration test fixture data
+// Existing ids, loaded in Registry integration test fixture data
 const ObjIdExists = "institution2.edu/toads"
 const FileIdExists = "institution2.edu/coal/doc3"
 
@@ -46,15 +46,15 @@ func PutBagMetadataInRedis(t *testing.T) *service.IngestObject {
 	return g.IngestObject
 }
 
-func PutBagMetadataInPharos(t *testing.T, obj *service.IngestObject) {
+func PutBagMetadataInRegistry(t *testing.T, obj *service.IngestObject) {
 	context := common.NewContext()
 
-	// Get the correct institution id from Pharos
+	// Get the correct institution id from Registry
 	inst := context.RegistryClient.InstitutionByIdentifier("example.edu").Institution()
 	require.NotNil(t, inst)
 	obj.InstitutionID = inst.ID
 
-	// Save the intel obj in Pharos
+	// Save the intel obj in Registry
 	resp := context.RegistryClient.IntellectualObjectSave(obj.ToIntellectualObject())
 	require.Nil(t, resp.Error)
 
@@ -109,7 +109,7 @@ func TestGetExistingObject(t *testing.T) {
 	// Set these properties on our test object so that
 	// IngestObject.Indentifier() resolves to
 	// "institution2.edu/toads", which does exist as part
-	// of the Pharos fixture data.
+	// of the Registry fixture data.
 	manager.IngestObject.S3Key = "toads.tar"
 	manager.IngestObject.Institution = "institution2.edu"
 	intelObj, err := manager.GetExistingObject()
@@ -150,9 +150,9 @@ func TestSetStorageOption(t *testing.T) {
 }
 
 func TestFlagForUpdate(t *testing.T) {
-	pharosUUID := "c445c30b-2299-4796-b803-e3c6ee43a2ae"
+	registryUUID := "c445c30b-2299-4796-b803-e3c6ee43a2ae"
 	genericFile := &registry.GenericFile{
-		UUID: pharosUUID,
+		UUID: registryUUID,
 	}
 	ingestFile := &service.IngestFile{
 		NeedsSave: false,
@@ -161,13 +161,13 @@ func TestFlagForUpdate(t *testing.T) {
 	manager := GetReingestManager()
 	manager.FlagForUpdate(ingestFile, genericFile)
 	assert.True(t, ingestFile.NeedsSave)
-	assert.Equal(t, pharosUUID, ingestFile.UUID)
+	assert.Equal(t, registryUUID, ingestFile.UUID)
 }
 
 func TestFlagUnchanged(t *testing.T) {
-	pharosUUID := "c445c30b-2299-4796-b803-e3c6ee43a2ae"
+	registryUUID := "c445c30b-2299-4796-b803-e3c6ee43a2ae"
 	genericFile := &registry.GenericFile{
-		UUID: pharosUUID,
+		UUID: registryUUID,
 	}
 	ingestFile := &service.IngestFile{
 		NeedsSave: true,
@@ -176,16 +176,16 @@ func TestFlagUnchanged(t *testing.T) {
 	manager := GetReingestManager()
 	manager.FlagUnchanged(ingestFile, genericFile)
 	assert.False(t, ingestFile.NeedsSave)
-	assert.Equal(t, pharosUUID, ingestFile.UUID)
+	assert.Equal(t, registryUUID, ingestFile.UUID)
 }
 
 func TestChecksumChanged(t *testing.T) {
-	pharosChecksums := make(map[string]*registry.Checksum)
-	pharosChecksums[constants.AlgMd5] = &registry.Checksum{
+	registryChecksums := make(map[string]*registry.Checksum)
+	registryChecksums[constants.AlgMd5] = &registry.Checksum{
 		Algorithm: constants.AlgMd5,
 		Digest:    "12345",
 	}
-	pharosChecksums[constants.AlgSha256] = &registry.Checksum{
+	registryChecksums[constants.AlgSha256] = &registry.Checksum{
 		Algorithm: constants.AlgSha256,
 		Digest:    "54321",
 	}
@@ -206,21 +206,21 @@ func TestChecksumChanged(t *testing.T) {
 
 	// Ingest checksums match registry checksums,
 	// so this this should return false.
-	assert.False(t, manager.ChecksumChanged(ingestFile, pharosChecksums))
+	assert.False(t, manager.ChecksumChanged(ingestFile, registryChecksums))
 
 	// Change one md5 checksum, and we should get true.
-	pharosChecksums[constants.AlgMd5].Digest = "99999"
-	assert.True(t, manager.ChecksumChanged(ingestFile, pharosChecksums))
+	registryChecksums[constants.AlgMd5].Digest = "99999"
+	assert.True(t, manager.ChecksumChanged(ingestFile, registryChecksums))
 
 	// Fix the md5 and make sure we catch the changed sha256
-	pharosChecksums[constants.AlgMd5].Digest = "12345"
-	pharosChecksums[constants.AlgSha256].Digest = "99999"
-	assert.True(t, manager.ChecksumChanged(ingestFile, pharosChecksums))
+	registryChecksums[constants.AlgMd5].Digest = "12345"
+	registryChecksums[constants.AlgSha256].Digest = "99999"
+	assert.True(t, manager.ChecksumChanged(ingestFile, registryChecksums))
 
 	// Delete the ingest sha256 and make sure missing checksum
 	// causes no error. Both md5s are the same now.
 	ingestFile.Checksums = ingestFile.Checksums[0:0]
-	assert.False(t, manager.ChecksumChanged(ingestFile, pharosChecksums))
+	assert.False(t, manager.ChecksumChanged(ingestFile, registryChecksums))
 }
 
 func TestGetNewest(t *testing.T) {
@@ -277,7 +277,7 @@ func TestGetNewest(t *testing.T) {
 // include: ProcessFiles, ProcessFile, and CompareFiles.
 func TestReingestManagerRun(t *testing.T) {
 	obj := PutBagMetadataInRedis(t)
-	PutBagMetadataInPharos(t, obj)
+	PutBagMetadataInRegistry(t, obj)
 	manager := GetReingestManager()
 	manager.WorkItemID = TestBagWorkItemId
 
@@ -328,7 +328,7 @@ func TestReingestManagerRun(t *testing.T) {
 
 	// Now when we process the object again, it should mark all
 	// files as needing save, because all have checksums that
-	// do not match the Pharos checksums.
+	// do not match the Registry checksums.
 	wasPreviouslyIngested, errors = manager.Run()
 	assert.Equal(t, 1, wasPreviouslyIngested)
 	assert.Empty(t, errors, errors)

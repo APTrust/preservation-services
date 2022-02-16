@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -21,7 +22,7 @@ import (
 
 func testFileDeletions() {
 	// 	for _, gfIdentifier := range e2e.FilesToDelete {
-	// 		// Get GenericFile record from Pharos
+	// 		// Get GenericFile record from Registry
 	// 		// Pass to verifyFileDeletion
 	// 	}
 }
@@ -36,6 +37,6 @@ func testObjectDeletions() {
 
 func verifyFileDeletion(gf *registry.GenericFile) {
 	// Verify file state changed to D
-	// Verify deletion event in Pharos
+	// Verify deletion event in Registry
 	// Verify file deleted from all S3/Glacier buckets
 }

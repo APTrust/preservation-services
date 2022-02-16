@@ -477,11 +477,11 @@ func TestIngestFileFindEvent(t *testing.T) {
 	//func (f *IngestFile) FindEvent(eventUUID string) *registry.PremisEvent {
 	ingestFile := &service.IngestFile{}
 	ingestFile.PremisEvents = []*registry.PremisEvent{
-		&registry.PremisEvent{
+		{
 			Identifier: "824de525-5f16-444b-8e77-3e280c25d0fb",
 			Detail:     "Event One",
 		},
-		&registry.PremisEvent{
+		{
 			Identifier: "780ee87f-c379-4e9b-913f-e5a71c514240",
 			Detail:     "Event Two",
 		},
@@ -515,31 +515,31 @@ func getFileForEvents() *service.IngestFile {
 		StorageOption:        constants.StorageStandard,
 		UUID:                 constants.EmptyUUID,
 		Checksums: []*service.IngestChecksum{
-			&service.IngestChecksum{
+			{
 				Algorithm: constants.AlgMd5,
 				DateTime:  testutil.Bloomsday,
 				Digest:    "5555",
 				Source:    constants.SourceManifest,
 			},
-			&service.IngestChecksum{
+			{
 				Algorithm: constants.AlgMd5,
 				DateTime:  testutil.Bloomsday,
 				Digest:    "5555",
 				Source:    constants.SourceIngest,
 			},
-			&service.IngestChecksum{
+			{
 				Algorithm: constants.AlgSha256,
 				DateTime:  testutil.Bloomsday,
 				Digest:    "256256",
 				Source:    constants.SourceManifest,
 			},
-			&service.IngestChecksum{
+			{
 				Algorithm: constants.AlgSha256,
 				DateTime:  testutil.Bloomsday,
 				Digest:    "256256",
 				Source:    constants.SourceIngest,
 			},
-			&service.IngestChecksum{
+			{
 				Algorithm: constants.AlgSha512,
 				DateTime:  testutil.Bloomsday,
 				Digest:    "512512",
@@ -547,12 +547,12 @@ func getFileForEvents() *service.IngestFile {
 			},
 		},
 		StorageRecords: []*service.StorageRecord{
-			&service.StorageRecord{
+			{
 				StoredAt:   testutil.Bloomsday,
 				URL:        "https://example.com/preservation/0987",
 				VerifiedAt: testutil.Bloomsday,
 			},
-			&service.StorageRecord{
+			{
 				StoredAt:   testutil.Bloomsday,
 				URL:        "https://example.com/replication/0987",
 				VerifiedAt: testutil.Bloomsday,

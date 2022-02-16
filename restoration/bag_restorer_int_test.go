@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package restoration_test
@@ -76,7 +77,7 @@ var expectedBTRFiles = []string{
 
 // setup ensures the files we want to restore are in the local Minio
 // preservation buckets. All other info pertaining to these files/bags
-// is loaded from fixture data into Pharos by the test script in
+// is loaded from fixture data into Registry by the test script in
 // scripts/test.rb
 func setup(t *testing.T, context *common.Context) {
 	if bagRestorerSetupCompleted {
@@ -86,7 +87,7 @@ func setup(t *testing.T, context *common.Context) {
 	s3Client := context.S3Clients[constants.StorageProviderAWS]
 
 	// Our test files should be in these two preservation buckets,
-	// according to the Pharos fixture data.
+	// according to the Registry fixture data.
 	preservationBuckets := []string{
 		context.Config.BucketStandardVA,
 		context.Config.BucketStandardOR,

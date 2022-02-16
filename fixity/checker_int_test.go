@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Object identifier is loaded as part of Pharos integration fixtures
+// Object identifier is loaded as part of Registry integration fixtures
 var objIdentifier = "institution1.edu/photos"
 var fileIdentifier = "institution1.edu/data/test_http_file.txt"
 
@@ -32,7 +32,7 @@ func setup(t *testing.T) {
 	if !setupHasRun {
 		context := common.NewContext()
 		storageRecords := copyFileToPreservation(t, context)
-		createPharosRecords(t, context, storageRecords)
+		createRegistryRecords(t, context, storageRecords)
 		setupHasRun = true
 	}
 }
@@ -57,7 +57,7 @@ func copyFileToPreservation(t *testing.T, context *common.Context) (records []*r
 	return records
 }
 
-func createPharosRecords(t *testing.T, context *common.Context, records []*registry.StorageRecord) {
+func createRegistryRecords(t *testing.T, context *common.Context, records []*registry.StorageRecord) {
 	// Save a GenericFile record
 	gf := getGenericFile(t, context)
 	resp := context.RegistryClient.GenericFileSave(gf)

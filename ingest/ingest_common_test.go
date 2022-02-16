@@ -208,7 +208,7 @@ func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string
 // staging upload. Note that this ensures proper S3 setup and deletes
 // Redis records related to our WorkItem so that we start with a fresh
 // slate each time.
-func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.StagingUploader {
+func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int64, context *common.Context) *ingest.StagingUploader {
 	// Put tagsample_good in S3 receiving bucket.
 	setupS3(t, context, path.Base(pathToBag), pathToBag)
 
@@ -217,7 +217,7 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int, con
 	require.Nil(t, err)
 
 	// Set up an ingest object, and assign the correct institution id.
-	// We can't know this id ahead of time because of the way Pharos
+	// We can't know this id ahead of time because of the way Registry
 	// loads fixture data.
 	instIdentifier := getInstFromFileName(pathToBag)
 	obj := getIngestObject(pathToBag, goodbagMd5)
@@ -251,7 +251,7 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int, con
 
 // This lays the groundwork to test the PreservationUploader. It pushes our
 // test bag through all phases of ingest prior to preservation upload.
-func prepareForPreservationUpload(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.PreservationUploader {
+func prepareForPreservationUpload(t *testing.T, pathToBag string, workItemId int64, context *common.Context) *ingest.PreservationUploader {
 	uploader := prepareForCopyToStaging(t, pathToBag, workItemId, context)
 	_, errors := uploader.Run()
 	require.Empty(t, errors)
@@ -263,21 +263,21 @@ func prepareForPreservationUpload(t *testing.T, pathToBag string, workItemId int
 	return ingest.NewPreservationUploader(context, workItemId, uploader.IngestObject)
 }
 
-func prepareForPreservationVerify(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.PreservationVerifier {
+func prepareForPreservationVerify(t *testing.T, pathToBag string, workItemId int64, context *common.Context) *ingest.PreservationVerifier {
 	uploader := prepareForPreservationUpload(t, pathToBag, workItemId, context)
 	_, errors := uploader.Run()
 	require.Empty(t, errors, errors)
 	return ingest.NewPreservationVerifier(context, uploader.WorkItemID, uploader.IngestObject)
 }
 
-func prepareForRecord(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.Recorder {
+func prepareForRecord(t *testing.T, pathToBag string, workItemId int64, context *common.Context) *ingest.Recorder {
 	verifier := prepareForPreservationVerify(t, pathToBag, workItemId, context)
 	_, errors := verifier.Run()
 	require.Empty(t, errors, errors)
 	return ingest.NewRecorder(context, verifier.WorkItemID, verifier.IngestObject)
 }
 
-func prepareForCleanup(t *testing.T, pathToBag string, workItemId int, context *common.Context) *ingest.Cleanup {
+func prepareForCleanup(t *testing.T, pathToBag string, workItemId int64, context *common.Context) *ingest.Cleanup {
 	recorder := prepareForRecord(t, pathToBag, workItemId, context)
 	_, errors := recorder.Run()
 	require.Empty(t, errors, errors)

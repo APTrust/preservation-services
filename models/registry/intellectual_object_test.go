@@ -34,10 +34,6 @@ var obj = &registry.IntellectualObject{
 
 var objJson = `{"access":"consortia","alt_identifier":"alt-1234","bag_group_identifier":"group-1","bagit_profile_identifier":"https://example.com/profile.json","bag_name":"BagOfTricks","created_at":"1904-06-16T15:04:05Z","description":"Bag of tricks","etag":"987654","id":28,"identifier":"test.edu/BagOfTricks","internal_sender_description":"int-sender-desc","internal_sender_identifier":"int-sender-ident","institution":"test.edu","institution_id":301,"source_organization":"Test University","state":"A","storage_option":"Wasabi-OR","title":"Thirteen Ways of Looking at a Blackbird","updated_at":"1904-06-16T15:04:05Z"}`
 
-// JSON format for Pharos post/put is {"intellectual_object": <object>}
-// Also note that we don't serialize fields that Pharos doesn't accept.
-var objJsonForPharos = `{"intellectual_object":{"access":"consortia","alt_identifier":"alt-1234","bag_group_identifier":"group-1","bagit_profile_identifier":"https://example.com/profile.json","bag_name":"BagOfTricks","description":"Bag of tricks","etag":"987654","identifier":"test.edu/BagOfTricks","internal_sender_description":"int-sender-desc","internal_sender_identifier":"int-sender-ident","institution_id":301,"source_organization":"Test University","state":"A","storage_option":"Wasabi-OR","title":"Thirteen Ways of Looking at a Blackbird"}}`
-
 func TestIntellectualObjectFromJson(t *testing.T) {
 	intelObj, err := registry.IntellectualObjectFromJSON([]byte(objJson))
 	require.Nil(t, err)
@@ -48,12 +44,6 @@ func TestIntellectualObjectToJson(t *testing.T) {
 	actualJson, err := obj.ToJSON()
 	require.Nil(t, err)
 	assert.Equal(t, objJson, string(actualJson))
-}
-
-func TestIntellectualSerializeForPharos(t *testing.T) {
-	actualJson, err := obj.SerializeForPharos()
-	require.Nil(t, err)
-	assert.Equal(t, objJsonForPharos, string(actualJson))
 }
 
 func TestObjIdentifierMinusInstitution(t *testing.T) {

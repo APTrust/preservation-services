@@ -11,7 +11,7 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 )
 
-// Recorder records the result of successful ingest in Pharos, creating
+// Recorder records the result of successful ingest in Registry, creating
 // or updating all necessary records, including IntellectualObject,
 // GenericFiles, and PremisEvents.
 type Recorder struct {
@@ -29,12 +29,12 @@ func NewRecorder(context *common.Context, workItemID int64, ingestObject *servic
 	}
 }
 
-// Run saves all object, file, checksum, and event data to Pharos.
+// Run saves all object, file, checksum, and event data to Registry.
 // This returns the number of files saved, and a list of any errors that
 // occurred.
 func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
-	if r.IngestObject.RecheckPharosIdentifiers {
-		errors = r.recheckPharosIdentifiers()
+	if r.IngestObject.RecheckRegistryIdentifiers {
+		errors = r.recheckRegistryIdentifiers()
 		if len(errors) > 0 {
 			r.flagPartialRecordingIfNecessary(errors)
 			return 0, errors
@@ -60,7 +60,7 @@ func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 		// deleted by the bucket policy, but we want to know the
 		// error occurred.
 		r.IngestObject.ShouldDeleteFromReceiving = true
-		r.IngestObject.RecheckPharosIdentifiers = false
+		r.IngestObject.RecheckRegistryIdentifiers = false
 		err := r.IngestObjectSave()
 		if err != nil {
 			r.Context.Logger.Errorf("WorkItem %d. After marking ShouldDeletedFromReceiving = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
@@ -70,7 +70,7 @@ func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 	return fileCount, errors
 }
 
-// recordObject records the IntellectualObject record in Pharos,
+// recordObject records the IntellectualObject record in Registry,
 // along with the object-level events.
 // The IntellectualObject comes from this worker's IngestObject.
 // This method is public so we can test it. Call Run() instead.
@@ -123,11 +123,11 @@ func (r *Recorder) recordObjectEvents() (errors []*service.ProcessingError) {
 	return errors
 }
 
-// recordFiles saves new files to Pharos in batches, and updates
+// recordFiles saves new files to Registry in batches, and updates
 // existing (reingested) files individually. Note that when we save
 // GenericFile records, we save all associated PremisEvents, Checksums,
 // and StorageRecords with the file. Typically, each batch of files we
-// send to Pharos will have ~100 files and each of those files will have
+// send to Registry will have ~100 files and each of those files will have
 // 2-3 checksums, 1-2 storage records, and 8-9 premis events.
 func (r *Recorder) recordFiles() (fileCount int, errors []*service.ProcessingError) {
 	batchNumber := 0
@@ -146,7 +146,7 @@ func (r *Recorder) recordFiles() (fileCount int, errors []*service.ProcessingErr
 			errors = append(errors, r.Error(r.IngestObject.Identifier(), err, false))
 			break
 		}
-		// Pharos can save new files in batches, but cannot
+		// Registry can save new files in batches, but cannot
 		// update existing files in batches, so we have to
 		// separate these.
 		filesToSave, filesToUpdate := r.prepareFilesForSave(fileMap, batchNumber)
@@ -216,7 +216,7 @@ func (r *Recorder) saveBatch(ingestFiles []*service.IngestFile) (fileCount int, 
 }
 
 // updateBatch updates a batch of existing GenericFile records in a series
-// of requests to Pharos. One request per file.
+// of requests to Registry. One request per file.
 func (r *Recorder) updateBatch(ingestFiles []*service.IngestFile) (fileCount int, errors []*service.ProcessingError) {
 	for _, ingestFile := range ingestFiles {
 		gf, err := ingestFile.ToGenericFile()
@@ -225,7 +225,7 @@ func (r *Recorder) updateBatch(ingestFiles []*service.IngestFile) (fileCount int
 		}
 		resp := r.Context.RegistryClient.GenericFileSave(gf)
 		if resp.Error != nil {
-			// TODO: Pharos should return 409 on StorageRecord.URL
+			// TODO: Registry should return 409 on StorageRecord.URL
 			// conflict, and that should be a fatal error.
 			errors = append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
 			// -------- DEBUG --------
@@ -246,7 +246,7 @@ func (r *Recorder) updateBatch(ingestFiles []*service.IngestFile) (fileCount int
 }
 
 // MarkFilesAsSaved updates files in Redis to indicate they were saved to
-// Pharos.
+// Registry.
 func (r *Recorder) markFilesAsSaved(genericFiles []*registry.GenericFile, ingestFiles []*service.IngestFile) (errors []*service.ProcessingError) {
 	itemsMarked := 0
 	ingestFileMap := make(map[string]*service.IngestFile, len(ingestFiles))
@@ -264,27 +264,27 @@ func (r *Recorder) markFilesAsSaved(genericFiles []*registry.GenericFile, ingest
 		itemsMarked++
 	}
 	if itemsMarked < len(ingestFiles) {
-		err := fmt.Errorf("Only %d of %d ingest files were marked as saved in Pharos", itemsMarked, len(ingestFiles))
+		err := fmt.Errorf("Only %d of %d ingest files were marked as saved in Registry", itemsMarked, len(ingestFiles))
 		errors = append(errors, r.Error(r.IngestObject.Identifier(), err, false))
 	}
 	return errors
 }
 
 // hasDuplicateIdentityError returns true if we encountered an "identity has
-// already been taken" error from Pharos. Ideally, we'd have a better way of
-// testing for this, but this error occurs during batch operations, and Pharos
+// already been taken" error from Registry. Ideally, we'd have a better way of
+// testing for this, but this error occurs during batch operations, and Registry
 // does not report specifics about which error is a duplicate.
 //
 // This error occurs when a prior run of the ingest recorder successfully records
-// a number of generic files but does not get a response from Pharos. There are
+// a number of generic files but does not get a response from Registry. There are
 // several reasons for not getting a response, including proxy errors from Nginx,
-// http timeouts, disk errors on the Pharos server, etc. Whatever the cause, we
+// http timeouts, disk errors on the Registry server, etc. Whatever the cause, we
 // have to recover from it, so we set this flag. The next record worker to pick up
-// this task will ask Pharos which generic files it knows about, and will set
+// this task will ask Registry which generic files it knows about, and will set
 // the proper ID on those files so we know to record them with a PUT/update
 // instead of a POST/create.
 //
-// Pharos really should be returning 409 here, not 422.
+// Registry really should be returning 409 here, not 422.
 //
 // https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
 func (r *Recorder) hasDuplicateIdentityError(errors []*service.ProcessingError) bool {
@@ -297,21 +297,21 @@ func (r *Recorder) hasDuplicateIdentityError(errors []*service.ProcessingError) 
 }
 
 // https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
-func (r *Recorder) recheckPharosIdentifiers() []*service.ProcessingError {
-	objectExistsInPharos, errors := r.recheckPharosObject()
+func (r *Recorder) recheckRegistryIdentifiers() []*service.ProcessingError {
+	objectExistsInRegistry, errors := r.recheckRegistryObject()
 
 	// Can't continue on error; don't need to if object doesn't exist
-	if len(errors) > 0 || objectExistsInPharos == false {
+	if len(errors) > 0 || objectExistsInRegistry == false {
 		return errors
 	}
 
-	return r.recheckPharosFiles()
+	return r.recheckRegistryFiles()
 }
 
 // https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
-func (r *Recorder) recheckPharosObject() (objectExistsInPharos bool, errors []*service.ProcessingError) {
-	// If we already have the object id, no need to bother Pharos,
-	// except in the edge case where Pharos has the object and
+func (r *Recorder) recheckRegistryObject() (objectExistsInRegistry bool, errors []*service.ProcessingError) {
+	// If we already have the object id, no need to bother Registry,
+	// except in the edge case where Registry has the object and
 	// only SOME of the object events.
 	if r.IngestObject.ID > 0 {
 		r.recheckObjectEvents()
@@ -322,9 +322,9 @@ func (r *Recorder) recheckPharosObject() (objectExistsInPharos bool, errors []*s
 		return true, errors
 	}
 
-	r.Context.Logger.Infof("Checking for existing Pharos object %s", r.IngestObject.Identifier())
+	r.Context.Logger.Infof("Checking for existing Registry object %s", r.IngestObject.Identifier())
 
-	// Look up the object in Pharos
+	// Look up the object in Registry
 	resp := r.Context.RegistryClient.IntellectualObjectByIdentifier(r.IngestObject.Identifier())
 	if resp.Error != nil {
 		// If not found, item has not yet been recorded, and we have
@@ -338,10 +338,10 @@ func (r *Recorder) recheckPharosObject() (objectExistsInPharos bool, errors []*s
 	}
 	obj := resp.IntellectualObject()
 	if obj == nil {
-		errors = append(errors, r.Error(r.IngestObject.Identifier(), fmt.Errorf("Pharos returned nil object"), false))
+		errors = append(errors, r.Error(r.IngestObject.Identifier(), fmt.Errorf("Registry returned nil object"), false))
 		return false, errors
 	}
-	r.Context.Logger.Infof("RecheckPharosObject: Setting object ID to %d for %s", obj.ID, obj.Identifier)
+	r.Context.Logger.Infof("RecheckRegistryObject: Setting object ID to %d for %s", obj.ID, obj.Identifier)
 	r.IngestObject.ID = obj.ID
 	r.recheckObjectEvents()
 	err := r.IngestObjectSave()
@@ -352,7 +352,7 @@ func (r *Recorder) recheckPharosObject() (objectExistsInPharos bool, errors []*s
 }
 
 // https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
-// If Pharos has already recorded the object-level ingest events, we need
+// If Registry has already recorded the object-level ingest events, we need
 // to know their IDs so we don't try to re-record them.
 func (r *Recorder) recheckObjectEvents() {
 	for _, event := range r.IngestObject.PremisEvents {
@@ -367,10 +367,10 @@ func (r *Recorder) recheckObjectEvents() {
 }
 
 // https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
-// Check GenericFile records in Pharos. If they have IDs, we need to copy them
+// Check GenericFile records in Registry. If they have IDs, we need to copy them
 // to our Redis records before recording. This is part of the recovery process
 // for partial ingest recording.
-func (r *Recorder) recheckPharosFiles() (errors []*service.ProcessingError) {
+func (r *Recorder) recheckRegistryFiles() (errors []*service.ProcessingError) {
 	params := url.Values{}
 	params.Set("intellectual_object_identifier", r.IngestObject.Identifier())
 	params.Set("include_events", "true")
@@ -398,7 +398,7 @@ func (r *Recorder) recheckPharosFiles() (errors []*service.ProcessingError) {
 func (r *Recorder) updateRedisFileAndEvents(gf *registry.GenericFile) (errors []*service.ProcessingError) {
 	// Update Redis IngestFile record
 	ingestFile, _ := r.Context.RedisClient.IngestFileGet(r.WorkItemID, gf.Identifier)
-	// Pharos may have some older files for this object that are not
+	// Registry may have some older files for this object that are not
 	// part of this ingest. Redis will return nil for those.
 	if ingestFile != nil {
 		ingestFile.ID = gf.ID
@@ -419,10 +419,10 @@ func (r *Recorder) updateRedisFileAndEvents(gf *registry.GenericFile) (errors []
 
 func (r *Recorder) flagPartialRecordingIfNecessary(errors []*service.ProcessingError) {
 	if r.hasDuplicateIdentityError(errors) {
-		r.IngestObject.RecheckPharosIdentifiers = true
+		r.IngestObject.RecheckRegistryIdentifiers = true
 		err := r.IngestObjectSave()
 		if err != nil {
-			r.Context.Logger.Errorf("WorkItem %d. After marking RecheckPharosIdentifiers = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
+			r.Context.Logger.Errorf("WorkItem %d. After marking RecheckRegistryIdentifiers = true, error saving IngestObject to Redis: %v", r.WorkItemID, err)
 		} else {
 			r.Context.Logger.Errorf("Flagged WorkItem %d, object %s as partially recorded and in need of duplicate identifier check ", r.WorkItemID, r.IngestObject.Identifier())
 		}

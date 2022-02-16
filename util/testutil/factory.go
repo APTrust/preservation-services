@@ -102,25 +102,25 @@ func GetStorageRecord(provider, bucket, url string) *service.StorageRecord {
 func GetIngestChecksumSet() []*service.IngestChecksum {
 	now := time.Now().UTC()
 	return []*service.IngestChecksum{
-		&service.IngestChecksum{
+		{
 			Algorithm: "md5",
 			DateTime:  now,
 			Digest:    "12345",
 			Source:    constants.SourceManifest,
 		},
-		&service.IngestChecksum{
+		{
 			Algorithm: "md5",
 			DateTime:  now,
 			Digest:    "12345",
 			Source:    constants.SourceIngest,
 		},
-		&service.IngestChecksum{
+		{
 			Algorithm: "sha256",
 			DateTime:  now,
 			Digest:    "12345",
 			Source:    constants.SourceManifest,
 		},
-		&service.IngestChecksum{
+		{
 			Algorithm: "sha256",
 			DateTime:  now,
 			Digest:    "12345",

@@ -13,19 +13,19 @@ import (
 
 func testGenericFiles() {
 	t := ctx.T
-	pharosFiles := getGenericFiles()
+	registryFiles := getGenericFiles()
 	for _, expectedFile := range ctx.ExpectedFiles {
-		pharosFile := findFile(pharosFiles, expectedFile.Identifier)
-		require.NotNil(t, pharosFile, "Not in Pharos: %s", expectedFile.Identifier)
-		testGenericFile(pharosFile, expectedFile)
+		registryFile := findFile(registryFiles, expectedFile.Identifier)
+		require.NotNil(t, registryFile, "Not in Registry: %s", expectedFile.Identifier)
+		testGenericFile(registryFile, expectedFile)
 	}
 }
 
-func testGenericFile(pharosFile, expectedFile *registry.GenericFile) {
-	testFileAttributes(pharosFile, expectedFile)
-	testChecksums(pharosFile, expectedFile)
-	testStorageRecords(pharosFile, expectedFile)
-	testPremisEvents(pharosFile, expectedFile)
+func testGenericFile(registryFile, expectedFile *registry.GenericFile) {
+	testFileAttributes(registryFile, expectedFile)
+	testChecksums(registryFile, expectedFile)
+	testStorageRecords(registryFile, expectedFile)
+	testPremisEvents(registryFile, expectedFile)
 }
 
 func findFile(files []*registry.GenericFile, identifier string) *registry.GenericFile {
@@ -49,12 +49,12 @@ func getGenericFiles() []*registry.GenericFile {
 	return resp.GenericFiles()
 }
 
-func testFileAttributes(pharosFile, expectedFile *registry.GenericFile) {
+func testFileAttributes(registryFile, expectedFile *registry.GenericFile) {
 	t := ctx.T
-	assert.Equal(t, pharosFile.Identifier, expectedFile.Identifier, expectedFile.Identifier)
-	assert.Equal(t, pharosFile.FileFormat, expectedFile.FileFormat, expectedFile.Identifier)
-	assert.Equal(t, pharosFile.IntellectualObjectIdentifier, expectedFile.IntellectualObjectIdentifier, expectedFile.Identifier)
-	assert.Equal(t, pharosFile.Size, expectedFile.Size, expectedFile.Identifier)
-	assert.Equal(t, pharosFile.State, expectedFile.State, expectedFile.Identifier)
-	assert.Equal(t, pharosFile.StorageOption, expectedFile.StorageOption, expectedFile.Identifier)
+	assert.Equal(t, registryFile.Identifier, expectedFile.Identifier, expectedFile.Identifier)
+	assert.Equal(t, registryFile.FileFormat, expectedFile.FileFormat, expectedFile.Identifier)
+	assert.Equal(t, registryFile.IntellectualObjectIdentifier, expectedFile.IntellectualObjectIdentifier, expectedFile.Identifier)
+	assert.Equal(t, registryFile.Size, expectedFile.Size, expectedFile.Identifier)
+	assert.Equal(t, registryFile.State, expectedFile.State, expectedFile.Identifier)
+	assert.Equal(t, registryFile.StorageOption, expectedFile.StorageOption, expectedFile.Identifier)
 }

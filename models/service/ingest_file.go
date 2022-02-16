@@ -331,7 +331,7 @@ func (f *IngestFile) HasRegistryURL(url string) bool {
 // Note that this list should be generated only once, and the events
 // should be preserved in Redis so that if any part of registry data
 // recording process fails, we can retry and know that we are not
-// creating new PremisEvents in Pharos. When Pharos sees these event
+// creating new PremisEvents in Registry. When Registry sees these event
 // UUIDs already exist, it will not create duplicate entries. If we
 // don't persist events with their UUIDs in Redis intermediate storage,
 // we will be sending new events with new UUIDs each time we retry
@@ -410,6 +410,9 @@ func (f *IngestFile) initIngestEvents() error {
 	return nil
 }
 
+//
+// TODO: Review this. Fix or remove.
+//
 // URI returns the URL of this file's first storage record.
 // TODO: Fix this, because it doesn't map to Pharos' db structure.
 // Pharos allows one URI per generic file, but it should allow
@@ -453,8 +456,8 @@ func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 	}
 	storageRecords := make([]*registry.StorageRecord, 0)
 	for _, r := range f.StorageRecords {
-		// Tell Pharos the file is stored at this URL only if
-		// Pharos doesn't already have a record of it.
+		// Tell Registry the file is stored at this URL only if
+		// Registry doesn't already have a record of it.
 		if !f.HasRegistryURL(r.URL) {
 			storageRecords = append(storageRecords, &registry.StorageRecord{
 				URL: r.URL,

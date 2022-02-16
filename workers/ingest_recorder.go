@@ -31,7 +31,7 @@ func NewIngestRecorder(bufSize, numWorkers, maxAttempts int) *IngestRecorder {
 		PushToCleanupAfterMaxFailedAttempts: false,
 		PushToCleanupOnFatalError:           false,
 		RequeueTimeout:                      (1 * time.Minute),
-		WorkItemSuccessNote:                 "Finished recording ingest data in Pharos",
+		WorkItemSuccessNote:                 "Finished recording ingest data in Registry",
 	}
 	worker := &IngestRecorder{
 		IngestBase: NewIngestBase(

@@ -208,7 +208,7 @@ func (r *BagRestorer) RecordDigests(gf *registry.GenericFile, digests map[string
 		digest := digests[alg]
 		registryChecksum := gf.GetLatestChecksum(alg)
 		if registryChecksum != nil && digest != registryChecksum.Digest {
-			return fmt.Errorf("%s digest mismatch for %s. Pharos says %s, S3 file has %s", alg, gf.Identifier, registryChecksum.Digest, digest)
+			return fmt.Errorf("%s digest mismatch for %s. Registry says %s, S3 file has %s", alg, gf.Identifier, registryChecksum.Digest, digest)
 		}
 		err := r.AppendDigestToManifest(gf, digest, alg)
 		if err != nil {

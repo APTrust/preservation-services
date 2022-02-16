@@ -56,7 +56,7 @@ func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string
 	goodbagETag = objInfo.ETag
 }
 
-func putWorkItemInPharos(t *testing.T, context *common.Context, workItem *registry.WorkItem) *registry.WorkItem {
+func putWorkItemInRegistry(t *testing.T, context *common.Context, workItem *registry.WorkItem) *registry.WorkItem {
 	resp := context.RegistryClient.WorkItemSave(workItem)
 	require.Nil(t, resp.Error)
 	require.NotNil(t, resp.WorkItem())
@@ -159,7 +159,7 @@ func doSetup(t *testing.T, key, pathToBagFile string) int {
 			Stage:            constants.StageReceive,
 			Status:           constants.StatusPending,
 		}
-		testWorkItem = putWorkItemInPharos(t, context, workItem)
+		testWorkItem = putWorkItemInRegistry(t, context, workItem)
 		msgBody := []byte(strconv.Itoa(testWorkItem.ID))
 		var msgId [16]byte
 		copy(msgId[:], []byte("9999"))
@@ -409,7 +409,7 @@ func TestIngestBase_MarkAsStarted(t *testing.T) {
 	ingestBase := getIngestBase()
 
 	copyOfWorkItem := copyWorkItem(t, testWorkItem)
-	putWorkItemInPharos(t, ingestBase.Context, copyOfWorkItem)
+	putWorkItemInRegistry(t, ingestBase.Context, copyOfWorkItem)
 
 	hostname, _ := os.Hostname()
 	task := &workers.Task{
@@ -437,7 +437,7 @@ func TestIngestBase_FinishItem(t *testing.T) {
 	doSetup(t, keyToGoodBag, pathToGoodBag)
 	ingestBase := getIngestBase()
 
-	copyOfWorkItem := putWorkItemInPharos(t, ingestBase.Context, copyWorkItem(t, testWorkItem))
+	copyOfWorkItem := putWorkItemInRegistry(t, ingestBase.Context, copyWorkItem(t, testWorkItem))
 
 	msgBody := []byte(strconv.Itoa(copyOfWorkItem.ID))
 	var msgId [16]byte

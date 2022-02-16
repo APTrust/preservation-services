@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -16,7 +17,7 @@ import (
 // are actually present in the correct preservation buckets.
 //
 // This is called from testStorageRecords. Param gf is the GenericFile
-// record retrieved from Pharos. Param storageRecord is the specific record
+// record retrieved from Registry. Param storageRecord is the specific record
 // to test.
 func testS3File(storageRecord *registry.StorageRecord, gf *registry.GenericFile) {
 	preservationBucket, key, err := ctx.Context.Config.BucketAndKeyFor(storageRecord.URL)

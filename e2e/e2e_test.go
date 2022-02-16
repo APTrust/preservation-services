@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -24,7 +25,7 @@ var ctx E2ECtx
 // TestEndToEnd runs a number of bags through ingest and reingest,
 // then tests that:
 //
-// * all Pharos data is complete and as expected
+// * all Registry data is complete and as expected
 // * all files are in the correct preservation storage buckets
 //   with complete metadata
 // * all interim processing data was deleted from S3 staging and Redis
@@ -49,7 +50,7 @@ func testIngest() {
 
 	// Test that all objects, files, checksums, storage records
 	// and premis events from these ingests are as expected
-	testPharosObjects()
+	testRegistryObjects()
 	testGenericFiles()
 
 	// Make sure we cleaned up all interim processing resources.

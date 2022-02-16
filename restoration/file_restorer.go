@@ -60,7 +60,7 @@ func (r *FileRestorer) Run() (fileCount int, errors []*service.ProcessingError) 
 	return fileCount, errors
 }
 
-// Get the GenericFile record from Pharos
+// Get the GenericFile record from Registry
 func (r *FileRestorer) getGenericFile() (*registry.GenericFile, error) {
 	resp := r.Context.RegistryClient.GenericFileByIdentifier(r.RestorationObject.Identifier)
 	if resp.Error != nil {
@@ -68,7 +68,7 @@ func (r *FileRestorer) getGenericFile() (*registry.GenericFile, error) {
 	}
 	gf := resp.GenericFile()
 	if gf == nil {
-		return nil, fmt.Errorf("Pharos returned nil for file %s", r.RestorationObject.Identifier)
+		return nil, fmt.Errorf("Registry returned nil for file %s", r.RestorationObject.Identifier)
 	}
 	r.Context.Logger.Infof("File %s has %d storage records", gf.Identifier, len(gf.StorageRecords))
 	return gf, nil

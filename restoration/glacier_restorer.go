@@ -113,7 +113,7 @@ func (r *GlacierRestorer) restoreFile() (restoreStatus int, errors []*service.Pr
 	}
 	gf := resp.GenericFile()
 	if gf == nil {
-		err := fmt.Errorf("Pharos returned nil for GenericFile %s", r.RestorationObject.Identifier)
+		err := fmt.Errorf("Registry returned nil for GenericFile %s", r.RestorationObject.Identifier)
 		errors = append(errors, r.Error(r.RestorationObject.Identifier, err, true))
 		return RestoreError, errors
 	}

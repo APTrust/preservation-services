@@ -30,7 +30,7 @@ func TestIngestBucketReader_Run(t *testing.T) {
 	reader.RunOnce()
 	assertStatsCount(t, context, preTestCount+4)
 
-	// Make sure the records are in Pharos as well.
+	// Make sure the records are in Registry as well.
 	assertWorkItems(t, context)
 }
 

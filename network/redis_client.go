@@ -132,7 +132,7 @@ func (c *RedisClient) IngestFileDelete(workItemID int64, fileIdentifier string) 
 	return err
 }
 
-// WorkItemDelete deletes the Redis copy (NOT the Pharos copy) of a WorkItem,
+// WorkItemDelete deletes the Redis copy (NOT the Registry copy) of a WorkItem,
 // along with its associated IngestObject and IngestFile records. Call
 // this only when ingest is complete and no further workers will need to
 // access the working data.

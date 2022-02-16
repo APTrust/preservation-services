@@ -17,12 +17,12 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-// Manager deletes files from preservation and ensures that Pharos
+// Manager deletes files from preservation and ensures that Registry
 // IntellectualObjects, GenericFiles, StorageRecords and PremisEvents
 // are updated to reflect the changes.
 type Manager struct {
 	// Context is the context, which includes config settings and
-	// clients to access S3 and Pharos.
+	// clients to access S3 and Registry.
 	Context *common.Context
 
 	// Identifier is the identifier of the GenericFile or IntellectualObject
@@ -36,7 +36,7 @@ type Manager struct {
 	// WorkItemID is the ID of the WorkItem being processed.
 	WorkItemID int64
 
-	// RequestedBy is the email address of the Pharos user who requested
+	// RequestedBy is the email address of the Registry user who requested
 	// (initiated) this deletion.
 	RequestedBy string
 
@@ -75,8 +75,8 @@ func NewManager(context *common.Context, workItemID int64, identifier, itemType,
 // before calling this method.
 //
 // After deleting files from storage, this method creates deletion PREMIS events
-// in Pharos for each file, and it changes the state of each file from "A" (active)
-// to "D" (deleted). For object deletion, it also changes the Pharos object's
+// in Registry for each file, and it changes the state of each file from "A" (active)
+// to "D" (deleted). For object deletion, it also changes the Registry object's
 // state to "D" if all file deletions succeeded.
 func (m *Manager) Run() (count int, errors []*service.ProcessingError) {
 	if m.RequestedBy == "" || m.InstApprover == "" {
@@ -224,10 +224,10 @@ func (m *Manager) deleteFromPreservationStorage(bucket *common.PreservationBucke
 	return err
 }
 
-// saveFileDeletionEvent saves a PremisEvent to Pharos saying we deleted
+// saveFileDeletionEvent saves a PremisEvent to Registry saying we deleted
 // one copy of this file from one preservation bucket. Other copies may
 // exist. Note that we cannot call GenericFileFinishDelete until at least
-// of these deletion events has been record in Pharos.
+// of these deletion events has been record in Registry.
 func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.StorageRecord) error {
 	eventId := uuid.New()
 	now := time.Now().UTC()
@@ -262,6 +262,8 @@ func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.S
 	// 502s occur sporadically when Pharos is so busy that Nginx
 	// can't forward the request. See https://trello.com/c/pI16xrcD
 	// for this particular ticket.
+	//
+	// TODO: This was a problem in Pharos. It may not be in Registry.
 	var resp *network.RegistryResponse
 	for i := 0; i < 3; i++ {
 		resp = m.Context.RegistryClient.PremisEventSave(event)

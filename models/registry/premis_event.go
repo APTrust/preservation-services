@@ -41,9 +41,3 @@ func (event *PremisEvent) ToJSON() ([]byte, error) {
 	}
 	return bytes, nil
 }
-
-// Note that Pharos uses the same format as ToJson() for this
-// object.
-func (event *PremisEvent) SerializeForPharos() ([]byte, error) {
-	return event.ToJSON()
-}

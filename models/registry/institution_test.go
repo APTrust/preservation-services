@@ -27,9 +27,6 @@ var inst = &registry.Institution{
 
 var instJson = `{"created_at":"1904-06-16T15:04:05Z","deactivated_at":"1904-06-16T15:04:05Z","id":999,"identifier":"hardknocks.edu","member_institution_id":999,"name":"School of Hard Knocks","otp_enabled":false,"receiving_bucket":"aptrust-hk-receiving","restore_bucket":"aptrust-hk-restore","state":"A","type":"","updated_at":"1904-06-16T15:04:05Z"}`
 
-// JSON format for Pharos post/put is {"institution": <object>}
-var instJsonForPharos = `{"institution":{"created_at":"1904-06-16T15:04:05Z","deactivated_at":"1904-06-16T15:04:05Z","id":999,"identifier":"hardknocks.edu","member_institution_id":999,"name":"School of Hard Knocks","otp_enabled":false,"receiving_bucket":"aptrust-hk-receiving","restore_bucket":"aptrust-hk-restore","state":"A","type":"","updated_at":"1904-06-16T15:04:05Z"}}`
-
 func TestInstitutionFromJson(t *testing.T) {
 	institution, err := registry.InstitutionFromJSON([]byte(instJson))
 	require.Nil(t, err)
@@ -40,10 +37,4 @@ func TestInstitutionToJson(t *testing.T) {
 	actualJson, err := inst.ToJSON()
 	require.Nil(t, err)
 	assert.Equal(t, instJson, string(actualJson))
-}
-
-func TestInstitutionSerializeForPharos(t *testing.T) {
-	actualJson, err := inst.SerializeForPharos()
-	require.Nil(t, err)
-	assert.Equal(t, instJsonForPharos, string(actualJson))
 }

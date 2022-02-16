@@ -53,15 +53,15 @@ func TestRecorderRun(t *testing.T) {
 	// deletion.
 	assert.True(t, recorder.IngestObject.ShouldDeleteFromReceiving)
 
-	testNewObjectInPharos(t, recorder)
-	testNewFilesInPharos(t, recorder)
+	testNewObjectInRegistry(t, recorder)
+	testNewFilesInRegistry(t, recorder)
 
 	// Now process an update of the same bag and make
 	// sure all info is recorded correctly.
 	testObjectUpdate(t, context)
 }
 
-func testNewObjectInPharos(t *testing.T, recorder *ingest.Recorder) {
+func testNewObjectInRegistry(t *testing.T, recorder *ingest.Recorder) {
 	client := recorder.Context.RegistryClient
 	resp := client.IntellectualObjectByIdentifier(recorder.IngestObject.Identifier())
 	require.Nil(t, resp.Error)
@@ -88,10 +88,10 @@ func testNewObjectInPharos(t *testing.T, recorder *ingest.Recorder) {
 	assert.Equal(t, intelObj.Title, "APTrust Test Bag 001")
 	assert.False(t, intelObj.UpdatedAt.IsZero())
 
-	testObjectEventsInPharos(t, recorder)
+	testObjectEventsInRegistry(t, recorder)
 }
 
-func testObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder) {
+func testObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder) {
 	objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
@@ -137,7 +137,7 @@ func testObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder) {
 	assert.Equal(t, 1, eventTypes[constants.EventIngestion])
 }
 
-func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
+func testNewFilesInRegistry(t *testing.T, recorder *ingest.Recorder) {
 	objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
@@ -167,12 +167,12 @@ func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
 		assert.True(t, util.LooksLikeUUID(gf.UUID))
 		assert.False(t, gf.UpdatedAt.IsZero())
 
-		testFileEventsInPharos(t, recorder, gf.Identifier)
-		testChecksumsInPharos(t, recorder, gf)
+		testFileEventsInRegistry(t, recorder, gf.Identifier)
+		testChecksumsInRegistry(t, recorder, gf)
 	}
 }
 
-func testFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentifier string) {
+func testFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, fileIdentifier string) {
 	objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
@@ -217,7 +217,7 @@ func testFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentif
 	assert.Equal(t, 1, eventTypes[constants.EventReplication])
 }
 
-func testChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
+func testChecksumsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
 	params := url.Values{}
 	params.Add("generic_file_identifier", gf.Identifier)
 	params.Add("per_page", "100")
@@ -320,10 +320,10 @@ func testObjectUpdate(t *testing.T, context *common.Context) {
 	// deletion.
 	assert.True(t, recorder.IngestObject.ShouldDeleteFromReceiving)
 
-	testUpdatedObjectInPharos(t, recorder, timestamp)
+	testUpdatedObjectInRegistry(t, recorder, timestamp)
 }
 
-func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
+func testUpdatedObjectInRegistry(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
 	client := recorder.Context.RegistryClient
 	resp := client.IntellectualObjectByIdentifier(recorder.IngestObject.Identifier())
 	require.Nil(t, resp.Error)
@@ -352,15 +352,15 @@ func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestam
 	// This should have changed
 	assert.True(t, intelObj.UpdatedAt.After(intelObj.CreatedAt))
 
-	testUpdatedObjectEventsInPharos(t, recorder, timestamp)
-	testUpdatedFilesInPharos(t, recorder, timestamp)
+	testUpdatedObjectEventsInRegistry(t, recorder, timestamp)
+	testUpdatedFilesInRegistry(t, recorder, timestamp)
 }
 
-func testUpdatedObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
+func testUpdatedObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
 	objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 
-	// Because Pharos is so badly broken, we can't reliably retrieve
+	// Because Registry is so badly broken, we can't reliably retrieve
 	// a list of object-level events. So we have to retrieve all events
 	// created since a specified time and filter them on our own.
 	params := url.Values{}
@@ -401,7 +401,7 @@ func testUpdatedObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder, ti
 	assert.Equal(t, 1, eventTypes[constants.EventIngestion])
 }
 
-func testUpdatedFilesInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
+func testUpdatedFilesInRegistry(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
 	objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
@@ -444,12 +444,12 @@ func testUpdatedFilesInPharos(t *testing.T, recorder *ingest.Recorder, timestamp
 		assert.True(t, util.LooksLikeUUID(gf.UUID))
 		assert.True(t, gf.UpdatedAt.After(timestamp))
 
-		testUpdatedFileEventsInPharos(t, recorder, gf.Identifier, timestamp)
-		testUpdatedChecksumsInPharos(t, recorder, gf)
+		testUpdatedFileEventsInRegistry(t, recorder, gf.Identifier, timestamp)
+		testUpdatedChecksumsInRegistry(t, recorder, gf)
 	}
 }
 
-func testUpdatedFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentifier string, timestamp time.Time) {
+func testUpdatedFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, fileIdentifier string, timestamp time.Time) {
 	objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
@@ -503,7 +503,7 @@ func testUpdatedFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, file
 	assert.Equal(t, 1, eventTypes[constants.EventReplication], fileIdentifier)
 }
 
-func testUpdatedChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
+func testUpdatedChecksumsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
 	params := url.Values{}
 	params.Add("generic_file_identifier", gf.Identifier)
 	params.Add("per_page", "100")

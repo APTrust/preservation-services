@@ -24,7 +24,7 @@ type RestorationObject struct {
 	ErrorMessage string `json:"error_message"`
 
 	// Identifier is the identifier of the IntellectionObject or GenericFile
-	// (from Pharos) to be restored.
+	// (from Registry) to be restored.
 	Identifier string `json:"identifier"`
 
 	// ObjectSize is the size of the bag or file to be restored. For bags,

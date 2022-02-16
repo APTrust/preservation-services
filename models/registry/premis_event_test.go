@@ -45,10 +45,3 @@ func TestPremisEventToJson(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, eventJson, string(actualJson))
 }
-
-// Pharos uses standard JSON format for this model.
-func TestPremisEventSerializeForPharos(t *testing.T) {
-	actualJson, err := event.SerializeForPharos()
-	require.Nil(t, err)
-	assert.Equal(t, eventJson, string(actualJson))
-}

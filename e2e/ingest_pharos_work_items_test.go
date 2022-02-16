@@ -20,14 +20,14 @@ func testWorkItemsAfterIngest() {
 	params.Set("institution_id", strconv.Itoa(ctx.TestInstitution.ID))
 	resp := ctx.Context.RegistryClient.WorkItemList(params)
 	require.Nil(t, resp.Error)
-	pharosItems := resp.WorkItems()
-	require.NotEmpty(t, pharosItems)
+	registryItems := resp.WorkItems()
+	require.NotEmpty(t, registryItems)
 
 	itemCounts := make(map[string]int)
 
 	// 17 ingests plus 4 reingests
-	assert.Equal(t, 21, len(pharosItems))
-	for _, item := range pharosItems {
+	assert.Equal(t, 21, len(registryItems))
+	for _, item := range registryItems {
 		assert.Equal(t, "Finished cleanup. Ingest complete.", item.Note)
 		assert.Equal(t, constants.StageCleanup, item.Stage)
 		assert.Equal(t, constants.StatusSuccess, item.Status)

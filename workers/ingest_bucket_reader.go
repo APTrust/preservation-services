@@ -47,6 +47,7 @@ func (r *IngestBucketReader) logStartup() {
 
 func (r *IngestBucketReader) scanReceivingBuckets() {
 	for _, inst := range r.LoadInstitutions() {
+		// TODO: This should be fixed in Registry, but confirm.
 		// Pharos needs to provide proper filtering on Institutions controller
 		if inst.State == "D" {
 			r.Context.Logger.Infof("Skipping inactive institution %s", inst.Identifier)
@@ -63,7 +64,7 @@ func (r *IngestBucketReader) LoadInstitutions() []*registry.Institution {
 	v.Set("per_page", "100")
 	resp := r.Context.RegistryClient.InstitutionList(v)
 	if resp.Error != nil {
-		r.Context.Logger.Errorf("Error getting institutions from Pharos: %v", resp.Error)
+		r.Context.Logger.Errorf("Error getting institutions from Registry: %v", resp.Error)
 	}
 	return resp.Institutions()
 }
@@ -115,6 +116,7 @@ func (r *IngestBucketReader) WorkItemAlreadyExists(instID int64, name, etag stri
 	if resp.Error != nil {
 		return false, resp.Error
 	}
+	// TODO: This should be fixed in registry, but confirm.
 	// Pharos doesn't have good filtering for this, so we do it here.
 	exists := false
 	for _, item := range resp.WorkItems() {

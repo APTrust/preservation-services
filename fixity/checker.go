@@ -22,7 +22,7 @@ import (
 
 type Checker struct {
 	// Context is the context, which includes config settings and
-	// clients to access S3 and Pharos.
+	// clients to access S3 and Registry.
 	Context *common.Context
 
 	// Identifier is the identifier of the GenericFile whose fixity
@@ -44,7 +44,7 @@ func (c *Checker) Run() (count int, errors []*service.ProcessingError) {
 		errors = append(errors, c.Error(err, true))
 		return 0, errors
 	}
-	c.Context.Logger.Infof("Got Pharos record for %s", gf.Identifier)
+	c.Context.Logger.Infof("Got Registry record for %s", gf.Identifier)
 	if c.IsGlacierOnlyFile(gf) {
 		err = fmt.Errorf("Skipping file %s because it's Glacier-only", gf.Identifier)
 		c.Context.Logger.Warningf("%v", err)
@@ -99,13 +99,14 @@ func (c *Checker) GetLatestSha256() (checksum *registry.Checksum, err error) {
 		return nil, resp.Error
 	}
 	// I don't trust Pharos to sort correctly.
+	// TODO: Can we now trust Registry to do it? Prolly.
 	for _, cs := range resp.Checksums() {
 		if checksum == nil || cs.DateTime.After(checksum.DateTime) {
 			checksum = cs
 		}
 	}
 	if checksum == nil {
-		err = fmt.Errorf("Pharos returned no sha256 checksum for file %s", c.Identifier)
+		err = fmt.Errorf("Registry returned no sha256 checksum for file %s", c.Identifier)
 	} else {
 		c.Context.Logger.Infof("Got checksum %s for file %s", checksum.Digest, c.Identifier)
 	}
@@ -153,6 +154,7 @@ func (c *Checker) RecordFixityEvent(gf *registry.GenericFile, url, expectedFixit
 	event := c.GetFixityEvent(gf, url, expectedFixity, actualFixity)
 
 	// Still need to work out 502s between nginx and Pharos when Pharos is busy
+	// TODO: Does this problem exist in Registry? Will have to test and see.
 	var resp *network.RegistryResponse
 	for i := 0; i < 3; i++ {
 		resp = c.Context.RegistryClient.PremisEventSave(event)

@@ -47,7 +47,7 @@ func initTestContext(t *testing.T) {
 
 // Push some bags into the receiving bucket using Minio.
 // We do this instead of a simple filesystem copy because
-// Pharos WorkItems use ETags to distinguish between versions
+// Registry WorkItems use ETags to distinguish between versions
 // of a bag. Minio creates ETags, file copying doesn't.
 func pushBagsToReceiving(testbags []*e2e.TestBag) {
 	client := ctx.Context.S3Clients[constants.StorageProviderAWS]
@@ -197,7 +197,7 @@ func objIdentFromFileIdent(gfIdentifier string) string {
 	return strings.Join(parts[0:2], "/")
 }
 
-// Returns an institution record from Pharos. Our "test.edu" institution
+// Returns an institution record from Registry. Our "test.edu" institution
 // will have a different ID each time we test, so we have to look it up.
 func getInstitution(identifier string) *registry.Institution {
 	resp := ctx.Context.RegistryClient.InstitutionByIdentifier(identifier)

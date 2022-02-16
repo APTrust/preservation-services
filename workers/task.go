@@ -51,7 +51,7 @@ type Task struct {
 	// WorkResult describes the result of this worker's work.
 	WorkResult *service.WorkResult
 
-	// WorkItem is the Pharos WorkItem that describes the bag, object,
+	// WorkItem is the Registry WorkItem that describes the bag, object,
 	// of file the worker is working on.
 	WorkItem *registry.WorkItem
 

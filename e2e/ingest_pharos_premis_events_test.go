@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -10,13 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testPremisEvents(pharosFile, expectedFile *registry.GenericFile) {
-	assert.Equal(ctx.T, len(expectedFile.PremisEvents), len(pharosFile.PremisEvents))
-	pharosEvents := hashEvents(pharosFile.PremisEvents)
+func testPremisEvents(registryFile, expectedFile *registry.GenericFile) {
+	assert.Equal(ctx.T, len(expectedFile.PremisEvents), len(registryFile.PremisEvents))
+	registryEvents := hashEvents(registryFile.PremisEvents)
 	for _, event := range expectedFile.PremisEvents {
 		key := eventKey(event)
-		pharosEvent := pharosEvents[key]
-		assert.NotNil(ctx.T, pharosEvent, "Pharos file %s is missing event %s", pharosFile.Identifier, key)
+		registryEvent := registryEvents[key]
+		assert.NotNil(ctx.T, registryEvent, "Registry file %s is missing event %s", registryFile.Identifier, key)
 	}
 }
 

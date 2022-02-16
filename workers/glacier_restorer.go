@@ -24,7 +24,7 @@ type GlacierRestorer struct {
 }
 
 // NewGlacierRestorer creates a new GlacierRestorer worker. Param context is a
-// Context object with connections to S3, Redis, Pharos, and NSQ.
+// Context object with connections to S3, Redis, Registry, and NSQ.
 func NewGlacierRestorer(bufSize, numWorkers, maxAttempts int) *GlacierRestorer {
 	_context := common.NewContext()
 	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.TopicGlacierRestore, bufSize, numWorkers, maxAttempts)
@@ -83,7 +83,7 @@ func (r *GlacierRestorer) ProcessSuccessChannel() {
 		r.Context.Logger.Infof("WorkItem %d (%s) is in success channel",
 			task.WorkItem.ID, task.WorkItem.Name)
 
-		// Tell Pharos item succeeded.
+		// Tell Registry item succeeded.
 		note := fmt.Sprintf("Object %s restored from Glacier to S3.", task.WorkItem.ObjectIdentifier)
 		task.WorkItem.Note = note
 		task.WorkItem.Stage = r.Settings.NextWorkItemStage
@@ -112,7 +112,7 @@ func (r *GlacierRestorer) ProcessErrorChannel() {
 			task.WorkItem.ID, task.WorkItem.Name,
 			task.WorkResult.NonFatalErrorMessage())
 
-		// Update WorkItem in Pharos
+		// Update WorkItem in Registry
 		task.WorkItem.Note = task.WorkResult.NonFatalErrorMessage()
 		if task.WorkResult.Attempt >= r.Settings.MaxAttempts {
 			task.WorkItem.Note += fmt.Sprintf(" Will not retry: failed %d times.", task.WorkResult.Attempt)
@@ -137,12 +137,12 @@ func (r *GlacierRestorer) ProcessFatalErrorChannel() {
 			task.WorkItem.ID, task.WorkItem.Name,
 			task.WorkResult.FatalErrorMessage())
 
-		// Update WorkItem for Pharos
+		// Update WorkItem for Registry
 		task.WorkItem.Note = task.WorkResult.FatalErrorMessage()
 		task.WorkItem.Retry = false
 		task.WorkItem.NeedsAdminReview = true
 
-		// Update Pharos and Redis
+		// Update Registry and Redis
 		r.FinishItem(task)
 
 		// Tell NSQ we're done with this message.
@@ -214,7 +214,7 @@ func (r *GlacierRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	return false
 }
 
-// CreateRestorationWorkItem creates a new WorkItem in Pharos to restore
+// CreateRestorationWorkItem creates a new WorkItem in Registry to restore
 // the file(s) we just worked on. Glacier restoration is a two-step process,
 // with this worker handling the first step of the process, which is to
 // copy files from Glacier to S3. When our step is done, we create a WorkItem
@@ -241,14 +241,14 @@ func (r *GlacierRestorer) CreateRestorationWorkItem(task *Task) {
 	}
 	resp := r.Context.RegistryClient.WorkItemSave(newItem)
 	if resp.Error != nil {
-		r.Context.Logger.Errorf("Error saving restoration WorkItem to Pharos for %s: %v", task.RestorationObject.Identifier, resp.Error)
+		r.Context.Logger.Errorf("Error saving restoration WorkItem to Registry for %s: %v", task.RestorationObject.Identifier, resp.Error)
 		task.WorkItem.Note = task.WorkItem.Note + " Object(s) are in S3 but worker was unable to create next restore item. Create it manually."
 		task.WorkItem.NeedsAdminReview = true
 		resp = r.Context.RegistryClient.WorkItemSave(task.WorkItem)
 		if resp.Error != nil {
-			r.Context.Logger.Errorf("Error flagging WorkItem in Pharos for %s: %v", task.RestorationObject.Identifier, resp.Error)
+			r.Context.Logger.Errorf("Error flagging WorkItem in Registry for %s: %v", task.RestorationObject.Identifier, resp.Error)
 		}
 	} else {
-		r.Context.Logger.Infof("Created new WorkItem in Pharos with ID %s to restore %s from S3 to depositor bucket.", resp.WorkItem().ID, task.RestorationObject.Identifier)
+		r.Context.Logger.Infof("Created new WorkItem in Registry with ID %s to restore %s from S3 to depositor bucket.", resp.WorkItem().ID, task.RestorationObject.Identifier)
 	}
 }
