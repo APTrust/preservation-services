@@ -14,7 +14,7 @@ import (
 
 var etag = "12345678"
 var objIdentifier = "test.edu/test-bag"
-var institution = "test.edu"
+var instIdentifier = "test.edu"
 var institutionId = int64(9855)
 var bucket = "bucket"
 var s3Key = "test-bag.b001.of200.tar"
@@ -53,10 +53,10 @@ func getObjectWithTags() *service.IngestObject {
 }
 
 func TestNewIngestObject(t *testing.T) {
-	obj := service.NewIngestObject(bucket, s3Key, etag, institution, institutionId, int64(500))
+	obj := service.NewIngestObject(bucket, s3Key, etag, instIdentifier, institutionId, int64(500))
 	assert.Equal(t, etag, obj.ETag)
 	assert.Equal(t, objIdentifier, obj.Identifier())
-	assert.Equal(t, institution, obj.Institution)
+	assert.Equal(t, instIdentifier, obj.Institution)
 	assert.NotNil(t, obj.Manifests)
 	assert.NotNil(t, obj.ParsableTagFiles)
 	assert.Equal(t, bucket, obj.S3Bucket)
@@ -68,7 +68,7 @@ func TestNewIngestObject(t *testing.T) {
 }
 
 func TestIngestObjectBagName(t *testing.T) {
-	obj := service.NewIngestObject(bucket, s3Key, etag, institution, institutionId, int64(500))
+	obj := service.NewIngestObject(bucket, s3Key, etag, instIdentifier, institutionId, int64(500))
 	assert.Equal(t, "test-bag", obj.BagName())
 
 	obj.S3Key = "photos.tar"
@@ -76,7 +76,7 @@ func TestIngestObjectBagName(t *testing.T) {
 }
 
 func TestBaseNameOfS3Key(t *testing.T) {
-	obj := service.NewIngestObject(bucket, s3Key, etag, institution, institutionId, int64(500))
+	obj := service.NewIngestObject(bucket, s3Key, etag, instIdentifier, institutionId, int64(500))
 	assert.Equal(t, "test-bag.b001.of200", obj.BaseNameOfS3Key())
 
 	obj.S3Key = "photos.tar"
@@ -84,7 +84,7 @@ func TestBaseNameOfS3Key(t *testing.T) {
 }
 
 func TestIngestObjectIdentifier(t *testing.T) {
-	obj := service.NewIngestObject(bucket, s3Key, etag, institution, institutionId, int64(500))
+	obj := service.NewIngestObject(bucket, s3Key, etag, instIdentifier, institutionId, int64(500))
 	assert.Equal(t, objIdentifier, obj.Identifier())
 
 	obj.Institution = "example.edu"
@@ -274,7 +274,7 @@ func TestToIntellectualObject(t *testing.T) {
 	assert.Equal(t, etag, intelObj.ETag)
 	assert.Equal(t, obj.ID, intelObj.ID)
 	assert.Equal(t, "test.edu/some-bag", intelObj.Identifier)
-	assert.Equal(t, institution, intelObj.Institution)
+	assert.Equal(t, instIdentifier, intelObj.InstitutionIdentifier)
 	assert.Equal(t, institutionId, intelObj.InstitutionID)
 	assert.Equal(t, sourceOrganization, intelObj.SourceOrganization)
 	assert.Equal(t, constants.StateActive, intelObj.State)

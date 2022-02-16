@@ -2,6 +2,7 @@ package registry
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -11,23 +12,21 @@ import (
 // GenericFile represents a Registry GenericFile object.
 // Note that FileModified is currently not being stored in Registry.
 type GenericFile struct {
-	Checksums            []*Checksum `json:"checksums"`
-	CreatedAt            time.Time   `json:"created_at"`
-	FileFormat           string      `json:"file_format"`
-	FileModified         time.Time   `json:"file_modified"`
-	ID                   int64       `json:"id"`
-	Identifier           string      `json:"identifier"`
-	InstitutionID        int64       `json:"institution_id"`
-	IntellectualObjectID int64       `json:"intellectual_object_id"`
-	// TODO: This field isn't part of registry record
-	IntellectualObjectIdentifier string           `json:"object_identifier"`
-	LastFixityCheck              time.Time        `json:"last_fixity_check"`
-	PremisEvents                 []*PremisEvent   `json:"premis_events"`
-	Size                         int64            `json:"size"`
-	State                        string           `json:"state"`
-	StorageOption                string           `json:"storage_option"`
-	StorageRecords               []*StorageRecord `json:"storage_records"`
-	UUID                         string           `json:"uuid"`
+	Checksums            []*Checksum      `json:"checksums"`
+	CreatedAt            time.Time        `json:"created_at"`
+	FileFormat           string           `json:"file_format"`
+	FileModified         time.Time        `json:"file_modified"`
+	ID                   int64            `json:"id"`
+	Identifier           string           `json:"identifier"`
+	InstitutionID        int64            `json:"institution_id"`
+	IntellectualObjectID int64            `json:"intellectual_object_id"`
+	LastFixityCheck      time.Time        `json:"last_fixity_check"`
+	PremisEvents         []*PremisEvent   `json:"premis_events"`
+	Size                 int64            `json:"size"`
+	State                string           `json:"state"`
+	StorageOption        string           `json:"storage_option"`
+	StorageRecords       []*StorageRecord `json:"storage_records"`
+	UUID                 string           `json:"uuid"`
 
 	// Md5 is read-only, from Registry's GenericFileView
 	Md5 string `json:"md5"`
@@ -61,19 +60,39 @@ func (gf *GenericFile) ToJSON() ([]byte, error) {
 	return bytes, nil
 }
 
+// IntellectualObjectIdentifier returns this file's intellectual
+// object identifier, or an error if it can't determine the object
+// identifier.
+func (gf *GenericFile) IntellectualObjectIdentifier() (string, error) {
+	parts := strings.Split(gf.Identifier, "/")
+	if len(parts) > 1 {
+		ident := strings.Join(parts[0:2], "/")
+		return ident, nil
+	}
+	return "", fmt.Errorf("invalid identifier: %s", gf.Identifier)
+}
+
 // PathInBag returns the path of this file within the original bag.
 // Example: If Identifier is "test.edu/bag/data/file.txt", this will
 // return "data/file.txt"
-func (gf *GenericFile) PathInBag() string {
-	return strings.Replace(gf.Identifier, gf.IntellectualObjectIdentifier+"/", "", 1)
+func (gf *GenericFile) PathInBag() (string, error) {
+	parts := strings.Split(gf.Identifier, "/")
+	if len(parts) > 2 {
+		return strings.Join(parts[2:], "/"), nil
+	}
+	return "", fmt.Errorf("invalid identifier: %s", gf.Identifier)
 }
 
 // PathMinusInstitution is the object name plus PathInBag(). In other words,
 // the full Identifier minus the leading institution name.
 // Example: If Identifier is "test.edu/bag/data/file.txt", this will
 // return "bag/data/file.txt"
-func (gf *GenericFile) PathMinusInstitution() string {
-	return strings.Replace(gf.Identifier, gf.InstitutionIdentifier()+"/", "", 1)
+func (gf *GenericFile) PathMinusInstitution() (string, error) {
+	parts := strings.Split(gf.Identifier, "/")
+	if len(parts) > 1 {
+		return strings.Join(parts[1:], "/"), nil
+	}
+	return "", fmt.Errorf("invalid identifier: %s", gf.Identifier)
 }
 
 // InstitutionIdentifier returns the Instition Identifier from the beginning
@@ -86,7 +105,7 @@ func (gf *GenericFile) InstitutionIdentifier() string {
 // IsTagFile returns true if this file's original path in the bag
 // was not in the data (payload) directory, and the
 func (gf *GenericFile) IsTagFile() bool {
-	pathInBag := gf.PathInBag()
+	pathInBag, _ := gf.PathInBag()
 	return !strings.HasPrefix(pathInBag, "data") && !util.LooksLikeManifest(pathInBag) && !util.LooksLikeTagManifest(pathInBag)
 }
 

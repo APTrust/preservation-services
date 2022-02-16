@@ -224,7 +224,11 @@ func (r *BagRestorer) AppendDigestToManifest(gf *registry.GenericFile, digest, a
 	// Payload digests go into manifest.
 	// Digests of tag files and payload manifests go into tag manifests.
 	fileType := constants.FileTypeManifest
-	if gf.IsTagFile() || util.LooksLikeManifest(gf.PathInBag()) {
+	pathInBag, err := gf.PathInBag()
+	if err != nil {
+		return err
+	}
+	if gf.IsTagFile() || util.LooksLikeManifest(pathInBag) {
 		fileType = constants.FileTypeTagManifest
 	}
 
@@ -240,7 +244,7 @@ func (r *BagRestorer) AppendDigestToManifest(gf *registry.GenericFile, digest, a
 		return err
 	}
 	defer file.Close()
-	_, err = fmt.Fprintf(file, "%s  %s\n", digest, gf.PathInBag())
+	_, err = fmt.Fprintf(file, "%s  %s\n", digest, pathInBag)
 	return err
 }
 
@@ -271,8 +275,9 @@ func (r *BagRestorer) DeleteStaleManifests() error {
 
 // GetTarHeader returns a tar header for the specified GenericFile.
 func (r *BagRestorer) GetTarHeader(gf *registry.GenericFile) *tar.Header {
+	pathMinusInstitution, _ := gf.PathMinusInstitution()
 	return &tar.Header{
-		Name:     gf.PathMinusInstitution(),
+		Name:     pathMinusInstitution,
 		Size:     gf.Size,
 		Typeflag: tar.TypeReg,
 		Mode:     int64(0755),
@@ -301,8 +306,7 @@ func (r *BagRestorer) AddBagItFile() error {
 	}
 
 	gf := &registry.GenericFile{
-		IntellectualObjectIdentifier: r.RestorationObject.Identifier,
-		Identifier:                   fmt.Sprintf("%s/%s", r.RestorationObject.Identifier, "bagit.txt"),
+		Identifier: fmt.Sprintf("%s/%s", r.RestorationObject.Identifier, "bagit.txt"),
 	}
 	for alg, digest := range digests {
 		err = r.AppendDigestToManifest(gf, digest, alg)
@@ -368,8 +372,7 @@ func (r *BagRestorer) _addManifest(manifestFile, manifestType string) error {
 	// tag manifests.
 	if manifestType == constants.FileTypeManifest {
 		gf := &registry.GenericFile{
-			IntellectualObjectIdentifier: r.RestorationObject.Identifier,
-			Identifier:                   fmt.Sprintf("%s/%s", r.RestorationObject.Identifier, manifestName),
+			Identifier: fmt.Sprintf("%s/%s", r.RestorationObject.Identifier, manifestName),
 		}
 		for alg, digest := range digests {
 			err = r.AppendDigestToManifest(gf, digest, alg)

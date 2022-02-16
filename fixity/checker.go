@@ -178,20 +178,19 @@ func (c *Checker) GetFixityEvent(gf *registry.GenericFile, url, expectedFixity, 
 		c.Context.Logger.Errorf("GenericFile %s: %s", gf.Identifier, outcomeInformation)
 	}
 	return &registry.PremisEvent{
-		Agent:                        agent,
-		DateTime:                     time.Now().UTC(),
-		Detail:                       "Fixity check against registered hash",
-		EventType:                    constants.EventFixityCheck,
-		GenericFileID:                gf.ID,
-		GenericFileIdentifier:        gf.Identifier,
-		Identifier:                   eventId.String(),
-		InstitutionID:                gf.InstitutionID,
-		IntellectualObjectID:         gf.IntellectualObjectID,
-		IntellectualObjectIdentifier: gf.IntellectualObjectIdentifier,
-		Object:                       object,
-		Outcome:                      outcome,
-		OutcomeDetail:                fmt.Sprintf("%s:%s", constants.AlgSha256, actualFixity),
-		OutcomeInformation:           outcomeInformation,
+		Agent:                 agent,
+		DateTime:              time.Now().UTC(),
+		Detail:                "Fixity check against registered hash",
+		EventType:             constants.EventFixityCheck,
+		GenericFileID:         gf.ID,
+		GenericFileIdentifier: gf.Identifier,
+		Identifier:            eventId.String(),
+		InstitutionID:         gf.InstitutionID,
+		IntellectualObjectID:  gf.IntellectualObjectID,
+		Object:                object,
+		Outcome:               outcome,
+		OutcomeDetail:         fmt.Sprintf("%s:%s", constants.AlgSha256, actualFixity),
+		OutcomeInformation:    outcomeInformation,
 	}
 }
 

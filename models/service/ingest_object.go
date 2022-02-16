@@ -397,7 +397,7 @@ func (obj *IngestObject) ToIntellectualObject() *registry.IntellectualObject {
 		ETag:                      obj.ETag,
 		ID:                        obj.ID,
 		Identifier:                obj.Identifier(),
-		Institution:               obj.Institution,
+		InstitutionIdentifier:     obj.Institution,
 		InstitutionID:             obj.InstitutionID,
 		InternalSenderDescription: obj.InternalSenderDescription(),
 		InternalSenderIdentifier:  obj.AltIdentifier(),

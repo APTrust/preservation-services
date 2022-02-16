@@ -465,20 +465,19 @@ func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 		}
 	}
 	return &registry.GenericFile{
-		Checksums:                    checksums,
-		FileFormat:                   f.FileFormat,
-		FileModified:                 f.FileModified,
-		ID:                           f.ID,
-		Identifier:                   f.Identifier(),
-		InstitutionID:                f.InstitutionID,
-		IntellectualObjectID:         f.IntellectualObjectID,
-		IntellectualObjectIdentifier: f.ObjectIdentifier,
-		PremisEvents:                 ingestEvents,
-		Size:                         f.Size,
-		State:                        constants.StateActive,
-		StorageOption:                f.StorageOption,
-		StorageRecords:               storageRecords,
-		UUID:                         f.UUID,
+		Checksums:            checksums,
+		FileFormat:           f.FileFormat,
+		FileModified:         f.FileModified,
+		ID:                   f.ID,
+		Identifier:           f.Identifier(),
+		InstitutionID:        f.InstitutionID,
+		IntellectualObjectID: f.IntellectualObjectID,
+		PremisEvents:         ingestEvents,
+		Size:                 f.Size,
+		State:                constants.StateActive,
+		StorageOption:        f.StorageOption,
+		StorageRecords:       storageRecords,
+		UUID:                 f.UUID,
 	}, nil
 }
 
