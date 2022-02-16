@@ -16,7 +16,7 @@ type PreservationVerifier struct {
 }
 
 // NewPreservationVerifier returns a new PreservationVerifier.
-func NewPreservationVerifier(context *common.Context, workItemID int, ingestObject *service.IngestObject) *PreservationVerifier {
+func NewPreservationVerifier(context *common.Context, workItemID int64, ingestObject *service.IngestObject) *PreservationVerifier {
 	return &PreservationVerifier{
 		Base: Base{
 			Context:      context,

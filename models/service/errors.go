@@ -31,7 +31,7 @@ type ProcessingError struct {
 
 	// WorkItemID is the ID of the WorkItem being processed when the
 	// error occurree.
-	WorkItemID int
+	WorkItemID int64
 }
 
 // NewProcessingError returns a new ProcessingError. Param workItemID
@@ -46,7 +46,7 @@ type ProcessingError struct {
 // tries. We may flag transient errors as fatal after too many retries.
 // For example, repeated failed attempts to connect to a network host should
 // be flagged as fatal so an admin can look into the issue.
-func NewProcessingError(workItemID int, identifier, message string, isFatal bool) *ProcessingError {
+func NewProcessingError(workItemID int64, identifier, message string, isFatal bool) *ProcessingError {
 	_, filename, line, ok := runtime.Caller(1)
 	source := "unknown:0"
 	if ok {

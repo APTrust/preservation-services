@@ -154,7 +154,7 @@ func getProfile(name string) (*bagit.Profile, error) {
 	return bagit.ProfileLoad(filename)
 }
 
-func getMetadataValidator(t *testing.T, profileName, pathToBag, bagMd5 string, workItemId int) *ingest.MetadataValidator {
+func getMetadataValidator(t *testing.T, profileName, pathToBag, bagMd5 string, workItemId int64) *ingest.MetadataValidator {
 	context := common.NewContext()
 	profile, err := getProfile(profileName)
 	require.Nil(t, err)
@@ -169,7 +169,7 @@ func getMetadataValidator(t *testing.T, profileName, pathToBag, bagMd5 string, w
 // This function prepares a bag for validation by running it through
 // the MetadataGatherer. It returns a MetadataValidator that is ready
 // to be tested.
-func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string, workItemId int, testForScanError bool) *ingest.MetadataValidator {
+func setupValidatorAndObject(t *testing.T, profileName, pathToBag, bagMd5 string, workItemId int64, testForScanError bool) *ingest.MetadataValidator {
 	// Create a validator
 	validator := getMetadataValidator(t, profileName, pathToBag, bagMd5, workItemId)
 	context := validator.Context
@@ -221,7 +221,7 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int, con
 	// loads fixture data.
 	instIdentifier := getInstFromFileName(pathToBag)
 	obj := getIngestObject(pathToBag, goodbagMd5)
-	inst := context.PharosClient.InstitutionGet(instIdentifier).Institution()
+	inst := context.RegistryClient.InstitutionByIdentifier(instIdentifier).Institution()
 	require.NotNil(t, inst)
 	obj.InstitutionID = inst.ID
 

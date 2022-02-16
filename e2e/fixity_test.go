@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -36,7 +37,7 @@ func getLatestFixityCheckEvent(gfIdentifier string) *registry.PremisEvent {
 	// "date_time desc", the controller discards the param altogether.
 	params.Set("sort", "date")
 
-	resp := ctx.Context.PharosClient.PremisEventList(params)
+	resp := ctx.Context.RegistryClient.PremisEventList(params)
 	require.Nil(ctx.T, resp.Error, gfIdentifier)
 	return resp.PremisEvent()
 }

@@ -20,7 +20,6 @@ type Context struct {
 	Config         *Config
 	Logger         *logging.Logger
 	NSQClient      *network.NSQClient
-	PharosClient   *network.PharosClient
 	RedisClient    *network.RedisClient
 	RegistryClient *network.RegistryClient
 	S3Clients      map[string]*minio.Client
@@ -33,7 +32,6 @@ func NewContext() *Context {
 		Config:         config,
 		Logger:         _logger,
 		NSQClient:      getNsqClient(config),
-		PharosClient:   getPharosClient(config, _logger),
 		RedisClient:    getRedisClient(config),
 		RegistryClient: getRegistryClient(config, _logger),
 		S3Clients:      getS3Clients(config, _logger),
@@ -54,20 +52,6 @@ func getRedisClient(config *Config) *network.RedisClient {
 		config.RedisURL,
 		config.RedisPassword,
 		config.RedisDefaultDB)
-}
-
-func getPharosClient(config *Config, logger *logging.Logger) *network.PharosClient {
-	client, err := network.NewPharosClient(
-		config.PharosURL,
-		config.PharosAPIVersion,
-		config.PharosAPIUser,
-		config.PharosAPIKey,
-		logger)
-	if err != nil {
-		msg := fmt.Sprintf("Could not initialize Pharos client: %v", err)
-		panic(msg)
-	}
-	return client
 }
 
 func getRegistryClient(config *Config, logger *logging.Logger) *network.RegistryClient {

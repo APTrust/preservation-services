@@ -21,7 +21,7 @@ type Cleanup struct {
 // NewCleanup creates a new Cleanup. This will panic
 // if the prerequisites for running the format identifier script are
 // not present.
-func NewCleanup(context *common.Context, workItemID int, ingestObject *service.IngestObject) *Cleanup {
+func NewCleanup(context *common.Context, workItemID int64, ingestObject *service.IngestObject) *Cleanup {
 	return &Cleanup{
 		Base: Base{
 			Context:      context,

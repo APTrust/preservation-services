@@ -34,7 +34,7 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 			ErrorChannel:         make(chan *Task, settings.ChannelBufferSize),
 			FatalErrorChannel:    make(chan *Task, settings.ChannelBufferSize),
 			processorConstructor: processorConstructor,
-			institutionCache:     make(map[int]string),
+			institutionCache:     make(map[int64]string),
 		},
 	}
 
@@ -307,9 +307,9 @@ func (b *IngestBase) FindOtherIngestRequests(workItem *registry.WorkItem) []*reg
 	v := url.Values{}
 	v.Add("per_page", "20")
 	v.Add("name", workItem.Name)
-	v.Add("item_action", constants.ActionIngest)
+	v.Add("action", constants.ActionIngest)
 	v.Add("sort", "date") // Pharos changes this to 'date desc'
-	resp := b.Context.PharosClient.WorkItemList(v)
+	resp := b.Context.RegistryClient.WorkItemList(v)
 	if resp.Error != nil {
 		b.Context.Logger.Error("Error getting WorkItems list from Pharos: %v",
 			resp.Error)
@@ -326,7 +326,7 @@ func (b *IngestBase) FindOtherIngestRequests(workItem *registry.WorkItem) []*reg
 func (b *IngestBase) FindNewerIngestRequest(workItem *registry.WorkItem) *registry.WorkItem {
 	items := b.FindOtherIngestRequests(workItem)
 	for _, item := range items {
-		if item.Date.After(workItem.Date) && item.ETag != workItem.ETag && !item.ProcessingHasCompleted() {
+		if item.DateProcessed.After(workItem.DateProcessed) && item.ETag != workItem.ETag && !item.ProcessingHasCompleted() {
 			return item
 		}
 	}
@@ -338,7 +338,7 @@ func (b *IngestBase) FindNewerIngestRequest(workItem *registry.WorkItem) *regist
 func (b *IngestBase) StillIngestingOlderVersion(workItem *registry.WorkItem) bool {
 	items := b.FindOtherIngestRequests(workItem)
 	for _, item := range items {
-		if item.Date.Before(workItem.Date) && item.Retry && !item.ProcessingHasCompleted() {
+		if item.DateProcessed.Before(workItem.DateProcessed) && item.Retry && !item.ProcessingHasCompleted() {
 			message := fmt.Sprintf("Skipping WorkItem %d because a prior version of this bag is still being ingested in WorkItem %d.", workItem.ID, item.ID)
 			b.Context.Logger.Info(message)
 			workItem.MarkNoLongerInProgress(

@@ -18,7 +18,7 @@ type FileRestorer struct {
 
 // NewFileRestorer creates a new FileRestorer to copy files from S3
 // to local disk for packaging.
-func NewFileRestorer(context *common.Context, workItemID int, restorationObject *service.RestorationObject) *FileRestorer {
+func NewFileRestorer(context *common.Context, workItemID int64, restorationObject *service.RestorationObject) *FileRestorer {
 	return &FileRestorer{
 		Base: Base{
 			Context:           context,
@@ -62,7 +62,7 @@ func (r *FileRestorer) Run() (fileCount int, errors []*service.ProcessingError) 
 
 // Get the GenericFile record from Pharos
 func (r *FileRestorer) getGenericFile() (*registry.GenericFile, error) {
-	resp := r.Context.PharosClient.GenericFileGet(r.RestorationObject.Identifier)
+	resp := r.Context.RegistryClient.GenericFileByIdentifier(r.RestorationObject.Identifier)
 	if resp.Error != nil {
 		return nil, resp.Error
 	}

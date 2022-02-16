@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package deletion_test
@@ -112,18 +113,18 @@ func TestRun_Object(t *testing.T) {
 
 func testItemMarkedDeleted(t *testing.T, context *common.Context, identifier string) {
 	if identifier == objIdentifier {
-		resp := context.PharosClient.IntellectualObjectGet(identifier)
+		resp := context.RegistryClient.IntellectualObjectByIdentifier(identifier)
 		require.Nil(t, resp.Error)
 		assert.Equal(t, constants.StateDeleted, resp.IntellectualObject().State)
 	} else {
-		resp := context.PharosClient.GenericFileGet(identifier)
+		resp := context.RegistryClient.GenericFileByIdentifier(identifier)
 		require.Nil(t, resp.Error)
 		assert.Equal(t, constants.StateDeleted, resp.GenericFile().State)
 	}
 }
 
 func testStorageRecordsRemoved(t *testing.T, context *common.Context, gfIdentifier string) {
-	resp := context.PharosClient.StorageRecordList(gfIdentifier)
+	resp := context.RegistryClient.StorageRecordList(gfIdentifier)
 	require.Nil(t, resp.Error)
 	assert.Equal(t, 0, len(resp.StorageRecords()))
 }
@@ -135,7 +136,7 @@ func testFileDeletionEvents(t *testing.T, context *common.Context, gfIdentifier 
 	values.Set("event_type", constants.EventDeletion)
 	values.Set("page", "1")
 	values.Set("per_page", "20")
-	resp := context.PharosClient.PremisEventList(values)
+	resp := context.RegistryClient.PremisEventList(values)
 	require.Nil(t, resp.Error)
 	deletionEvents := resp.PremisEvents()
 	assert.Equal(t, 10, len(deletionEvents))
@@ -159,7 +160,7 @@ func testObjectDeletionEvent(t *testing.T, context *common.Context) {
 	values.Set("event_type", constants.EventDeletion)
 	values.Set("page", "1")
 	values.Set("per_page", "100")
-	resp := context.PharosClient.PremisEventList(values)
+	resp := context.RegistryClient.PremisEventList(values)
 	require.Nil(t, resp.Error)
 	// Pharos doesn't filter these results properly
 	count := 0
@@ -181,7 +182,7 @@ func prepareForTest(t *testing.T, context *common.Context) {
 // the name, ID, and identifier.
 func createObjectAndFiles(t *testing.T, context *common.Context) {
 	if !objectCreated {
-		resp := context.PharosClient.IntellectualObjectGet("institution2.edu/coal")
+		resp := context.RegistryClient.IntellectualObjectGet("institution2.edu/coal")
 		require.Nil(t, resp.Error)
 		obj := resp.IntellectualObject()
 		require.NotNil(t, obj)
@@ -189,7 +190,7 @@ func createObjectAndFiles(t *testing.T, context *common.Context) {
 		obj.Identifier = objIdentifier
 		obj.BagName = "springfield.tar"
 		obj.State = constants.StateActive
-		resp = context.PharosClient.IntellectualObjectSave(obj)
+		resp = context.RegistryClient.IntellectualObjectSave(obj)
 		require.Nil(t, resp.Error)
 		savedObj := resp.IntellectualObject()
 
@@ -205,10 +206,10 @@ func createObjectAndFiles(t *testing.T, context *common.Context) {
 				StorageOption:                constants.StorageStandard,
 				UUID:                         uuid.New().String(),
 			}
-			resp = context.PharosClient.GenericFileSave(gf)
+			resp = context.RegistryClient.GenericFileSave(gf)
 			require.Nil(t, resp.Error)
 			ingestEvent := getFileIngestEvent(gf)
-			resp = context.PharosClient.PremisEventSave(ingestEvent)
+			resp = context.RegistryClient.PremisEventSave(ingestEvent)
 			require.Nil(t, resp.Error)
 		}
 	}
@@ -246,7 +247,7 @@ func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 		storageRecord := &registry.StorageRecord{
 			URL: _url,
 		}
-		resp := context.PharosClient.StorageRecordSave(storageRecord, gfIdentifier)
+		resp := context.RegistryClient.StorageRecordSave(storageRecord, gfIdentifier)
 		require.Nil(t, resp.Error)
 		alreadySaved = append(alreadySaved, _url)
 	}
@@ -286,13 +287,13 @@ func createDeletionWorkItem(t *testing.T, context *common.Context, identifier st
 		UpdatedAt:             now,
 		User:                  "requestor@example.com",
 	}
-	resp := context.PharosClient.WorkItemSave(item)
+	resp := context.RegistryClient.WorkItemSave(item)
 	require.Nil(t, resp.Error)
 	return resp.WorkItem().ID
 }
 
 func getInstId(t *testing.T, context *common.Context) int {
-	resp := context.PharosClient.InstitutionGet("institution2.edu")
+	resp := context.RegistryClient.InstitutionByIdentifier("institution2.edu")
 	require.Nil(t, resp.Error)
 	return resp.Institution().ID
 }

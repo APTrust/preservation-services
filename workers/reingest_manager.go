@@ -48,6 +48,6 @@ func NewReingestManager(bufSize, numWorkers, maxAttempts int) *ReingestManager {
 	return worker
 }
 
-func createReingestManager(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+func createReingestManager(context *common.Context, workItemID int64, ingestObject *service.IngestObject) ingest.Runnable {
 	return ingest.NewReingestManager(context, workItemID, ingestObject)
 }

@@ -53,7 +53,7 @@ func IsWrongRestorationType(context *common.Context, workItem *registry.WorkItem
 }
 
 func GetRestorationObject(context *common.Context, workItem *registry.WorkItem, restorationSource string) (*service.RestorationObject, error) {
-	resp := context.PharosClient.IntellectualObjectGet(workItem.ObjectIdentifier)
+	resp := context.RegistryClient.IntellectualObjectByIdentifier(workItem.ObjectIdentifier)
 	if resp.Error != nil {
 		return nil, resp.Error
 	}
@@ -61,7 +61,7 @@ func GetRestorationObject(context *common.Context, workItem *registry.WorkItem, 
 	if intelObj == nil {
 		return nil, fmt.Errorf("Pharos returned nil for IntellectualObject %s", workItem.ObjectIdentifier)
 	}
-	resp = context.PharosClient.InstitutionGet(intelObj.Institution)
+	resp = context.RegistryClient.InstitutionByIdentifier(intelObj.Institution)
 	if resp.Error != nil {
 		return nil, resp.Error
 	}
@@ -95,7 +95,7 @@ func GetRestorationObject(context *common.Context, workItem *registry.WorkItem, 
 
 // GetFileSize returns the size of the GenericFile with the specified identifier.
 func GetFileSize(context *common.Context, gfIdentifier string) (int64, error) {
-	resp := context.PharosClient.GenericFileGet(gfIdentifier)
+	resp := context.RegistryClient.GenericFileByIdentifier(gfIdentifier)
 	if resp.Error != nil {
 		return int64(0), resp.Error
 	}
@@ -108,7 +108,7 @@ func GetFileSize(context *common.Context, gfIdentifier string) (int64, error) {
 
 // QueueE2EWorkItem queues a WorkItem for post tests if the env variable
 // APT_E2E is set to "true".
-func QueueE2EWorkItem(context *common.Context, topic string, workItemID int) {
+func QueueE2EWorkItem(context *common.Context, topic string, workItemID int64) {
 	if context.Config.IsE2ETest() {
 		err := context.NSQClient.Enqueue(topic, workItemID)
 		if err != nil {

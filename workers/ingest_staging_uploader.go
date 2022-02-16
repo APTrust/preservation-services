@@ -48,6 +48,6 @@ func NewStagingUploader(bufSize, numWorkers, maxAttempts int) *StagingUploader {
 	return worker
 }
 
-func createStagingUploader(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+func createStagingUploader(context *common.Context, workItemID int64, ingestObject *service.IngestObject) ingest.Runnable {
 	return ingest.NewStagingUploader(context, workItemID, ingestObject)
 }

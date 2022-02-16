@@ -17,7 +17,7 @@ var item = &registry.WorkItem{
 	BagDate:               testutil.Bloomsday,
 	Bucket:                "receiving-bucket",
 	CreatedAt:             testutil.Bloomsday,
-	Date:                  testutil.Bloomsday,
+	DateProcessed:         testutil.Bloomsday,
 	ETag:                  "54321",
 	GenericFileIdentifier: "test.edu/bag/data/file.txt",
 	ID:                    908,

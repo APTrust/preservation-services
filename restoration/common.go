@@ -44,6 +44,6 @@ func GetBatchOfFiles(context *common.Context, objectIdentifier string, pageNumbe
 	params.Set("sort", "name")
 	params.Set("state", "A")
 	params.Set("include_storage_records", "true")
-	resp := context.PharosClient.GenericFileList(params)
+	resp := context.RegistryClient.GenericFileList(params)
 	return resp.GenericFiles(), resp.Error
 }

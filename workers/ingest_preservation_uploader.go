@@ -48,6 +48,6 @@ func NewIngestPreservationUploader(bufSize, numWorkers, maxAttempts int) *Preser
 	return worker
 }
 
-func createPreservationUploader(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+func createPreservationUploader(context *common.Context, workItemID int64, ingestObject *service.IngestObject) ingest.Runnable {
 	return ingest.NewPreservationUploader(context, workItemID, ingestObject)
 }

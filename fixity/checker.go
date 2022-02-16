@@ -79,7 +79,7 @@ func (c *Checker) Run() (count int, errors []*service.ProcessingError) {
 }
 
 func (c *Checker) GetGenericFile() (*registry.GenericFile, error) {
-	resp := c.Context.PharosClient.GenericFileGet(c.Identifier)
+	resp := c.Context.RegistryClient.GenericFileByIdentifier(c.Identifier)
 	if resp.Error != nil {
 		return nil, resp.Error
 	}
@@ -94,7 +94,7 @@ func (c *Checker) GetLatestSha256() (checksum *registry.Checksum, err error) {
 	params := url.Values{}
 	params.Set("generic_file_identifier", c.Identifier)
 	params.Set("algorithm", constants.AlgSha256)
-	resp := c.Context.PharosClient.ChecksumList(params)
+	resp := c.Context.RegistryClient.ChecksumList(params)
 	if resp.Error != nil {
 		return nil, resp.Error
 	}
@@ -153,9 +153,9 @@ func (c *Checker) RecordFixityEvent(gf *registry.GenericFile, url, expectedFixit
 	event := c.GetFixityEvent(gf, url, expectedFixity, actualFixity)
 
 	// Still need to work out 502s between nginx and Pharos when Pharos is busy
-	var resp *network.PharosResponse
+	var resp *network.RegistryResponse
 	for i := 0; i < 3; i++ {
-		resp = c.Context.PharosClient.PremisEventSave(event)
+		resp = c.Context.RegistryClient.PremisEventSave(event)
 		if resp.Response.StatusCode != http.StatusBadGateway {
 			break
 		}

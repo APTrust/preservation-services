@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -17,7 +18,7 @@ func testPharosObjects() {
 }
 
 func testObject(expectedObj *registry.IntellectualObject) {
-	resp := ctx.Context.PharosClient.IntellectualObjectGet(expectedObj.Identifier)
+	resp := ctx.Context.RegistryClient.IntellectualObjectByIdentifier(expectedObj.Identifier)
 	require.Nil(ctx.T, resp.Error)
 	pharosObj := resp.IntellectualObject()
 	require.NotNil(ctx.T, pharosObj, "Pharos is missing %s", expectedObj.Identifier)

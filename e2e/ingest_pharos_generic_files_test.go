@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -43,7 +44,7 @@ func getGenericFiles() []*registry.GenericFile {
 	params.Set("include_storage_records", "true")
 	params.Set("page", "1")
 	params.Set("per_page", "200")
-	resp := ctx.Context.PharosClient.GenericFileList(params)
+	resp := ctx.Context.RegistryClient.GenericFileList(params)
 	require.Nil(ctx.T, resp.Error)
 	return resp.GenericFiles()
 }

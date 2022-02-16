@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -15,9 +16,9 @@ import (
 func testWorkItemsAfterIngest() {
 	t := ctx.T
 	params := url.Values{}
-	params.Set("item_action", constants.ActionIngest)
+	params.Set("action", constants.ActionIngest)
 	params.Set("institution_id", strconv.Itoa(ctx.TestInstitution.ID))
-	resp := ctx.Context.PharosClient.WorkItemList(params)
+	resp := ctx.Context.RegistryClient.WorkItemList(params)
 	require.Nil(t, resp.Error)
 	pharosItems := resp.WorkItems()
 	require.NotEmpty(t, pharosItems)

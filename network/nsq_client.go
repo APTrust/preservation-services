@@ -82,8 +82,8 @@ func NewNSQClient(url string) *NSQClient {
 // topic. Param topic is the topic under which you want to queue something.
 // For example, prepare_topic, fixity_topic, etc.
 // Param workItemId is the id of the WorkItem record in Pharos we want to queue.
-func (client *NSQClient) Enqueue(topic string, workItemID int) error {
-	idAsString := strconv.Itoa(workItemID)
+func (client *NSQClient) Enqueue(topic string, workItemID int64) error {
+	idAsString := strconv.FormatInt(workItemID, 10)
 	return client.EnqueueString(topic, idAsString)
 }
 

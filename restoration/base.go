@@ -15,7 +15,7 @@ type Runnable interface {
 type Base struct {
 	Context           *common.Context
 	RestorationObject *service.RestorationObject
-	WorkItemID        int
+	WorkItemID        int64
 }
 
 // Error returns a ProcessingError describing something that went wrong

@@ -88,7 +88,7 @@ type Base struct {
 	// institutionCache maps institution ids to identifiers. The institution
 	// identifier is typically a domain name like "virginia.edu", "test.org",
 	// etc.
-	institutionCache map[int]string
+	institutionCache map[int64]string
 
 	// NSQConsumer implements HandleMessage to receive messages from NSQ.
 	NSQConsumer *nsq.Consumer
@@ -189,12 +189,12 @@ func (b *Base) ProcessItem() {
 func (b *Base) GetWorkItem(message *nsq.Message) (*registry.WorkItem, *service.ProcessingError) {
 	msgBody := strings.TrimSpace(string(message.Body))
 	b.Context.Logger.Info("NSQ Message body: ", msgBody)
-	workItemID, err := strconv.Atoi(string(msgBody))
+	workItemID, err := strconv.ParseInt(string(msgBody), 10, 64)
 	if err != nil || workItemID == 0 {
 		fullErr := fmt.Errorf("Could not get WorkItemId from NSQ message body: %v", err)
 		return nil, b.Error(0, msgBody, fullErr, true)
 	}
-	resp := b.Context.PharosClient.WorkItemGet(workItemID)
+	resp := b.Context.RegistryClient.WorkItemByID(workItemID)
 	if resp.Error != nil {
 		fullErr := fmt.Errorf("Error getting WorkItem %d from Pharos: %v", workItemID, resp.Error)
 		return nil, b.Error(workItemID, msgBody, fullErr, true)
@@ -209,7 +209,7 @@ func (b *Base) GetWorkItem(message *nsq.Message) (*registry.WorkItem, *service.P
 }
 
 // Error creates a new ProcessingError.
-func (b *Base) Error(workItemID int, identifier string, err error, isFatal bool) *service.ProcessingError {
+func (b *Base) Error(workItemID int64, identifier string, err error, isFatal bool) *service.ProcessingError {
 	return service.NewProcessingError(
 		workItemID,
 		identifier,
@@ -220,12 +220,12 @@ func (b *Base) Error(workItemID int, identifier string, err error, isFatal bool)
 
 // GetInstitutionIdentifier returns the identifier for the institution
 // with the specified ID.
-func (b *Base) GetInstitutionIdentifier(instID int) (string, error) {
+func (b *Base) GetInstitutionIdentifier(instID int64) (string, error) {
 	if _, ok := b.institutionCache[instID]; !ok {
 		v := url.Values{}
 		v.Add("order", "name")
 		v.Add("per_page", "200")
-		resp := b.Context.PharosClient.InstitutionList(v)
+		resp := b.Context.RegistryClient.InstitutionList(v)
 		if resp.Error != nil {
 			return "", resp.Error
 		}
@@ -238,7 +238,7 @@ func (b *Base) GetInstitutionIdentifier(instID int) (string, error) {
 
 // GetWorkResult returns an WorkResult object for this WorkItem. If one
 // already exists in Redis, it returns that. If not, it creates a new one.
-func (b *Base) GetWorkResult(workItemID int) *service.WorkResult {
+func (b *Base) GetWorkResult(workItemID int64) *service.WorkResult {
 	workResult, err := b.Context.RedisClient.WorkResultGet(workItemID, b.Settings.NSQTopic)
 	if err != nil {
 		b.Context.Logger.Infof("No WorkResult in Redis for WorkItem %d. No problem. Creating a new one.", workItemID)
@@ -249,7 +249,7 @@ func (b *Base) GetWorkResult(workItemID int) *service.WorkResult {
 
 // SaveWorkResult saves a WorkResult to Redis and logs an error if any occurs.
 // Will try three times, in case Redis is busy.
-func (b *Base) SaveWorkResult(workItemID int, result *service.WorkResult) error {
+func (b *Base) SaveWorkResult(workItemID int64, result *service.WorkResult) error {
 	// Don't save, because processing is done and we don't
 	// want to leave orphan records in Redis.
 	if b.Settings.NextQueueTopic == "" {
@@ -274,9 +274,9 @@ func (b *Base) SaveWorkResult(workItemID int, result *service.WorkResult) error 
 
 // SaveWorkItem saves a WorkItem back to Pharos.
 func (b *Base) SaveWorkItem(workItem *registry.WorkItem) error {
-	var resp *network.PharosResponse
+	var resp *network.RegistryResponse
 	for i := 0; i < 5; i++ {
-		resp = b.Context.PharosClient.WorkItemSave(workItem)
+		resp = b.Context.RegistryClient.WorkItemSave(workItem)
 		if resp.Error == nil {
 			break
 		} else {
@@ -323,7 +323,7 @@ func (b *Base) OtherWorkerIsHandlingThis(workItem *registry.WorkItem) bool {
 // when NSQ thinks the item has timed out and tries to reassign it to a new
 // worker.
 func (b *Base) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
-	if b.ItemsInProcess.Contains(strconv.Itoa(workItem.ID)) {
+	if b.ItemsInProcess.Contains(strconv.FormatInt(workItem.ID, 10)) {
 		// Node and pid may be empty if this was manually requeued. Reset them.
 		workItem.SetNodeAndPid()
 		b.Context.Logger.Infof("Skipping WorkItem %d because this worker is already working on it host %s, pid %d", workItem.ID, workItem.Node, workItem.Pid)
@@ -349,14 +349,14 @@ func (b *Base) ShouldRetry(workItem *registry.WorkItem) bool {
 }
 
 // AddToInProcessList adds workItemID to this worker's ItemsInProcess list.
-func (b *Base) AddToInProcessList(workItemID int) {
-	b.ItemsInProcess.Add(strconv.Itoa(workItemID))
+func (b *Base) AddToInProcessList(workItemID int64) {
+	b.ItemsInProcess.Add(strconv.FormatInt(workItemID, 10))
 }
 
 // RemoveFromInProcessList removes workItemID from this worker's
 // ItemsInProcess list.
-func (b *Base) RemoveFromInProcessList(workItemID int) {
-	b.ItemsInProcess.Del(strconv.Itoa(workItemID))
+func (b *Base) RemoveFromInProcessList(workItemID int64) {
+	b.ItemsInProcess.Del(strconv.FormatInt(workItemID, 10))
 }
 
 // MarkAsStarted tells Pharos, Redis, and NSQ that work on this

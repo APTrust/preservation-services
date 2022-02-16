@@ -44,7 +44,7 @@ type ReingestManager struct {
 }
 
 // NewReingestManager creates a new ReingestManager.
-func NewReingestManager(context *common.Context, workItemID int, ingestObject *service.IngestObject) *ReingestManager {
+func NewReingestManager(context *common.Context, workItemID int64, ingestObject *service.IngestObject) *ReingestManager {
 	return &ReingestManager{
 		Base{
 			Context:      context,
@@ -93,7 +93,7 @@ func (r *ReingestManager) Run() (isReingest int, errors []*service.ProcessingErr
 // GetExistingObject returns true if the IngestObject has been
 // previously ingested. Returns an error if it can't get info from Pharos.
 func (r *ReingestManager) GetExistingObject() (*registry.IntellectualObject, error) {
-	resp := r.Context.PharosClient.IntellectualObjectGet(r.IngestObject.Identifier())
+	resp := r.Context.RegistryClient.IntellectualObjectByIdentifier(r.IngestObject.Identifier())
 	if resp.ObjectNotFound() {
 		return nil, nil
 	} else if resp.Error != nil {
@@ -108,7 +108,7 @@ func (r *ReingestManager) GetExistingObject() (*registry.IntellectualObject, err
 // re-copy the file into preservation storage.
 func (r *ReingestManager) ProcessFiles() (int, []*service.ProcessingError) {
 	processFile := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
-		resp := r.Context.PharosClient.GenericFileGet(ingestFile.Identifier())
+		resp := r.Context.RegistryClient.GenericFileByIdentifier(ingestFile.Identifier())
 		// Most files will be new files, so we expect lots of 404s.
 		// If we get 404, we do not need to flag changes for this file
 		// because it's new.
@@ -130,7 +130,9 @@ func (r *ReingestManager) ProcessFiles() (int, []*service.ProcessingError) {
 		// these storage URLs, and if we try to re-save a StorageRecord
 		// whose URL is already in the DB, we'll get a unique constraint
 		// error.
-		resp = r.Context.PharosClient.StorageRecordList(ingestFile.Identifier())
+		params := url.Values{}
+		params.Add("generic_file_identifier", ingestFile.Identifier())
+		resp = r.Context.RegistryClient.StorageRecordList(params)
 		if resp.Error != nil {
 			return append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
 		}
@@ -165,7 +167,7 @@ func (r *ReingestManager) ProcessFiles() (int, []*service.ProcessingError) {
 // an error if it has trouble communicating with Pharos or Redis.
 func (r *ReingestManager) ProcessFile(ingestFile *service.IngestFile) (bool, error) {
 	updatedInRedis := false
-	resp := r.Context.PharosClient.GenericFileGet(ingestFile.Identifier())
+	resp := r.Context.RegistryClient.GenericFileByIdentifier(ingestFile.Identifier())
 	if resp.Error != nil {
 		return updatedInRedis, resp.Error
 	}
@@ -194,7 +196,7 @@ func (r *ReingestManager) FlagChanges(ingestFile *service.IngestFile, pharosFile
 	params.Add("generic_file_identifier", ingestFile.Identifier())
 	params.Add("sort", "datetime DESC")
 
-	resp := r.Context.PharosClient.ChecksumList(params)
+	resp := r.Context.RegistryClient.ChecksumList(params)
 	if resp.Error != nil {
 		return fileChanged, resp.Error
 	}

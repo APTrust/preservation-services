@@ -34,7 +34,7 @@ type Manager struct {
 	ItemType string
 
 	// WorkItemID is the ID of the WorkItem being processed.
-	WorkItemID int
+	WorkItemID int64
 
 	// RequestedBy is the email address of the Pharos user who requested
 	// (initiated) this deletion.
@@ -51,7 +51,7 @@ type Manager struct {
 }
 
 // NewManager creates a new deletion.Manager.
-func NewManager(context *common.Context, workItemID int, identifier, itemType, requestedBy, instApprover, aptrustApprover string) *Manager {
+func NewManager(context *common.Context, workItemID int64, identifier, itemType, requestedBy, instApprover, aptrustApprover string) *Manager {
 	return &Manager{
 		Context:         context,
 		Identifier:      identifier,
@@ -105,7 +105,7 @@ func (m *Manager) IngestObjectSave() error {
 // deleteSingleFile is for deleting a single GenericFile. Call this when ItemType
 // is GenericFile.
 func (m *Manager) deleteSingleFile() (count int, errors []*service.ProcessingError) {
-	resp := m.Context.PharosClient.GenericFileGet(m.Identifier)
+	resp := m.Context.RegistryClient.GenericFileByIdentifier(m.Identifier)
 	if resp.Error != nil {
 		return count, append(errors, m.Error(m.Identifier, resp.Error, false))
 	}
@@ -128,7 +128,7 @@ func (m *Manager) deleteFiles() (count int, errors []*service.ProcessingError) {
 	params.Set("page", "1")
 	params.Set("per_page", "200")
 	for {
-		resp := m.Context.PharosClient.GenericFileList(params)
+		resp := m.Context.RegistryClient.GenericFileList(params)
 		if resp.Error != nil {
 			errors = append(errors, m.Error(m.Identifier, resp.Error, false))
 			return count, errors
@@ -161,7 +161,9 @@ func (m *Manager) deleteFiles() (count int, errors []*service.ProcessingError) {
 
 // deleteFile tries to delete all the storage records associated with a file.
 func (m *Manager) deleteFile(gf *registry.GenericFile) (errors []*service.ProcessingError) {
-	resp := m.Context.PharosClient.StorageRecordList(gf.Identifier)
+	params := url.Values{}
+	params.Add("generic_file_identifier", gf.Identifier)
+	resp := m.Context.RegistryClient.StorageRecordList(params)
 	if resp.Error != nil {
 		return append(errors, m.Error(gf.Identifier, resp.Error, false))
 	}
@@ -177,18 +179,13 @@ func (m *Manager) deleteFile(gf *registry.GenericFile) (errors []*service.Proces
 			errors = append(errors, m.Error(gf.Identifier, err, false))
 			continue
 		}
-		err = m.deleteStorageRecordFromPharos(gf, sr)
-		if err != nil {
-			errors = append(errors, m.Error(gf.Identifier, err, false))
-			continue
-		}
 		err = m.saveFileDeletionEvent(gf, sr)
 		if err != nil {
 			errors = append(errors, m.Error(gf.Identifier, err, false))
 		}
 	}
 	if len(errors) == 0 {
-		resp = m.Context.PharosClient.GenericFileFinishDelete(gf.Identifier)
+		resp = m.Context.RegistryClient.GenericFileDelete(gf.Identifier)
 		if resp.Error != nil {
 			errors = append(errors, m.Error(gf.Identifier, resp.Error, false))
 		}
@@ -225,18 +222,6 @@ func (m *Manager) deleteFromPreservationStorage(bucket *common.PreservationBucke
 	// Other errors are permission denied, bucket does not exist, conflict,
 	// request limit. These need to be reported.
 	return err
-}
-
-// deleteStorageRecordFromPharos deletes a single StorageRecord from
-// Pharos. It does not touch the GenericFile record.
-//
-// TODO: Pharos also deletes these storage records when we mark
-// the GenericFile deleted. However, it's probably better to do this
-// here, in case we wind up deleting only one of two records. The
-// PremisEvents will keep a record of what happened.
-func (m *Manager) deleteStorageRecordFromPharos(gf *registry.GenericFile, sr *registry.StorageRecord) error {
-	resp := m.Context.PharosClient.StorageRecordDelete(sr.ID)
-	return resp.Error
 }
 
 // saveFileDeletionEvent saves a PremisEvent to Pharos saying we deleted
@@ -277,9 +262,9 @@ func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.S
 	// 502s occur sporadically when Pharos is so busy that Nginx
 	// can't forward the request. See https://trello.com/c/pI16xrcD
 	// for this particular ticket.
-	var resp *network.PharosResponse
+	var resp *network.RegistryResponse
 	for i := 0; i < 3; i++ {
-		resp = m.Context.PharosClient.PremisEventSave(event)
+		resp = m.Context.RegistryClient.PremisEventSave(event)
 		if resp.Response.StatusCode != http.StatusBadGateway {
 			break
 		}
@@ -288,10 +273,19 @@ func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.S
 	return resp.Error
 }
 
-// markObjectDeleted tells Pharos that this object has been deleted in its
+// markObjectDeleted tells Registry that this object has been deleted in its
 // entirety (all files deleted).
 func (m *Manager) markObjectDeleted() error {
-	resp := m.Context.PharosClient.IntellectualObjectFinishDelete(m.Identifier)
+	// TODO: Add manager.ID. This extra lookup is a temporary measure during the rewrite.
+	resp := m.Context.RegistryClient.IntellectualObjectByIdentifier(m.Identifier)
+	if resp.Error != nil {
+		return resp.Error
+	}
+	obj := resp.IntellectualObject()
+	if obj == nil || obj.ID == 0 {
+		return fmt.Errorf("registry returned empty object for identifier '%s'", m.Identifier)
+	}
+	resp = m.Context.RegistryClient.IntellectualObjectDelete(obj.ID)
 	return resp.Error
 }
 

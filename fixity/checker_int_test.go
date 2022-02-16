@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package fixity_test
@@ -59,7 +60,7 @@ func copyFileToPreservation(t *testing.T, context *common.Context) (records []*r
 func createPharosRecords(t *testing.T, context *common.Context, records []*registry.StorageRecord) {
 	// Save a GenericFile record
 	gf := getGenericFile(t, context)
-	resp := context.PharosClient.GenericFileSave(gf)
+	resp := context.RegistryClient.GenericFileSave(gf)
 	require.Nil(t, resp.Error)
 	gf = resp.GenericFile() // now has ID
 
@@ -74,20 +75,20 @@ func createPharosRecords(t *testing.T, context *common.Context, records []*regis
 		ID:            0,
 		UpdatedAt:     now,
 	}
-	resp = context.PharosClient.ChecksumSave(checksum, gf.Identifier)
+	resp = context.RegistryClient.ChecksumSave(checksum, gf.Identifier)
 	require.Nil(t, resp.Error)
 
 	// Save the storage records that point to our local
 	// Minio integration test server.
 	for _, sr := range records {
 		sr.GenericFileID = gf.ID
-		resp = context.PharosClient.StorageRecordSave(sr, gf.Identifier)
+		resp = context.RegistryClient.StorageRecordSave(sr, gf.Identifier)
 		require.Nil(t, resp.Error)
 	}
 }
 
 func getGenericFile(t *testing.T, context *common.Context) *registry.GenericFile {
-	resp := context.PharosClient.IntellectualObjectGet(objIdentifier)
+	resp := context.RegistryClient.IntellectualObjectByIdentifier(objIdentifier)
 	require.Nil(t, resp.Error)
 	obj := resp.IntellectualObject()
 	require.NotNil(t, obj)
@@ -129,7 +130,7 @@ func TestSupportingMethods(t *testing.T) {
 	checker := fixity.NewChecker(context, fileIdentifier)
 
 	// Need to get GenericFile with StorageRecords
-	gf := context.PharosClient.GenericFileGet(fileIdentifier).GenericFile()
+	gf := context.RegistryClient.GenericFileByIdentifier(fileIdentifier).GenericFile()
 	actualFixity, url, err := checker.CalculateFixity(gf)
 	assert.Equal(t, expectedFixity, actualFixity)
 	assert.Equal(t, "https://s3.us-east-1.localhost:9899/preservation-va/8dc5ba50-4a53-4cfc-bb27-6f5e799ace53", url)

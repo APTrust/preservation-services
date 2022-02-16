@@ -30,7 +30,7 @@ type GlacierRestorer struct {
 }
 
 // NewGlacierRestorer creates a new GlacierRestorer
-func NewGlacierRestorer(context *common.Context, workItemID int, restorationObject *service.RestorationObject) *GlacierRestorer {
+func NewGlacierRestorer(context *common.Context, workItemID int64, restorationObject *service.RestorationObject) *GlacierRestorer {
 	return &GlacierRestorer{
 		Base: Base{
 			Context:           context,
@@ -106,7 +106,7 @@ func (r *GlacierRestorer) restoreAllFiles() (completed, pending, errored int, er
 
 // Restore a single file from Glacier to S3
 func (r *GlacierRestorer) restoreFile() (restoreStatus int, errors []*service.ProcessingError) {
-	resp := r.Context.PharosClient.GenericFileGet(r.RestorationObject.Identifier)
+	resp := r.Context.RegistryClient.GenericFileByIdentifier(r.RestorationObject.Identifier)
 	if resp.Error != nil {
 		errors = append(errors, r.Error(r.RestorationObject.Identifier, resp.Error, true))
 		return RestoreError, errors

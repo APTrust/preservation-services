@@ -48,6 +48,6 @@ func NewIngestFormatIdentifier(bufSize, numWorkers, maxAttempts int) *FormatIden
 	return worker
 }
 
-func createFormatIdentifier(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+func createFormatIdentifier(context *common.Context, workItemID int64, ingestObject *service.IngestObject) ingest.Runnable {
 	return ingest.NewFormatIdentifier(context, workItemID, ingestObject)
 }

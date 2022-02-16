@@ -15,7 +15,7 @@ import (
 var etag = "12345678"
 var objIdentifier = "test.edu/test-bag"
 var institution = "test.edu"
-var institutionId = 9855
+var institutionId = int64(9855)
 var bucket = "bucket"
 var s3Key = "test-bag.b001.of200.tar"
 

@@ -50,6 +50,6 @@ func NewIngestPreservationVerifier(bufSize, numWorkers, maxAttempts int) *Preser
 	return worker
 }
 
-func createPreservationVerifier(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+func createPreservationVerifier(context *common.Context, workItemID int64, ingestObject *service.IngestObject) ingest.Runnable {
 	return ingest.NewPreservationVerifier(context, workItemID, ingestObject)
 }

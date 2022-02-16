@@ -34,7 +34,7 @@ type MetadataGatherer struct {
 // NewMetadataGatherer creates a new MetadataGatherer.
 // The context parameter provides methods for communicating
 // with S3 and our working data store (Redis).
-func NewMetadataGatherer(context *common.Context, workItemID int, ingestObject *service.IngestObject) *MetadataGatherer {
+func NewMetadataGatherer(context *common.Context, workItemID int64, ingestObject *service.IngestObject) *MetadataGatherer {
 	return &MetadataGatherer{
 		Base{
 			Context:      context,
@@ -360,7 +360,7 @@ func (m *MetadataGatherer) setStorageOption() {
 
 // Delete stale manifests from the staging bucket. This problem affects
 // our staging environment. See https://trello.com/c/cE9rLSUH
-func (m *MetadataGatherer) deleteStaleItemsFromStaging(workItemId int) {
+func (m *MetadataGatherer) deleteStaleItemsFromStaging(workItemId int64) {
 	if m.Context.Config.StagingBucket != "aptrust.staging.staging" {
 		return
 	}

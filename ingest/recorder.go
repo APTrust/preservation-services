@@ -19,7 +19,7 @@ type Recorder struct {
 }
 
 // NewRecorder returns a new Recorder.
-func NewRecorder(context *common.Context, workItemID int, ingestObject *service.IngestObject) *Recorder {
+func NewRecorder(context *common.Context, workItemID int64, ingestObject *service.IngestObject) *Recorder {
 	return &Recorder{
 		Base: Base{
 			Context:      context,
@@ -77,7 +77,7 @@ func (r *Recorder) Run() (fileCount int, errors []*service.ProcessingError) {
 func (r *Recorder) recordObject() (errors []*service.ProcessingError) {
 	if r.IngestObject.SavedToRegistryAt.IsZero() {
 		obj := r.IngestObject.ToIntellectualObject()
-		resp := r.Context.PharosClient.IntellectualObjectSave(obj)
+		resp := r.Context.RegistryClient.IntellectualObjectSave(obj)
 		if resp.Error != nil {
 			errors = append(errors, r.Error(r.IngestObject.Identifier(), resp.Error, true))
 		} else {
@@ -103,7 +103,7 @@ func (r *Recorder) recordObjectEvents() (errors []*service.ProcessingError) {
 			continue
 		}
 
-		resp := r.Context.PharosClient.PremisEventSave(event)
+		resp := r.Context.RegistryClient.PremisEventSave(event)
 		if resp.Error != nil {
 			errors = append(errors, r.Error(r.IngestObject.Identifier(), resp.Error, false))
 		} else {
@@ -203,7 +203,7 @@ func (r *Recorder) saveBatch(ingestFiles []*service.IngestFile) (fileCount int, 
 		}
 		genericFiles[i] = genericFile
 	}
-	resp := r.Context.PharosClient.GenericFileSaveBatch(genericFiles)
+	resp := r.Context.RegistryClient.GenericFileCreateBatch(genericFiles)
 	if resp.Error != nil {
 		errors = append(errors, r.Error(r.IngestObject.Identifier(), resp.Error, false))
 		return fileCount, errors
@@ -223,7 +223,7 @@ func (r *Recorder) updateBatch(ingestFiles []*service.IngestFile) (fileCount int
 		if err != nil {
 			errors = append(errors, r.Error(ingestFile.Identifier(), err, true))
 		}
-		resp := r.Context.PharosClient.GenericFileSave(gf)
+		resp := r.Context.RegistryClient.GenericFileSave(gf)
 		if resp.Error != nil {
 			// TODO: Pharos should return 409 on StorageRecord.URL
 			// conflict, and that should be a fatal error.
@@ -325,7 +325,7 @@ func (r *Recorder) recheckPharosObject() (objectExistsInPharos bool, errors []*s
 	r.Context.Logger.Infof("Checking for existing Pharos object %s", r.IngestObject.Identifier())
 
 	// Look up the object in Pharos
-	resp := r.Context.PharosClient.IntellectualObjectGet(r.IngestObject.Identifier())
+	resp := r.Context.RegistryClient.IntellectualObjectByIdentifier(r.IngestObject.Identifier())
 	if resp.Error != nil {
 		// If not found, item has not yet been recorded, and we have
 		// no work to do here.
@@ -359,7 +359,7 @@ func (r *Recorder) recheckObjectEvents() {
 		if event.ID > 0 {
 			continue
 		}
-		resp := r.Context.PharosClient.PremisEventGet(event.Identifier)
+		resp := r.Context.RegistryClient.PremisEventByIdentifier(event.Identifier)
 		if resp.Error == nil && resp.PremisEvent() != nil {
 			event.ID = resp.PremisEvent().ID
 		}
@@ -377,7 +377,7 @@ func (r *Recorder) recheckPharosFiles() (errors []*service.ProcessingError) {
 	params.Set("page", "1")
 	params.Set("per_page", "200")
 	for {
-		resp := r.Context.PharosClient.GenericFileList(params)
+		resp := r.Context.RegistryClient.GenericFileList(params)
 		if resp.Error != nil {
 			errors = append(errors, r.Error(r.IngestObject.Identifier(), resp.Error, false))
 			break // go to return errors

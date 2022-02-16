@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package ingest_test
@@ -49,12 +50,12 @@ func PutBagMetadataInPharos(t *testing.T, obj *service.IngestObject) {
 	context := common.NewContext()
 
 	// Get the correct institution id from Pharos
-	inst := context.PharosClient.InstitutionGet("example.edu").Institution()
+	inst := context.RegistryClient.InstitutionByIdentifier("example.edu").Institution()
 	require.NotNil(t, inst)
 	obj.InstitutionID = inst.ID
 
 	// Save the intel obj in Pharos
-	resp := context.PharosClient.IntellectualObjectSave(obj.ToIntellectualObject())
+	resp := context.RegistryClient.IntellectualObjectSave(obj.ToIntellectualObject())
 	require.Nil(t, resp.Error)
 
 	fileMap, _, err := context.RedisClient.GetBatchOfFileKeys(
@@ -81,7 +82,7 @@ func PutBagMetadataInPharos(t *testing.T, obj *service.IngestObject) {
 
 		genericFile, err := ingestFile.ToGenericFile()
 		require.Nil(t, err)
-		resp = context.PharosClient.GenericFileSave(genericFile)
+		resp = context.RegistryClient.GenericFileSave(genericFile)
 		require.Nil(t, resp.Error)
 		gf := resp.GenericFile()
 		require.NotNil(t, gf)

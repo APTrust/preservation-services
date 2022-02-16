@@ -48,6 +48,6 @@ func NewIngestRecorder(bufSize, numWorkers, maxAttempts int) *IngestRecorder {
 	return worker
 }
 
-func createIngestRecorder(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+func createIngestRecorder(context *common.Context, workItemID int64, ingestObject *service.IngestObject) ingest.Runnable {
 	return ingest.NewRecorder(context, workItemID, ingestObject)
 }

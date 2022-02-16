@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -199,7 +200,7 @@ func objIdentFromFileIdent(gfIdentifier string) string {
 // Returns an institution record from Pharos. Our "test.edu" institution
 // will have a different ID each time we test, so we have to look it up.
 func getInstitution(identifier string) *registry.Institution {
-	resp := ctx.Context.PharosClient.InstitutionGet(identifier)
+	resp := ctx.Context.RegistryClient.InstitutionByIdentifier(identifier)
 	assert.NotNil(ctx.T, resp)
 	require.Nil(ctx.T, resp.Error)
 	institution := resp.Institution()
@@ -253,20 +254,20 @@ func createRestorationWorkItem(objIdentifier, gfIdentifier string) error {
 		Status:                constants.StatusPending,
 		User:                  "e2e@aptrust.org",
 	}
-	resp := ctx.Context.PharosClient.WorkItemSave(restorationItem)
+	resp := ctx.Context.RegistryClient.WorkItemSave(restorationItem)
 	return resp.Error
 }
 
 func getLastIngestRecord(objIdentifier string) (*registry.WorkItem, error) {
 	params := url.Values{}
 	params.Set("object_identifier", objIdentifier)
-	params.Set("item_action", constants.ActionIngest)
+	params.Set("action", constants.ActionIngest)
 	params.Set("stage", constants.StageCleanup)
 	params.Set("status", constants.StatusSuccess)
 	params.Set("sort", "date desc")
 	params.Set("page", "1")
 	params.Set("per_page", "1")
-	resp := ctx.Context.PharosClient.WorkItemList(params)
+	resp := ctx.Context.RegistryClient.WorkItemList(params)
 	if resp.Error != nil {
 		return nil, resp.Error
 	}
@@ -281,8 +282,8 @@ func getRestoreWorkItems(objIdentifier, gfIdentifier string) []*registry.WorkIte
 	params := url.Values{}
 	params.Set("object_identifier", objIdentifier)
 	params.Set("file_identifier", gfIdentifier)
-	params.Set("item_action", constants.ActionRestore)
-	resp := ctx.Context.PharosClient.WorkItemList(params)
+	params.Set("action", constants.ActionRestore)
+	resp := ctx.Context.RegistryClient.WorkItemList(params)
 	require.Nil(ctx.T, resp.Error)
 	return resp.WorkItems()
 }
@@ -326,6 +327,6 @@ func createDeletionWorkItem(objIdentifier, gfIdentifier string) error {
 		Status:                constants.StatusPending,
 		User:                  "e2e@aptrust.org",
 	}
-	resp := ctx.Context.PharosClient.WorkItemSave(deletionItem)
+	resp := ctx.Context.RegistryClient.WorkItemSave(deletionItem)
 	return resp.Error
 }

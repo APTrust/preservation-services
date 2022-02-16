@@ -225,7 +225,7 @@ func (r *GlacierRestorer) CreateRestorationWorkItem(task *Task) {
 		Action:                constants.ActionRestore,
 		BagDate:               task.WorkItem.BagDate,
 		Bucket:                task.WorkItem.Bucket,
-		Date:                  task.WorkItem.Date,
+		DateProcessed:         task.WorkItem.DateProcessed,
 		ETag:                  task.WorkItem.ETag,
 		GenericFileIdentifier: task.WorkItem.GenericFileIdentifier,
 		InstitutionID:         task.WorkItem.InstitutionID,
@@ -239,12 +239,12 @@ func (r *GlacierRestorer) CreateRestorationWorkItem(task *Task) {
 		Status:                constants.StatusPending,
 		User:                  task.WorkItem.User,
 	}
-	resp := r.Context.PharosClient.WorkItemSave(newItem)
+	resp := r.Context.RegistryClient.WorkItemSave(newItem)
 	if resp.Error != nil {
 		r.Context.Logger.Errorf("Error saving restoration WorkItem to Pharos for %s: %v", task.RestorationObject.Identifier, resp.Error)
 		task.WorkItem.Note = task.WorkItem.Note + " Object(s) are in S3 but worker was unable to create next restore item. Create it manually."
 		task.WorkItem.NeedsAdminReview = true
-		resp = r.Context.PharosClient.WorkItemSave(task.WorkItem)
+		resp = r.Context.RegistryClient.WorkItemSave(task.WorkItem)
 		if resp.Error != nil {
 			r.Context.Logger.Errorf("Error flagging WorkItem in Pharos for %s: %v", task.RestorationObject.Identifier, resp.Error)
 		}

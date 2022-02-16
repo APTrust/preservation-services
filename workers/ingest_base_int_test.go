@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package workers_test
@@ -56,7 +57,7 @@ func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string
 }
 
 func putWorkItemInPharos(t *testing.T, context *common.Context, workItem *registry.WorkItem) *registry.WorkItem {
-	resp := context.PharosClient.WorkItemSave(workItem)
+	resp := context.RegistryClient.WorkItemSave(workItem)
 	require.Nil(t, resp.Error)
 	require.NotNil(t, resp.WorkItem())
 	return resp.WorkItem()
@@ -70,7 +71,7 @@ func saveSimilarWorkItems(t *testing.T, context *common.Context, workItem *regis
 	olderIngestRequest.Date = olderDate
 	olderIngestRequest.CreatedAt = olderDate
 	olderIngestRequest.UpdatedAt = olderDate
-	resp := context.PharosClient.WorkItemSave(olderIngestRequest)
+	resp := context.RegistryClient.WorkItemSave(olderIngestRequest)
 	require.Nil(t, resp.Error)
 	olderWorkItemID = resp.WorkItem().ID
 
@@ -83,7 +84,7 @@ func saveSimilarWorkItems(t *testing.T, context *common.Context, workItem *regis
 	olderStillIngesting.UpdatedAt = olderDate
 	olderStillIngesting.Stage = constants.StageStore
 	olderStillIngesting.Status = constants.StatusStarted
-	resp = context.PharosClient.WorkItemSave(olderStillIngesting)
+	resp = context.RegistryClient.WorkItemSave(olderStillIngesting)
 	require.Nil(t, resp.Error)
 	olderStillIngestingID = resp.WorkItem().ID
 
@@ -95,7 +96,7 @@ func saveSimilarWorkItems(t *testing.T, context *common.Context, workItem *regis
 	newerIngestRequest.CreatedAt = newerDate
 	newerIngestRequest.UpdatedAt = newerDate
 	newerIngestRequest.ETag = "12345678"
-	resp = context.PharosClient.WorkItemSave(newerIngestRequest)
+	resp = context.RegistryClient.WorkItemSave(newerIngestRequest)
 	require.Nil(t, resp.Error)
 	newerWorkItemID = resp.WorkItem().ID
 }
@@ -136,7 +137,7 @@ func doSetup(t *testing.T, key, pathToBagFile string) int {
 	if testWorkItem == nil {
 		context := common.NewContext()
 		putBagInS3(t, context, key, pathToBagFile)
-		testInstitution = context.PharosClient.InstitutionGet("test.edu").Institution()
+		testInstitution = context.RegistryClient.InstitutionByIdentifier("test.edu").Institution()
 		require.NotNil(t, testInstitution)
 		hostname, _ := os.Hostname()
 		workItem := &registry.WorkItem{

@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -97,7 +98,7 @@ func validateBag(objIdentifier string) {
 }
 
 func getObject(objIdentifier string) *registry.IntellectualObject {
-	resp := ctx.Context.PharosClient.IntellectualObjectGet(objIdentifier)
+	resp := ctx.Context.RegistryClient.IntellectualObjectByIdentifier(objIdentifier)
 	require.Nil(ctx.T, resp.Error, objIdentifier)
 	intelObj := resp.IntellectualObject()
 	require.NotNil(ctx.T, intelObj, objIdentifier)
@@ -112,7 +113,7 @@ func getPharosFiles(objIdentifier string) []*registry.GenericFile {
 	params.Set("include_storage_records", "true")
 	params.Set("page", "1")
 	params.Set("per_page", "200")
-	resp := ctx.Context.PharosClient.GenericFileList(params)
+	resp := ctx.Context.RegistryClient.GenericFileList(params)
 	require.Nil(ctx.T, resp.Error, objIdentifier)
 	require.NotEmpty(ctx.T, resp.GenericFiles())
 	return resp.GenericFiles()

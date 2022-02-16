@@ -47,7 +47,7 @@ type BagRestorer struct {
 
 // NewBagRestorer creates a new BagRestorer to copy files from S3
 // to local disk for packaging.
-func NewBagRestorer(context *common.Context, workItemID int, restorationObject *service.RestorationObject) *BagRestorer {
+func NewBagRestorer(context *common.Context, workItemID int64, restorationObject *service.RestorationObject) *BagRestorer {
 	return &BagRestorer{
 		Base: Base{
 			Context:           context,
@@ -253,7 +253,7 @@ func (r *BagRestorer) GetManifestPath(algorithm, fileType string) string {
 	} else {
 		filename = fmt.Sprintf("manifest-%s.txt", algorithm)
 	}
-	return path.Join(r.Context.Config.RestoreDir, strconv.Itoa(r.WorkItemID), filename)
+	return path.Join(r.Context.Config.RestoreDir, strconv.FormatInt(r.WorkItemID, 10), filename)
 }
 
 // DeleteStaleManifests deletes any manifests and tag manifests left over

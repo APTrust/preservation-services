@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package ingest_test
@@ -61,8 +62,8 @@ func TestRecorderRun(t *testing.T) {
 }
 
 func testNewObjectInPharos(t *testing.T, recorder *ingest.Recorder) {
-	client := recorder.Context.PharosClient
-	resp := client.IntellectualObjectGet(recorder.IngestObject.Identifier())
+	client := recorder.Context.RegistryClient
+	resp := client.IntellectualObjectByIdentifier(recorder.IngestObject.Identifier())
 	require.Nil(t, resp.Error)
 	intelObj := resp.IntellectualObject()
 	require.NotNil(t, intelObj)
@@ -92,7 +93,7 @@ func testNewObjectInPharos(t *testing.T, recorder *ingest.Recorder) {
 
 func testObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder) {
 	objIdentifier := recorder.IngestObject.Identifier()
-	client := recorder.Context.PharosClient
+	client := recorder.Context.RegistryClient
 	params := url.Values{}
 	params.Add("object_identifier", objIdentifier)
 	params.Add("per_page", "100")
@@ -138,7 +139,7 @@ func testObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder) {
 
 func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
 	objIdentifier := recorder.IngestObject.Identifier()
-	client := recorder.Context.PharosClient
+	client := recorder.Context.RegistryClient
 	params := url.Values{}
 	params.Add("intellectual_object_identifier", objIdentifier)
 	params.Add("per_page", "100")
@@ -173,7 +174,7 @@ func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
 
 func testFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentifier string) {
 	objIdentifier := recorder.IngestObject.Identifier()
-	client := recorder.Context.PharosClient
+	client := recorder.Context.RegistryClient
 	params := url.Values{}
 	params.Add("file_identifier", fileIdentifier)
 	params.Add("per_page", "100")
@@ -222,7 +223,7 @@ func testChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *registry
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 
-	resp := recorder.Context.PharosClient.ChecksumList(params)
+	resp := recorder.Context.RegistryClient.ChecksumList(params)
 	require.Nil(t, resp.Error)
 	checksums := resp.Checksums()
 	assert.Equal(t, 4, len(checksums))
@@ -323,8 +324,8 @@ func testObjectUpdate(t *testing.T, context *common.Context) {
 }
 
 func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
-	client := recorder.Context.PharosClient
-	resp := client.IntellectualObjectGet(recorder.IngestObject.Identifier())
+	client := recorder.Context.RegistryClient
+	resp := client.IntellectualObjectByIdentifier(recorder.IngestObject.Identifier())
 	require.Nil(t, resp.Error)
 	intelObj := resp.IntellectualObject()
 	require.NotNil(t, intelObj)
@@ -357,7 +358,7 @@ func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestam
 
 func testUpdatedObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
 	objIdentifier := recorder.IngestObject.Identifier()
-	client := recorder.Context.PharosClient
+	client := recorder.Context.RegistryClient
 
 	// Because Pharos is so badly broken, we can't reliably retrieve
 	// a list of object-level events. So we have to retrieve all events
@@ -402,7 +403,7 @@ func testUpdatedObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder, ti
 
 func testUpdatedFilesInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
 	objIdentifier := recorder.IngestObject.Identifier()
-	client := recorder.Context.PharosClient
+	client := recorder.Context.RegistryClient
 	params := url.Values{}
 	params.Add("intellectual_object_identifier", objIdentifier)
 	params.Add("updated_after", timestamp.Format(time.RFC3339))
@@ -450,7 +451,7 @@ func testUpdatedFilesInPharos(t *testing.T, recorder *ingest.Recorder, timestamp
 
 func testUpdatedFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentifier string, timestamp time.Time) {
 	objIdentifier := recorder.IngestObject.Identifier()
-	client := recorder.Context.PharosClient
+	client := recorder.Context.RegistryClient
 	params := url.Values{}
 	params.Add("file_identifier", fileIdentifier)
 	params.Add("created_after", timestamp.Format(time.RFC3339))
@@ -508,7 +509,7 @@ func testUpdatedChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *r
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 
-	resp := recorder.Context.PharosClient.ChecksumList(params)
+	resp := recorder.Context.RegistryClient.ChecksumList(params)
 	require.Nil(t, resp.Error)
 	checksums := resp.Checksums()
 

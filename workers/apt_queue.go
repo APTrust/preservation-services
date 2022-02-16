@@ -54,7 +54,7 @@ func (q *APTQueue) run() {
 	params.Set("page", "1")
 	params.Set("per_page", "100")
 	for {
-		resp := q.Context.PharosClient.WorkItemList(params)
+		resp := q.Context.RegistryClient.WorkItemList(params)
 		if resp.Error != nil {
 			q.Context.Logger.Errorf("Error getting WorkItem list from Pharos: %s", resp.Error)
 		}
@@ -103,9 +103,9 @@ func (q *APTQueue) addToNSQ(workItem *registry.WorkItem) bool {
 
 func (q *APTQueue) markAsQueued(workItem *registry.WorkItem) *registry.WorkItem {
 	utcNow := time.Now().UTC()
-	workItem.Date = utcNow
+	workItem.DateProcessed = utcNow
 	workItem.QueuedAt = utcNow
-	resp := q.Context.PharosClient.WorkItemSave(workItem)
+	resp := q.Context.RegistryClient.WorkItemSave(workItem)
 	if resp.Error != nil {
 		q.Context.Logger.Error("Error setting QueuedAt for WorkItem with id %d: %v",
 			workItem.ID, resp.Error)
@@ -120,7 +120,7 @@ func (q *APTQueue) markAsQueued(workItem *registry.WorkItem) *registry.WorkItem 
 	return resp.WorkItem()
 }
 
-func (q *APTQueue) processPharosError(resp *network.PharosResponse) {
+func (q *APTQueue) processPharosError(resp *network.RegistryResponse) {
 	respBody := ""
 	bytesRead, aptQueuer := resp.RawResponseData()
 	if aptQueuer == nil {
