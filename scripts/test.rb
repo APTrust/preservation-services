@@ -141,7 +141,7 @@ class TestRunner
     start_ingest_services(["ingest_bucket_reader", "apt_queue", "apt_queue_fixity"])
     puts ">> NSQ: 'http://localhost:4171'"
     puts ">> Minio: 'http://localhost:9899' login/pwd -> minioadmin/minioadmin"
-    puts ">> Pharos: 'http://localhost:9292' login/pwd -> system@aptrust.org/password"
+    puts ">> Registry: 'http://localhost:8080' login/pwd -> system@aptrust.org/password"
 
     puts "Push some bags to aptrust.receiving.test.test.edu"
     puts "on the local minio server, then run the bucket reader"
@@ -154,7 +154,7 @@ class TestRunner
   end
 
 
-  # TODO: Quit if an instance of Pharos is already running on 9292.
+  # TODO: Quit if an instance of Registry is already running on 8080.
   # Note: Don't run apt_queue_fixity service here, because it will queue
   # a bunch of fixture files. The e2e test will queue specific items for
   # fixity checks when it's ready to test that functionality.
@@ -181,10 +181,9 @@ class TestRunner
   def init_for_integration
     clean_test_cache
     make_test_dirs
-    self.pharos_start
     self.registry_start
     sleep(8)
-    # Start NSQ, Minio, Redis, and Docker/Pharos
+    # Start NSQ, Minio, Redis, and Registry
     @all_services.each do |svc|
       start_service(svc)
     end
@@ -272,10 +271,8 @@ class TestRunner
   def env_hash
 	env = {}
 	ENV.each{ |k,v| env[k] = v }
-	env['RAILS_ENV'] = 'integration'
+	env['APT_ENV'] = 'integration'
     if self.test_name != 'units'
-      env['PHAROS_ROOT'] = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
-	  env['RBENV_VERSION'] = `cat #{ENV['PHAROS_ROOT']}/.ruby-version`.chomp
       env['REGISTRY_ROOT'] = ENV['REGISTRY_ROOT'] || abort("Set env var REGISTRY_ROOT")
     end
     if self.test_name == 'e2e'
@@ -340,28 +337,6 @@ class TestRunner
     File.join(project_root, "bin", os)
   end
 
-  # Assumes you have the Pharos source tree on your machine.
-  # I pity the fool!
-  # https://github.com/APTrust/pharos
-  def pharos_start
-	if !@pids['pharos']
-      pharos_reset_db
-      pharos_db_migrate
-      pharos_load_fixtures
-	  env = env_hash
-	  cmd = 'bundle exec rails server'
-	  log_file = log_file_path('pharos')
-	  pharos_pid = Process.spawn(env,
-								 cmd,
-								 chdir: env['PHAROS_ROOT'],
-								 out: [log_file, 'w'],
-								 err: [log_file, 'w'])
-	  Process.detach pharos_pid
-      @pids['pharos'] = pharos_pid
-	  puts "Started Pharos with command '#{cmd}' and pid #{pharos_pid}"
-	end
-  end
-
   # Note: This assumes you have the registry repo source tree
   # on your machine. It's on GitHub at https://github.com/APTrust/registry
   def registry_start
@@ -380,37 +355,6 @@ class TestRunner
       @pids['registry'] = registry_pid
 	  puts "Started Registry with command '#{cmd}' and pid #{registry_pid}"
 	end
-  end
-
-  # reset, migrate, load fixtures
-  def pharos_reset_db
-	puts "Resetting Pharos DB"
-	env = env_hash
-	cmd = 'bundle exec rake db:reset'
-	log_file = log_file_path('pharos')
-	pid = Process.spawn(env, cmd, chdir: env['PHAROS_ROOT'])
-	Process.wait pid
-	puts "Finished resetting Pharos DB"
-  end
-
-  def pharos_db_migrate
-	puts "Migrating Pharos DB"
-	env = env_hash
-	cmd = 'bundle exec rake db:migrate'
-	log_file = log_file_path('pharos')
-	pid = Process.spawn(env, cmd, chdir: env['PHAROS_ROOT'])
-	Process.wait pid
-	puts "Finished migrating Pharos DB"
-  end
-
-  def pharos_load_fixtures
-	puts "Loading Pharos fixtures"
-	env = env_hash
-	cmd = 'bundle exec rake db:fixtures:load'
-	log_file = log_file_path('pharos')
-	pid = Process.spawn(env, cmd, chdir: env['PHAROS_ROOT'])
-	Process.wait pid
-	puts "Finished loading Pharos fixtures"
   end
 
   def log_file_path(service_name)
@@ -452,8 +396,7 @@ class TestRunner
     puts "  test.rb integration ./network/..."
     puts "  test.rb integration ./network/... --rebuild \n\n"
     puts "Note that running integration tests also runs unit tests."
-    puts "Go files are always rebuilt for testing, but the Pharos"
-    puts "Docker container is only rebuilt when you speficy --rebuild.\n\n"
+    puts "Go files are always rebuilt for testing."
   end
 
 end
