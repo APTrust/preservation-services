@@ -124,7 +124,9 @@ func testItemMarkedDeleted(t *testing.T, context *common.Context, identifier str
 }
 
 func testStorageRecordsRemoved(t *testing.T, context *common.Context, gfIdentifier string) {
-	resp := context.RegistryClient.StorageRecordList(gfIdentifier)
+	values := url.Values{}
+	values.Add("generic_file_identifier", gfIdentifier)
+	resp := context.RegistryClient.StorageRecordList(values)
 	require.Nil(t, resp.Error)
 	assert.Equal(t, 0, len(resp.StorageRecords()))
 }
@@ -184,7 +186,7 @@ func prepareForTest(t *testing.T, context *common.Context) {
 // the name, ID, and identifier.
 func createObjectAndFiles(t *testing.T, context *common.Context) {
 	if !objectCreated {
-		resp := context.RegistryClient.IntellectualObjectGet("institution2.edu/coal")
+		resp := context.RegistryClient.IntellectualObjectByIdentifier("institution2.edu/coal")
 		require.Nil(t, resp.Error)
 		obj := resp.IntellectualObject()
 		require.NotNil(t, obj)
@@ -198,15 +200,14 @@ func createObjectAndFiles(t *testing.T, context *common.Context) {
 
 		for _, file := range fileNames {
 			gf := &registry.GenericFile{
-				FileFormat:                   "application/ms-word",
-				Identifier:                   fmt.Sprintf("%s/%s", objIdentifier, file),
-				InstitutionID:                savedObj.InstitutionID,
-				IntellectualObjectID:         savedObj.ID,
-				IntellectualObjectIdentifier: savedObj.Identifier,
-				Size:                         500,
-				State:                        "A",
-				StorageOption:                constants.StorageStandard,
-				UUID:                         uuid.New().String(),
+				FileFormat:           "application/ms-word",
+				Identifier:           fmt.Sprintf("%s/%s", objIdentifier, file),
+				InstitutionID:        savedObj.InstitutionID,
+				IntellectualObjectID: savedObj.ID,
+				Size:                 500,
+				State:                "A",
+				StorageOption:        constants.StorageStandard,
+				UUID:                 uuid.New().String(),
 			}
 			resp = context.RegistryClient.GenericFileSave(gf)
 			require.Nil(t, resp.Error)
@@ -262,7 +263,7 @@ func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 // or Pharos returns the following error when we call the
 // object's finish_delete endpoint:
 // "There is no existing deletion request for the specified object."
-func createDeletionWorkItem(t *testing.T, context *common.Context, identifier string) int {
+func createDeletionWorkItem(t *testing.T, context *common.Context, identifier string) int64 {
 	now := time.Now().UTC()
 	gfIdentifier := ""
 	if identifier != objIdentifier {

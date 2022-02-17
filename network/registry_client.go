@@ -686,6 +686,42 @@ func (client *RegistryClient) PremisEventSave(obj *registry.PremisEvent) *Regist
 	return resp
 }
 
+// StorageRecordCreate creates a new StorageRecord in the Registry. The record Id
+// should be zero, since we can create but not update storage records.
+// The response object will have a new copy of the StorageRecord if the
+// save was successful. This call is used in integration tests, but not in
+// production.
+func (client *RegistryClient) StorageRecordCreate(obj *registry.StorageRecord, institutionID int64) *RegistryResponse {
+	// Set up the response object
+	resp := NewRegistryResponse(RegistryStorageRecord)
+	resp.storageRecords = make([]*registry.StorageRecord, 1)
+
+	// URL and method
+	relativeURL := fmt.Sprintf("/admin-api/%s/storage_records/create/%d", client.APIVersion, institutionID)
+	httpMethod := "POST"
+	absoluteURL := client.BuildURL(relativeURL)
+
+	// Prepare the JSON data
+	postData, err := obj.ToJSON()
+	if err != nil {
+		resp.Error = err
+	}
+
+	// Run the request
+	client.DoRequest(resp, httpMethod, absoluteURL, bytes.NewBuffer(postData))
+	if resp.Error != nil {
+		return resp
+	}
+
+	// Parse the JSON from the response body
+	sr := &registry.StorageRecord{}
+	resp.Error = json.Unmarshal(resp.data, sr)
+	if resp.Error == nil {
+		resp.storageRecords[0] = sr
+	}
+	return resp
+}
+
 // StorageRecordList returns a list of StorageRecords. The only supported
 // filter param is generic_file_identifier. This also supports the usual
 // page, per_page, and sort params. The main use case for this is to get

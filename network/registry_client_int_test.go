@@ -235,7 +235,7 @@ func TestRegistryIntellectualObjectSave_Update(t *testing.T) {
 	assert.Equal(t, existingObj.AltIdentifier, obj.AltIdentifier)
 	assert.Equal(t, existingObj.BagName, obj.BagName)
 	assert.Equal(t, existingObj.Access, obj.Access)
-	assert.Equal(t, existingObj.Institution, obj.Institution)
+	assert.Equal(t, existingObj.InstitutionID, obj.InstitutionID)
 	assert.Equal(t, existingObj.State, obj.State)
 	assert.Equal(t, existingObj.ETag, obj.ETag)
 	assert.Equal(t, existingObj.SourceOrganization, obj.SourceOrganization)
@@ -461,7 +461,7 @@ func TestRegistryChecksumList(t *testing.T) {
 	}
 }
 
-func TestRegistryChecksumSave(t *testing.T) {
+func TestRegistryChecksumCreate(t *testing.T) {
 	client := GetRegistryClient(t)
 	timestamp := time.Now().UTC()
 	checksum := &registry.Checksum{
@@ -546,6 +546,25 @@ func TestRegistryPremisEventList(t *testing.T) {
 		assert.True(t, event.Identifier > lastIdentifier)
 		lastIdentifier = event.Identifier
 	}
+}
+
+func TestRegistryStorageRecordCreate(t *testing.T) {
+	client := GetRegistryClient(t)
+	sr := &registry.StorageRecord{
+		ID:            0,
+		GenericFileID: 11,
+		URL:           "https://example.com/storage/blah-blah-test",
+	}
+	institutionID := int64(3) // owner of file 11 in fixtures
+	resp := client.StorageRecordCreate(sr, institutionID)
+	require.Nil(t, resp.Error)
+	assert.Equal(t, http.StatusCreated, resp.Response.StatusCode)
+	savedStorageRecord := resp.StorageRecord()
+	require.NotNil(t, savedStorageRecord)
+
+	assert.True(t, savedStorageRecord.ID > 0)
+	assert.Equal(t, sr.URL, savedStorageRecord.URL)
+	assert.Equal(t, sr.GenericFileID, savedStorageRecord.GenericFileID)
 }
 
 func TestRegistryStorageRecordList(t *testing.T) {
