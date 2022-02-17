@@ -341,10 +341,11 @@ class TestRunner
   # on your machine. It's on GitHub at https://github.com/APTrust/registry
   def registry_start
 	if !@pids['registry']
-	  env = {}.merge(env_hash)
+      registry_load_fixtures
 	  # Force copy of env to integration so that registry fixtures load.
+	  env = {}.merge(env_hash)
 	  env['APT_ENV'] = 'integration'
-	  cmd = './registry serve'
+	  cmd = 'go run registry.go'
 	  log_file = log_file_path('registry')
 	  registry_pid = Process.spawn(env,
 								 cmd,
@@ -355,6 +356,20 @@ class TestRunner
       @pids['registry'] = registry_pid
 	  puts "Started Registry with command '#{cmd}' and pid #{registry_pid}"
 	end
+  end
+
+  def registry_load_fixtures
+	# Force copy of env to integration so that registry fixtures load.
+	env = {}.merge(env_hash)
+	env['APT_ENV'] = 'integration'
+	cmd = 'go run loader/load_fixtures.go'
+	log_file = log_file_path('registry_fixtures')
+	registry_pid = Process.spawn(env,
+								 cmd,
+								 chdir: env['REGISTRY_ROOT'],
+								 out: [log_file, 'w'],
+								 err: [log_file, 'w'])
+	Process.wait
   end
 
   def log_file_path(service_name)

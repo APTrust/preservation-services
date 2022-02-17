@@ -24,6 +24,7 @@ import (
 )
 
 var objIdentifier = "institution2.edu/springfield"
+var instID = int64(3)
 var fileNames = []string{
 	"doc1",
 	"doc2",
@@ -45,7 +46,7 @@ func TestNewManager(t *testing.T) {
 	)
 	assert.NotNil(t, manager)
 	assert.Equal(t, context, manager.Context)
-	assert.Equal(t, 9999, manager.WorkItemID)
+	assert.EqualValues(t, 9999, manager.WorkItemID)
 	assert.Equal(t, "test.edu/my_object", manager.Identifier)
 	assert.Equal(t, constants.TypeObject, manager.ItemType)
 	assert.Equal(t, "requestor@example.com", manager.RequestedBy)
@@ -57,9 +58,10 @@ func TestRun_SingleFile(t *testing.T) {
 	context := common.NewContext()
 	prepareForTest(t, context)
 	fileIdentifier := "institution2.edu/springfield/doc1"
+	itemID := createDeletionRequestAndWorkItem(t, context, fileIdentifier)
 	manager := deletion.NewManager(
 		context,
-		9999,
+		itemID,
 		fileIdentifier,
 		constants.TypeFile,
 		"requestor@example.com",
@@ -78,7 +80,7 @@ func TestRun_SingleFile(t *testing.T) {
 func TestRun_Object(t *testing.T) {
 	context := common.NewContext()
 	prepareForTest(t, context)
-	itemID := createDeletionWorkItem(t, context, objIdentifier)
+	itemID := createDeletionRequestAndWorkItem(t, context, objIdentifier)
 	manager := deletion.NewManager(
 		context,
 		itemID,
@@ -232,6 +234,12 @@ func copyFilesToLocalPreservation(t *testing.T, context *common.Context) {
 func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 	pathToFile := testutil.PathToUnitTestBag("example.edu.multipart.b01.of02.tar")
 	gfIdentifier := fmt.Sprintf("%s/%s", objIdentifier, filename)
+
+	resp := context.RegistryClient.GenericFileByIdentifier(gfIdentifier)
+	require.Nil(t, resp.Error)
+	gf := resp.GenericFile()
+	require.NotNil(t, gf)
+
 	for _, preservationBucket := range context.Config.PreservationBuckets {
 		_url := preservationBucket.URLFor(filename)
 		if util.StringListContains(alreadySaved, _url) {
@@ -248,22 +256,18 @@ func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 		require.Nil(t, err)
 
 		storageRecord := &registry.StorageRecord{
-			URL: _url,
+			URL:           _url,
+			GenericFileID: gf.ID,
 		}
-		resp := context.RegistryClient.StorageRecordSave(storageRecord, gfIdentifier)
+		resp := context.RegistryClient.StorageRecordCreate(storageRecord, gf.InstitutionID)
 		require.Nil(t, resp.Error)
 		alreadySaved = append(alreadySaved, _url)
 	}
 }
 
-// TODO: Can we delete this?
-// It looks like Registry may create the WorkItem
-//
 // We have to create a deletion WorkItem for this object,
-// or Pharos returns the following error when we call the
-// object's finish_delete endpoint:
-// "There is no existing deletion request for the specified object."
-func createDeletionWorkItem(t *testing.T, context *common.Context, identifier string) int64 {
+// or Registry returns an error.
+func createDeletionRequestAndWorkItem(t *testing.T, context *common.Context, identifier string) int64 {
 	now := time.Now().UTC()
 	gfIdentifier := ""
 	if identifier != objIdentifier {
@@ -275,8 +279,8 @@ func createDeletionWorkItem(t *testing.T, context *common.Context, identifier st
 		BagDate:               testutil.Bloomsday,
 		Bucket:                "receiving",
 		CreatedAt:             now,
-		Date:                  now,
-		ETag:                  "1234",
+		DateProcessed:         now,
+		ETag:                  "33331234000099998888777766665555",
 		GenericFileIdentifier: gfIdentifier,
 		InstApprover:          "approver@example.com",
 		InstitutionID:         getInstId(t, context),
@@ -298,7 +302,7 @@ func createDeletionWorkItem(t *testing.T, context *common.Context, identifier st
 	return resp.WorkItem().ID
 }
 
-func getInstId(t *testing.T, context *common.Context) int {
+func getInstId(t *testing.T, context *common.Context) int64 {
 	resp := context.RegistryClient.InstitutionByIdentifier("institution2.edu")
 	require.Nil(t, resp.Error)
 	return resp.Institution().ID
@@ -310,20 +314,18 @@ func getFileIngestEvent(gf *registry.GenericFile) *registry.PremisEvent {
 	eventId := uuid.New()
 	timestamp := time.Now().UTC().Add(-1 * time.Minute)
 	return &registry.PremisEvent{
-		Identifier:                   eventId.String(),
-		EventType:                    constants.EventIngestion,
-		DateTime:                     timestamp,
-		Detail:                       fmt.Sprintf("Item was ingested"),
-		Outcome:                      constants.StatusSuccess,
-		OutcomeDetail:                "yadda yadda yadda",
-		Object:                       "preservation-services + Minio S3 client",
-		Agent:                        constants.S3ClientName,
-		OutcomeInformation:           "blah blah blah",
-		IntellectualObjectIdentifier: gf.IntellectualObjectIdentifier,
-		GenericFileIdentifier:        gf.Identifier,
-		InstitutionID:                gf.InstitutionID,
-		IntellectualObjectID:         gf.IntellectualObjectID,
-		CreatedAt:                    timestamp,
-		UpdatedAt:                    timestamp,
+		Identifier:           eventId.String(),
+		EventType:            constants.EventIngestion,
+		DateTime:             timestamp,
+		Detail:               fmt.Sprintf("Item was ingested"),
+		Outcome:              constants.StatusSuccess,
+		OutcomeDetail:        "yadda yadda yadda",
+		Object:               "preservation-services + Minio S3 client",
+		Agent:                constants.S3ClientName,
+		OutcomeInformation:   "blah blah blah",
+		InstitutionID:        gf.InstitutionID,
+		IntellectualObjectID: gf.IntellectualObjectID,
+		CreatedAt:            timestamp,
+		UpdatedAt:            timestamp,
 	}
 }

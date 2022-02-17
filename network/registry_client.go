@@ -463,18 +463,17 @@ func (client *RegistryClient) GenericFileCreateBatch(gfList []*registry.GenericF
 // 4. There must be a valid deletion work item for this file or its
 //    parent object.
 //
-func (client *RegistryClient) GenericFileDelete(identifier string) *RegistryResponse {
+func (client *RegistryClient) GenericFileDelete(id int64) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryGenericFile)
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/files/finish_delete/%s", client.APIVersion,
-		EscapeFileIdentifier(identifier))
+	relativeURL := fmt.Sprintf("/admin-api/%s/files/delete/%d", client.APIVersion, id)
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
-	client.DoRequest(resp, "GET", absoluteURL, nil)
+	client.DoRequest(resp, "DELETE", absoluteURL, nil)
 	if resp.Error != nil {
 		return resp
 	}
@@ -656,12 +655,13 @@ func (client *RegistryClient) PremisEventSave(obj *registry.PremisEvent) *Regist
 	resp.events = make([]*registry.PremisEvent, 1)
 
 	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/events/", client.APIVersion)
+	relativeURL := fmt.Sprintf("/admin-api/%s/events/create", client.APIVersion)
 	httpMethod := "POST"
 	if obj.ID > 0 {
-		// PUT is not even implemented in Registry, and never will be
-		relativeURL = fmt.Sprintf("%s/%s", relativeURL, url.QueryEscape(obj.Identifier))
-		httpMethod = "PUT"
+		// PUT/update for PremisEvent is not even implemented in Registry,
+		// and never will be
+		resp.Error = http.ErrNotSupported
+		return resp
 	}
 	absoluteURL := client.BuildURL(relativeURL)
 

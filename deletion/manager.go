@@ -185,7 +185,7 @@ func (m *Manager) deleteFile(gf *registry.GenericFile) (errors []*service.Proces
 		}
 	}
 	if len(errors) == 0 {
-		resp = m.Context.RegistryClient.GenericFileDelete(gf.Identifier)
+		resp = m.Context.RegistryClient.GenericFileDelete(gf.ID)
 		if resp.Error != nil {
 			errors = append(errors, m.Error(gf.Identifier, resp.Error, false))
 		}
