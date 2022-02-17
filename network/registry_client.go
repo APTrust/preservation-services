@@ -281,6 +281,37 @@ func (client *RegistryClient) IntellectualObjectDelete(objId int64) *RegistryRes
 	return resp
 }
 
+// IntellectualObjectPrepareForDelete prepares a IntellectualObject for deletion
+// by setting up the required ingest PremisEvent, DeletionRequest
+// and WorkItem. This returns the deletion WorkItem.
+//
+// This call is used for integration testing and is
+// available only in the test and integration environments. Calling
+// this outside those environments will return an error.
+func (client *RegistryClient) IntellectualObjectPrepareForDelete(id int64) *RegistryResponse {
+	// Set up the response object
+	resp := NewRegistryResponse(RegistryWorkItem)
+	resp.workItems = make([]*registry.WorkItem, 1)
+
+	// Build the url and the request object
+	relativeURL := fmt.Sprintf("/admin-api/%s/prepare_object_delete/%d", client.APIVersion, id)
+	absoluteURL := client.BuildURL(relativeURL)
+
+	// Run the request
+	client.DoRequest(resp, "POST", absoluteURL, nil)
+	if resp.Error != nil {
+		return resp
+	}
+
+	// Parse the JSON from the response body
+	workItem := &registry.WorkItem{}
+	resp.Error = json.Unmarshal(resp.data, workItem)
+	if resp.Error == nil {
+		resp.workItems[0] = workItem
+	}
+	return resp
+}
+
 // GenericFileByIdentifier returns the GenericFile having the specified
 // identifier. The identifier should be in the format
 // "institution.edu/object_name/path/to/file.ext"
@@ -481,6 +512,37 @@ func (client *RegistryClient) GenericFileDelete(id int64) *RegistryResponse {
 	// This call has no response body. We're just looking for 200 or 204.
 	if resp.Response.StatusCode != 200 && resp.Response.StatusCode != 204 {
 		resp.Error = fmt.Errorf("GenericFile finish_delete failed with message: %s", string(resp.data))
+	}
+	return resp
+}
+
+// GenericFilePrepareForDelete prepares a GenericFile for deletion
+// by setting up the required ingest PremisEvent, DeletionRequest
+// and WorkItem. This returns the deletion WorkItem.
+//
+// This call is used for integration testing and is
+// available only in the test and integration environments. Calling
+// this outside those environments will return an error.
+func (client *RegistryClient) GenericFilePrepareForDelete(id int64) *RegistryResponse {
+	// Set up the response object
+	resp := NewRegistryResponse(RegistryWorkItem)
+	resp.workItems = make([]*registry.WorkItem, 1)
+
+	// Build the url and the request object
+	relativeURL := fmt.Sprintf("/admin-api/%s/prepare_file_delete/%d", client.APIVersion, id)
+	absoluteURL := client.BuildURL(relativeURL)
+
+	// Run the request
+	client.DoRequest(resp, "POST", absoluteURL, nil)
+	if resp.Error != nil {
+		return resp
+	}
+
+	// Parse the JSON from the response body
+	workItem := &registry.WorkItem{}
+	resp.Error = json.Unmarshal(resp.data, workItem)
+	if resp.Error == nil {
+		resp.workItems[0] = workItem
 	}
 	return resp
 }

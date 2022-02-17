@@ -31,7 +31,12 @@ var fileNames = []string{
 	"doc3",
 }
 var alreadySaved = make([]string, 0)
+
+// The following are all set the first time createObjectAndFiles is called.
+// This was retrofitted after the creation of the Registry.
 var objectCreated = false
+var savedObj *registry.IntellectualObject
+var savedFiles []*registry.GenericFile
 
 func TestNewManager(t *testing.T) {
 	context := common.NewContext()
@@ -57,12 +62,17 @@ func TestNewManager(t *testing.T) {
 func TestRun_SingleFile(t *testing.T) {
 	context := common.NewContext()
 	prepareForTest(t, context)
-	fileIdentifier := "institution2.edu/springfield/doc1"
-	itemID := createDeletionRequestAndWorkItem(t, context, fileIdentifier)
+	gf := savedFiles[0] // doc1
+
+	resp := context.RegistryClient.GenericFilePrepareForDelete(gf.ID)
+	require.Nil(t, resp.Error)
+	workItem := resp.WorkItem()
+	require.True(t, workItem.ID > 0)
+
 	manager := deletion.NewManager(
 		context,
-		itemID,
-		fileIdentifier,
+		workItem.ID,
+		gf.Identifier,
 		constants.TypeFile,
 		"requestor@example.com",
 		"approver@example.com",
@@ -72,19 +82,24 @@ func TestRun_SingleFile(t *testing.T) {
 	assert.Equal(t, 1, count)
 	assert.Empty(t, errors)
 
-	testItemMarkedDeleted(t, context, fileIdentifier)
-	testStorageRecordsRemoved(t, context, fileIdentifier)
-	testFileDeletionEvents(t, context, fileIdentifier)
+	testItemMarkedDeleted(t, context, gf.Identifier)
+	testStorageRecordsRemoved(t, context, gf.Identifier)
+	testFileDeletionEvents(t, context, gf.Identifier)
 }
 
 func TestRun_Object(t *testing.T) {
 	context := common.NewContext()
 	prepareForTest(t, context)
-	itemID := createDeletionRequestAndWorkItem(t, context, objIdentifier)
+
+	resp := context.RegistryClient.IntellectualObjectPrepareForDelete(savedObj.ID)
+	require.Nil(t, resp.Error)
+	workItem := resp.WorkItem()
+	require.True(t, workItem.ID > 0)
+
 	manager := deletion.NewManager(
 		context,
-		itemID,
-		objIdentifier,
+		workItem.ID,
+		savedObj.Identifier,
 		constants.TypeObject,
 		"requestor@example.com",
 		"approver@example.com",
@@ -198,9 +213,10 @@ func createObjectAndFiles(t *testing.T, context *common.Context) {
 		obj.State = constants.StateActive
 		resp = context.RegistryClient.IntellectualObjectSave(obj)
 		require.Nil(t, resp.Error)
-		savedObj := resp.IntellectualObject()
+		savedObj = resp.IntellectualObject()
+		savedFiles = make([]*registry.GenericFile, len(fileNames))
 
-		for _, file := range fileNames {
+		for i, file := range fileNames {
 			gf := &registry.GenericFile{
 				FileFormat:           "application/ms-word",
 				Identifier:           fmt.Sprintf("%s/%s", objIdentifier, file),
@@ -213,6 +229,7 @@ func createObjectAndFiles(t *testing.T, context *common.Context) {
 			}
 			resp = context.RegistryClient.GenericFileSave(gf)
 			require.Nil(t, resp.Error)
+			savedFiles[i] = resp.GenericFile()
 			ingestEvent := getFileIngestEvent(gf)
 			resp = context.RegistryClient.PremisEventSave(ingestEvent)
 			require.Nil(t, resp.Error)
@@ -265,42 +282,42 @@ func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 	}
 }
 
-// We have to create a deletion WorkItem for this object,
-// or Registry returns an error.
-func createDeletionRequestAndWorkItem(t *testing.T, context *common.Context, identifier string) int64 {
-	now := time.Now().UTC()
-	gfIdentifier := ""
-	if identifier != objIdentifier {
-		gfIdentifier = identifier
-	}
-	item := &registry.WorkItem{
-		APTrustApprover:       "some-admin@aptrust.org",
-		Action:                constants.ActionDelete,
-		BagDate:               testutil.Bloomsday,
-		Bucket:                "receiving",
-		CreatedAt:             now,
-		DateProcessed:         now,
-		ETag:                  "33331234000099998888777766665555",
-		GenericFileIdentifier: gfIdentifier,
-		InstApprover:          "approver@example.com",
-		InstitutionID:         getInstId(t, context),
-		Name:                  "springfield.tar",
-		NeedsAdminReview:      false,
-		Note:                  "Deletion requested",
-		ObjectIdentifier:      objIdentifier,
-		Outcome:               "Deleteion requested",
-		QueuedAt:              now,
-		Retry:                 true,
-		Size:                  500,
-		Stage:                 constants.StageRequested,
-		Status:                constants.StatusPending,
-		UpdatedAt:             now,
-		User:                  "requestor@example.com",
-	}
-	resp := context.RegistryClient.WorkItemSave(item)
-	require.Nil(t, resp.Error)
-	return resp.WorkItem().ID
-}
+// // We have to create a deletion WorkItem for this object,
+// // or Registry returns an error.
+// func createDeletionRequestAndWorkItem(t *testing.T, context *common.Context, identifier string) *registry.WorkItem {
+// 	now := time.Now().UTC()
+// 	gfIdentifier := ""
+// 	if identifier != objIdentifier {
+// 		gfIdentifier = identifier
+// 	}
+// 	item := &registry.WorkItem{
+// 		APTrustApprover:       "some-admin@aptrust.org",
+// 		Action:                constants.ActionDelete,
+// 		BagDate:               testutil.Bloomsday,
+// 		Bucket:                "receiving",
+// 		CreatedAt:             now,
+// 		DateProcessed:         now,
+// 		ETag:                  "33331234000099998888777766665555",
+// 		GenericFileIdentifier: gfIdentifier,
+// 		InstApprover:          "approver@example.com",
+// 		InstitutionID:         getInstId(t, context),
+// 		Name:                  "springfield.tar",
+// 		NeedsAdminReview:      false,
+// 		Note:                  "Deletion requested",
+// 		ObjectIdentifier:      objIdentifier,
+// 		Outcome:               "Deleteion requested",
+// 		QueuedAt:              now,
+// 		Retry:                 true,
+// 		Size:                  500,
+// 		Stage:                 constants.StageRequested,
+// 		Status:                constants.StatusPending,
+// 		UpdatedAt:             now,
+// 		User:                  "requestor@example.com",
+// 	}
+// 	resp := context.RegistryClient.WorkItemSave(item)
+// 	require.Nil(t, resp.Error)
+// 	return resp.WorkItem().ID
+// }
 
 func getInstId(t *testing.T, context *common.Context) int64 {
 	resp := context.RegistryClient.InstitutionByIdentifier("institution2.edu")

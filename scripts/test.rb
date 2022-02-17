@@ -359,7 +359,7 @@ class TestRunner
   end
 
   def registry_load_fixtures
-	# Force copy of env to integration so that registry fixtures load.
+	puts "Loading registry fixtures"
 	env = {}.merge(env_hash)
 	env['APT_ENV'] = 'integration'
 	cmd = 'go run loader/load_fixtures.go'
@@ -370,6 +370,7 @@ class TestRunner
 								 out: [log_file, 'w'],
 								 err: [log_file, 'w'])
 	Process.wait
+    puts "Registry fixtures loaded"
   end
 
   def log_file_path(service_name)
