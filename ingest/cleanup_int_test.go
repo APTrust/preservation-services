@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package ingest_test
@@ -24,7 +25,7 @@ func TestNewCleanup(t *testing.T) {
 	require.NotNil(t, cleanup)
 	assert.Equal(t, context, cleanup.Context)
 	assert.Equal(t, obj, cleanup.IngestObject)
-	assert.Equal(t, 333, cleanup.WorkItemID)
+	assert.EqualValues(t, 333, cleanup.WorkItemID)
 }
 
 func TestBucketUnsafeForDeletion(t *testing.T) {

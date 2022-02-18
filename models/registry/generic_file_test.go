@@ -166,3 +166,12 @@ func TestPathIsTagFile(t *testing.T) {
 	gf.Identifier = "test.edu/sample-bag/bag-info.txt"
 	assert.True(t, gf.IsTagFile())
 }
+
+func TestGFIntellectualObjectIdentifier(t *testing.T) {
+	gf := &registry.GenericFile{
+		Identifier: "test.edu/photos/data/image1.png",
+	}
+	objIdentifier, err := gf.IntellectualObjectIdentifier()
+	require.Nil(t, err)
+	assert.Equal(t, "test.edu/photos", objIdentifier)
+}

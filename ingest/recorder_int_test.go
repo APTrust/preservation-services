@@ -1,12 +1,15 @@
-//go:build integration
-// +build integration
+/*
+  //go:build integration
+*/
 
 package ingest_test
 
 import (
 	//"fmt"
+	"fmt"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -15,6 +18,7 @@ import (
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
+
 	//"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
@@ -36,7 +40,7 @@ func TestNewRecorder(t *testing.T) {
 	require.NotNil(t, recorder)
 	assert.Equal(t, context, recorder.Context)
 	assert.Equal(t, obj, recorder.IngestObject)
-	assert.Equal(t, 333, recorder.WorkItemID)
+	assert.EqualValues(t, 333, recorder.WorkItemID)
 }
 
 func TestRecorderRun(t *testing.T) {
@@ -95,7 +99,7 @@ func testObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder) {
 	objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
-	params.Add("object_identifier", objIdentifier)
+	params.Add("intellectual_object_identifier", objIdentifier)
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 
@@ -119,7 +123,7 @@ func testObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder) {
 		assert.NotEmpty(t, event.EventType)
 
 		// No Generic File for object-level events
-		assert.Equal(t, 0, event.GenericFileID)
+		assert.EqualValues(t, 0, event.GenericFileID)
 		assert.Empty(t, event.GenericFileIdentifier)
 
 		assert.NotEmpty(t, event.Identifier)
@@ -139,9 +143,12 @@ func testObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder) {
 
 func testNewFilesInRegistry(t *testing.T, recorder *ingest.Recorder) {
 	objIdentifier := recorder.IngestObject.Identifier()
+	fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", objIdentifier)
+	fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", recorder.IngestObject.ID)
+
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
-	params.Add("intellectual_object_identifier", objIdentifier)
+	params.Add("intellectual_object_id", strconv.FormatInt(recorder.IngestObject.ID, 10))
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 	resp := client.GenericFileList(params)
@@ -159,7 +166,8 @@ func testNewFilesInRegistry(t *testing.T, recorder *ingest.Recorder) {
 		assert.True(t, len(gf.Identifier) > len(objIdentifier))
 		assert.True(t, gf.InstitutionID > 0)
 		assert.True(t, gf.IntellectualObjectID > 0)
-		assert.Equal(t, objIdentifier, gf.IntellectualObjectIdentifier)
+		gfObjIdentifier, _ := gf.IntellectualObjectIdentifier()
+		assert.Equal(t, objIdentifier, gfObjIdentifier)
 		assert.False(t, gf.LastFixityCheck.IsZero())
 		assert.True(t, gf.Size > 0)
 		assert.Equal(t, "A", gf.State)
@@ -167,16 +175,17 @@ func testNewFilesInRegistry(t *testing.T, recorder *ingest.Recorder) {
 		assert.True(t, util.LooksLikeUUID(gf.UUID))
 		assert.False(t, gf.UpdatedAt.IsZero())
 
-		testFileEventsInRegistry(t, recorder, gf.Identifier)
+		testFileEventsInRegistry(t, recorder, gf)
 		testChecksumsInRegistry(t, recorder, gf)
 	}
 }
 
-func testFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, fileIdentifier string) {
-	objIdentifier := recorder.IngestObject.Identifier()
+func testFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
+	objIdentifier, err := gf.IntellectualObjectIdentifier() //recorder.IngestObject.Identifier()
+	require.Nil(t, err)
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
-	params.Add("file_identifier", fileIdentifier)
+	params.Add("generic_file_id", strconv.FormatInt(gf.ID, 10))
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 
@@ -196,11 +205,11 @@ func testFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, fileIdent
 		assert.NotEmpty(t, event.Detail)
 		assert.NotEmpty(t, event.EventType)
 		assert.NotEqual(t, 0, event.GenericFileID)
-		assert.Equal(t, fileIdentifier, event.GenericFileIdentifier)
+		assert.Equal(t, gf.Identifier, event.GenericFileIdentifier)
 		assert.NotEmpty(t, event.Identifier)
 		assert.NotEmpty(t, event.InstitutionID)
 		assert.NotEmpty(t, event.IntellectualObjectID, event)
-		assert.Equal(t, objIdentifier, event.IntellectualObjectIdentifier)
+		assert.Equal(t, objIdentifier, event.IntellectualObjectIdentifier, gf.Identifier)
 		assert.NotEmpty(t, event.Object)
 		assert.NotEmpty(t, event.OutcomeDetail)
 		assert.NotEmpty(t, event.OutcomeInformation)
@@ -360,11 +369,8 @@ func testUpdatedObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder, 
 	objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 
-	// Because Registry is so badly broken, we can't reliably retrieve
-	// a list of object-level events. So we have to retrieve all events
-	// created since a specified time and filter them on our own.
 	params := url.Values{}
-	params.Add("object_identifier", objIdentifier)
+	params.Add("intellectual_object_identifier", objIdentifier)
 	params.Add("created_after", timestamp.Format(time.RFC3339))
 	params.Add("per_page", "200")
 	params.Add("page", "1")
@@ -436,7 +442,9 @@ func testUpdatedFilesInRegistry(t *testing.T, recorder *ingest.Recorder, timesta
 		assert.True(t, len(gf.Identifier) > len(objIdentifier))
 		assert.True(t, gf.InstitutionID > 0)
 		assert.True(t, gf.IntellectualObjectID > 0)
-		assert.Equal(t, objIdentifier, gf.IntellectualObjectIdentifier)
+		gfObjIdentifier, err := gf.IntellectualObjectIdentifier()
+		assert.Nil(t, err)
+		assert.Equal(t, objIdentifier, gfObjIdentifier)
 		assert.False(t, gf.LastFixityCheck.IsZero())
 		assert.True(t, gf.Size > 0)
 		assert.Equal(t, "A", gf.State)
@@ -444,16 +452,16 @@ func testUpdatedFilesInRegistry(t *testing.T, recorder *ingest.Recorder, timesta
 		assert.True(t, util.LooksLikeUUID(gf.UUID))
 		assert.True(t, gf.UpdatedAt.After(timestamp))
 
-		testUpdatedFileEventsInRegistry(t, recorder, gf.Identifier, timestamp)
+		testUpdatedFileEventsInRegistry(t, recorder, gf, timestamp)
 		testUpdatedChecksumsInRegistry(t, recorder, gf)
 	}
 }
 
-func testUpdatedFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, fileIdentifier string, timestamp time.Time) {
-	objIdentifier := recorder.IngestObject.Identifier()
+func testUpdatedFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile, timestamp time.Time) {
+	objIdentifier, _ := gf.IntellectualObjectIdentifier() //recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
-	params.Add("file_identifier", fileIdentifier)
+	params.Add("generic_file_identifier", gf.Identifier)
 	params.Add("created_after", timestamp.Format(time.RFC3339))
 	params.Add("per_page", "100")
 	params.Add("page", "1")
@@ -474,7 +482,7 @@ func testUpdatedFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, fi
 		assert.NotEmpty(t, event.Detail)
 		assert.NotEmpty(t, event.EventType)
 		assert.NotEqual(t, 0, event.GenericFileID)
-		assert.Equal(t, fileIdentifier, event.GenericFileIdentifier)
+		assert.Equal(t, gf.Identifier, event.GenericFileIdentifier)
 		assert.NotEmpty(t, event.Identifier)
 		assert.NotEmpty(t, event.InstitutionID)
 		assert.NotEmpty(t, event.IntellectualObjectID, event)
@@ -485,22 +493,22 @@ func testUpdatedFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, fi
 		assert.NotEmpty(t, event.Outcome)
 	}
 
-	changedFile := getChangedFileRecord(fileIdentifier)
+	changedFile := getChangedFileRecord(gf.Identifier)
 
 	// md5, sha1, sha256, sha512
-	assert.Equal(t, 4, eventTypes[constants.EventDigestCalculation], fileIdentifier)
+	assert.Equal(t, 4, eventTypes[constants.EventDigestCalculation], gf.Identifier)
 
 	// 1) semantic identifier assignment, 2) URL identifier assignment
 	// But if this is a reingest of an existing file, no new IDs were
 	// assigned, so there will be zero no identifier assignment events.
 	if changedFile.IsReingest {
-		assert.Equal(t, 0, eventTypes[constants.EventIdentifierAssignment], fileIdentifier)
+		assert.Equal(t, 0, eventTypes[constants.EventIdentifierAssignment], gf.Identifier)
 	} else {
-		assert.Equal(t, 2, eventTypes[constants.EventIdentifierAssignment], fileIdentifier)
+		assert.Equal(t, 2, eventTypes[constants.EventIdentifierAssignment], gf.Identifier)
 	}
 
-	assert.Equal(t, 1, eventTypes[constants.EventIngestion], fileIdentifier)
-	assert.Equal(t, 1, eventTypes[constants.EventReplication], fileIdentifier)
+	assert.Equal(t, 1, eventTypes[constants.EventIngestion], gf.Identifier)
+	assert.Equal(t, 1, eventTypes[constants.EventReplication], gf.Identifier)
 }
 
 func testUpdatedChecksumsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {

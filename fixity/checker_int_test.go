@@ -72,6 +72,7 @@ func createRegistryRecords(t *testing.T, context *common.Context, records []*reg
 		Digest:        expectedFixity,
 		GenericFileID: gf.ID,
 		ID:            0,
+		InstitutionID: gf.InstitutionID,
 		UpdatedAt:     now,
 	}
 	resp = context.RegistryClient.ChecksumCreate(checksum)

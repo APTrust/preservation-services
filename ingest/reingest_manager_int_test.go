@@ -100,7 +100,7 @@ func TestNewReingestManager(t *testing.T) {
 	manager := GetReingestManager()
 	assert.NotNil(t, manager.Context)
 	assert.Equal(t, "example.edu.tagsample_good.tar", manager.IngestObject.S3Key)
-	assert.Equal(t, 9999, manager.WorkItemID)
+	assert.EqualValues(t, 9999, manager.WorkItemID)
 }
 
 func TestGetExistingObject(t *testing.T) {
@@ -125,7 +125,7 @@ func TestGetExistingObject(t *testing.T) {
 	require.Nil(t, err)
 	assert.Nil(t, intelObj)
 
-	assert.Equal(t, 0, manager.IngestObject.ID)
+	assert.EqualValues(t, 0, manager.IngestObject.ID)
 	assert.False(t, manager.IngestObject.IsReingest)
 }
 
@@ -267,9 +267,9 @@ func TestGetNewest(t *testing.T) {
 	// For each algorithm, we should get the checksum
 	// with the latest DateTime.
 	newest := manager.GetNewest(checksums)
-	assert.Equal(t, 2, newest[constants.AlgMd5].ID)
-	assert.Equal(t, 4, newest[constants.AlgSha256].ID)
-	assert.Equal(t, 6, newest[constants.AlgSha512].ID)
+	assert.EqualValues(t, 2, newest[constants.AlgMd5].ID)
+	assert.EqualValues(t, 4, newest[constants.AlgSha256].ID)
+	assert.EqualValues(t, 6, newest[constants.AlgSha512].ID)
 }
 
 // This one tests all of the ReingestManager's functions,

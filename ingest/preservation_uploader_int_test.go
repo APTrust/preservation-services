@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package ingest_test
@@ -22,7 +23,7 @@ func TestNewPreservationUploader(t *testing.T) {
 	require.NotNil(t, uploader)
 	assert.Equal(t, context, uploader.Context)
 	assert.Equal(t, obj, uploader.IngestObject)
-	assert.Equal(t, uploaderItemID, uploader.WorkItemID)
+	assert.EqualValues(t, uploaderItemID, uploader.WorkItemID)
 }
 
 func TestPreservationUploaderRun(t *testing.T) {

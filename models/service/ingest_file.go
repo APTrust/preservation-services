@@ -464,6 +464,15 @@ func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 			})
 		}
 	}
+	var lastFixityCheck time.Time
+	for _, event := range ingestEvents {
+		if event.EventType == constants.EventDigestCalculation {
+			lastFixityCheck = event.DateTime
+		}
+	}
+	if lastFixityCheck.IsZero() {
+		return nil, fmt.Errorf("cannot calculate last fixity check date from digest calculation event")
+	}
 	return &registry.GenericFile{
 		Checksums:            checksums,
 		FileFormat:           f.FileFormat,
@@ -472,6 +481,7 @@ func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 		Identifier:           f.Identifier(),
 		InstitutionID:        f.InstitutionID,
 		IntellectualObjectID: f.IntellectualObjectID,
+		LastFixityCheck:      lastFixityCheck,
 		PremisEvents:         ingestEvents,
 		Size:                 f.Size,
 		State:                constants.StateActive,
