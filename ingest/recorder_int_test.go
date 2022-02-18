@@ -1,12 +1,8 @@
-/*
-  //go:build integration
-*/
+//go:build integration
 
 package ingest_test
 
 import (
-	//"fmt"
-	"fmt"
 	"net/url"
 	"path"
 	"strconv"
@@ -96,11 +92,11 @@ func testNewObjectInRegistry(t *testing.T, recorder *ingest.Recorder) {
 }
 
 func testObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder) {
-	objIdentifier := recorder.IngestObject.Identifier()
+	//objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
-	params.Add("intellectual_object_identifier", objIdentifier)
-	params.Add("per_page", "100")
+	params.Add("intellectual_object_id", strconv.FormatInt(recorder.IngestObject.ID, 10))
+	params.Add("per_page", "300")
 	params.Add("page", "1")
 
 	resp := client.PremisEventList(params)
@@ -143,8 +139,6 @@ func testObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder) {
 
 func testNewFilesInRegistry(t *testing.T, recorder *ingest.Recorder) {
 	objIdentifier := recorder.IngestObject.Identifier()
-	fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", objIdentifier)
-	fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", recorder.IngestObject.ID)
 
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
