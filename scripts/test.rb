@@ -353,8 +353,20 @@ class TestRunner
 								 out: [log_file, 'w'],
 								 err: [log_file, 'w'])
 	  Process.detach registry_pid
-      @pids['registry'] = registry_pid
-	  puts "Started Registry with command '#{cmd}' and pid #{registry_pid}"
+      sleep 3
+
+      # go run compiles an executable, puts it in a temp directory, and
+      # runs it as a new process. We need to get the pid of that process.
+      # Note that the temp dir pattern will be different on linux.
+      # /var/folders works for Mac.
+      registry_process = `ps -ef | grep registry | grep /var/folders`
+      pid = registry_process.split(/\s+/)[2].to_i
+      if pid
+        @pids['registry'] = pid
+      else
+        @pids['registry'] = registry_pid
+      end
+	  puts "Started Registry with command '#{cmd}' and pid #{@pids['registry']}"
 	end
   end
 
