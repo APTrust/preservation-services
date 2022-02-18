@@ -12,26 +12,20 @@ import (
 // WorkItem is a Registry WorkItem that describes a task to be completed
 // and its current stage and status.
 type WorkItem struct {
-	APTrustApprover string    `json:"aptrust_approver"`
-	Action          string    `json:"action"`
-	BagDate         time.Time `json:"bag_date"`
-	Bucket          string    `json:"bucket"`
-	CreatedAt       time.Time `json:"created_at,omitempty"`
-	DateProcessed   time.Time `json:"date_processed"`
-	ETag            string    `json:"etag"`
-
-	// Read-only, from view.
-	GenericFileIdentifier string `json:"generic_file_identifier"`
-	ID                    int64  `json:"id,omitempty"`
-	InstApprover          string `json:"inst_approver"`
-	InstitutionID         int64  `json:"institution_id"`
-	Name                  string `json:"name"`
-	NeedsAdminReview      bool   `json:"needs_admin_review"`
-	Node                  string `json:"node"`
-	Note                  string `json:"note"`
-
-	// Read-only, from view.
-	ObjectIdentifier string    `json:"object_identifier"`
+	APTrustApprover  string    `json:"aptrust_approver"`
+	Action           string    `json:"action"`
+	BagDate          time.Time `json:"bag_date"`
+	Bucket           string    `json:"bucket"`
+	CreatedAt        time.Time `json:"created_at,omitempty"`
+	DateProcessed    time.Time `json:"date_processed"`
+	ETag             string    `json:"etag"`
+	ID               int64     `json:"id,omitempty"`
+	InstApprover     string    `json:"inst_approver"`
+	InstitutionID    int64     `json:"institution_id"`
+	Name             string    `json:"name"`
+	NeedsAdminReview bool      `json:"needs_admin_review"`
+	Node             string    `json:"node"`
+	Note             string    `json:"note"`
 	Outcome          string    `json:"outcome"`
 	Pid              int       `json:"pid"`
 	QueuedAt         time.Time `json:"queued_at,omitempty"`
@@ -42,6 +36,17 @@ type WorkItem struct {
 	Status           string    `json:"status"`
 	UpdatedAt        time.Time `json:"updated_at,omitempty"`
 	User             string    `json:"user"`
+
+	// GenericFileIdentifier is ead-only, from view.
+	GenericFileIdentifier string `json:"generic_file_identifier"`
+	// GenericFileID is read-only, from view.
+	GenericFileID int64 `json:"generic_file_id"`
+	// IntellectualObjectID is read-only, from view
+	IntellectualObjectID int64 `json:"intellectual_object_id"`
+	// ObjectIdentifier is read-only, from view.
+	ObjectIdentifier string `json:"object_identifier"`
+	// StorageOption is read-only, from view.
+	StorageOption string `json:"storage_option"`
 }
 
 // WorkItemFromJSON converts a JSON representation of a WorkItem to
