@@ -269,7 +269,7 @@ func (client *RegistryClient) IntellectualObjectDelete(objId int64) *RegistryRes
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
-	client.DoRequest(resp, "GET", absoluteURL, nil)
+	client.DoRequest(resp, "DELETE", absoluteURL, nil)
 	if resp.Error != nil {
 		return resp
 	}
@@ -785,7 +785,7 @@ func (client *RegistryClient) StorageRecordCreate(obj *registry.StorageRecord, i
 }
 
 // StorageRecordList returns a list of StorageRecords. The only supported
-// filter param is generic_file_identifier. This also supports the usual
+// filter param is generic_file_id. This also supports the usual
 // page, per_page, and sort params. The main use case for this is to get
 // all storage records for a single generic file.
 func (client *RegistryClient) StorageRecordList(params url.Values) *RegistryResponse {

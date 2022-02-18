@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,9 +26,9 @@ type Manager struct {
 	// clients to access S3 and Registry.
 	Context *common.Context
 
-	// Identifier is the identifier of the GenericFile or IntellectualObject
+	// ObjOrFileID is the ID of the GenericFile or IntellectualObject
 	// we're deleting.
-	Identifier string
+	ObjOrFileID int64
 
 	// ItemType is the type of item we're deleting. It should be one of
 	// constants.TypeFile or constants.TypeObject.
@@ -48,18 +49,22 @@ type Manager struct {
 	// approved this deletion. This will be empty unless it was a bulk
 	// deletion request. Normal deletion requests don't need APTrust approval.
 	APTrustApprover string
+
+	// itemIdentifier is used for logging and error reporting
+	itemIdentifier string
 }
 
 // NewManager creates a new deletion.Manager.
-func NewManager(context *common.Context, workItemID int64, identifier, itemType, requestedBy, instApprover, aptrustApprover string) *Manager {
+func NewManager(context *common.Context, workItemID, objOrFileID int64, itemType, requestedBy, instApprover, aptrustApprover string) *Manager {
 	return &Manager{
 		Context:         context,
-		Identifier:      identifier,
+		ObjOrFileID:     objOrFileID,
 		ItemType:        itemType,
 		WorkItemID:      workItemID,
 		RequestedBy:     requestedBy,
 		InstApprover:    instApprover,
 		APTrustApprover: aptrustApprover,
+		itemIdentifier:  fmt.Sprintf("%s:%d", itemType, objOrFileID),
 	}
 }
 
@@ -80,7 +85,7 @@ func NewManager(context *common.Context, workItemID int64, identifier, itemType,
 // state to "D" if all file deletions succeeded.
 func (m *Manager) Run() (count int, errors []*service.ProcessingError) {
 	if m.RequestedBy == "" || m.InstApprover == "" {
-		return 0, append(errors, m.Error(m.Identifier, fmt.Errorf("Deletion requires email of requestor and institutional approver"), true))
+		return 0, append(errors, m.Error(m.itemIdentifier, fmt.Errorf("Deletion requires email of requestor and institutional approver"), true))
 	}
 	if m.ItemType == constants.TypeFile {
 		count, errors = m.deleteSingleFile()
@@ -105,13 +110,13 @@ func (m *Manager) IngestObjectSave() error {
 // deleteSingleFile is for deleting a single GenericFile. Call this when ItemType
 // is GenericFile.
 func (m *Manager) deleteSingleFile() (count int, errors []*service.ProcessingError) {
-	resp := m.Context.RegistryClient.GenericFileByIdentifier(m.Identifier)
+	resp := m.Context.RegistryClient.GenericFileByID(m.ObjOrFileID)
 	if resp.Error != nil {
-		return count, append(errors, m.Error(m.Identifier, resp.Error, false))
+		return count, append(errors, m.Error(m.itemIdentifier, resp.Error, false))
 	}
 	gf := resp.GenericFile()
 	if gf == nil {
-		return count, append(errors, m.Error(m.Identifier, fmt.Errorf("Cannot find GenericFile with identifier %s", m.Identifier), false))
+		return count, append(errors, m.Error(m.itemIdentifier, fmt.Errorf("Cannot find GenericFile with id %d", m.ObjOrFileID), false))
 	}
 	errs := m.deleteFile(gf)
 	if len(errs) > 0 {
@@ -124,13 +129,14 @@ func (m *Manager) deleteSingleFile() (count int, errors []*service.ProcessingErr
 // Call this when ItemType is IntellectualObject.
 func (m *Manager) deleteFiles() (count int, errors []*service.ProcessingError) {
 	params := url.Values{}
-	params.Set("intellectual_object_identifier", m.Identifier)
+	params.Set("intellectual_object_id", strconv.FormatInt(m.ObjOrFileID, 10))
 	params.Set("page", "1")
+	params.Set("state", constants.StateActive)
 	params.Set("per_page", "200")
 	for {
 		resp := m.Context.RegistryClient.GenericFileList(params)
 		if resp.Error != nil {
-			errors = append(errors, m.Error(m.Identifier, resp.Error, false))
+			errors = append(errors, m.Error(m.itemIdentifier, resp.Error, false))
 			return count, errors
 		}
 		for _, gf := range resp.GenericFiles() {
@@ -144,16 +150,17 @@ func (m *Manager) deleteFiles() (count int, errors []*service.ProcessingError) {
 				count++
 			}
 		}
-		if resp.HasNextPage() {
-			params = resp.ParamsForNextPage()
-		} else {
+		// Because we're filtering on State="A", we can keep getting the first page.
+		// Everything that was on the first page is now marked State="D".
+		// We don't need to call resp.ParamsForNextPage()
+		if !resp.HasNextPage() {
 			break
 		}
 	}
 	if len(errors) == 0 {
 		err := m.markObjectDeleted()
 		if err != nil {
-			errors = append(errors, m.Error(m.Identifier, err, false))
+			errors = append(errors, m.Error(m.itemIdentifier, err, false))
 		}
 	}
 	return count, errors
@@ -162,7 +169,7 @@ func (m *Manager) deleteFiles() (count int, errors []*service.ProcessingError) {
 // deleteFile tries to delete all the storage records associated with a file.
 func (m *Manager) deleteFile(gf *registry.GenericFile) (errors []*service.ProcessingError) {
 	params := url.Values{}
-	params.Add("generic_file_identifier", gf.Identifier)
+	params.Add("generic_file_id", strconv.FormatInt(gf.ID, 10))
 	resp := m.Context.RegistryClient.StorageRecordList(params)
 	if resp.Error != nil {
 		return append(errors, m.Error(gf.Identifier, resp.Error, false))
@@ -251,6 +258,7 @@ func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.S
 		OutcomeInformation:   outcomeInfo,
 		InstitutionID:        gf.InstitutionID,
 		IntellectualObjectID: gf.IntellectualObjectID,
+		GenericFileID:        gf.ID,
 		CreatedAt:            now,
 		UpdatedAt:            now,
 	}
@@ -277,13 +285,13 @@ func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.S
 // entirety (all files deleted).
 func (m *Manager) markObjectDeleted() error {
 	// TODO: Add manager.ID. This extra lookup is a temporary measure during the rewrite.
-	resp := m.Context.RegistryClient.IntellectualObjectByIdentifier(m.Identifier)
+	resp := m.Context.RegistryClient.IntellectualObjectByID(m.ObjOrFileID)
 	if resp.Error != nil {
 		return resp.Error
 	}
 	obj := resp.IntellectualObject()
 	if obj == nil || obj.ID == 0 {
-		return fmt.Errorf("registry returned empty object for identifier '%s'", m.Identifier)
+		return fmt.Errorf("registry returned empty object for id %d", m.ObjOrFileID)
 	}
 	resp = m.Context.RegistryClient.IntellectualObjectDelete(obj.ID)
 	return resp.Error

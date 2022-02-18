@@ -150,7 +150,7 @@ func (d *Deleter) ProcessFatalErrorChannel() {
 func (d *Deleter) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
 	// Set up the deletion manager, which actually deletes
 	// the files.
-	identifier := workItem.GenericFileIdentifier
+	id := workItem.GenericFileIdentifier
 	itemType := constants.TypeFile
 	if identifier == "" && workItem.ObjectIdentifier != "" {
 		identifier = workItem.ObjectIdentifier

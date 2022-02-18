@@ -1,5 +1,7 @@
-//go:build integration
-// +build integration
+/*
+  //go:build integration
+  // +build integration
+*/
 
 package deletion_test
 
@@ -7,6 +9,7 @@ import (
 	ctx "context"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -43,7 +46,7 @@ func TestNewManager(t *testing.T) {
 	manager := deletion.NewManager(
 		context,
 		9999,
-		"test.edu/my_object",
+		12345,
 		constants.TypeObject,
 		"requestor@example.com",
 		"approver@example.com",
@@ -52,7 +55,7 @@ func TestNewManager(t *testing.T) {
 	assert.NotNil(t, manager)
 	assert.Equal(t, context, manager.Context)
 	assert.EqualValues(t, 9999, manager.WorkItemID)
-	assert.Equal(t, "test.edu/my_object", manager.Identifier)
+	assert.EqualValues(t, 12345, manager.ObjOrFileID)
 	assert.Equal(t, constants.TypeObject, manager.ItemType)
 	assert.Equal(t, "requestor@example.com", manager.RequestedBy)
 	assert.Equal(t, "approver@example.com", manager.InstApprover)
@@ -72,7 +75,7 @@ func TestRun_SingleFile(t *testing.T) {
 	manager := deletion.NewManager(
 		context,
 		workItem.ID,
-		gf.Identifier,
+		gf.ID,
 		constants.TypeFile,
 		"requestor@example.com",
 		"approver@example.com",
@@ -82,9 +85,9 @@ func TestRun_SingleFile(t *testing.T) {
 	assert.Equal(t, 1, count)
 	assert.Empty(t, errors)
 
-	testItemMarkedDeleted(t, context, gf.Identifier)
-	testStorageRecordsRemoved(t, context, gf.Identifier)
-	testFileDeletionEvents(t, context, gf.Identifier)
+	testItemMarkedDeleted(t, context, constants.TypeFile, gf.ID)
+	testStorageRecordsRemoved(t, context, gf.ID)
+	testFileDeletionEvents(t, context, gf.ID)
 }
 
 func TestRun_Object(t *testing.T) {
@@ -99,7 +102,7 @@ func TestRun_Object(t *testing.T) {
 	manager := deletion.NewManager(
 		context,
 		workItem.ID,
-		savedObj.Identifier,
+		savedObj.ID,
 		constants.TypeObject,
 		"requestor@example.com",
 		"approver@example.com",
@@ -114,57 +117,58 @@ func TestRun_Object(t *testing.T) {
 	assert.Empty(t, errors)
 
 	// File 2
-	testItemMarkedDeleted(t, context, "institution2.edu/springfield/doc2")
-	testStorageRecordsRemoved(t, context, "institution2.edu/springfield/doc2")
-	testFileDeletionEvents(t, context, "institution2.edu/springfield/doc2")
+	testItemMarkedDeleted(t, context, constants.TypeFile, savedFiles[1].ID)
+	testStorageRecordsRemoved(t, context, savedFiles[1].ID)
+	testFileDeletionEvents(t, context, savedFiles[1].ID)
 
 	// File 3
-	testItemMarkedDeleted(t, context, "institution2.edu/springfield/doc3")
-	testStorageRecordsRemoved(t, context, "institution2.edu/springfield/doc3")
-	testFileDeletionEvents(t, context, "institution2.edu/springfield/doc3")
+	testItemMarkedDeleted(t, context, constants.TypeFile, savedFiles[2].ID)
+	testStorageRecordsRemoved(t, context, savedFiles[2].ID)
+	testFileDeletionEvents(t, context, savedFiles[2].ID)
 
 	// IntellectualObject
-	testItemMarkedDeleted(t, context, "institution2.edu/springfield")
+	testItemMarkedDeleted(t, context, constants.TypeObject, savedObj.ID)
 	testObjectDeletionEvent(t, context)
 }
 
-func testItemMarkedDeleted(t *testing.T, context *common.Context, identifier string) {
-	if identifier == objIdentifier {
-		resp := context.RegistryClient.IntellectualObjectByIdentifier(identifier)
+func testItemMarkedDeleted(t *testing.T, context *common.Context, itemType string, itemID int64) {
+	if itemType == constants.TypeObject {
+		resp := context.RegistryClient.IntellectualObjectByID(itemID)
 		require.Nil(t, resp.Error)
 		assert.Equal(t, constants.StateDeleted, resp.IntellectualObject().State)
 	} else {
-		resp := context.RegistryClient.GenericFileByIdentifier(identifier)
+		resp := context.RegistryClient.GenericFileByID(itemID)
 		require.Nil(t, resp.Error)
 		assert.Equal(t, constants.StateDeleted, resp.GenericFile().State)
 	}
 }
 
-func testStorageRecordsRemoved(t *testing.T, context *common.Context, gfIdentifier string) {
+func testStorageRecordsRemoved(t *testing.T, context *common.Context, gfID int64) {
 	values := url.Values{}
-	values.Add("generic_file_identifier", gfIdentifier)
+	values.Add("generic_file_id", strconv.FormatInt(gfID, 10))
 	resp := context.RegistryClient.StorageRecordList(values)
 	require.Nil(t, resp.Error)
 	assert.Equal(t, 0, len(resp.StorageRecords()))
 }
 
-func testFileDeletionEvents(t *testing.T, context *common.Context, gfIdentifier string) {
+func testFileDeletionEvents(t *testing.T, context *common.Context, gfID int64) {
 	instId := getInstId(t, context)
 	values := url.Values{}
-	values.Set("file_identifier", gfIdentifier)
+	values.Set("generic_file_id", strconv.FormatInt(gfID, 10))
 	values.Set("event_type", constants.EventDeletion)
 	values.Set("page", "1")
 	values.Set("per_page", "20")
 	resp := context.RegistryClient.PremisEventList(values)
 	require.Nil(t, resp.Error)
 	deletionEvents := resp.PremisEvents()
-	assert.Equal(t, 10, len(deletionEvents))
+	// One event for each copy deletion, plus one signalling
+	// that all copies have been deleted.
+	assert.Equal(t, 11, len(deletionEvents))
 	for _, event := range deletionEvents {
-		assert.True(t, strings.Contains(event.OutcomeInformation, "requestor@example.com"))
-		assert.True(t, strings.Contains(event.OutcomeInformation, "approver@example.com"))
-		assert.True(t, strings.Contains(event.OutcomeInformation, "some-admin@aptrust.org"))
-		assert.True(t, strings.Contains(event.Detail, "Deleted one copy of this file from"))
-		assert.True(t, strings.Contains(event.Detail, "localhost:9899"))
+		// Deletion manager and Registry internal log slighly different messages.
+		// The second is for Registry internal, indicating deletion of all copies.
+		assert.True(t, (event.OutcomeInformation == "File deleted at the request of requestor@example.com. Institutional approver: approver@example.com. APTrust approver: some-admin@aptrust.org." || event.OutcomeInformation == "File deleted at the request of admin@inst2.edu. Institutional approver: admin@inst2.edu."))
+		assert.True(t, (strings.HasPrefix(event.Detail, "Deleted one copy of this file from") || event.Detail == "File deleted from preservation storage"), event.Detail)
 		assert.Equal(t, constants.StatusSuccess, event.Outcome)
 		assert.Equal(t, objIdentifier, event.IntellectualObjectIdentifier)
 		assert.NotEqual(t, 0, event.IntellectualObjectID)
@@ -174,23 +178,30 @@ func testFileDeletionEvents(t *testing.T, context *common.Context, gfIdentifier 
 
 func testObjectDeletionEvent(t *testing.T, context *common.Context) {
 	values := url.Values{}
-	values.Set("object_identifier", objIdentifier)
-	values.Set("file_identifier", "")
+	values.Set("intellectual_object_id", strconv.FormatInt(savedObj.ID, 10))
 	values.Set("event_type", constants.EventDeletion)
 	values.Set("page", "1")
 	values.Set("per_page", "100")
 	resp := context.RegistryClient.PremisEventList(values)
 	require.Nil(t, resp.Error)
-	// TODO: Can we delete this?
-	// Pharos did't filter these results properly,
-	// Registry probably does.
-	count := 0
+
+	// There should be one deletion event for the object,
+	// and eleven for each file (one for each of the ten copies
+	// of the file, which we copied to all ten buckets, and one
+	// for the overall deletion).
+	objCount := 0
+	fileCount := 0
 	for _, event := range resp.PremisEvents() {
-		if event.GenericFileIdentifier == "" {
-			count++
+		// j, _ := json.MarshalIndent(event, "", "  ")
+		// fmt.Println(string(j))
+		if event.GenericFileID == 0 {
+			objCount++
+		} else {
+			fileCount++
 		}
 	}
-	assert.Equal(t, 1, count)
+	assert.Equal(t, 1, objCount)
+	assert.Equal(t, 33, fileCount)
 }
 
 func prepareForTest(t *testing.T, context *common.Context) {
@@ -281,43 +292,6 @@ func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 		alreadySaved = append(alreadySaved, _url)
 	}
 }
-
-// // We have to create a deletion WorkItem for this object,
-// // or Registry returns an error.
-// func createDeletionRequestAndWorkItem(t *testing.T, context *common.Context, identifier string) *registry.WorkItem {
-// 	now := time.Now().UTC()
-// 	gfIdentifier := ""
-// 	if identifier != objIdentifier {
-// 		gfIdentifier = identifier
-// 	}
-// 	item := &registry.WorkItem{
-// 		APTrustApprover:       "some-admin@aptrust.org",
-// 		Action:                constants.ActionDelete,
-// 		BagDate:               testutil.Bloomsday,
-// 		Bucket:                "receiving",
-// 		CreatedAt:             now,
-// 		DateProcessed:         now,
-// 		ETag:                  "33331234000099998888777766665555",
-// 		GenericFileIdentifier: gfIdentifier,
-// 		InstApprover:          "approver@example.com",
-// 		InstitutionID:         getInstId(t, context),
-// 		Name:                  "springfield.tar",
-// 		NeedsAdminReview:      false,
-// 		Note:                  "Deletion requested",
-// 		ObjectIdentifier:      objIdentifier,
-// 		Outcome:               "Deleteion requested",
-// 		QueuedAt:              now,
-// 		Retry:                 true,
-// 		Size:                  500,
-// 		Stage:                 constants.StageRequested,
-// 		Status:                constants.StatusPending,
-// 		UpdatedAt:             now,
-// 		User:                  "requestor@example.com",
-// 	}
-// 	resp := context.RegistryClient.WorkItemSave(item)
-// 	require.Nil(t, resp.Error)
-// 	return resp.WorkItem().ID
-// }
 
 func getInstId(t *testing.T, context *common.Context) int64 {
 	resp := context.RegistryClient.InstitutionByIdentifier("institution2.edu")
