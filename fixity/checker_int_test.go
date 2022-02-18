@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package fixity_test
 
@@ -75,14 +74,14 @@ func createRegistryRecords(t *testing.T, context *common.Context, records []*reg
 		ID:            0,
 		UpdatedAt:     now,
 	}
-	resp = context.RegistryClient.ChecksumSave(checksum, gf.Identifier)
+	resp = context.RegistryClient.ChecksumCreate(checksum)
 	require.Nil(t, resp.Error)
 
 	// Save the storage records that point to our local
 	// Minio integration test server.
 	for _, sr := range records {
 		sr.GenericFileID = gf.ID
-		resp = context.RegistryClient.StorageRecordSave(sr, gf.Identifier)
+		resp = context.RegistryClient.StorageRecordCreate(sr, gf.InstitutionID)
 		require.Nil(t, resp.Error)
 	}
 }
@@ -93,17 +92,16 @@ func getGenericFile(t *testing.T, context *common.Context) *registry.GenericFile
 	obj := resp.IntellectualObject()
 	require.NotNil(t, obj)
 	return &registry.GenericFile{
-		FileFormat:                   "text/plain",
-		FileModified:                 time.Now().UTC(),
-		ID:                           0,
-		Identifier:                   fileIdentifier,
-		InstitutionID:                obj.InstitutionID,
-		IntellectualObjectID:         obj.ID,
-		IntellectualObjectIdentifier: obj.Identifier,
-		Size:                         15,
-		State:                        constants.StateActive,
-		StorageOption:                constants.StorageStandard,
-		UUID:                         fileUUID,
+		FileFormat:           "text/plain",
+		FileModified:         time.Now().UTC(),
+		ID:                   0,
+		Identifier:           fileIdentifier,
+		InstitutionID:        obj.InstitutionID,
+		IntellectualObjectID: obj.ID,
+		Size:                 15,
+		State:                constants.StateActive,
+		StorageOption:        constants.StorageStandard,
+		UUID:                 fileUUID,
 	}
 }
 

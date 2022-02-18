@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package restoration_test
 
@@ -19,7 +18,7 @@ import (
 // This generic file is loaded as part of the Registry integration
 // text fixture set.
 var gfIdentifier = "test.edu/apt-test-restore/data/sample.xml"
-var gfWorkItemID = 56338
+var gfWorkItemID = int64(56338)
 
 // Size, in bytes, of our sample file
 var gfSize = int64(23972)

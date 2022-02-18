@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package restoration_test
 
@@ -30,7 +29,7 @@ const aptrustObject = "test.edu/apt-test-restore"
 const btrObject = "test.edu/btr-512-test-restore"
 
 type RestorationItem struct {
-	WorkItemID    int
+	WorkItemID    int64
 	ObjIdentifier string
 	BagItProfile  string
 }
