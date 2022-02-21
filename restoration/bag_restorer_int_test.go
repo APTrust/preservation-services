@@ -147,7 +147,7 @@ func TestBagRestorer_Run(t *testing.T) {
 		restorer := restoration.NewBagRestorer(context, item.WorkItemID, restObj)
 		fileCount, errors := restorer.Run()
 		assert.True(t, fileCount >= 3)
-		assert.Empty(t, errors)
+		require.Empty(t, errors)
 		testRestoredBag(t, context, item)
 		testBestRestorationSource(t, restorer)
 		testCleanup(t, restorer)

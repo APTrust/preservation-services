@@ -41,7 +41,7 @@ func GetBatchOfFiles(context *common.Context, objectIdentifier string, pageNumbe
 	params.Set("intellectual_object_identifier", objectIdentifier)
 	params.Set("page", strconv.Itoa(pageNumber))
 	params.Set("per_page", strconv.Itoa(batchSize))
-	params.Set("sort", "name")
+	params.Set("sort", "identifier")
 	params.Set("state", "A")
 	params.Set("include_storage_records", "true")
 	resp := context.RegistryClient.GenericFileList(params)

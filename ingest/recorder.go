@@ -103,6 +103,12 @@ func (r *Recorder) recordObjectEvents() (errors []*service.ProcessingError) {
 			continue
 		}
 
+		// We have to set the object ID here, because we don't know
+		// the ID until after we've inserted it in the Registry.
+		// Also note that object-level events have a null GenericFileID,
+		// since they pertain only to the object and not to any specific files.
+		event.IntellectualObjectID = r.IngestObject.ID
+
 		resp := r.Context.RegistryClient.PremisEventSave(event)
 		if resp.Error != nil {
 			errors = append(errors, r.Error(r.IngestObject.Identifier(), resp.Error, false))

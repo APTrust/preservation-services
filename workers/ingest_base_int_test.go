@@ -25,7 +25,7 @@ import (
 
 var keyToGoodBag = "example.edu.tagsample_good.tar"
 var pathToGoodBag = testutil.PathToUnitTestBag(keyToGoodBag)
-var goodbagETag = ""
+var goodbagETag = "00000000888888880000000077777777"
 var goodbagSize = int64(40960)
 var objectIdentifier = "test.edu/example.edu.tagsample_good"
 var bufSize = 20
@@ -94,7 +94,7 @@ func saveSimilarWorkItems(t *testing.T, context *common.Context, workItem *regis
 	newerIngestRequest.DateProcessed = newerDate
 	newerIngestRequest.CreatedAt = newerDate
 	newerIngestRequest.UpdatedAt = newerDate
-	newerIngestRequest.ETag = "12345678"
+	newerIngestRequest.ETag = "12345678123456781234567812345678"
 	resp = context.RegistryClient.WorkItemSave(newerIngestRequest)
 	require.Nil(t, resp.Error)
 	newerWorkItemID = resp.WorkItem().ID
@@ -157,8 +157,11 @@ func doSetup(t *testing.T, key, pathToBagFile string) int64 {
 			Size:             goodbagSize,
 			Stage:            constants.StageReceive,
 			Status:           constants.StatusPending,
+			User:             "system@aptrust.org",
 		}
 		testWorkItem = putWorkItemInRegistry(t, context, workItem)
+		assert.NotNil(t, testWorkItem)
+		assert.NotEmpty(t, testWorkItem.ID)
 		msgBody := []byte(strconv.FormatInt(testWorkItem.ID, 10))
 		var msgId [16]byte
 		copy(msgId[:], []byte("9999"))
@@ -229,7 +232,7 @@ func TestIngestBase_Error(t *testing.T) {
 	ingestBase := getIngestBase()
 	err := fmt.Errorf("This is the internal error")
 	processingErr := ingestBase.Error(999, "my-identifier", err, false)
-	assert.Equal(t, 999, processingErr.WorkItemID)
+	assert.Equal(t, int64(999), processingErr.WorkItemID)
 	assert.Equal(t, "my-identifier", processingErr.Identifier)
 	assert.Equal(t, "This is the internal error", processingErr.Message)
 	assert.False(t, processingErr.IsFatal)
@@ -394,7 +397,7 @@ func TestIngestBase_ShouldAbandonForNewerVersion(t *testing.T) {
 	assert.False(t, ingestBase.ShouldAbandonForNewerVersion(item))
 
 	// True, because ETag of S3 item no longer matches
-	item.ETag = "1234"
+	item.ETag = "12341234123412341234123412341234"
 	assert.True(t, ingestBase.ShouldAbandonForNewerVersion(item))
 
 	// False, because even though ETag no longer matches,

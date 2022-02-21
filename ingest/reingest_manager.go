@@ -194,7 +194,7 @@ func (r *ReingestManager) FlagChanges(ingestFile *service.IngestFile, registryFi
 	fileChanged := false
 	params := url.Values{}
 	params.Add("generic_file_identifier", ingestFile.Identifier())
-	params.Add("sort", "datetime DESC")
+	params.Add("sort", "datetime__desc")
 
 	resp := r.Context.RegistryClient.ChecksumList(params)
 	if resp.Error != nil {

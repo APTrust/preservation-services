@@ -3,6 +3,10 @@
 package ingest_test
 
 import (
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
@@ -12,9 +16,6 @@ import (
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"strings"
-	"testing"
-	"time"
 )
 
 // Existing ids, loaded in Registry integration test fixture data
@@ -56,6 +57,8 @@ func PutBagMetadataInRegistry(t *testing.T, obj *service.IngestObject) {
 	// Save the intel obj in Registry
 	resp := context.RegistryClient.IntellectualObjectSave(obj.ToIntellectualObject())
 	require.Nil(t, resp.Error)
+	intelObj := resp.IntellectualObject()
+	require.NotNil(t, intelObj)
 
 	fileMap, _, err := context.RedisClient.GetBatchOfFileKeys(
 		TestBagWorkItemId,
@@ -64,7 +67,7 @@ func PutBagMetadataInRegistry(t *testing.T, obj *service.IngestObject) {
 	require.Nil(t, err)
 	for _, ingestFile := range fileMap {
 		ingestFile.InstitutionID = inst.ID
-		ingestFile.IntellectualObjectID = obj.ID
+		ingestFile.IntellectualObjectID = intelObj.ID
 
 		ingestFile.StorageRecords = []*service.StorageRecord{
 			&service.StorageRecord{

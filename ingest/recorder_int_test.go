@@ -96,7 +96,8 @@ func testObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder) {
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
 	params.Add("intellectual_object_id", strconv.FormatInt(recorder.IngestObject.ID, 10))
-	params.Add("per_page", "300")
+	params.Add("generic_file_id__is_null", "true")
+	params.Add("per_page", "20")
 	params.Add("page", "1")
 
 	resp := client.PremisEventList(params)
@@ -106,9 +107,6 @@ func testObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder) {
 
 	eventTypes := make(map[string]int)
 	for _, event := range events {
-		if event.GenericFileID > 0 {
-			continue // this is a file-level event
-		}
 		if _, ok := eventTypes[event.EventType]; !ok {
 			eventTypes[event.EventType] = 0
 		}
@@ -310,7 +308,6 @@ func getChangedFileRecord(identifier string) ChangedFile {
 }
 
 func testObjectUpdate(t *testing.T, context *common.Context) {
-	timestamp := time.Now().UTC()
 	bagPath := getBagPath("updated", "test.edu.apt-001.tar")
 	recorder := prepareForRecord(t, bagPath, recorderItemID_02, context)
 	require.NotNil(t, recorder)
@@ -323,10 +320,10 @@ func testObjectUpdate(t *testing.T, context *common.Context) {
 	// deletion.
 	assert.True(t, recorder.IngestObject.ShouldDeleteFromReceiving)
 
-	testUpdatedObjectInRegistry(t, recorder, timestamp)
+	testUpdatedObjectInRegistry(t, recorder)
 }
 
-func testUpdatedObjectInRegistry(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
+func testUpdatedObjectInRegistry(t *testing.T, recorder *ingest.Recorder) {
 	client := recorder.Context.RegistryClient
 	resp := client.IntellectualObjectByIdentifier(recorder.IngestObject.Identifier())
 	require.Nil(t, resp.Error)
@@ -353,67 +350,80 @@ func testUpdatedObjectInRegistry(t *testing.T, recorder *ingest.Recorder, timest
 	assert.Equal(t, "APTrust Bag 001 (updated)", intelObj.Title)
 
 	// This should have changed
+	// j, _ := json.MarshalIndent(intelObj, "", "  ")
+	// fmt.Println(string(j))
 	assert.True(t, intelObj.UpdatedAt.After(intelObj.CreatedAt))
 
-	testUpdatedObjectEventsInRegistry(t, recorder, timestamp)
-	testUpdatedFilesInRegistry(t, recorder, timestamp)
+	testUpdatedObjectEventsInRegistry(t, recorder, intelObj.UpdatedAt)
+	testUpdatedFilesInRegistry(t, recorder, intelObj.UpdatedAt)
 }
 
 func testUpdatedObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
-	objIdentifier := recorder.IngestObject.Identifier()
+	//objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 
 	params := url.Values{}
-	params.Add("intellectual_object_identifier", objIdentifier)
-	params.Add("created_after", timestamp.Format(time.RFC3339))
-	params.Add("per_page", "200")
+	params.Add("intellectual_object_id", strconv.FormatInt(recorder.IngestObject.ID, 10))
+	params.Add("generic_file_id__is_null", "true")
+	params.Add("created_at__gteq", timestamp.Format(time.RFC3339Nano)) //.Add(-500*time.Millisecond).Format(time.RFC3339))
+	params.Add("per_page", "300")
 	params.Add("page", "1")
 
 	resp := client.PremisEventList(params)
+
+	// DEBUG
 	//data, _ := resp.RawResponseData()
-	//fmt.Printf(string(data))
+	//fmt.Println("PremisEventList:", string(data))
+	// END DEBUG
+
 	require.Nil(t, resp.Error)
 	events := resp.PremisEvents()
 	require.NotEmpty(t, events)
 
 	eventTypes := make(map[string]int)
 	for _, event := range events {
-		if event.GenericFileID > 0 {
-			continue // this is a file-level event
-		}
+		//if event.GenericFileID > 0 {
+		//	continue // this is a file-level event
+		//}
 		if _, ok := eventTypes[event.EventType]; !ok {
 			eventTypes[event.EventType] = 0
 		}
 		eventTypes[event.EventType]++
 	}
 
-	// No new creation event, because this is reingest
-	assert.Equal(t, 0, eventTypes[constants.EventCreation])
+	// No new creation event, because this is reingest.
+	// There should be just one, the original.
+	assert.Equal(t, 1, eventTypes[constants.EventCreation])
 
 	// No new identifier assignment for reingest
-	assert.Equal(t, 0, eventTypes[constants.EventIdentifierAssignment])
+	// Should be just one, the original assignment event.
+	assert.Equal(t, 1, eventTypes[constants.EventIdentifierAssignment])
 
-	// Should be one new rights event, since this can be reset
+	// Should be original + one new rights event, since this can be reset
 	// on each ingest.
-	assert.Equal(t, 1, eventTypes[constants.EventAccessAssignment])
+	assert.Equal(t, 2, eventTypes[constants.EventAccessAssignment])
 
 	// There *SHOULD* be a new ingest event for reingest.
-	assert.Equal(t, 1, eventTypes[constants.EventIngestion])
+	// So, one for original ingest plus one for re-ingest = 2.
+	assert.Equal(t, 2, eventTypes[constants.EventIngestion])
 }
 
 func testUpdatedFilesInRegistry(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
 	objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
-	params.Add("intellectual_object_identifier", objIdentifier)
-	params.Add("updated_after", timestamp.Format(time.RFC3339))
-	params.Add("per_page", "100")
+	params.Add("intellectual_object_id", strconv.FormatInt(recorder.IngestObject.ID, 10))
+	params.Add("updated_at__gteq", timestamp.Format(time.RFC3339Nano))
+	params.Add("per_page", "300")
 	params.Add("page", "1")
 	resp := client.GenericFileList(params)
-	//data, _ := resp.RawResponseData()
-	//fmt.Println(string(data))
 	require.Nil(t, resp.Error)
 	genericFiles := resp.GenericFiles()
+
+	//fmt.Println("OBJ UPDATED:", timestamp.Format(time.RFC3339Nano))
+	//j, _ := json.MarshalIndent(genericFiles, "", "  ")
+	//fmt.Println(string(j))
+
 	require.NotEmpty(t, genericFiles)
 	assert.Equal(t, len(changedFiles), len(genericFiles))
 
@@ -455,8 +465,8 @@ func testUpdatedFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, gf
 	objIdentifier, _ := gf.IntellectualObjectIdentifier() //recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
-	params.Add("generic_file_identifier", gf.Identifier)
-	params.Add("created_after", timestamp.Format(time.RFC3339))
+	params.Add("generic_file_id", strconv.FormatInt(gf.ID, 10))
+	//params.Add("date_time__gteq", timestamp.Format(time.RFC3339Nano))
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 
@@ -507,7 +517,7 @@ func testUpdatedFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, gf
 
 func testUpdatedChecksumsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
 	params := url.Values{}
-	params.Add("generic_file_identifier", gf.Identifier)
+	params.Add("generic_file_id", strconv.FormatInt(gf.ID, 10))
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 

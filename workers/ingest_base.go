@@ -308,7 +308,7 @@ func (b *IngestBase) FindOtherIngestRequests(workItem *registry.WorkItem) []*reg
 	v.Add("per_page", "20")
 	v.Add("name", workItem.Name)
 	v.Add("action", constants.ActionIngest)
-	v.Add("sort", "date") // Registry changes this to 'date desc'
+	v.Add("sort", "date_processed__desc")
 	resp := b.Context.RegistryClient.WorkItemList(v)
 	if resp.Error != nil {
 		b.Context.Logger.Error("Error getting WorkItems list from Registry: %v",

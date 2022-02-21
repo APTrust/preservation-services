@@ -395,12 +395,14 @@ func (obj *IngestObject) ToIntellectualObject() *registry.IntellectualObject {
 		BagName:                   obj.BagName(),
 		Description:               obj.BestAvailableDescription(),
 		ETag:                      obj.ETag,
+		FileCount:                 int64(obj.FileCount),
 		ID:                        obj.ID,
 		Identifier:                obj.Identifier(),
 		InstitutionIdentifier:     obj.Institution,
 		InstitutionID:             obj.InstitutionID,
 		InternalSenderDescription: obj.InternalSenderDescription(),
 		InternalSenderIdentifier:  obj.AltIdentifier(),
+		Size:                      obj.Size,
 		SourceOrganization:        obj.SourceOrganization(),
 		State:                     constants.StateActive,
 		StorageOption:             obj.StorageOption,
@@ -451,18 +453,19 @@ func (obj *IngestObject) NewObjectCreationEvent() *registry.PremisEvent {
 	eventId := uuid.New()
 	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
-		Identifier:                   eventId.String(),
-		EventType:                    constants.EventCreation,
-		DateTime:                     timestamp,
-		Detail:                       "Object created",
-		Outcome:                      constants.StatusSuccess,
-		OutcomeDetail:                "Intellectual object created",
-		Object:                       "APTrust preservation services",
-		IntellectualObjectIdentifier: obj.Identifier(),
-		Agent:                        "https://github.com/APTrust/preservation-services",
-		OutcomeInformation:           "Object created, files copied to preservation storage",
-		CreatedAt:                    timestamp,
-		UpdatedAt:                    timestamp,
+		Identifier:           eventId.String(),
+		EventType:            constants.EventCreation,
+		DateTime:             timestamp,
+		Detail:               "Object created",
+		Outcome:              constants.StatusSuccess,
+		OutcomeDetail:        "Intellectual object created",
+		Object:               "APTrust preservation services",
+		IntellectualObjectID: obj.ID,
+		InstitutionID:        obj.InstitutionID,
+		Agent:                "https://github.com/APTrust/preservation-services",
+		OutcomeInformation:   "Object created, files copied to preservation storage",
+		CreatedAt:            timestamp,
+		UpdatedAt:            timestamp,
 	}
 }
 
@@ -473,18 +476,19 @@ func (obj *IngestObject) NewObjectIngestEvent() *registry.PremisEvent {
 	eventId := uuid.New()
 	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
-		Identifier:                   eventId.String(),
-		EventType:                    constants.EventIngestion,
-		DateTime:                     timestamp,
-		Detail:                       "Copied files to perservation storage",
-		Outcome:                      constants.StatusSuccess,
-		OutcomeDetail:                fmt.Sprintf("%d files copied", obj.FileCount),
-		Object:                       "Minio S3 client",
-		IntellectualObjectIdentifier: obj.Identifier(),
-		Agent:                        constants.S3ClientName,
-		OutcomeInformation:           "Multipart put using s3 etags",
-		CreatedAt:                    timestamp,
-		UpdatedAt:                    timestamp,
+		Identifier:           eventId.String(),
+		EventType:            constants.EventIngestion,
+		DateTime:             timestamp,
+		Detail:               "Copied files to perservation storage",
+		Outcome:              constants.StatusSuccess,
+		OutcomeDetail:        fmt.Sprintf("%d files copied", obj.FileCount),
+		Object:               "Minio S3 client",
+		IntellectualObjectID: obj.ID,
+		InstitutionID:        obj.InstitutionID,
+		Agent:                constants.S3ClientName,
+		OutcomeInformation:   "Multipart put using s3 etags",
+		CreatedAt:            timestamp,
+		UpdatedAt:            timestamp,
 	}
 }
 
@@ -495,18 +499,19 @@ func (obj *IngestObject) NewObjectIdentifierEvent() *registry.PremisEvent {
 	eventId := uuid.New()
 	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
-		Identifier:                   eventId.String(),
-		EventType:                    constants.EventIdentifierAssignment,
-		DateTime:                     timestamp,
-		Detail:                       "Assigned object identifier " + obj.Identifier(),
-		Outcome:                      constants.StatusSuccess,
-		OutcomeDetail:                obj.Identifier(),
-		Object:                       "APTrust preservation services",
-		IntellectualObjectIdentifier: obj.Identifier(),
-		Agent:                        "https://github.com/APTrust/preservation-services",
-		OutcomeInformation:           "Institution domain + tar file name",
-		CreatedAt:                    timestamp,
-		UpdatedAt:                    timestamp,
+		Identifier:           eventId.String(),
+		EventType:            constants.EventIdentifierAssignment,
+		DateTime:             timestamp,
+		Detail:               "Assigned object identifier " + obj.Identifier(),
+		Outcome:              constants.StatusSuccess,
+		OutcomeDetail:        obj.Identifier(),
+		Object:               "APTrust preservation services",
+		IntellectualObjectID: obj.ID,
+		InstitutionID:        obj.InstitutionID,
+		Agent:                "https://github.com/APTrust/preservation-services",
+		OutcomeInformation:   "Institution domain + tar file name",
+		CreatedAt:            timestamp,
+		UpdatedAt:            timestamp,
 	}
 }
 
@@ -517,17 +522,18 @@ func (obj *IngestObject) NewObjectRightsEvent() *registry.PremisEvent {
 	eventId := uuid.New()
 	timestamp := time.Now().UTC()
 	return &registry.PremisEvent{
-		Identifier:                   eventId.String(),
-		EventType:                    constants.EventAccessAssignment,
-		DateTime:                     timestamp,
-		Detail:                       "Assigned object access rights",
-		Outcome:                      constants.StatusSuccess,
-		OutcomeDetail:                obj.Access(),
-		Object:                       "APTrust preservation services",
-		IntellectualObjectIdentifier: obj.Identifier(),
-		Agent:                        "https://github.com/APTrust/preservation-services",
-		OutcomeInformation:           "Set access to " + obj.Access(),
-		CreatedAt:                    timestamp,
-		UpdatedAt:                    timestamp,
+		Identifier:           eventId.String(),
+		EventType:            constants.EventAccessAssignment,
+		DateTime:             timestamp,
+		Detail:               "Assigned object access rights",
+		Outcome:              constants.StatusSuccess,
+		OutcomeDetail:        obj.Access(),
+		Object:               "APTrust preservation services",
+		IntellectualObjectID: obj.ID,
+		InstitutionID:        obj.InstitutionID,
+		Agent:                "https://github.com/APTrust/preservation-services",
+		OutcomeInformation:   "Set access to " + obj.Access(),
+		CreatedAt:            timestamp,
+		UpdatedAt:            timestamp,
 	}
 }

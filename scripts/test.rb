@@ -271,7 +271,7 @@ class TestRunner
   def env_hash
 	env = {}
 	ENV.each{ |k,v| env[k] = v }
-	env['APT_ENV'] = 'integration'
+	# env['APT_ENV'] = 'integration'
     if self.test_name != 'units'
       env['REGISTRY_ROOT'] = ENV['REGISTRY_ROOT'] || abort("Set env var REGISTRY_ROOT")
     end

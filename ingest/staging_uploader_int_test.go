@@ -1,4 +1,4 @@
-// +build integration
+//go:build integration
 
 package ingest_test
 
@@ -42,7 +42,7 @@ func TestNewStagingUploader(t *testing.T) {
 	uploader := ingest.NewStagingUploader(context, stagingItemID, obj)
 	require.NotNil(t, uploader)
 	assert.Equal(t, context, uploader.Context)
-	assert.Equal(t, stagingItemID, uploader.WorkItemID)
+	assert.EqualValues(t, stagingItemID, uploader.WorkItemID)
 	assert.Equal(t, obj, uploader.IngestObject)
 }
 
