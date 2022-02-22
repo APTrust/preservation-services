@@ -1,5 +1,4 @@
-//go:build integration
-// +build integration
+// -- //go:build integration
 
 package network_test
 
@@ -151,7 +150,7 @@ func TestRegistryIntellectualObjectList(t *testing.T) {
 	assert.Nil(t, resp.Error)
 	assert.Equal(t, fmt.Sprintf("/admin-api/v3/objects/?%s", v.Encode()), resp.Request.URL.Opaque)
 	objects := resp.IntellectualObjects()
-	assert.Equal(t, 8, len(objects))
+	assert.Equal(t, 11, len(objects))
 	for _, obj := range objects {
 		assert.NotEmpty(t, obj.ID)
 		assert.NotEmpty(t, obj.FileCount)
@@ -292,7 +291,7 @@ func TestGenericFileList(t *testing.T) {
 	files := resp.GenericFiles()
 
 	lastIdentifier := ""
-	assert.Equal(t, 11, len(files))
+	assert.Equal(t, 12, len(files))
 	for _, gf := range files {
 		assert.EqualValues(t, 2, gf.InstitutionID)
 		assert.Equal(t, constants.StorageClassStandard, gf.StorageOption)
@@ -452,7 +451,7 @@ func TestRegistryChecksumList(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("/admin-api/v3/checksums/?%s", v.Encode()), resp.Request.URL.Opaque)
 	checksums := resp.Checksums()
 	lastGFID := int64(0)
-	assert.Equal(t, 2, len(checksums))
+	assert.Equal(t, 3, len(checksums))
 	for _, cs := range checksums {
 		assert.EqualValues(t, 2, cs.InstitutionID)
 		assert.Equal(t, constants.AlgSha256, cs.Algorithm)
@@ -540,7 +539,7 @@ func TestRegistryPremisEventList(t *testing.T) {
 	events := resp.PremisEvents()
 
 	lastIdentifier := ""
-	assert.Equal(t, 27, len(events))
+	assert.Equal(t, 30, len(events))
 	for _, event := range events {
 		assert.EqualValues(t, 2, event.InstitutionID)
 		assert.True(t, event.Identifier > lastIdentifier)

@@ -165,5 +165,6 @@ func (r *IngestBucketReader) CreateWorkItem(institution *registry.Institution, o
 		Size:          obj.Size,
 		Stage:         constants.StageReceive,
 		Status:        constants.StatusPending,
+		User:          "system@aptrust.org",
 	}
 }
