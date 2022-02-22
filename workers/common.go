@@ -66,16 +66,18 @@ func GetRestorationObject(context *common.Context, workItem *registry.WorkItem, 
 		return nil, resp.Error
 	}
 	institution := resp.Institution()
-	if intelObj == nil {
+	if institution == nil {
 		return nil, fmt.Errorf("Registry returned nil for Institution %s", intelObj.InstitutionIdentifier)
 	}
 
 	objectSize := intelObj.Size
 	restorationType := constants.RestorationTypeObject
 	identifier := workItem.ObjectIdentifier
+	itemID := workItem.IntellectualObjectID
 	if workItem.GenericFileIdentifier != "" {
 		restorationType = constants.RestorationTypeFile
 		identifier = workItem.GenericFileIdentifier
+		itemID = workItem.GenericFileID
 		fileSize, err := GetFileSize(context, identifier)
 		if err != nil {
 			return nil, err
@@ -85,6 +87,7 @@ func GetRestorationObject(context *common.Context, workItem *registry.WorkItem, 
 
 	return &service.RestorationObject{
 		Identifier:             identifier,
+		ItemID:                 itemID,
 		BagItProfileIdentifier: intelObj.BagItProfileIdentifier,
 		ObjectSize:             objectSize,
 		RestorationSource:      restorationSource,

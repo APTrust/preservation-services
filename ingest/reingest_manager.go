@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"net/url"
+	"strconv"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
@@ -131,7 +132,7 @@ func (r *ReingestManager) ProcessFiles() (int, []*service.ProcessingError) {
 		// whose URL is already in the DB, we'll get a unique constraint
 		// error.
 		params := url.Values{}
-		params.Add("generic_file_identifier", ingestFile.Identifier())
+		params.Add("generic_file_id", strconv.FormatInt(ingestFile.ID, 10))
 		resp = r.Context.RegistryClient.StorageRecordList(params)
 		if resp.Error != nil {
 			return append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
@@ -198,6 +199,7 @@ func (r *ReingestManager) FlagChanges(ingestFile *service.IngestFile, registryFi
 
 	resp := r.Context.RegistryClient.ChecksumList(params)
 	if resp.Error != nil {
+		r.Context.Logger.Errorf("Error getting checksums for generic file %s. Assuming this is a reingest. Error: %v", ingestFile.Identifier(), resp.Error)
 		return fileChanged, resp.Error
 	}
 

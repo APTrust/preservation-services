@@ -167,7 +167,7 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 	fileCount = 0
 	pageNumber := 1
 	for {
-		files, err := GetBatchOfFiles(r.Context, r.RestorationObject.Identifier, pageNumber)
+		files, err := GetBatchOfFiles(r.Context, r.RestorationObject.ItemID, pageNumber)
 		if err != nil {
 			errors = append(errors, r.Error(r.RestorationObject.Identifier, err, false))
 			return fileCount, errors

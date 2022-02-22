@@ -1,4 +1,4 @@
-//go:build integration
+// -- //go:build integration
 
 package ingest_test
 
@@ -15,7 +15,6 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 
-	//"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"

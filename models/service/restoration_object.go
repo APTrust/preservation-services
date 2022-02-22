@@ -27,6 +27,9 @@ type RestorationObject struct {
 	// (from Registry) to be restored.
 	Identifier string `json:"identifier"`
 
+	// ItemID is the ID of the IntellectualObject or GenericFile to be restored.
+	ItemID int64 `json:"item_id"`
+
 	// ObjectSize is the size of the bag or file to be restored. For bags,
 	// this is actually the size of the payload. The final bag will be somewhat
 	// larger because it will include manifests and tag files in addition to

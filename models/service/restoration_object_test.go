@@ -67,4 +67,4 @@ func TestRestorationObj_ManifestAlgorithms(t *testing.T) {
 	assert.Equal(t, constants.BTRRestorationAlgorithms, obj.ManifestAlgorithms())
 }
 
-const RestorationObjectJSON = `{"all_files_restored":true,"BagItProfileIdentifier":"https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json","error_message":"No error","identifier":"test.edu/bag-name.tar","object_size":333000,"restoration_source":"s3","restoration_target":"aptrust.restore.test.edu","restoration_type":"object","restored_at":"1904-06-16T15:04:05Z","url":"https://s3.example.com/restore-bucket/bag-name.tar"}`
+const RestorationObjectJSON = `{"all_files_restored":true,"BagItProfileIdentifier":"https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json","error_message":"No error","identifier":"test.edu/bag-name.tar","item_id":111222333444,"object_size":333000,"restoration_source":"s3","restoration_target":"aptrust.restore.test.edu","restoration_type":"object","restored_at":"1904-06-16T15:04:05Z","url":"https://s3.example.com/restore-bucket/bag-name.tar"}`

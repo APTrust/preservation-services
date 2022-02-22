@@ -79,7 +79,7 @@ func (r *GlacierRestorer) Run() (fileCount int, errors []*service.ProcessingErro
 func (r *GlacierRestorer) restoreAllFiles() (completed, pending, errored int, errors []*service.ProcessingError) {
 	pageNumber := 1
 	for {
-		files, err := GetBatchOfFiles(r.Context, r.RestorationObject.Identifier, pageNumber)
+		files, err := GetBatchOfFiles(r.Context, r.RestorationObject.ItemID, pageNumber)
 		if err != nil {
 			errors = append(errors, r.Error(r.RestorationObject.Identifier, err, false))
 			return completed, pending, errored, errors

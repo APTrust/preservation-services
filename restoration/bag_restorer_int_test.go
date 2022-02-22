@@ -1,4 +1,4 @@
-//go:build integration
+//  -- //go:build integration
 
 package restoration_test
 
@@ -24,7 +24,7 @@ import (
 
 var bagRestorerSetupCompleted = false
 
-const workItemID = 334455
+// const workItemID = 334455
 const aptrustObject = "test.edu/apt-test-restore"
 const btrObject = "test.edu/btr-512-test-restore"
 
@@ -112,13 +112,20 @@ func setup(t *testing.T, context *common.Context) {
 	bagRestorerSetupCompleted = true
 }
 
-func getRestorationObject(objIdentifier string) *service.RestorationObject {
+func getRestorationObject(t *testing.T, objIdentifier string) *service.RestorationObject {
 	profile := constants.DefaultProfileIdentifier
 	if objIdentifier == btrObject {
 		profile = constants.BTRProfileIdentifier
 	}
+
+	resp := common.NewContext().RegistryClient.IntellectualObjectByIdentifier(objIdentifier)
+	obj := resp.IntellectualObject()
+	assert.Nil(t, resp.Error)
+	assert.NotNil(t, obj)
+
 	return &service.RestorationObject{
 		Identifier:             objIdentifier,
+		ItemID:                 obj.ID,
 		BagItProfileIdentifier: profile,
 		ObjectSize:             int64(78930000),
 		RestorationSource:      constants.RestorationSourceS3,
@@ -132,7 +139,7 @@ func TestNewBagRestorer(t *testing.T) {
 	restorer := restoration.NewBagRestorer(
 		common.NewContext(),
 		item.WorkItemID,
-		getRestorationObject(item.ObjIdentifier))
+		getRestorationObject(t, item.ObjIdentifier))
 	require.NotNil(t, restorer)
 	require.NotNil(t, restorer.Context)
 	assert.Equal(t, item.WorkItemID, restorer.WorkItemID)
@@ -143,10 +150,10 @@ func TestBagRestorer_Run(t *testing.T) {
 	context := common.NewContext()
 	setup(t, context)
 	for _, item := range itemsToRestore {
-		restObj := getRestorationObject(item.ObjIdentifier)
+		restObj := getRestorationObject(t, item.ObjIdentifier)
 		restorer := restoration.NewBagRestorer(context, item.WorkItemID, restObj)
 		fileCount, errors := restorer.Run()
-		assert.True(t, fileCount >= 3)
+		assert.True(t, fileCount >= 3, fileCount)
 		require.Empty(t, errors)
 		testRestoredBag(t, context, item)
 		testBestRestorationSource(t, restorer)

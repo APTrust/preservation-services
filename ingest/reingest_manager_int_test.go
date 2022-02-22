@@ -1,4 +1,4 @@
-//go:build integration
+//  -- //go:build integration
 
 package ingest_test
 
@@ -288,7 +288,7 @@ func TestReingestManagerRun(t *testing.T) {
 	assert.Empty(t, errors, errors)
 
 	// Test basic attributes on each ingest file.
-	// Not should need saving, because they haven't changed
+	// None should need saving, because they haven't changed
 	// since last ingest.
 	testAttrs := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
 		testIngestFile_ReingestManager(t, ingestFile)
@@ -378,7 +378,11 @@ func testIngestFile_ReingestManager(t *testing.T, f *service.IngestFile) {
 	assert.Equal(t, 36, len(f.UUID))
 	assert.True(t, util.LooksLikeUUID(f.UUID), f.PathInBag)
 	require.Equal(t, 0, len(f.StorageRecords), f.PathInBag)
-	require.Equal(t, 2, len(f.RegistryURLs), "%s: %v", f.PathInBag, f.RegistryURLs)
+
+	//j, _ := json.MarshalIndent(f, "", "  ")
+	//fmt.Println(string(j))
+
+	require.Equal(t, 2, len(f.RegistryURLs), "%s/%s (%d): %v", f.ObjectIdentifier, f.PathInBag, f.ID, f.RegistryURLs)
 }
 
 func shouldHaveManifestChecksum(f *service.IngestFile) bool {
