@@ -46,13 +46,13 @@ func GetBatchOfFiles(context *common.Context, objectID int64, pageNumber int) (g
 	params.Set("include_storage_records", "true")
 	resp := context.RegistryClient.GenericFileList(params)
 
-	data, _ := resp.RawResponseData()
-	fmt.Println(string(data))
+	//data, _ := resp.RawResponseData()
+	//fmt.Println(string(data))
 
-	fmt.Println(objectID, pageNumber)
-	for _, gf := range resp.GenericFiles() {
-		fmt.Println(gf.IntellectualObjectID)
-	}
+	//fmt.Println(objectID, pageNumber)
+	//for _, gf := range resp.GenericFiles() {
+	//	fmt.Println(gf.IntellectualObjectID, gf.ID, gf.Identifier, len(gf.StorageRecords))
+	//}
 
 	return resp.GenericFiles(), resp.Error
 }

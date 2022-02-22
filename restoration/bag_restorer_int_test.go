@@ -1,4 +1,4 @@
-//  -- //go:build integration
+//go:build integration
 
 package restoration_test
 
@@ -112,22 +112,35 @@ func setup(t *testing.T, context *common.Context) {
 	bagRestorerSetupCompleted = true
 }
 
-func getRestorationObject(t *testing.T, objIdentifier string) *service.RestorationObject {
+func getRestorationObject(t *testing.T, itemIdentifier, itemType string) *service.RestorationObject {
 	profile := constants.DefaultProfileIdentifier
-	if objIdentifier == btrObject {
+	if itemIdentifier == btrObject {
 		profile = constants.BTRProfileIdentifier
 	}
 
-	resp := common.NewContext().RegistryClient.IntellectualObjectByIdentifier(objIdentifier)
-	obj := resp.IntellectualObject()
-	assert.Nil(t, resp.Error)
-	assert.NotNil(t, obj)
+	var itemID int64
+	var itemSize int64
+	if itemType == constants.RestorationTypeObject {
+		resp := common.NewContext().RegistryClient.IntellectualObjectByIdentifier(itemIdentifier)
+		obj := resp.IntellectualObject()
+		assert.Nil(t, resp.Error)
+		assert.NotNil(t, obj)
+		itemID = obj.ID
+		itemSize = obj.Size
+	} else {
+		resp := common.NewContext().RegistryClient.GenericFileByIdentifier(itemIdentifier)
+		gf := resp.GenericFile()
+		assert.Nil(t, resp.Error)
+		assert.NotNil(t, gf)
+		itemID = gf.ID
+		itemSize = gf.Size
+	}
 
 	return &service.RestorationObject{
-		Identifier:             objIdentifier,
-		ItemID:                 obj.ID,
+		Identifier:             itemIdentifier,
+		ItemID:                 itemID,
 		BagItProfileIdentifier: profile,
-		ObjectSize:             int64(78930000),
+		ObjectSize:             itemSize,
 		RestorationSource:      constants.RestorationSourceS3,
 		RestorationTarget:      "aptrust.restore.test.test.edu",
 		RestorationType:        constants.RestorationTypeObject,
@@ -139,7 +152,7 @@ func TestNewBagRestorer(t *testing.T) {
 	restorer := restoration.NewBagRestorer(
 		common.NewContext(),
 		item.WorkItemID,
-		getRestorationObject(t, item.ObjIdentifier))
+		getRestorationObject(t, item.ObjIdentifier, constants.RestorationTypeObject))
 	require.NotNil(t, restorer)
 	require.NotNil(t, restorer.Context)
 	assert.Equal(t, item.WorkItemID, restorer.WorkItemID)
@@ -150,7 +163,7 @@ func TestBagRestorer_Run(t *testing.T) {
 	context := common.NewContext()
 	setup(t, context)
 	for _, item := range itemsToRestore {
-		restObj := getRestorationObject(t, item.ObjIdentifier)
+		restObj := getRestorationObject(t, item.ObjIdentifier, constants.RestorationTypeObject)
 		restorer := restoration.NewBagRestorer(context, item.WorkItemID, restObj)
 		fileCount, errors := restorer.Run()
 		assert.True(t, fileCount >= 3, fileCount)
@@ -188,6 +201,7 @@ func testRestoredBag(t *testing.T, context *common.Context, item RestorationItem
 	// Validate the bag
 	v := ingest.NewMetadataValidator(context, item.WorkItemID, ingestObj)
 	fileCount, errors = v.Run()
+	assert.Equal(t, len(expectedFiles), fileCount)
 	assert.Empty(t, errors)
 
 	// Do a sanity check on the files. Although the bag may be valid,

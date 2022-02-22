@@ -27,7 +27,7 @@ func TestNewFileRestorer(t *testing.T) {
 	restorer := restoration.NewBagRestorer(
 		common.NewContext(),
 		gfWorkItemID,
-		getRestorationObject(t, gfIdentifier))
+		getRestorationObject(t, gfIdentifier, constants.RestorationTypeFile))
 	require.NotNil(t, restorer)
 	require.NotNil(t, restorer.Context)
 	assert.Equal(t, gfWorkItemID, restorer.WorkItemID)
@@ -37,7 +37,7 @@ func TestNewFileRestorer(t *testing.T) {
 func TestFileRestorer_Run(t *testing.T) {
 	context := common.NewContext()
 	setup(t, context) // setup is defined in bag_restorer_int_test.go
-	restObj := getRestorationObject(t, gfIdentifier)
+	restObj := getRestorationObject(t, gfIdentifier, constants.RestorationTypeFile)
 	restorer := restoration.NewFileRestorer(context, gfWorkItemID, restObj)
 	fileCount, errors := restorer.Run()
 	assert.Equal(t, 1, fileCount)
