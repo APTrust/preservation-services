@@ -465,7 +465,6 @@ func testUpdatedFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, gf
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
 	params.Add("generic_file_id", strconv.FormatInt(gf.ID, 10))
-	//params.Add("date_time__gteq", timestamp.Format(time.RFC3339Nano))
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 
@@ -498,20 +497,30 @@ func testUpdatedFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, gf
 
 	changedFile := getChangedFileRecord(gf.Identifier)
 
-	// md5, sha1, sha256, sha512
-	assert.Equal(t, 4, eventTypes[constants.EventDigestCalculation], gf.Identifier)
-
-	// 1) semantic identifier assignment, 2) URL identifier assignment
-	// But if this is a reingest of an existing file, no new IDs were
-	// assigned, so there will be zero no identifier assignment events.
+	// There should be a total of two identifier assignment events:
+	// 1) semantic identifier assignment, 2) URL identifier assignment.
+	// We do not assign new identifiers on reingest. We keep the same ones,
+	// so there should be exactly two identifier assignment events after both
+	// initial ingest and reingest.
 	if changedFile.IsReingest {
-		assert.Equal(t, 0, eventTypes[constants.EventIdentifierAssignment], gf.Identifier)
+		assert.Equal(t, 2, eventTypes[constants.EventIdentifierAssignment], gf.Identifier)
+		// reingest should have two ingest events
+		assert.Equal(t, 2, eventTypes[constants.EventIngestion], gf.Identifier)
+		// (md5, sha1, sha256, sha512) x 2
+		// because the file changed on reingest and has new checksums.
+		// The registry keeps current and all historical checksums.
+		assert.Equal(t, 8, eventTypes[constants.EventDigestCalculation], gf.Identifier)
+		// Replication events from two ingests
+		assert.Equal(t, 2, eventTypes[constants.EventReplication], gf.Identifier)
 	} else {
 		assert.Equal(t, 2, eventTypes[constants.EventIdentifierAssignment], gf.Identifier)
+		// if not reingest, there should be just one ingest event
+		assert.Equal(t, 1, eventTypes[constants.EventIngestion], gf.Identifier)
+		// (md5, sha1, sha256, sha512) x 1
+		assert.Equal(t, 4, eventTypes[constants.EventDigestCalculation], gf.Identifier)
+		// replication event from one ingest
+		assert.Equal(t, 1, eventTypes[constants.EventReplication], gf.Identifier)
 	}
-
-	assert.Equal(t, 1, eventTypes[constants.EventIngestion], gf.Identifier)
-	assert.Equal(t, 1, eventTypes[constants.EventReplication], gf.Identifier)
 }
 
 func testUpdatedChecksumsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
