@@ -1,10 +1,10 @@
-//go:build e2e
-// +build e2e
+// -- go:build e2e
 
 package e2e_test
 
 import (
 	s3ctx "context"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
@@ -53,7 +53,7 @@ func testS3File(storageRecord *registry.StorageRecord, gf *registry.GenericFile)
 	assert.Equal(ctx.T, gf.InstitutionIdentifier(), objInfo.UserMetadata["Institution"])
 	assert.Equal(ctx.T, gf.IntellectualObjectIdentifier, objInfo.UserMetadata["Bag"])
 	pathInBag, err := gf.PathInBag()
-	require.Nil(t, err)
+	require.Nil(ctx.T, err)
 	assert.Equal(ctx.T, pathInBag, objInfo.UserMetadata["Bagpath"])
 	assert.Equal(ctx.T, md5.Digest, objInfo.UserMetadata["Md5"])
 	assert.Equal(ctx.T, sha256.Digest, objInfo.UserMetadata["Sha256"])

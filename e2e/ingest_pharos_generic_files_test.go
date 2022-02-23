@@ -1,5 +1,4 @@
-//go:build e2e
-// +build e2e
+// -- go:build e2e
 
 package e2e_test
 
@@ -51,10 +50,15 @@ func getGenericFiles() []*registry.GenericFile {
 
 func testFileAttributes(registryFile, expectedFile *registry.GenericFile) {
 	t := ctx.T
-	assert.Equal(t, registryFile.Identifier, expectedFile.Identifier, expectedFile.Identifier)
-	assert.Equal(t, registryFile.FileFormat, expectedFile.FileFormat, expectedFile.Identifier)
-	assert.Equal(t, registryFile.IntellectualObjectIdentifier, expectedFile.IntellectualObjectIdentifier, expectedFile.Identifier)
-	assert.Equal(t, registryFile.Size, expectedFile.Size, expectedFile.Identifier)
-	assert.Equal(t, registryFile.State, expectedFile.State, expectedFile.Identifier)
-	assert.Equal(t, registryFile.StorageOption, expectedFile.StorageOption, expectedFile.Identifier)
+	expectedObjIdentifier, err := expectedFile.IntellectualObjectIdentifier()
+	require.Nil(t, err)
+	actualObjIdentifier, err := registryFile.IntellectualObjectIdentifier()
+	require.Nil(t, err)
+
+	assert.Equal(t, expectedFile.Identifier, registryFile.Identifier, registryFile.Identifier)
+	assert.Equal(t, expectedFile.FileFormat, registryFile.FileFormat, registryFile.Identifier)
+	assert.Equal(t, expectedObjIdentifier, actualObjIdentifier, registryFile.Identifier)
+	assert.Equal(t, expectedFile.Size, registryFile.Size, registryFile.Identifier)
+	assert.Equal(t, expectedFile.State, registryFile.State, registryFile.Identifier)
+	assert.Equal(t, expectedFile.StorageOption, registryFile.StorageOption, registryFile.Identifier)
 }

@@ -107,8 +107,18 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 	ingestFile.InstitutionID = scanner.IngestObject.InstitutionID
 	ingestFile.IntellectualObjectID = scanner.IngestObject.ID
 	ingestFile.Size = header.Size
-	ingestFile.StorageOption = scanner.IngestObject.StorageOption
 	ingestFile.UUID = uuid.New().String()
+
+	// Note: Setting ingestFile.StorageOption here is pointless because
+	// the scanner doesn't know the correct value for
+	// scanner.IngestObject.StorageOption until after it's parsed the
+	// aptrust-info.txt tag file (or bag-info.txt for BTR bags).
+	//
+	// Also note that if the bag is a reingest, the reingest checker
+	// may force the object's StorageOption to match that of the originally
+	// ingested version.
+	//
+	// As of Feb 2022, set ingestFile.StorageOption in the recorder.
 
 	ingestFile.FileFormat = constants.MimeTypeForExtension[filepath.Ext(pathInBag)]
 	if ingestFile.FileFormat == "" {

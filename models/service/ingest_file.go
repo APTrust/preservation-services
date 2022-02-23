@@ -33,9 +33,22 @@ type IngestFile struct {
 	RegistryURLs         []string                `json:"registry_urls"`
 	SavedToRegistryAt    time.Time               `json:"saved_to_registry_at,omitempty"`
 	Size                 int64                   `json:"size"`
-	StorageOption        string                  `json:"storage_option"`
-	StorageRecords       []*StorageRecord        `json:"storage_records"`
-	UUID                 string                  `json:"uuid"`
+
+	// StorageOption comes from the parent object, which gets from the
+	// Storage-Option tag or APTrust-Storage-Option tag in the bag. This
+	// property is set by the recorder, just before IngestFile is converted
+	// to GenericFile to be sent to the Registry.
+	//
+	// We wait to set this because 1) we don't know the requested storage
+	// option until we've parsed the bag's tag files, which often happens
+	// after we've created the IngestFile; and 2) for reingests, we may have
+	// to force the parent object's StorageOption to match that of the
+	// already-ingested version. (That prevents us having divergent versions
+	// in different preservation buckets. This is publicly documented in the
+	// "Note" at https://aptrust.github.io/userguide/bagging/#allowed-storage-option-values)
+	StorageOption  string           `json:"storage_option"`
+	StorageRecords []*StorageRecord `json:"storage_records"`
+	UUID           string           `json:"uuid"`
 }
 
 func NewIngestFile(objIdentifier, pathInBag string) *IngestFile {

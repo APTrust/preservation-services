@@ -202,6 +202,7 @@ func (r *Recorder) prepareFilesForSave(fileMap map[string]*service.IngestFile, b
 func (r *Recorder) saveBatch(ingestFiles []*service.IngestFile) (fileCount int, errors []*service.ProcessingError) {
 	genericFiles := make([]*registry.GenericFile, len(ingestFiles))
 	for i, ingestFile := range ingestFiles {
+		ingestFile.StorageOption = r.IngestObject.StorageOption
 		genericFile, err := ingestFile.ToGenericFile()
 		if err != nil {
 			errors = append(errors, r.Error(ingestFile.Identifier(), err, false))
@@ -225,6 +226,7 @@ func (r *Recorder) saveBatch(ingestFiles []*service.IngestFile) (fileCount int, 
 // of requests to Registry. One request per file.
 func (r *Recorder) updateBatch(ingestFiles []*service.IngestFile) (fileCount int, errors []*service.ProcessingError) {
 	for _, ingestFile := range ingestFiles {
+		ingestFile.StorageOption = r.IngestObject.StorageOption
 		gf, err := ingestFile.ToGenericFile()
 		if err != nil {
 			errors = append(errors, r.Error(ingestFile.Identifier(), err, true))

@@ -1,5 +1,4 @@
-//go:build e2e
-// +build e2e
+// -- go:build e2e
 
 package e2e_test
 
@@ -17,7 +16,7 @@ func testWorkItemsAfterIngest() {
 	t := ctx.T
 	params := url.Values{}
 	params.Set("action", constants.ActionIngest)
-	params.Set("institution_id", strconv.Itoa(ctx.TestInstitution.ID))
+	params.Set("institution_id", strconv.FormatInt(ctx.TestInstitution.ID, 10))
 	resp := ctx.Context.RegistryClient.WorkItemList(params)
 	require.Nil(t, resp.Error)
 	registryItems := resp.WorkItems()
@@ -33,7 +32,7 @@ func testWorkItemsAfterIngest() {
 		assert.Equal(t, constants.StatusSuccess, item.Status)
 		assert.Equal(t, "Ingest complete", item.Outcome)
 		assert.False(t, item.BagDate.IsZero())
-		assert.False(t, item.Date.IsZero())
+		assert.False(t, item.DateProcessed.IsZero())
 		assert.False(t, item.QueuedAt.IsZero())
 		assert.NotEmpty(t, item.ObjectIdentifier)
 		assert.Empty(t, item.GenericFileIdentifier)

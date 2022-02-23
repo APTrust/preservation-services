@@ -6,7 +6,7 @@
 	"alt_identifier": "",
 	"access": "institution",
 	"bag_name": "test.edu.wasabi-va",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:39:20.658-04:00",
 	"updated_at": "2020-09-28T10:39:20.658-04:00",
 	"state": "A",
@@ -18,7 +18,7 @@
 	"internal_sender_identifier": "",
 	"internal_sender_description": "",
 	"file_count": 6,
-	"file_size": 140207,
+	"size": 140207,
 	"institution": "test.edu"
 	}, {
 	"id": 889911827,
@@ -28,7 +28,7 @@
 	"alt_identifier": "",
 	"access": "institution",
 	"bag_name": "test.edu.wasabi-or",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:39:19.150-04:00",
 	"updated_at": "2020-09-28T10:39:19.150-04:00",
 	"state": "A",
@@ -40,7 +40,7 @@
 	"internal_sender_identifier": "",
 	"internal_sender_description": "",
 	"file_count": 6,
-	"file_size": 140203,
+	"size": 140203,
 	"institution": "test.edu"
 	}, {
 	"id": 889911826,
@@ -50,7 +50,7 @@
 	"alt_identifier": "",
 	"access": "institution",
 	"bag_name": "test.edu.standard-storage",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:39:16.666-04:00",
 	"updated_at": "2020-09-28T10:39:16.666-04:00",
 	"state": "A",
@@ -62,7 +62,7 @@
 	"internal_sender_identifier": "",
 	"internal_sender_description": "",
 	"file_count": 6,
-	"file_size": 140208,
+	"size": 140208,
 	"institution": "test.edu"
 	}, {
 	"id": 889911825,
@@ -72,7 +72,7 @@
 	"alt_identifier": "",
 	"access": "institution",
 	"bag_name": "test.edu.glacier-va",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:39:14.655-04:00",
 	"updated_at": "2020-09-28T10:39:14.655-04:00",
 	"state": "A",
@@ -84,7 +84,7 @@
 	"internal_sender_identifier": "",
 	"internal_sender_description": "",
 	"file_count": 6,
-	"file_size": 140210,
+	"size": 140210,
 	"institution": "test.edu"
 	}, {
 	"id": 889911824,
@@ -94,7 +94,7 @@
 	"alt_identifier": "",
 	"access": "institution",
 	"bag_name": "test.edu.glacier-or",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:39:11.247-04:00",
 	"updated_at": "2020-09-28T10:39:11.247-04:00",
 	"state": "A",
@@ -106,7 +106,7 @@
 	"internal_sender_identifier": "",
 	"internal_sender_description": "",
 	"file_count": 6,
-	"file_size": 140206,
+	"size": 140206,
 	"institution": "test.edu"
 	}, {
 	"id": 889911823,
@@ -116,7 +116,7 @@
 	"alt_identifier": "",
 	"access": "institution",
 	"bag_name": "test.edu.glacier-oh",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:39:08.320-04:00",
 	"updated_at": "2020-09-28T10:39:08.320-04:00",
 	"state": "A",
@@ -128,7 +128,7 @@
 	"internal_sender_identifier": "",
 	"internal_sender_description": "",
 	"file_count": 6,
-	"file_size": 140202,
+	"size": 140202,
 	"institution": "test.edu"
 	}, {
 	"id": 889911822,
@@ -138,7 +138,7 @@
 	"alt_identifier": "",
 	"access": "institution",
 	"bag_name": "test.edu.glacier-deep-va",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:39:05.221-04:00",
 	"updated_at": "2020-09-28T10:39:05.221-04:00",
 	"state": "A",
@@ -150,7 +150,7 @@
 	"internal_sender_identifier": "",
 	"internal_sender_description": "",
 	"file_count": 6,
-	"file_size": 140225,
+	"size": 140225,
 	"institution": "test.edu"
 	}, {
 	"id": 889911821,
@@ -160,7 +160,7 @@
 	"alt_identifier": "",
 	"access": "institution",
 	"bag_name": "test.edu.glacier-deep-or",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:39:01.829-04:00",
 	"updated_at": "2020-09-28T10:39:01.829-04:00",
 	"state": "A",
@@ -172,7 +172,7 @@
 	"internal_sender_identifier": "",
 	"internal_sender_description": "",
 	"file_count": 6,
-	"file_size": 140221,
+	"size": 140221,
 	"institution": "test.edu"
 	}, {
 	"id": 889911820,
@@ -182,7 +182,7 @@
 	"alt_identifier": "",
 	"access": "institution",
 	"bag_name": "test.edu.glacier-deep-oh",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:38:58.006-04:00",
 	"updated_at": "2020-09-28T10:38:58.006-04:00",
 	"state": "A",
@@ -194,7 +194,7 @@
 	"internal_sender_identifier": "",
 	"internal_sender_description": "",
 	"file_count": 6,
-	"file_size": 140217,
+	"size": 140217,
 	"institution": "test.edu"
 	}, {
 	"id": 889911819,
@@ -204,7 +204,7 @@
 	"alt_identifier": "internal-512",
 	"access": "institution",
 	"bag_name": "test.edu.btr_good_sha512",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:38:55.017-04:00",
 	"updated_at": "2020-09-28T10:38:55.017-04:00",
 	"state": "A",
@@ -216,7 +216,7 @@
 	"internal_sender_identifier": "internal-512",
 	"internal_sender_description": "This is the internal description. Valid bag using sha-512 manifests.",
 	"file_count": 7,
-	"file_size": 19066,
+	"size": 19066,
 	"institution": "test.edu"
 	}, {
 	"id": 889911818,
@@ -226,7 +226,7 @@
 	"alt_identifier": "internal-256",
 	"access": "institution",
 	"bag_name": "test.edu.btr_good_sha256",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:38:49.668-04:00",
 	"updated_at": "2020-09-28T10:38:49.668-04:00",
 	"state": "A",
@@ -238,7 +238,7 @@
 	"internal_sender_identifier": "internal-256",
 	"internal_sender_description": "This is the internal description. Valid BTR sample bag using sha256 manifests.",
 	"file_count": 7,
-	"file_size": 19086,
+	"size": 19086,
 	"institution": "test.edu"
 	}, {
 	"id": 889911817,
@@ -248,7 +248,7 @@
 	"alt_identifier": "",
 	"access": "institution",
 	"bag_name": "test.edu.btr-wasabi-or",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:38:46.546-04:00",
 	"updated_at": "2020-09-28T10:38:46.546-04:00",
 	"state": "A",
@@ -260,7 +260,7 @@
 	"internal_sender_identifier": "",
 	"internal_sender_description": "",
 	"file_count": 5,
-	"file_size": 140494,
+	"size": 140494,
 	"institution": "test.edu"
 	}, {
 	"id": 889911816,
@@ -270,7 +270,7 @@
 	"alt_identifier": "",
 	"access": "institution",
 	"bag_name": "test.edu.btr-glacier-deep-oh",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:38:39.794-04:00",
 	"updated_at": "2020-09-28T10:38:39.794-04:00",
 	"state": "A",
@@ -282,7 +282,7 @@
 	"internal_sender_identifier": "",
 	"internal_sender_description": "",
 	"file_count": 5,
-	"file_size": 140492,
+	"size": 140492,
 	"institution": "test.edu"
 	}, {
 	"id": 889911815,
@@ -292,7 +292,7 @@
 	"alt_identifier": "btr-2-internal",
 	"access": "institution",
 	"bag_name": "test.edu.btr-002",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:38:34.818-04:00",
 	"updated_at": "2020-09-28T10:42:20.877-04:00",
 	"state": "A",
@@ -304,7 +304,7 @@
 	"internal_sender_identifier": "btr-2-internal",
 	"internal_sender_description": "BTR test bag #2 (internal)",
 	"file_count": 16,
-	"file_size": 1844743,
+	"size": 1844743,
 	"institution": "test.edu"
 	}, {
 	"id": 889911814,
@@ -314,7 +314,7 @@
 	"alt_identifier": "btr-1-internal",
 	"access": "institution",
 	"bag_name": "test.edu.btr-001",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:38:27.703-04:00",
 	"updated_at": "2020-09-28T10:42:20.005-04:00",
 	"state": "A",
@@ -326,7 +326,7 @@
 	"internal_sender_identifier": "btr-1-internal",
 	"internal_sender_description": "BTR test bag #1 (internal - updated)",
 	"file_count": 16,
-	"file_size": 1844773,
+	"size": 1844773,
 	"institution": "test.edu"
 	}, {
 	"id": 889911813,
@@ -336,7 +336,7 @@
 	"alt_identifier": "bag-002-updated",
 	"access": "institution",
 	"bag_name": "test.edu.apt-002",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:38:23.968-04:00",
 	"updated_at": "2020-09-28T10:42:10.287-04:00",
 	"state": "A",
@@ -348,7 +348,7 @@
 	"internal_sender_identifier": "bag-002-updated",
 	"internal_sender_description": "Updated APTrust bag 002 - updated",
 	"file_count": 17,
-	"file_size": 1844596,
+	"size": 1844596,
 	"institution": "test.edu"
 	}, {
 	"id": 889911829,
@@ -358,7 +358,7 @@
 	"alt_identifier": "bag-001-updated",
 	"access": "institution",
 	"bag_name": "test.edu.apt-001",
-	"institution_id": 857748577,
+	"institution_id": 4,
 	"created_at": "2020-09-28T10:41:35.943-04:00",
 	"updated_at": "2020-09-28T10:42:08.834-04:00",
 	"state": "A",
@@ -370,6 +370,6 @@
 	"internal_sender_identifier": "bag-001-updated",
 	"internal_sender_description": "Updated APTrust bag 001 - updated",
 	"file_count": 17,
-	"file_size": 1844596,
+	"size": 1844596,
 	"institution": "test.edu"
 }]

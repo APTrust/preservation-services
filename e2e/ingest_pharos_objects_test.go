@@ -1,5 +1,4 @@
-//go:build e2e
-// +build e2e
+// -- go:build e2e
 
 package e2e_test
 
@@ -41,6 +40,6 @@ func testObjAgainstExpected(RegistryObj, expectedObj *registry.IntellectualObjec
 	assert.Equal(t, RegistryObj.InternalSenderIdentifier, expectedObj.InternalSenderIdentifier, expectedObj.Identifier)
 	assert.Equal(t, RegistryObj.InternalSenderDescription, expectedObj.InternalSenderDescription, expectedObj.Identifier)
 	assert.Equal(t, RegistryObj.FileCount, expectedObj.FileCount, expectedObj.Identifier)
-	assert.Equal(t, RegistryObj.FileSize, expectedObj.FileSize, expectedObj.Identifier)
-	assert.Equal(t, RegistryObj.Institution, expectedObj.Institution, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.Size, expectedObj.Size, expectedObj.Identifier)
+	assert.Equal(t, RegistryObj.InstitutionID, expectedObj.InstitutionID, expectedObj.Identifier)
 }
