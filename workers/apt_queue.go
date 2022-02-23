@@ -83,7 +83,7 @@ func (q *APTQueue) addToNSQ(workItem *registry.WorkItem) bool {
 
 	topic, err := constants.TopicFor(workItem.Action, workItem.Stage, workItem.GenericFileIdentifier)
 	if err != nil {
-		q.Context.Logger.Error(
+		q.Context.Logger.Errorf(
 			"Unknown topic for WorkItem %d - %s (%s/%s/%s)",
 			workItem.ID, identifier, workItem.Action,
 			workItem.Stage, workItem.Status)
@@ -91,7 +91,7 @@ func (q *APTQueue) addToNSQ(workItem *registry.WorkItem) bool {
 	}
 	err = q.Context.NSQClient.Enqueue(topic, workItem.ID)
 	if err != nil {
-		q.Context.Logger.Error("Error sending WorkItem %d %s (%s/%s/%s) - to %s: %v",
+		q.Context.Logger.Errorf("Error sending WorkItem %d %s (%s/%s/%s) - to %s: %v",
 			workItem.ID, identifier, workItem.Action,
 			workItem.Stage, workItem.Status, topic, err)
 		return false
