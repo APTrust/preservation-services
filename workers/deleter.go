@@ -36,7 +36,7 @@ func NewDeleter(bufSize, numWorkers, maxAttempts int) *Deleter {
 		Base: Base{
 			Context:           _context,
 			Settings:          settings,
-			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize),
+			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize * settings.NumberOfWorkers),
 			ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			ErrorChannel:      make(chan *Task, settings.ChannelBufferSize),

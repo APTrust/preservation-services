@@ -336,7 +336,7 @@ func (b *Base) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
 // message to that effect if the WorkItem's Retry flag is false. It returns
 // the value of WorkItem.Retry.
 func (b *Base) ShouldRetry(workItem *registry.WorkItem) bool {
-	if workItem.Retry == false {
+	if !workItem.Retry {
 		message := fmt.Sprintf("Rejecting WorkItem %d because retry = false", workItem.ID)
 		workItem.MarkNoLongerInProgress(
 			workItem.Stage,

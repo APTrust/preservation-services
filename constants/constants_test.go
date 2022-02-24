@@ -71,13 +71,13 @@ var items = []Item{
 		Expected:       constants.TopicFixity,
 	},
 	Item{
-		Action:         constants.ActionRestore,
+		Action:         constants.ActionRestoreObject,
 		Stage:          "",
 		FileIdentifier: "",
 		Expected:       constants.TopicObjectRestore,
 	},
 	Item{
-		Action:         constants.ActionRestore,
+		Action:         constants.ActionRestoreFile,
 		Stage:          "",
 		FileIdentifier: "test.edu/bag/data/file.txt",
 		Expected:       constants.TopicFileRestore,

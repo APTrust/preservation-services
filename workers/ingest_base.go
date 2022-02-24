@@ -28,7 +28,7 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 		Base: Base{
 			Context:              context,
 			Settings:             settings,
-			ItemsInProcess:       service.NewRingList(settings.ChannelBufferSize),
+			ItemsInProcess:       service.NewRingList(settings.ChannelBufferSize * settings.NumberOfWorkers),
 			ProcessChannel:       make(chan *Task, settings.ChannelBufferSize),
 			SuccessChannel:       make(chan *Task, settings.ChannelBufferSize),
 			ErrorChannel:         make(chan *Task, settings.ChannelBufferSize),
@@ -85,11 +85,20 @@ func (b *IngestBase) ProcessSuccessChannel() {
 				b.Context.Logger.Infof("WorkItem %d (%s): Cleaned up cancelled item. Leaving status as Cancelled.",
 					task.WorkItem.ID, task.WorkItem.Name)
 				task.WorkItem.Status = constants.StatusCancelled
+				task.WorkItem.Outcome = "Ingest cancelled"
 			} else {
 				task.WorkItem.Status = constants.StatusSuccess
+				task.WorkItem.Outcome = "Ingest complete"
+				// We shouldn't have to set this, but somehow the cleanup worker
+				// keeps picking up completed items. We need to find the root of that.
+				task.WorkItem.Retry = false
+				task.WorkItem.IntellectualObjectID = task.Processor.IngestObjectGet().ID
+				// TEMP
+				if task.WorkItem.IntellectualObjectID == 0 {
+					panic("ID SHOULD NOT BE ZERO!")
+				}
+				// END TEMP
 			}
-			task.WorkItem.Outcome = "Ingest complete"
-			task.WorkItem.ObjectIdentifier = task.Processor.IngestObjectGet().Identifier()
 		}
 
 		// Push item to next queue.
@@ -216,8 +225,26 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 	// It's possible that another worker recently marked this as
 	// "do not retry." If that's the case, skip it.
-	if b.ShouldRetry(workItem) == false {
+	if !b.ShouldRetry(workItem) {
 		return true
+	}
+
+	// DEBUG
+	//if workItem.Stage == constants.StageCleanup {
+	//	j, _ := json.Marshal(workItem)
+	//	b.Context.Logger.Infof("WORKITEM DEBUG: Completed: %t, JSON: %s", workItem.ProcessingHasCompleted(), string(j))
+	//}
+	// END DEBUG
+
+	// TEMP - Find the root of this issue and fix it.
+	// TODO - Find and fix the root of this issue.
+	if workItem.Stage == constants.StageCleanup {
+		ingestObject, err := b.IngestObjectGet(workItem)
+		if ingestObject == nil || err != nil {
+			message := fmt.Sprintf("Rejecting WorkItem %d because Redis has no IngestObject. Ingest may already be complete.", workItem.ID)
+			b.Context.Logger.Info(message)
+			return true
+		}
 	}
 
 	// Occasionally, NSQ will think an item has timed out because
@@ -339,7 +366,7 @@ func (b *IngestBase) FindNewerIngestRequest(workItem *registry.WorkItem) *regist
 func (b *IngestBase) StillIngestingOlderVersion(workItem *registry.WorkItem) bool {
 	items := b.FindOtherIngestRequests(workItem)
 	for _, item := range items {
-		if item.DateProcessed.Before(workItem.DateProcessed) && item.Retry && !item.ProcessingHasCompleted() {
+		if item.BagDate.Before(workItem.BagDate) && item.Retry && !item.ProcessingHasCompleted() {
 			message := fmt.Sprintf("Skipping WorkItem %d because a prior version of this bag is still being ingested in WorkItem %d.", workItem.ID, item.ID)
 			b.Context.Logger.Info(message)
 			workItem.MarkNoLongerInProgress(

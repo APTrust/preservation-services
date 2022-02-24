@@ -42,7 +42,7 @@ func NewGlacierRestorer(bufSize, numWorkers, maxAttempts int) *GlacierRestorer {
 		Base: Base{
 			Context:           _context,
 			Settings:          settings,
-			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize),
+			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize * settings.NumberOfWorkers),
 			ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			ErrorChannel:      make(chan *Task, settings.ChannelBufferSize),
@@ -221,23 +221,28 @@ func (r *GlacierRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 // saying the file or object is ready to go into the normal restoration process,
 // moving from S3 through packaging to the depositor's restoration bucket.
 func (r *GlacierRestorer) CreateRestorationWorkItem(task *Task) {
+	action := constants.ActionRestoreObject
+	if task.WorkItem.GenericFileID > 0 {
+		action = constants.ActionRestoreFile
+	}
 	newItem := &registry.WorkItem{
-		Action:                constants.ActionRestore,
-		BagDate:               task.WorkItem.BagDate,
-		Bucket:                task.WorkItem.Bucket,
-		DateProcessed:         task.WorkItem.DateProcessed,
-		ETag:                  task.WorkItem.ETag,
-		GenericFileIdentifier: task.WorkItem.GenericFileIdentifier,
-		InstitutionID:         task.WorkItem.InstitutionID,
-		Name:                  task.WorkItem.Name,
-		Note:                  "Moved from Glacier to S3, awaiting restoration",
-		ObjectIdentifier:      task.WorkItem.ObjectIdentifier,
-		Outcome:               "Moved from Glacier to S3, awaiting restoration",
-		Retry:                 true,
-		Size:                  task.WorkItem.Size,
-		Stage:                 constants.StageRequested,
-		Status:                constants.StatusPending,
-		User:                  task.WorkItem.User,
+		Action:               action,
+		BagDate:              task.WorkItem.BagDate,
+		Bucket:               task.WorkItem.Bucket,
+		DateProcessed:        task.WorkItem.DateProcessed,
+		ETag:                 task.WorkItem.ETag,
+		GenericFileID:        task.WorkItem.GenericFileID,
+		InstitutionID:        task.WorkItem.InstitutionID,
+		IntellectualObjectID: task.WorkItem.IntellectualObjectID,
+		Name:                 task.WorkItem.Name,
+		Note:                 "Moved from Glacier to S3, awaiting restoration",
+		ObjectIdentifier:     task.WorkItem.ObjectIdentifier,
+		Outcome:              "Moved from Glacier to S3, awaiting restoration",
+		Retry:                true,
+		Size:                 task.WorkItem.Size,
+		Stage:                constants.StageRequested,
+		Status:               constants.StatusPending,
+		User:                 task.WorkItem.User,
 	}
 	resp := r.Context.RegistryClient.WorkItemSave(newItem)
 	if resp.Error != nil {

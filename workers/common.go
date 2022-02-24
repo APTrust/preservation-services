@@ -116,6 +116,8 @@ func QueueE2EWorkItem(context *common.Context, topic string, workItemID int64) {
 		err := context.NSQClient.Enqueue(topic, workItemID)
 		if err != nil {
 			context.Logger.Errorf("E2E Queue Error %s/%d: %v", topic, workItemID, err)
+		} else {
+			context.Logger.Infof("Queued E2E item %s/%d", topic, workItemID)
 		}
 	}
 }
@@ -127,6 +129,8 @@ func QueueE2EIdentifier(context *common.Context, topic, identifier string) {
 		err := context.NSQClient.EnqueueString(topic, identifier)
 		if err != nil {
 			context.Logger.Errorf("E2E Queue Error %s/%d: %v", topic, identifier, err)
+		} else {
+			context.Logger.Infof("Queued E2E item %s/%d", topic, identifier)
 		}
 	}
 }

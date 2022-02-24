@@ -51,7 +51,9 @@ func testS3File(storageRecord *registry.StorageRecord, gf *registry.GenericFile)
 
 	// Note that Minio capitalizes our UserMetadata tags.
 	assert.Equal(ctx.T, gf.InstitutionIdentifier(), objInfo.UserMetadata["Institution"])
-	assert.Equal(ctx.T, gf.IntellectualObjectIdentifier, objInfo.UserMetadata["Bag"])
+	objIdentifier, err := gf.IntellectualObjectIdentifier()
+	require.Nil(ctx.T, err)
+	assert.Equal(ctx.T, objIdentifier, objInfo.UserMetadata["Bag"])
 	pathInBag, err := gf.PathInBag()
 	require.Nil(ctx.T, err)
 	assert.Equal(ctx.T, pathInBag, objInfo.UserMetadata["Bagpath"])

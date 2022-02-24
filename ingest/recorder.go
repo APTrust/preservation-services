@@ -233,12 +233,13 @@ func (r *Recorder) updateBatch(ingestFiles []*service.IngestFile) (fileCount int
 		}
 		resp := r.Context.RegistryClient.GenericFileSave(gf)
 		if resp.Error != nil {
-			// TODO: Registry should return 409 on StorageRecord.URL
+			// TODO: Pharos should return 409 on StorageRecord.URL
 			// conflict, and that should be a fatal error.
+			// Is this fixed in Registry?
 			errors = append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
 			// -------- DEBUG --------
-			jsonData, _ := gf.ToJSON()
-			r.Context.Logger.Error(string(jsonData))
+			// jsonData, _ := gf.ToJSON()
+			// r.Context.Logger.Error(string(jsonData))
 			// ------ END DEBUG ------
 		} else {
 			savedFile := resp.GenericFile()
@@ -292,7 +293,8 @@ func (r *Recorder) markFilesAsSaved(genericFiles []*registry.GenericFile, ingest
 // the proper ID on those files so we know to record them with a PUT/update
 // instead of a POST/create.
 //
-// Registry really should be returning 409 here, not 422.
+// Pharos really should be returning 409 here, not 422.
+// Is this fixed in Registry?
 //
 // https://trello.com/c/edO9DaqO/700-handle-422-identifier-already-in-use
 func (r *Recorder) hasDuplicateIdentityError(errors []*service.ProcessingError) bool {

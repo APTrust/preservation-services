@@ -276,12 +276,16 @@ func (r *BagRestorer) DeleteStaleManifests() error {
 // GetTarHeader returns a tar header for the specified GenericFile.
 func (r *BagRestorer) GetTarHeader(gf *registry.GenericFile) *tar.Header {
 	pathMinusInstitution, _ := gf.PathMinusInstitution()
+	modTime := gf.FileModified
+	if modTime.IsZero() {
+		modTime = time.Now().UTC()
+	}
 	return &tar.Header{
 		Name:     pathMinusInstitution,
 		Size:     gf.Size,
 		Typeflag: tar.TypeReg,
 		Mode:     int64(0755),
-		ModTime:  gf.FileModified,
+		ModTime:  modTime,
 	}
 }
 

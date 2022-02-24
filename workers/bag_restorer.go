@@ -35,7 +35,7 @@ func NewBagRestorer(bufSize, numWorkers, maxAttempts int) *BagRestorer {
 		Base: Base{
 			Context:           _context,
 			Settings:          settings,
-			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize),
+			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize * settings.NumberOfWorkers),
 			ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			ErrorChannel:      make(chan *Task, settings.ChannelBufferSize),
@@ -178,7 +178,7 @@ func (r *BagRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	}
 
 	// Make sure this is actually a restoration request
-	if HasWrongAction(r.Context, workItem, constants.ActionRestore) {
+	if HasWrongAction(r.Context, workItem, constants.ActionRestoreObject) {
 		return true
 	}
 

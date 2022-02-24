@@ -35,7 +35,7 @@ func NewFileRestorer(bufSize, numWorkers, maxAttempts int) *FileRestorer {
 		Base: Base{
 			Context:           _context,
 			Settings:          settings,
-			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize),
+			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize * settings.NumberOfWorkers),
 			ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			ErrorChannel:      make(chan *Task, settings.ChannelBufferSize),
@@ -179,7 +179,7 @@ func (r *FileRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	}
 
 	// Make sure this is actually a restoration request
-	if HasWrongAction(r.Context, workItem, constants.ActionRestore) {
+	if HasWrongAction(r.Context, workItem, constants.ActionRestoreFile) {
 		return true
 	}
 

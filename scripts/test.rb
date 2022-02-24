@@ -187,6 +187,7 @@ class TestRunner
     @all_services.each do |svc|
       start_service(svc)
     end
+    sleep(5)
     create_nsq_topics
   end
 

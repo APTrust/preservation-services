@@ -82,6 +82,12 @@ func validateBag(objIdentifier string) {
 	require.Nil(ctx.T, err, objIdentifier)
 	assert.True(ctx.T, len(ingestFiles) > 0, objIdentifier)
 
+	// DEBUG
+	for _, f := range ingestFiles {
+		fmt.Println(f.Identifier())
+	}
+	// END DEBUG
+
 	for _, gf := range registryFiles {
 
 		// Make sure file was restored with bag
