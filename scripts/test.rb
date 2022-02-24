@@ -231,9 +231,16 @@ class TestRunner
       "delete_object",
       "delete_file",
       "fixity_check",
+      "e2e_deletion_post_test",
+      "e2e_fixity_post_test",
+      "e2e_ingest_post_test",
+      "e2e_reingest_post_test",
+      "e2e_restoration_post_test"
     ]
     topics.each do |t|
+      channel = "#{t}_worker_chan"
       `curl -s -X POST http://127.0.0.1:4151/topic/create?topic=#{t}`
+      `curl -s -X POST http://127.0.0.1:4151/channel/create?topic=#{t}&channel=#{channel}`
     end
   end
 

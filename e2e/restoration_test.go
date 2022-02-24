@@ -20,7 +20,9 @@ import (
 )
 
 func testFileRestorations() {
+	ctx.Context.Logger.Infof("Starting test of %d restoration files", len(e2e.FilesToRestore))
 	for _, testFile := range e2e.FilesToRestore {
+		ctx.Context.Logger.Infof("Testing restoration file %s", testFile.Identifier)
 		objInfo, err := ctx.Context.S3StatObject(
 			constants.StorageProviderAWS,
 			ctx.TestInstitution.RestoreBucket,

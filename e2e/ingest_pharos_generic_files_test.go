@@ -1,4 +1,4 @@
-//go:build e2e
+//  -- go:build e2e
 
 package e2e_test
 
@@ -12,10 +12,13 @@ import (
 
 func testGenericFiles() {
 	t := ctx.T
+	ctx.Context.Logger.Info("Testing Registry files")
 	registryFiles := getGenericFiles()
+	ctx.Context.Logger.Infof("Got %d Registry files for testing", len(registryFiles))
 	for _, expectedFile := range ctx.ExpectedFiles {
 		registryFile := findFile(registryFiles, expectedFile.Identifier)
 		require.NotNil(t, registryFile, "Not in Registry: %s", expectedFile.Identifier)
+		ctx.Context.Logger.Infof("Testing Registry file %s", expectedFile.Identifier)
 		testGenericFile(registryFile, expectedFile)
 	}
 }

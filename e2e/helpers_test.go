@@ -68,6 +68,7 @@ func pushBagsToReceiving(testbags []*e2e.TestBag) {
 func waitForInitialIngestCompletion() {
 	for {
 		if initialIngestsComplete() {
+			ctx.Context.Logger.Infof("E2E: Initial ingests complete")
 			break
 		}
 		time.Sleep(10 * time.Second)
@@ -79,6 +80,7 @@ func waitForInitialIngestCompletion() {
 func waitForReingestCompletion() {
 	for {
 		if reingestsComplete() {
+			ctx.Context.Logger.Infof("E2E: Reingests complete")
 			break
 		}
 		time.Sleep(10 * time.Second)
@@ -88,6 +90,7 @@ func waitForReingestCompletion() {
 func waitForRestorationCompletion() {
 	for {
 		if restorationsComplete() {
+			ctx.Context.Logger.Infof("E2E: Restorations complete")
 			break
 		}
 		time.Sleep(10 * time.Second)
@@ -97,6 +100,7 @@ func waitForRestorationCompletion() {
 func waitForFixityCompletion() {
 	for {
 		if fixitiesComplete() {
+			ctx.Context.Logger.Infof("E2E: Fixities complete")
 			break
 		}
 		time.Sleep(10 * time.Second)
@@ -106,6 +110,7 @@ func waitForFixityCompletion() {
 func waitForDeletionCompletion() {
 	for {
 		if deletionsComplete() {
+			ctx.Context.Logger.Infof("E2E: Deletions complete")
 			break
 		}
 		time.Sleep(10 * time.Second)
@@ -183,7 +188,7 @@ func allItemsInTopic(topicName string, desiredCount int64) bool {
 		ctx.Context.Logger.Infof("Topic %s hasn't been created yet", topicName)
 	} else {
 		ctx.Context.Logger.Infof("Topic %s has depth %d. Want %d", topicName, topicStats.Depth, desiredCount)
-		allComplete = (topicStats.Depth == desiredCount)
+		allComplete = (topicStats.Depth >= desiredCount)
 	}
 	return allComplete
 }
@@ -213,8 +218,10 @@ func createRestorationWorkItems() (err error) {
 		objIdentifier := objIdentFromFileIdent(testFile.Identifier)
 		err = createRestorationWorkItem(objIdentifier, testFile.Identifier)
 		if err != nil {
+			ctx.Context.Logger.Errorf("Error creating restoration WorkItem for file %s: %v", testFile.Identifier, err)
 			return err
 		}
+		ctx.Context.Logger.Infof("Created restoration WorkItem for file %s", testFile.Identifier)
 	}
 
 	// create 2 APTrust and 2 BTR bag restorations
@@ -222,8 +229,10 @@ func createRestorationWorkItems() (err error) {
 	for _, objIdentifier := range e2e.BagsToRestore {
 		err = createRestorationWorkItem(objIdentifier, "")
 		if err != nil {
+			ctx.Context.Logger.Errorf("Error creating restoration WorkItem for object %s: %v", objIdentifier, err)
 			return err
 		}
+		ctx.Context.Logger.Infof("Created restoration WorkItem for object %s", objIdentifier)
 	}
 	return nil
 }
@@ -263,7 +272,7 @@ func getLastIngestRecord(objIdentifier string) (*registry.WorkItem, error) {
 	params.Set("action", constants.ActionIngest)
 	params.Set("stage", constants.StageCleanup)
 	params.Set("status", constants.StatusSuccess)
-	params.Set("sort", "date desc")
+	params.Set("sort", "date_processed__desc")
 	params.Set("page", "1")
 	params.Set("per_page", "1")
 	resp := ctx.Context.RegistryClient.WorkItemList(params)

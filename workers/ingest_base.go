@@ -223,7 +223,8 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	// Occasionally, NSQ will think an item has timed out because
 	// it took a long time to record. NSQ sends it to a new worker
 	// after the original worker has completed it.
-	if workItem.ProcessingHasCompleted() && workItem.Stage != constants.StageCleanup {
+	// if workItem.ProcessingHasCompleted() && workItem.Stage != constants.StageCleanup {
+	if workItem.ProcessingHasCompleted() {
 		message := fmt.Sprintf("Rejecting WorkItem %d because status is %s", workItem.ID, workItem.Status)
 		b.Context.Logger.Info(message)
 		return true
@@ -445,6 +446,7 @@ func (b *IngestBase) QueueE2E(task *Task) {
 		if task.Processor.IngestObjectGet().IsReingest {
 			e2eTopic = constants.TopicE2EReingest
 		}
+		b.Context.Logger.Infof("Pushing %s (%d) into e2e topic %s", task.WorkItem.Name, task.WorkItem.ID, e2eTopic)
 		QueueE2EWorkItem(b.Context, e2eTopic, task.WorkItem.ID)
 	}
 }

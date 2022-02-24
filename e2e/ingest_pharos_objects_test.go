@@ -11,7 +11,9 @@ import (
 // Make sure that all expected IntellectualObjects with expected
 // atributes are in Registry.
 func testRegistryObjects() {
+	ctx.Context.Logger.Info("Testing Registry objects")
 	for _, expectedObj := range ctx.ExpectedObjects {
+		ctx.Context.Logger.Infof("Testing Registry object %s", expectedObj.Identifier)
 		testObject(expectedObj)
 	}
 }
