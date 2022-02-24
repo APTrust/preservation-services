@@ -27,17 +27,7 @@ type GenericFile struct {
 	StorageOption        string           `json:"storage_option"`
 	StorageRecords       []*StorageRecord `json:"storage_records"`
 	UUID                 string           `json:"uuid"`
-
-	// Md5 is read-only, from Registry's GenericFileView
-	Md5 string `json:"md5"`
-	// Sha1 is read-only, from Registry's GenericFileView
-	Sha1 string `json:"sha1"`
-	// Sha256 is read-only, from Registry's GenericFileView
-	Sha256 string `json:"sha256"`
-	// Sha512 is read-only, from Registry's GenericFileView
-	Sha512 string `json:"sha512"`
-
-	UpdatedAt time.Time `json:"updated_at"`
+	UpdatedAt            time.Time        `json:"updated_at"`
 }
 
 // GenericFileFromJSON converts a JSON representation of a GenericFile

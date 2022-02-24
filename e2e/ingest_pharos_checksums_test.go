@@ -15,6 +15,7 @@ import (
 // and correct.
 func testChecksums(registryFile, expectedFile *registry.GenericFile) {
 	t := ctx.T
+	assert.NotEmpty(t, registryFile.Checksums)
 	for _, alg := range constants.SupportedManifestAlgorithms {
 		// Match latest digests
 		expected := expectedFile.GetLatestChecksum(alg)

@@ -1,6 +1,7 @@
 package restoration
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -43,16 +44,13 @@ func GetBatchOfFiles(context *common.Context, objectID int64, pageNumber int) (g
 	params.Set("per_page", strconv.Itoa(batchSize))
 	params.Set("sort", "identifier")
 	params.Set("state", "A")
-	params.Set("include_storage_records", "true")
 	resp := context.RegistryClient.GenericFileList(params)
 
-	//data, _ := resp.RawResponseData()
-	//fmt.Println(string(data))
-
-	//fmt.Println(objectID, pageNumber)
-	//for _, gf := range resp.GenericFiles() {
-	//	fmt.Println(gf.IntellectualObjectID, gf.ID, gf.Identifier, len(gf.StorageRecords))
-	//}
+	// DEBUG
+	fmt.Println("IntellectualObjectID", objectID)
+	j, _ := json.Marshal(resp.GenericFiles())
+	fmt.Println(string(j))
+	// END DEBUG
 
 	return resp.GenericFiles(), resp.Error
 }

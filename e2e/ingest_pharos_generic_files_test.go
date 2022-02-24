@@ -4,6 +4,7 @@ package e2e_test
 
 import (
 	"net/url"
+	"strconv"
 
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/stretchr/testify/assert"
@@ -41,22 +42,23 @@ func findFile(files []*registry.GenericFile, identifier string) *registry.Generi
 
 func getGenericFiles() []*registry.GenericFile {
 	params := url.Values{}
-	params.Set("institution_identifier", ctx.TestInstitution.Identifier)
+	params.Set("institution_id", strconv.FormatInt(ctx.TestInstitution.ID, 10))
 	params.Set("page", "1")
 	params.Set("per_page", "200")
 	resp := ctx.Context.RegistryClient.GenericFileList(params)
 	require.Nil(ctx.T, resp.Error)
-
+	return resp.GenericFiles()
+	// THIS SHOULD BE WORKING NOW
 	// TODO: Registry Index endpoint doesn't return relations.
 	//       We need to fetch the full file objects, with
 	//       storage records, checksums, and events.
-	files := make([]*registry.GenericFile, len(resp.GenericFiles()))
-	for i, gf := range resp.GenericFiles() {
-		resp = ctx.Context.RegistryClient.GenericFileByID(gf.ID)
-		assert.Nil(ctx.T, resp.Error)
-		files[i] = resp.GenericFile()
-	}
-	return files
+	//files := make([]*registry.GenericFile, len(resp.GenericFiles()))
+	//for i, gf := range resp.GenericFiles() {
+	//	resp = ctx.Context.RegistryClient.GenericFileByID(gf.ID)
+	//	assert.Nil(ctx.T, resp.Error)
+	//	files[i] = resp.GenericFile()
+	//}
+	//return files
 }
 
 func testFileAttributes(registryFile, expectedFile *registry.GenericFile) {

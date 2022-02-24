@@ -383,7 +383,6 @@ func (r *Recorder) recheckObjectEvents() {
 func (r *Recorder) recheckRegistryFiles() (errors []*service.ProcessingError) {
 	params := url.Values{}
 	params.Set("intellectual_object_identifier", r.IngestObject.Identifier())
-	params.Set("include_events", "true")
 	params.Set("page", "1")
 	params.Set("per_page", "200")
 	for {

@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -73,7 +74,7 @@ func testWorkItemAfterRestore(objIdentifier, gfIdentifier string) {
 // and contains all the expected files.
 func validateBag(objIdentifier string) {
 	intelObj := getObject(objIdentifier)
-	registryFiles := getregistryFiles(objIdentifier)
+	registryFiles := getregistryFiles(intelObj)
 	tarFileName := strings.Split(objIdentifier, "/")[1] + ".tar"
 	pathToBag := path.Join(ctx.Context.Config.BaseWorkingDir, "minio", "aptrust.restore.test.test.edu", "test.edu", tarFileName)
 
@@ -83,8 +84,15 @@ func validateBag(objIdentifier string) {
 	assert.True(ctx.T, len(ingestFiles) > 0, objIdentifier)
 
 	// DEBUG
+	fmt.Println("ObjIdentifier:", objIdentifier)
+	fmt.Println("PathToBag:", pathToBag)
+	fmt.Println("Ingest files -> ")
 	for _, f := range ingestFiles {
-		fmt.Println(f.Identifier())
+		fmt.Println("    ", f.Identifier())
+	}
+	fmt.Println("Registry files -> ")
+	for _, f := range registryFiles {
+		fmt.Println("    ", f.Identifier)
 	}
 	// END DEBUG
 
@@ -113,15 +121,13 @@ func getObject(objIdentifier string) *registry.IntellectualObject {
 }
 
 // Get a list of files belonging to this object from Registry
-func getregistryFiles(objIdentifier string) []*registry.GenericFile {
+func getregistryFiles(obj *registry.IntellectualObject) []*registry.GenericFile {
 	params := url.Values{}
-	params.Set("intellectual_object_identifier", objIdentifier)
-	params.Set("include_relations", "true")
-	params.Set("include_storage_records", "true")
+	params.Set("intellectual_object_id", strconv.FormatInt(obj.ID, 10))
 	params.Set("page", "1")
 	params.Set("per_page", "200")
 	resp := ctx.Context.RegistryClient.GenericFileList(params)
-	require.Nil(ctx.T, resp.Error, objIdentifier)
+	require.Nil(ctx.T, resp.Error, obj.Identifier)
 	require.NotEmpty(ctx.T, resp.GenericFiles())
 	return resp.GenericFiles()
 }
