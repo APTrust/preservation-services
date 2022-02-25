@@ -305,7 +305,7 @@ func TestRegistryGenericFileSave_Create(t *testing.T) {
 	client := GetRegistryClient(t)
 
 	v := url.Values{}
-	v.Add("sord", "identifier__asc")
+	v.Add("sort", "identifier__asc")
 	v.Add("per_page", "1")
 	resp := client.IntellectualObjectList(v)
 	require.Nil(t, resp.Error)
@@ -340,7 +340,6 @@ func TestRegistryGenericFileSave_Update(t *testing.T) {
 	v := url.Values{}
 	v.Add("sort", "identifier__asc")
 	v.Add("per_page", "4")
-	v.Add("institution_identifier", "aptrust.org")
 	resp := client.GenericFileList(v)
 	assert.NotNil(t, resp)
 	require.Nil(t, resp.Error)

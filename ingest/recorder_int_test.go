@@ -348,9 +348,6 @@ func testUpdatedObjectInRegistry(t *testing.T, recorder *ingest.Recorder) {
 	assert.Equal(t, intelObj.StorageOption, constants.StorageClassStandard)
 	assert.Equal(t, "APTrust Bag 001 (updated)", intelObj.Title)
 
-	// This should have changed
-	// j, _ := json.MarshalIndent(intelObj, "", "  ")
-	// fmt.Println(string(j))
 	assert.True(t, intelObj.UpdatedAt.After(intelObj.CreatedAt))
 
 	testUpdatedObjectEventsInRegistry(t, recorder, intelObj.UpdatedAt)
@@ -364,16 +361,11 @@ func testUpdatedObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder, 
 	params := url.Values{}
 	params.Add("intellectual_object_id", strconv.FormatInt(recorder.IngestObject.ID, 10))
 	params.Add("generic_file_id__is_null", "true")
-	params.Add("created_at__gteq", timestamp.Format(time.RFC3339Nano)) //.Add(-500*time.Millisecond).Format(time.RFC3339))
+	//params.Add("date_time__gteq", timestamp.Format(time.RFC3339Nano))
 	params.Add("per_page", "300")
 	params.Add("page", "1")
 
 	resp := client.PremisEventList(params)
-
-	// DEBUG
-	//data, _ := resp.RawResponseData()
-	//fmt.Println("PremisEventList:", string(data))
-	// END DEBUG
 
 	require.Nil(t, resp.Error)
 	events := resp.PremisEvents()
