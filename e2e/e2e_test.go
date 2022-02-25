@@ -33,9 +33,7 @@ func TestEndToEnd(t *testing.T) {
 	testIngest()
 	testRestoration()
 	testFixityChecks()
-
-	// Can't automate deletion tests.
-	// testDeletions()
+	testDeletions()
 }
 
 func testIngest() {
@@ -76,9 +74,9 @@ func testFixityChecks() {
 // later, but it's a substantial amount of work, and
 // we already test deletions in our integration tests.
 //
-// func testDeletions() {
-// 	createDeletionWorkItems()
-// 	waitForDeletionCompletion()
-// 	testFileDeletions()
-// 	testObjectDeletions()
-// }
+func testDeletions() {
+	createDeletionWorkItems()
+	waitForDeletionCompletion()
+	testFileDeletions()
+	testObjectDeletions()
+}

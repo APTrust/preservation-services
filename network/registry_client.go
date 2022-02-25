@@ -283,7 +283,8 @@ func (client *RegistryClient) IntellectualObjectDelete(objId int64) *RegistryRes
 
 // IntellectualObjectPrepareForDelete prepares a IntellectualObject for deletion
 // by setting up the required ingest PremisEvent, DeletionRequest
-// and WorkItem. This returns the deletion WorkItem.
+// and WorkItem. This returns the deletion WorkItem, which you can get with
+// resp.WorkItem().
 //
 // This call is used for integration testing and is
 // available only in the test and integration environments. Calling

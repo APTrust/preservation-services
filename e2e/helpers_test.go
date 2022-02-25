@@ -323,48 +323,74 @@ func createDeletionWorkItems() {
 		gf := resp.GenericFile()
 		if gf == nil {
 			ctx.Context.Logger.Errorf("Can't create deletion WorkItem. Registry returned nil GenericFile for identifier %s", gfIdentifier)
+			return
 		}
-		err := createDeletionWorkItem(gf.IntellectualObjectID, gf.ID)
-		assert.Nil(ctx.T, err, gfIdentifier)
+		//err := createDeletionWorkItem(gf.IntellectualObjectID, gf.ID)
+		resp = ctx.Context.RegistryClient.GenericFilePrepareForDelete(gf.ID)
+		assert.Nil(ctx.T, resp.Error, gfIdentifier)
+
+		deletionWorkItem := resp.WorkItem()
+		assert.NotNil(ctx.T, deletionWorkItem, gfIdentifier)
+		if deletionWorkItem != nil {
+			err := ctx.Context.NSQClient.Enqueue(constants.TopicDelete, deletionWorkItem.ID)
+			if err == nil {
+				ctx.Context.Logger.Errorf("Queued WorkItem %d in %s for file %s", deletionWorkItem.ID, constants.TopicDelete, gfIdentifier)
+			} else {
+				ctx.Context.Logger.Errorf("Error queueing WorkItem %d in %s for file %s: %v", deletionWorkItem.ID, constants.TopicDelete, gfIdentifier, err)
+			}
+		}
 	}
 	for _, objIdentifier := range e2e.ObjectsToDelete {
 		resp := ctx.Context.RegistryClient.IntellectualObjectByIdentifier(objIdentifier)
 		obj := resp.IntellectualObject()
 		if obj == nil {
 			ctx.Context.Logger.Errorf("Can't create deletion WorkItem. Registry returned nil IntellectualObject for identifier %s", objIdentifier)
+			return
 		}
-		err := createDeletionWorkItem(obj.ID, 0)
-		assert.Nil(ctx.T, err, objIdentifier)
+		//err := createDeletionWorkItem(obj.ID, 0)
+		resp = ctx.Context.RegistryClient.IntellectualObjectPrepareForDelete(obj.ID)
+		assert.Nil(ctx.T, resp.Error, objIdentifier)
+
+		deletionWorkItem := resp.WorkItem()
+		assert.NotNil(ctx.T, deletionWorkItem, objIdentifier)
+		if deletionWorkItem != nil {
+			err := ctx.Context.NSQClient.Enqueue(constants.TopicDelete, deletionWorkItem.ID)
+			if err == nil {
+				ctx.Context.Logger.Errorf("Queued WorkItem %d in %s for object %s", deletionWorkItem.ID, constants.TopicDelete, objIdentifier)
+			} else {
+				ctx.Context.Logger.Errorf("Error queueing WorkItem %d in %s for object %s: %v", deletionWorkItem.ID, constants.TopicDelete, objIdentifier, err)
+			}
+		}
 	}
 }
 
-func createDeletionWorkItem(objID, gfID int64) error {
-	ctx.Context.Logger.Info("Creating deletion WorkItem for %d - %d", objID, gfID)
-	ingestItem, err := getLastIngestRecord(objID)
-	if err != nil {
-		return err
-	}
-	utcNow := time.Now().UTC()
-	deletionItem := &registry.WorkItem{
-		Action:               constants.ActionDelete,
-		BagDate:              ingestItem.BagDate,
-		Bucket:               ingestItem.Bucket,
-		CreatedAt:            utcNow,
-		DateProcessed:        ingestItem.DateProcessed,
-		ETag:                 ingestItem.ETag,
-		GenericFileID:        gfID,
-		IntellectualObjectID: objID,
-		InstApprover:         "approver@example.com",
-		InstitutionID:        ingestItem.InstitutionID,
-		Name:                 ingestItem.Name,
-		Note:                 "Deletion requested",
-		Outcome:              "Deletion requested",
-		Retry:                true,
-		Size:                 ingestItem.Size,
-		Stage:                constants.StageRequested,
-		Status:               constants.StatusPending,
-		User:                 "e2e@aptrust.org",
-	}
-	resp := ctx.Context.RegistryClient.WorkItemSave(deletionItem)
-	return resp.Error
-}
+// func createDeletionWorkItem(objID, gfID int64) error {
+// 	ctx.Context.Logger.Info("Creating deletion WorkItem for %d - %d", objID, gfID)
+// 	ingestItem, err := getLastIngestRecord(objID)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	utcNow := time.Now().UTC()
+// 	deletionItem := &registry.WorkItem{
+// 		Action:               constants.ActionDelete,
+// 		BagDate:              ingestItem.BagDate,
+// 		Bucket:               ingestItem.Bucket,
+// 		CreatedAt:            utcNow,
+// 		DateProcessed:        ingestItem.DateProcessed,
+// 		ETag:                 ingestItem.ETag,
+// 		GenericFileID:        gfID,
+// 		IntellectualObjectID: objID,
+// 		InstApprover:         "approver@example.com",
+// 		InstitutionID:        ingestItem.InstitutionID,
+// 		Name:                 ingestItem.Name,
+// 		Note:                 "Deletion requested",
+// 		Outcome:              "Deletion requested",
+// 		Retry:                true,
+// 		Size:                 ingestItem.Size,
+// 		Stage:                constants.StageRequested,
+// 		Status:               constants.StatusPending,
+// 		User:                 "e2e@aptrust.org",
+// 	}
+// 	resp := ctx.Context.RegistryClient.WorkItemSave(deletionItem)
+// 	return resp.Error
+// }
