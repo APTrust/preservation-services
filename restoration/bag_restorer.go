@@ -204,16 +204,28 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 // In bags with hundreds of thousands of files, manifests can be several
 // megabytes, but these are rare.
 func (r *BagRestorer) RecordDigests(gf *registry.GenericFile, digests map[string]string) error {
+	atLeastOneChecksumVerified := false
 	for _, alg := range constants.SupportedManifestAlgorithms {
 		digest := digests[alg]
+		// The checksums in the digests map include only those algorithms required
+		// by the BagIt profile. This list may not include all of our supported
+		// algorithms. If the bagger didn't calculate this particular algorithm, it's
+		// because it didn't have to. Move on.
+		if digest == "" {
+			continue
+		}
 		registryChecksum := gf.GetLatestChecksum(alg)
 		if registryChecksum != nil && digest != registryChecksum.Digest {
 			return fmt.Errorf("%s digest mismatch for %s. Registry says %s, S3 file has %s", alg, gf.Identifier, registryChecksum.Digest, digest)
 		}
+		atLeastOneChecksumVerified = true
 		err := r.AppendDigestToManifest(gf, digest, alg)
 		if err != nil {
 			return err
 		}
+	}
+	if !atLeastOneChecksumVerified {
+		return fmt.Errorf("BagRestorer.RecordDigests was not able to verify any checksums for %s", gf.Identifier)
 	}
 	return nil
 }

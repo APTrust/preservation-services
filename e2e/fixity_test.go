@@ -25,12 +25,11 @@ func testFixityResults() {
 
 func getLatestFixityCheckEvent(gfIdentifier string) *registry.PremisEvent {
 	params := url.Values{}
-	params.Set("file_identifier", gfIdentifier)
+	params.Set("generic_file_identifier", gfIdentifier)
 	params.Set("event_type", constants.EventFixityCheck)
 	params.Set("page", "1")
 	params.Set("per_page", "1")
 	params.Set("sort", "date_time__desc")
-
 	resp := ctx.Context.RegistryClient.PremisEventList(params)
 	require.Nil(ctx.T, resp.Error, gfIdentifier)
 	return resp.PremisEvent()
