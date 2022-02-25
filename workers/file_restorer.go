@@ -83,6 +83,7 @@ func (r *FileRestorer) ProcessSuccessChannel() {
 		task.WorkItem.Status = constants.StatusSuccess
 		task.WorkItem.Retry = false
 		task.WorkItem.NeedsAdminReview = false
+		task.WorkItem.Outcome = "File restoration complete"
 
 		r.FinishItem(task)
 

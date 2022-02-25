@@ -83,6 +83,7 @@ func (r *BagRestorer) ProcessSuccessChannel() {
 		task.WorkItem.Status = constants.StatusSuccess
 		task.WorkItem.Retry = false
 		task.WorkItem.NeedsAdminReview = false
+		task.WorkItem.Outcome = "Bag restoration complete"
 
 		r.FinishItem(task)
 

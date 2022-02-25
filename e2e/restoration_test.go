@@ -83,19 +83,6 @@ func validateBag(objIdentifier string) {
 	require.Nil(ctx.T, err, objIdentifier)
 	assert.True(ctx.T, len(ingestFiles) > 0, objIdentifier)
 
-	// DEBUG
-	fmt.Println("ObjIdentifier:", objIdentifier)
-	fmt.Println("PathToBag:", pathToBag)
-	fmt.Println("Ingest files -> ")
-	for _, f := range ingestFiles {
-		fmt.Println("    ", f.Identifier())
-	}
-	fmt.Println("Registry files -> ")
-	for _, f := range registryFiles {
-		fmt.Println("    ", f.Identifier)
-	}
-	// END DEBUG
-
 	for _, gf := range registryFiles {
 
 		// Make sure file was restored with bag

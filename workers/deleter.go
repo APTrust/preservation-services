@@ -88,6 +88,12 @@ func (d *Deleter) ProcessSuccessChannel() {
 		task.WorkItem.Retry = false
 		task.WorkItem.NeedsAdminReview = false
 
+		if task.WorkItem.GenericFileID > 0 {
+			task.WorkItem.Outcome = "File deletion complete"
+		} else {
+			task.WorkItem.Outcome = "Object deletion complete"
+		}
+
 		d.FinishItem(task)
 
 		// Tell NSQ this b is done with this message.
