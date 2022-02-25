@@ -37,7 +37,7 @@ type WorkItem struct {
 	UpdatedAt        time.Time `json:"updated_at,omitempty"`
 	User             string    `json:"user"`
 
-	// GenericFileIdentifier is ead-only, from view.
+	// GenericFileIdentifier is read-only, from view.
 	GenericFileIdentifier string `json:"generic_file_identifier"`
 	// GenericFileID is read-only, from view.
 	GenericFileID int64 `json:"generic_file_id"`

@@ -307,7 +307,7 @@ func getRestoreWorkItems(objIdentifier, gfIdentifier string) []*registry.WorkIte
 	params := url.Values{}
 	params.Set("object_identifier", objIdentifier)
 	if gfIdentifier != "" {
-		params.Set("file_identifier", gfIdentifier)
+		params.Set("generic_file_identifier", gfIdentifier)
 		params.Set("action", constants.ActionRestoreFile)
 	} else {
 		params.Set("action", constants.ActionRestoreObject)

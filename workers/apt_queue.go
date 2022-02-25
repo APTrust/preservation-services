@@ -47,10 +47,10 @@ func (q *APTQueue) logStartup() {
 // them into the appropriate NSQ topic.
 func (q *APTQueue) run() {
 	params := url.Values{}
-	params.Set("queued", "false")
+	params.Set("queued_at__is_null", "true")
 	params.Set("status", constants.StatusPending)
 	params.Set("retry", "true")
-	params.Set("node_empty", "true")
+	params.Set("node__is_null", "true")
 	params.Set("page", "1")
 	params.Set("per_page", "100")
 	for {

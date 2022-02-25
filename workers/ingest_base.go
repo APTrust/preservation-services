@@ -238,6 +238,9 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 	// TEMP - Find the root of this issue and fix it.
 	// TODO - Find and fix the root of this issue.
+	//
+	// **** This is probably due to the filter problem in Registry.
+	// **** Try removing this guard.
 	if workItem.Stage == constants.StageCleanup {
 		ingestObject, err := b.IngestObjectGet(workItem)
 		if ingestObject == nil || err != nil {

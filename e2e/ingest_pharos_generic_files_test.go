@@ -48,17 +48,6 @@ func getGenericFiles() []*registry.GenericFile {
 	resp := ctx.Context.RegistryClient.GenericFileList(params)
 	require.Nil(ctx.T, resp.Error)
 	return resp.GenericFiles()
-	// THIS SHOULD BE WORKING NOW
-	// TODO: Registry Index endpoint doesn't return relations.
-	//       We need to fetch the full file objects, with
-	//       storage records, checksums, and events.
-	//files := make([]*registry.GenericFile, len(resp.GenericFiles()))
-	//for i, gf := range resp.GenericFiles() {
-	//	resp = ctx.Context.RegistryClient.GenericFileByID(gf.ID)
-	//	assert.Nil(ctx.T, resp.Error)
-	//	files[i] = resp.GenericFile()
-	//}
-	//return files
 }
 
 func testFileAttributes(registryFile, expectedFile *registry.GenericFile) {

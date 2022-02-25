@@ -324,6 +324,12 @@ class TestRunner
       "staging",
       "aptrust.receiving.test.test.edu",
       "aptrust.restore.test.test.edu",
+      "aptrust.receiving.test.institution1.edu",
+      "aptrust.restore.test.institution1.edu",
+      "aptrust.receiving.test.institution2.edu",
+      "aptrust.restore.test.institution2.edu",
+      "aptrust.receiving.test.example.edu",
+      "aptrust.restore.test.example.edu",
     ]
     buckets.each do |bucket|
       full_bucket = File.join(base, "minio", bucket)

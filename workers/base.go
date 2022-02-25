@@ -223,7 +223,7 @@ func (b *Base) Error(workItemID int64, identifier string, err error, isFatal boo
 func (b *Base) GetInstitutionIdentifier(instID int64) (string, error) {
 	if _, ok := b.institutionCache[instID]; !ok {
 		v := url.Values{}
-		v.Add("order", "name")
+		v.Add("sort", "name")
 		v.Add("per_page", "200")
 		resp := b.Context.RegistryClient.InstitutionList(v)
 		if resp.Error != nil {
