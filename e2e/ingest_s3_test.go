@@ -1,4 +1,4 @@
-// -- go:build e2e
+//go:build e2e
 
 package e2e_test
 
@@ -35,19 +35,6 @@ func testS3File(storageRecord *registry.StorageRecord, gf *registry.GenericFile)
 	sha256 := gf.GetLatestChecksum(constants.AlgSha256)
 	require.NotNil(ctx.T, md5, gf.Identifier)
 	require.NotNil(ctx.T, sha256, gf.Identifier)
-
-	// ---- DEBUG ----
-	// ctx.Context.Logger.Info(gf.Identifier)
-	// ctx.Context.Logger.Info(objInfo)
-	// ctx.Context.Logger.Info("UserMetadata...")
-	// for k, v := range objInfo.UserMetadata {
-	// 	ctx.Context.Logger.Infof("%s = %s", k, v)
-	// }
-	// ctx.Context.Logger.Info("Metadata...")
-	// for k, v := range objInfo.Metadata {
-	// 	ctx.Context.Logger.Infof("%s = %s", k, v)
-	// }
-	// ---- DEBUG ----
 
 	// Note that Minio capitalizes our UserMetadata tags.
 	assert.Equal(ctx.T, gf.InstitutionIdentifier(), objInfo.UserMetadata["Institution"])
