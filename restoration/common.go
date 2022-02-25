@@ -44,12 +44,5 @@ func GetBatchOfFiles(context *common.Context, objectID int64, pageNumber int) (g
 	params.Set("sort", "identifier")
 	params.Set("state", "A")
 	resp := context.RegistryClient.GenericFileList(params)
-
-	// DEBUG
-	//fmt.Println("IntellectualObjectID", objectID)
-	//j, _ := json.Marshal(resp.GenericFiles())
-	//fmt.Println(string(j))
-	// END DEBUG
-
 	return resp.GenericFiles(), resp.Error
 }
