@@ -10,7 +10,6 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
-	//	"github.com/APTrust/preservation-services/util/testutil"
 )
 
 type MetadataValidator struct {

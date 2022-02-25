@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package ingest_test
 
@@ -55,7 +54,6 @@ func testStorageRecords(t *testing.T, uploader *ingest.PreservationUploader) {
 		if ingestFile.HasPreservableName() {
 			assert.Equal(t, 2, len(ingestFile.StorageRecords))
 			for _, record := range ingestFile.StorageRecords {
-				//fmt.Println(record)
 				uploadCount++
 				assert.True(t, record.Bucket == config.BucketStandardVA || record.Bucket == config.BucketStandardOR)
 				assert.False(t, record.StoredAt.IsZero())

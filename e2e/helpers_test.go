@@ -23,10 +23,6 @@ import (
 // This file contains helpers to do some setup and
 // housekeeping but don't perform any actual tests.
 
-// -------------------------------------------------------
-// TODO: Refactor. There's a lot of code duplication here.
-// -------------------------------------------------------
-
 // Set up a context for testing.
 func initTestContext(t *testing.T) {
 	objects, err := e2e.LoadObjectJSON()
@@ -216,7 +212,6 @@ func getInstitution(identifier string) *registry.Institution {
 func createRestorationWorkItems() (err error) {
 	// create 4 file restorations
 	for _, testFile := range e2e.FilesToRestore {
-		//objIdentifier := objIdentFromFileIdent(testFile.Identifier)
 		resp := ctx.Context.RegistryClient.GenericFileByIdentifier(testFile.Identifier)
 		gf := resp.GenericFile()
 		if gf == nil {
@@ -325,7 +320,6 @@ func createDeletionWorkItems() {
 			ctx.Context.Logger.Errorf("Can't create deletion WorkItem. Registry returned nil GenericFile for identifier %s", gfIdentifier)
 			return
 		}
-		//err := createDeletionWorkItem(gf.IntellectualObjectID, gf.ID)
 		resp = ctx.Context.RegistryClient.GenericFilePrepareForDelete(gf.ID)
 		assert.Nil(ctx.T, resp.Error, gfIdentifier)
 
@@ -347,7 +341,6 @@ func createDeletionWorkItems() {
 			ctx.Context.Logger.Errorf("Can't create deletion WorkItem. Registry returned nil IntellectualObject for identifier %s", objIdentifier)
 			return
 		}
-		//err := createDeletionWorkItem(obj.ID, 0)
 		resp = ctx.Context.RegistryClient.IntellectualObjectPrepareForDelete(obj.ID)
 		assert.Nil(ctx.T, resp.Error, objIdentifier)
 
@@ -363,34 +356,3 @@ func createDeletionWorkItems() {
 		}
 	}
 }
-
-// func createDeletionWorkItem(objID, gfID int64) error {
-// 	ctx.Context.Logger.Info("Creating deletion WorkItem for %d - %d", objID, gfID)
-// 	ingestItem, err := getLastIngestRecord(objID)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	utcNow := time.Now().UTC()
-// 	deletionItem := &registry.WorkItem{
-// 		Action:               constants.ActionDelete,
-// 		BagDate:              ingestItem.BagDate,
-// 		Bucket:               ingestItem.Bucket,
-// 		CreatedAt:            utcNow,
-// 		DateProcessed:        ingestItem.DateProcessed,
-// 		ETag:                 ingestItem.ETag,
-// 		GenericFileID:        gfID,
-// 		IntellectualObjectID: objID,
-// 		InstApprover:         "approver@example.com",
-// 		InstitutionID:        ingestItem.InstitutionID,
-// 		Name:                 ingestItem.Name,
-// 		Note:                 "Deletion requested",
-// 		Outcome:              "Deletion requested",
-// 		Retry:                true,
-// 		Size:                 ingestItem.Size,
-// 		Stage:                constants.StageRequested,
-// 		Status:               constants.StatusPending,
-// 		User:                 "e2e@aptrust.org",
-// 	}
-// 	resp := ctx.Context.RegistryClient.WorkItemSave(deletionItem)
-// 	return resp.Error
-// }

@@ -378,10 +378,6 @@ func testIngestFile_ReingestManager(t *testing.T, f *service.IngestFile) {
 	assert.Equal(t, 36, len(f.UUID))
 	assert.True(t, util.LooksLikeUUID(f.UUID), f.PathInBag)
 	require.Equal(t, 0, len(f.StorageRecords), f.PathInBag)
-
-	//j, _ := json.MarshalIndent(f, "", "  ")
-	//fmt.Println(string(j))
-
 	require.Equal(t, 2, len(f.RegistryURLs), "%s/%s (%d): %v", f.ObjectIdentifier, f.PathInBag, f.ID, f.RegistryURLs)
 }
 

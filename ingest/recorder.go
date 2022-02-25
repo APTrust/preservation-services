@@ -237,10 +237,6 @@ func (r *Recorder) updateBatch(ingestFiles []*service.IngestFile) (fileCount int
 			// conflict, and that should be a fatal error.
 			// Is this fixed in Registry?
 			errors = append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
-			// -------- DEBUG --------
-			// jsonData, _ := gf.ToJSON()
-			// r.Context.Logger.Error(string(jsonData))
-			// ------ END DEBUG ------
 		} else {
 			savedFile := resp.GenericFile()
 			ingestFile.ID = savedFile.ID

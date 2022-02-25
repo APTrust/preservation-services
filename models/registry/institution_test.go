@@ -1,7 +1,6 @@
 package registry_test
 
 import (
-	//"github.com/APTrust/preservation-services/constants"
 	"testing"
 
 	"github.com/APTrust/preservation-services/models/registry"

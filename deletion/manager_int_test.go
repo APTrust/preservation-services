@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package deletion_test
 
@@ -190,8 +189,6 @@ func testObjectDeletionEvent(t *testing.T, context *common.Context) {
 	objCount := 0
 	fileCount := 0
 	for _, event := range resp.PremisEvents() {
-		// j, _ := json.MarshalIndent(event, "", "  ")
-		// fmt.Println(string(j))
 		if event.GenericFileID == 0 {
 			objCount++
 		} else {

@@ -98,7 +98,7 @@ func TestWorkItemMarkInProgress(t *testing.T) {
 		constants.StatusStarted,
 		"Recording ingest metadata in Registry",
 	)
-	// Not this also sets node and pid
+	// Note that this also sets node and pid
 	assert.NotEqual(t, "", item.Node)
 	assert.NotEqual(t, 0, item.Pid)
 	assert.Equal(t, constants.StageRecord, item.Stage)

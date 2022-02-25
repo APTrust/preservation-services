@@ -91,7 +91,6 @@ func testNewObjectInRegistry(t *testing.T, recorder *ingest.Recorder) {
 }
 
 func testObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder) {
-	//objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
 	params.Add("intellectual_object_id", strconv.FormatInt(recorder.IngestObject.ID, 10))
@@ -355,13 +354,11 @@ func testUpdatedObjectInRegistry(t *testing.T, recorder *ingest.Recorder) {
 }
 
 func testUpdatedObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
-	//objIdentifier := recorder.IngestObject.Identifier()
 	client := recorder.Context.RegistryClient
 
 	params := url.Values{}
 	params.Add("intellectual_object_id", strconv.FormatInt(recorder.IngestObject.ID, 10))
 	params.Add("generic_file_id__is_null", "true")
-	//params.Add("date_time__gteq", timestamp.Format(time.RFC3339Nano))
 	params.Add("per_page", "300")
 	params.Add("page", "1")
 
@@ -373,9 +370,6 @@ func testUpdatedObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder, 
 
 	eventTypes := make(map[string]int)
 	for _, event := range events {
-		//if event.GenericFileID > 0 {
-		//	continue // this is a file-level event
-		//}
 		if _, ok := eventTypes[event.EventType]; !ok {
 			eventTypes[event.EventType] = 0
 		}
@@ -410,10 +404,6 @@ func testUpdatedFilesInRegistry(t *testing.T, recorder *ingest.Recorder, timesta
 	resp := client.GenericFileList(params)
 	require.Nil(t, resp.Error)
 	genericFiles := resp.GenericFiles()
-
-	//fmt.Println("OBJ UPDATED:", timestamp.Format(time.RFC3339Nano))
-	//j, _ := json.MarshalIndent(genericFiles, "", "  ")
-	//fmt.Println(string(j))
 
 	require.NotEmpty(t, genericFiles)
 	assert.Equal(t, len(changedFiles), len(genericFiles))
@@ -453,7 +443,7 @@ func testUpdatedFilesInRegistry(t *testing.T, recorder *ingest.Recorder, timesta
 }
 
 func testUpdatedFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile, timestamp time.Time) {
-	objIdentifier, _ := gf.IntellectualObjectIdentifier() //recorder.IngestObject.Identifier()
+	objIdentifier, _ := gf.IntellectualObjectIdentifier()
 	client := recorder.Context.RegistryClient
 	params := url.Values{}
 	params.Add("generic_file_id", strconv.FormatInt(gf.ID, 10))
