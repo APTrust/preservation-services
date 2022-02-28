@@ -358,7 +358,10 @@ class TestRunner
 	  # Force copy of env to integration so that registry fixtures load.
 	  env = {}.merge(env_hash)
 	  env['APT_ENV'] = 'integration'
-	  cmd = 'go run registry.go'
+      # Important! Adding -tags=test here turns on the special
+      # testing endpoints prepare_file_delete and prepare_object_delete,
+      # which are disabled in all non-test environments.
+	  cmd = 'go run -tags=test registry.go'
 	  log_file = log_file_path('registry')
 	  registry_pid = Process.spawn(env,
 								 cmd,
