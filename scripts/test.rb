@@ -40,7 +40,7 @@ class TestRunner
       },
       {
         name: "nsqd",
-        cmd: "#{bin}/nsqd --lookupd-tcp-address=127.0.0.1:4160 --data-path ~/tmp/nsq/",
+        cmd: "#{bin}/nsqd --lookupd-tcp-address=127.0.0.1:4160 --data-path ~/tmp/nsq/ --broadcast-address=127.0.0.1",
         msg: "Started nsqd at 127.0.0.1:4151"
       },
       {
