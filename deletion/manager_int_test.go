@@ -165,8 +165,8 @@ func testFileDeletionEvents(t *testing.T, context *common.Context, gfID int64) {
 	for _, event := range deletionEvents {
 		// Deletion manager and Registry internal log slighly different messages.
 		// The second is for Registry internal, indicating deletion of all copies.
-		assert.True(t, (event.OutcomeInformation == "File deleted at the request of requestor@example.com. Institutional approver: approver@example.com. APTrust approver: some-admin@aptrust.org." || event.OutcomeInformation == "File deleted at the request of admin@inst2.edu. Institutional approver: admin@inst2.edu."))
-		assert.True(t, (strings.HasPrefix(event.Detail, "Deleted one copy of this file from") || event.Detail == "File deleted from preservation storage"), event.Detail)
+		assert.True(t, strings.HasSuffix(event.OutcomeInformation, "This event confirms all preservation copies have been deleted.") || strings.HasPrefix(event.OutcomeInformation, "One copy of this file has been deleted from"), event.OutcomeInformation)
+		assert.True(t, (strings.HasPrefix(event.Detail, "Deleted one copy of this file from") || event.Detail == "All copies of this file have been deleted from preservation storage"), event.Detail)
 		assert.Equal(t, constants.StatusSuccess, event.Outcome)
 		assert.Equal(t, objIdentifier, event.IntellectualObjectIdentifier)
 		assert.NotEqual(t, 0, event.IntellectualObjectID)

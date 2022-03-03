@@ -239,7 +239,7 @@ func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.S
 	eventId := uuid.New()
 	now := time.Now().UTC()
 	outcomeDetail := m.RequestedBy
-	outcomeInfo := fmt.Sprintf("File deleted at the request of %s.", m.RequestedBy)
+	outcomeInfo := fmt.Sprintf("One copy of this file has been deleted from %s at the request of %s.", sr.URL, m.RequestedBy)
 	if m.InstApprover != "" {
 		outcomeInfo += fmt.Sprintf(" Institutional approver: %s.", m.InstApprover)
 	}

@@ -94,7 +94,7 @@ func verifyFileDeletionEvent(gf *registry.GenericFile) {
 	assert.Equal(ctx.T, "APTrust preservation services", deletionEvent.Agent)
 	assert.Equal(ctx.T, constants.EventDeletion, deletionEvent.EventType)
 	assert.Equal(ctx.T, gf.IntellectualObjectID, deletionEvent.IntellectualObjectID)
-	assert.Equal(ctx.T, "File deleted at the request of admin@test.edu. Institutional approver: admin@test.edu.", deletionEvent.OutcomeInformation)
+	assert.Equal(ctx.T, "File deleted at the request of admin@test.edu. Institutional approver: admin@test.edu. This event confirms all preservation copies have been deleted.", deletionEvent.OutcomeInformation)
 	assert.NotEmpty(ctx.T, deletionEvent.DateTime)
 	assert.NotEmpty(ctx.T, deletionEvent.CreatedAt)
 	assert.NotEmpty(ctx.T, deletionEvent.UpdatedAt)
