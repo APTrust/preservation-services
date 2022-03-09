@@ -102,25 +102,25 @@ func GetStorageRecord(provider, bucket, url string) *service.StorageRecord {
 func GetIngestChecksumSet() []*service.IngestChecksum {
 	now := time.Now().UTC()
 	return []*service.IngestChecksum{
-		&service.IngestChecksum{
+		{
 			Algorithm: "md5",
 			DateTime:  now,
 			Digest:    "12345",
 			Source:    constants.SourceManifest,
 		},
-		&service.IngestChecksum{
+		{
 			Algorithm: "md5",
 			DateTime:  now,
 			Digest:    "12345",
 			Source:    constants.SourceIngest,
 		},
-		&service.IngestChecksum{
+		{
 			Algorithm: "sha256",
 			DateTime:  now,
 			Digest:    "12345",
 			Source:    constants.SourceManifest,
 		},
-		&service.IngestChecksum{
+		{
 			Algorithm: "sha256",
 			DateTime:  now,
 			Digest:    "12345",
@@ -138,13 +138,13 @@ func GetIntellectualObject() *registry.IntellectualObject {
 		BagName:                "TestBag001",
 		Description:            "Test bag from factory",
 		FileCount:              21,
-		FileSize:               543210000,
+		Size:                   543210000,
 		ETag:                   "86753098675309",
 		ID:                     0,
 		Identifier:             "test.edu/TestBag001",
-		Institution:            "test.edu",
+		InstitutionIdentifier:  "test.edu",
 		InstitutionID:          0,
-		SourceOrganization:     "Test Univerisity Library",
+		SourceOrganization:     "Test University Library",
 		State:                  constants.StateActive,
 		StorageOption:          constants.StorageStandard,
 		Title:                  "Test Bag from Factory",
@@ -153,17 +153,16 @@ func GetIntellectualObject() *registry.IntellectualObject {
 
 func GetGenericFileForObj(obj *registry.IntellectualObject, suffix int, withChecksums, withEvents bool) *registry.GenericFile {
 	gf := &registry.GenericFile{
-		FileFormat:                   "text/plain",
-		FileModified:                 Bloomsday,
-		ID:                           0,
-		Identifier:                   fmt.Sprintf("%s/object/data/file_%d.txt", obj.Identifier, suffix),
-		InstitutionID:                obj.InstitutionID,
-		IntellectualObjectID:         obj.ID,
-		IntellectualObjectIdentifier: obj.Identifier,
-		Size:                         484896,
-		State:                        constants.StateActive,
-		StorageOption:                constants.StorageStandard,
-		UUID:                         uuid.New().String(),
+		FileFormat:           "text/plain",
+		FileModified:         Bloomsday,
+		ID:                   0,
+		Identifier:           fmt.Sprintf("%s/object/data/file_%d.txt", obj.Identifier, suffix),
+		InstitutionID:        obj.InstitutionID,
+		IntellectualObjectID: obj.ID,
+		Size:                 484896,
+		State:                constants.StateActive,
+		StorageOption:        constants.StorageStandard,
+		UUID:                 uuid.New().String(),
 	}
 	if withChecksums {
 		gf.Checksums = []*registry.Checksum{
@@ -194,20 +193,18 @@ func GetChecksum(gf *registry.GenericFile, alg string) *registry.Checksum {
 
 func GetPremisEvent(gf *registry.GenericFile, eventType string) *registry.PremisEvent {
 	return &registry.PremisEvent{
-		Agent:                        "Maxwell Smart",
-		DateTime:                     Bloomsday,
-		Detail:                       "Fake event detail",
-		EventType:                    eventType,
-		GenericFileID:                gf.ID,
-		GenericFileIdentifier:        gf.Identifier,
-		Identifier:                   uuid.New().String(),
-		InstitutionID:                gf.InstitutionID,
-		IntellectualObjectID:         gf.IntellectualObjectID,
-		IntellectualObjectIdentifier: gf.IntellectualObjectIdentifier,
-		Object:                       "Fake event object",
-		OutcomeDetail:                constants.OutcomeSuccess,
-		OutcomeInformation:           "Fake outcome information",
-		Outcome:                      "Fake outcome",
+		Agent:                "Maxwell Smart",
+		DateTime:             Bloomsday,
+		Detail:               "Fake event detail",
+		EventType:            eventType,
+		GenericFileID:        gf.ID,
+		Identifier:           uuid.New().String(),
+		InstitutionID:        gf.InstitutionID,
+		IntellectualObjectID: gf.IntellectualObjectID,
+		Object:               "Fake event object",
+		OutcomeDetail:        constants.OutcomeSuccess,
+		OutcomeInformation:   "Fake outcome information",
+		Outcome:              constants.OutcomeSuccess,
 	}
 }
 
@@ -217,6 +214,7 @@ func GetRestorationObject() *service.RestorationObject {
 		BagItProfileIdentifier: constants.DefaultProfileIdentifier,
 		ErrorMessage:           "No error",
 		Identifier:             "test.edu/bag-name.tar",
+		ItemID:                 int64(111222333444),
 		ObjectSize:             int64(333000),
 		RestoredAt:             Bloomsday,
 		RestorationSource:      constants.RestorationSourceS3,

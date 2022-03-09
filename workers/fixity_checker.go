@@ -30,7 +30,7 @@ type FixityChecker struct {
 }
 
 // NewFixityChecker creates a new FixityChecker worker. Param context is a
-// Context object with connections to S3, Redis, Pharos, and NSQ.
+// Context object with connections to S3, Redis, Registry, and NSQ.
 func NewFixityChecker(bufSize, numWorkers, maxAttempts int) *FixityChecker {
 	_context := common.NewContext()
 	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.TopicFixity, bufSize, numWorkers, maxAttempts)

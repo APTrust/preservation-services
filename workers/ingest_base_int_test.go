@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package workers_test
@@ -25,14 +26,14 @@ import (
 
 var keyToGoodBag = "example.edu.tagsample_good.tar"
 var pathToGoodBag = testutil.PathToUnitTestBag(keyToGoodBag)
-var goodbagETag = ""
+var goodbagETag = "00000000888888880000000077777777"
 var goodbagSize = int64(40960)
 var objectIdentifier = "test.edu/example.edu.tagsample_good"
 var bufSize = 20
 var testWorkItem *registry.WorkItem
-var olderWorkItemID = 0
-var olderStillIngestingID = 0
-var newerWorkItemID = 0
+var olderWorkItemID = int64(0)
+var olderStillIngestingID = int64(0)
+var newerWorkItemID = int64(0)
 var copyOfNsqMessage *nsq.Message
 var testInstitution *registry.Institution
 
@@ -55,8 +56,8 @@ func putBagInS3(t *testing.T, context *common.Context, key, pathToBagFile string
 	goodbagETag = objInfo.ETag
 }
 
-func putWorkItemInPharos(t *testing.T, context *common.Context, workItem *registry.WorkItem) *registry.WorkItem {
-	resp := context.PharosClient.WorkItemSave(workItem)
+func putWorkItemInRegistry(t *testing.T, context *common.Context, workItem *registry.WorkItem) *registry.WorkItem {
+	resp := context.RegistryClient.WorkItemSave(workItem)
 	require.Nil(t, resp.Error)
 	require.NotNil(t, resp.WorkItem())
 	return resp.WorkItem()
@@ -67,10 +68,10 @@ func saveSimilarWorkItems(t *testing.T, context *common.Context, workItem *regis
 	olderDate := workItem.BagDate.Add(time.Hour * -6)
 	olderIngestRequest := copyWorkItem(t, workItem)
 	olderIngestRequest.BagDate = olderDate
-	olderIngestRequest.Date = olderDate
+	olderIngestRequest.DateProcessed = olderDate
 	olderIngestRequest.CreatedAt = olderDate
 	olderIngestRequest.UpdatedAt = olderDate
-	resp := context.PharosClient.WorkItemSave(olderIngestRequest)
+	resp := context.RegistryClient.WorkItemSave(olderIngestRequest)
 	require.Nil(t, resp.Error)
 	olderWorkItemID = resp.WorkItem().ID
 
@@ -78,12 +79,12 @@ func saveSimilarWorkItems(t *testing.T, context *common.Context, workItem *regis
 	olderDate = workItem.BagDate.Add(time.Hour * -3)
 	olderStillIngesting := copyWorkItem(t, workItem)
 	olderStillIngesting.BagDate = olderDate
-	olderStillIngesting.Date = olderDate
+	olderStillIngesting.DateProcessed = olderDate
 	olderStillIngesting.CreatedAt = olderDate
 	olderStillIngesting.UpdatedAt = olderDate
 	olderStillIngesting.Stage = constants.StageStore
 	olderStillIngesting.Status = constants.StatusStarted
-	resp = context.PharosClient.WorkItemSave(olderStillIngesting)
+	resp = context.RegistryClient.WorkItemSave(olderStillIngesting)
 	require.Nil(t, resp.Error)
 	olderStillIngestingID = resp.WorkItem().ID
 
@@ -91,11 +92,11 @@ func saveSimilarWorkItems(t *testing.T, context *common.Context, workItem *regis
 	newerDate := workItem.BagDate.Add(time.Hour * 6)
 	newerIngestRequest := copyWorkItem(t, workItem)
 	newerIngestRequest.BagDate = newerDate
-	newerIngestRequest.Date = newerDate
+	newerIngestRequest.DateProcessed = newerDate
 	newerIngestRequest.CreatedAt = newerDate
 	newerIngestRequest.UpdatedAt = newerDate
-	newerIngestRequest.ETag = "12345678"
-	resp = context.PharosClient.WorkItemSave(newerIngestRequest)
+	newerIngestRequest.ETag = "12345678123456781234567812345678"
+	resp = context.RegistryClient.WorkItemSave(newerIngestRequest)
 	require.Nil(t, resp.Error)
 	newerWorkItemID = resp.WorkItem().ID
 }
@@ -127,16 +128,16 @@ func putWorkResultInRedis(t *testing.T, context *common.Context, workItem *regis
 	err := context.RedisClient.WorkResultSave(workItem.ID, workResult)
 	require.Nil(t, err)
 }
-func queueWorkItem(t *testing.T, context *common.Context, workItemID int) {
+func queueWorkItem(t *testing.T, context *common.Context, workItemID int64) {
 	err := context.NSQClient.Enqueue(constants.IngestPreFetch, workItemID)
 	require.Nil(t, err)
 }
 
-func doSetup(t *testing.T, key, pathToBagFile string) int {
+func doSetup(t *testing.T, key, pathToBagFile string) int64 {
 	if testWorkItem == nil {
 		context := common.NewContext()
 		putBagInS3(t, context, key, pathToBagFile)
-		testInstitution = context.PharosClient.InstitutionGet("test.edu").Institution()
+		testInstitution = context.RegistryClient.InstitutionByIdentifier("test.edu").Institution()
 		require.NotNil(t, testInstitution)
 		hostname, _ := os.Hostname()
 		workItem := &registry.WorkItem{
@@ -144,7 +145,7 @@ func doSetup(t *testing.T, key, pathToBagFile string) int {
 			BagDate:          testutil.Bloomsday,
 			Bucket:           constants.TestBucketReceiving,
 			CreatedAt:        testutil.Bloomsday,
-			Date:             testutil.Bloomsday,
+			DateProcessed:    testutil.Bloomsday,
 			ETag:             goodbagETag,
 			InstitutionID:    testInstitution.ID,
 			Name:             key,
@@ -157,9 +158,12 @@ func doSetup(t *testing.T, key, pathToBagFile string) int {
 			Size:             goodbagSize,
 			Stage:            constants.StageReceive,
 			Status:           constants.StatusPending,
+			User:             "system@aptrust.org",
 		}
-		testWorkItem = putWorkItemInPharos(t, context, workItem)
-		msgBody := []byte(strconv.Itoa(testWorkItem.ID))
+		testWorkItem = putWorkItemInRegistry(t, context, workItem)
+		assert.NotNil(t, testWorkItem)
+		assert.NotEmpty(t, testWorkItem.ID)
+		msgBody := []byte(strconv.FormatInt(testWorkItem.ID, 10))
 		var msgId [16]byte
 		copy(msgId[:], []byte("9999"))
 		copyOfNsqMessage = nsq.NewMessage(msgId, msgBody)
@@ -171,7 +175,7 @@ func doSetup(t *testing.T, key, pathToBagFile string) int {
 	return testWorkItem.ID
 }
 
-func createMetadataGatherer(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+func createMetadataGatherer(context *common.Context, workItemID int64, ingestObject *service.IngestObject) ingest.Runnable {
 	return ingest.NewMetadataGatherer(context, workItemID, ingestObject)
 }
 
@@ -229,7 +233,7 @@ func TestIngestBase_Error(t *testing.T) {
 	ingestBase := getIngestBase()
 	err := fmt.Errorf("This is the internal error")
 	processingErr := ingestBase.Error(999, "my-identifier", err, false)
-	assert.Equal(t, 999, processingErr.WorkItemID)
+	assert.Equal(t, int64(999), processingErr.WorkItemID)
 	assert.Equal(t, "my-identifier", processingErr.Identifier)
 	assert.Equal(t, "This is the internal error", processingErr.Message)
 	assert.False(t, processingErr.IsFatal)
@@ -345,7 +349,7 @@ func TestIngestBase_ImAlreadyProcessingThis(t *testing.T) {
 	assert.False(t, ingestBase.ImAlreadyProcessingThis(testWorkItem))
 
 	// True because WorkItem.ID is now in ItemsInProcess
-	ingestBase.ItemsInProcess.Add(strconv.Itoa(testWorkItem.ID))
+	ingestBase.ItemsInProcess.Add(strconv.FormatInt(testWorkItem.ID, 10))
 	assert.True(t, ingestBase.ImAlreadyProcessingThis(testWorkItem))
 }
 
@@ -394,7 +398,7 @@ func TestIngestBase_ShouldAbandonForNewerVersion(t *testing.T) {
 	assert.False(t, ingestBase.ShouldAbandonForNewerVersion(item))
 
 	// True, because ETag of S3 item no longer matches
-	item.ETag = "1234"
+	item.ETag = "12341234123412341234123412341234"
 	assert.True(t, ingestBase.ShouldAbandonForNewerVersion(item))
 
 	// False, because even though ETag no longer matches,
@@ -408,7 +412,7 @@ func TestIngestBase_MarkAsStarted(t *testing.T) {
 	ingestBase := getIngestBase()
 
 	copyOfWorkItem := copyWorkItem(t, testWorkItem)
-	putWorkItemInPharos(t, ingestBase.Context, copyOfWorkItem)
+	putWorkItemInRegistry(t, ingestBase.Context, copyOfWorkItem)
 
 	hostname, _ := os.Hostname()
 	task := &workers.Task{
@@ -436,9 +440,9 @@ func TestIngestBase_FinishItem(t *testing.T) {
 	doSetup(t, keyToGoodBag, pathToGoodBag)
 	ingestBase := getIngestBase()
 
-	copyOfWorkItem := putWorkItemInPharos(t, ingestBase.Context, copyWorkItem(t, testWorkItem))
+	copyOfWorkItem := putWorkItemInRegistry(t, ingestBase.Context, copyWorkItem(t, testWorkItem))
 
-	msgBody := []byte(strconv.Itoa(copyOfWorkItem.ID))
+	msgBody := []byte(strconv.FormatInt(copyOfWorkItem.ID, 10))
 	var msgId [16]byte
 	copy(msgId[:], []byte("3333"))
 	testNSQMessage := nsq.NewMessage(msgId, msgBody)
@@ -472,7 +476,7 @@ func TestIngestBase_FinishItem(t *testing.T) {
 	assert.Equal(t, 1, retrievedWorkResult.Attempt)
 
 	// Make sure item was removed from ItemsInProcess
-	assert.False(t, ingestBase.ItemsInProcess.Contains(strconv.Itoa(task.WorkItem.ID)))
+	assert.False(t, ingestBase.ItemsInProcess.Contains(strconv.FormatInt(task.WorkItem.ID, 10)))
 
 	// Make sure item was pushed to queue
 	stats, procErr := ingestBase.Context.NSQClient.GetStats()

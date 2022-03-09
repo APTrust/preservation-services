@@ -2,6 +2,9 @@ package network_test
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
@@ -9,8 +12,6 @@ import (
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"strings"
-	"testing"
 )
 
 var nonFatalErr = service.NewProcessingError(999, "test.edu/obj", "Non-fatal error", false)
@@ -206,7 +207,7 @@ func testGetBatch(t *testing.T, client *network.RedisClient, totalItems, batchSi
 }
 
 func TestIngestFileApply(t *testing.T) {
-	workItemId := 7654
+	workItemId := int64(7654)
 	client := getRedisClient()
 	require.NotNil(t, client)
 
@@ -249,7 +250,7 @@ func TestIngestFileApply(t *testing.T) {
 }
 
 func TestIngestFileApply_WithError(t *testing.T) {
-	workItemId := 988762
+	workItemId := int64(988762)
 	client := getRedisClient()
 	require.NotNil(t, client)
 

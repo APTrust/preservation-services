@@ -17,7 +17,7 @@ type BagRestorer struct {
 }
 
 // NewBagRestorer creates a new BagRestorer worker. Param context is a
-// Context object with connections to S3, Redis, Pharos, and NSQ.
+// Context object with connections to S3, Redis, Registry, and NSQ.
 func NewBagRestorer(bufSize, numWorkers, maxAttempts int) *BagRestorer {
 	_context := common.NewContext()
 	bufSize, numWorkers, maxAttempts = _context.Config.GetWorkerSettings(constants.TopicObjectRestore, bufSize, numWorkers, maxAttempts)
@@ -35,7 +35,7 @@ func NewBagRestorer(bufSize, numWorkers, maxAttempts int) *BagRestorer {
 		Base: Base{
 			Context:           _context,
 			Settings:          settings,
-			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize),
+			ItemsInProcess:    service.NewRingList(settings.ChannelBufferSize * settings.NumberOfWorkers),
 			ProcessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			ErrorChannel:      make(chan *Task, settings.ChannelBufferSize),
@@ -76,13 +76,14 @@ func (r *BagRestorer) ProcessSuccessChannel() {
 		r.Context.Logger.Infof("WorkItem %d (%s) is in success channel",
 			task.WorkItem.ID, task.WorkItem.Name)
 
-		// Tell Pharos item succeeded.
+		// Tell Registry item succeeded.
 		note := fmt.Sprintf("Object %s restored to %s.", task.WorkItem.ObjectIdentifier, task.RestorationObject.URL)
 		task.WorkItem.Note = note
 		task.WorkItem.Stage = r.Settings.NextWorkItemStage
 		task.WorkItem.Status = constants.StatusSuccess
 		task.WorkItem.Retry = false
 		task.WorkItem.NeedsAdminReview = false
+		task.WorkItem.Outcome = "Bag restoration complete"
 
 		r.FinishItem(task)
 
@@ -103,7 +104,7 @@ func (r *BagRestorer) ProcessErrorChannel() {
 			task.WorkItem.ID, task.WorkItem.Name,
 			task.WorkResult.NonFatalErrorMessage())
 
-		// Update WorkItem in Pharos
+		// Update WorkItem in Registry
 		task.WorkItem.Note = task.WorkResult.NonFatalErrorMessage()
 		if task.WorkResult.Attempt >= r.Settings.MaxAttempts {
 			task.WorkItem.Note += fmt.Sprintf(" Will not retry: failed %d times.", task.WorkResult.Attempt)
@@ -130,12 +131,12 @@ func (r *BagRestorer) ProcessFatalErrorChannel() {
 			task.WorkItem.ID, task.WorkItem.Name,
 			task.WorkResult.FatalErrorMessage())
 
-		// Update WorkItem for Pharos
+		// Update WorkItem for Registry
 		task.WorkItem.Note = task.WorkResult.FatalErrorMessage()
 		task.WorkItem.Retry = false
 		task.WorkItem.NeedsAdminReview = true
 
-		// Update Pharos and Redis
+		// Update Registry and Redis
 		r.FinishItem(task)
 
 		// Tell NSQ we're done with this message.
@@ -178,7 +179,7 @@ func (r *BagRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	}
 
 	// Make sure this is actually a restoration request
-	if HasWrongAction(r.Context, workItem, constants.ActionRestore) {
+	if HasWrongAction(r.Context, workItem, constants.ActionRestoreObject) {
 		return true
 	}
 

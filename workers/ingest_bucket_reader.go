@@ -47,6 +47,7 @@ func (r *IngestBucketReader) logStartup() {
 
 func (r *IngestBucketReader) scanReceivingBuckets() {
 	for _, inst := range r.LoadInstitutions() {
+		// TODO: This should be fixed in Registry, but confirm.
 		// Pharos needs to provide proper filtering on Institutions controller
 		if inst.State == "D" {
 			r.Context.Logger.Infof("Skipping inactive institution %s", inst.Identifier)
@@ -61,9 +62,9 @@ func (r *IngestBucketReader) LoadInstitutions() []*registry.Institution {
 	v := url.Values{}
 	v.Set("page", "1")
 	v.Set("per_page", "100")
-	resp := r.Context.PharosClient.InstitutionList(v)
+	resp := r.Context.RegistryClient.InstitutionList(v)
 	if resp.Error != nil {
-		r.Context.Logger.Errorf("Error getting institutions from Pharos: %v", resp.Error)
+		r.Context.Logger.Errorf("Error getting institutions from Registry: %v", resp.Error)
 	}
 	return resp.Institutions()
 }
@@ -104,17 +105,18 @@ func (r *IngestBucketReader) ProcessItem(institution *registry.Institution, obj 
 	r.CreateAndQueueItem(institution, obj)
 }
 
-func (r *IngestBucketReader) WorkItemAlreadyExists(instID int, name, etag string) (bool, error) {
+func (r *IngestBucketReader) WorkItemAlreadyExists(instID int64, name, etag string) (bool, error) {
 	v := url.Values{}
 	v.Set("name", name)
 	v.Set("etag", etag)
-	v.Set("institution_id", strconv.Itoa(instID))
+	v.Set("institution_id", strconv.FormatInt(instID, 10))
 	v.Set("page", "1")
 	v.Set("per_page", "100")
-	resp := r.Context.PharosClient.WorkItemList(v)
+	resp := r.Context.RegistryClient.WorkItemList(v)
 	if resp.Error != nil {
 		return false, resp.Error
 	}
+	// TODO: This should be fixed in registry, but confirm.
 	// Pharos doesn't have good filtering for this, so we do it here.
 	exists := false
 	for _, item := range resp.WorkItems() {
@@ -128,7 +130,7 @@ func (r *IngestBucketReader) WorkItemAlreadyExists(instID int, name, etag string
 
 func (r *IngestBucketReader) CreateAndQueueItem(institution *registry.Institution, obj minio.ObjectInfo) {
 	item := r.CreateWorkItem(institution, obj)
-	resp := r.Context.PharosClient.WorkItemSave(item)
+	resp := r.Context.RegistryClient.WorkItemSave(item)
 	if resp.Error != nil {
 		r.Context.Logger.Errorf("Error saving WorkItem for %s: %v", obj.Key, resp.Error)
 		return
@@ -140,7 +142,7 @@ func (r *IngestBucketReader) CreateAndQueueItem(institution *registry.Institutio
 		return
 	}
 	savedItem.QueuedAt = time.Now().UTC()
-	resp = r.Context.PharosClient.WorkItemSave(savedItem)
+	resp = r.Context.RegistryClient.WorkItemSave(savedItem)
 	if resp.Error != nil {
 		r.Context.Logger.Errorf("Error marking WorkItem %d as queued: %v", savedItem.ID, resp.Error)
 		return
@@ -153,7 +155,7 @@ func (r *IngestBucketReader) CreateWorkItem(institution *registry.Institution, o
 		Action:        constants.ActionIngest,
 		BagDate:       obj.LastModified,
 		Bucket:        institution.ReceivingBucket,
-		Date:          time.Now().UTC(),
+		DateProcessed: time.Now().UTC(),
 		ETag:          strings.Replace(obj.ETag, "\"", "", -1),
 		InstitutionID: institution.ID,
 		Name:          obj.Key,
@@ -163,5 +165,6 @@ func (r *IngestBucketReader) CreateWorkItem(institution *registry.Institution, o
 		Size:          obj.Size,
 		Stage:         constants.StageReceive,
 		Status:        constants.StatusPending,
+		User:          "system@aptrust.org",
 	}
 }

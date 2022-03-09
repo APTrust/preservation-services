@@ -12,7 +12,8 @@ const (
 	ActionFixityCheck          = "Fixity Check"
 	ActionGlacierRestore       = "Glacier Restore"
 	ActionIngest               = "Ingest"
-	ActionRestore              = "Restore"
+	ActionRestoreFile          = "Restore File"
+	ActionRestoreObject        = "Restore Object"
 	AlgMd5                     = "md5"
 	AlgSha1                    = "sha1"
 	AlgSha256                  = "sha256"
@@ -254,12 +255,10 @@ func TopicFor(action, stage, fileIdentifier string) (topic string, err error) {
 		topic = ingestTopics[action+stage]
 	} else if action == ActionFixityCheck {
 		topic = TopicFixity
-	} else if action == ActionRestore {
-		if fileIdentifier != "" {
-			topic = TopicFileRestore
-		} else {
-			topic = TopicObjectRestore
-		}
+	} else if action == ActionRestoreFile {
+		topic = TopicFileRestore
+	} else if action == ActionRestoreObject {
+		topic = TopicObjectRestore
 	} else if action == ActionGlacierRestore {
 		topic = TopicGlacierRestore
 	} else if action == ActionDelete {

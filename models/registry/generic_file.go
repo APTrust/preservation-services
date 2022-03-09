@@ -2,32 +2,32 @@ package registry
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/util"
 )
 
-// GenericFile represents a Pharos GenericFile object.
-// Note that FileModified is currently not being stored in Pharos.
+// GenericFile represents a Registry GenericFile object.
+// Note that FileModified is currently not being stored in Registry.
 type GenericFile struct {
-	Checksums                    []*Checksum      `json:"checksums,omitempty"`
-	CreatedAt                    time.Time        `json:"created_at,omitempty"`
-	FileFormat                   string           `json:"file_format,omitempty"`
-	FileModified                 time.Time        `json:"file_modified,omitempty"`
-	ID                           int              `json:"id,omitempty"`
-	Identifier                   string           `json:"identifier,omitempty"`
-	InstitutionID                int              `json:"institution_id,omitempty"`
-	IntellectualObjectID         int              `json:"intellectual_object_id,omitempty"`
-	IntellectualObjectIdentifier string           `json:"intellectual_object_identifier,omitempty"`
-	LastFixityCheck              time.Time        `json:"last_fixity_check,omitempty"`
-	PremisEvents                 []*PremisEvent   `json:"premis_events,omitempty"`
-	Size                         int64            `json:"size"`
-	State                        string           `json:"state,omitempty"`
-	StorageOption                string           `json:"storage_option"`
-	StorageRecords               []*StorageRecord `json:"storage_records,omitempty"`
-	UUID                         string           `json:"uuid,omitempty"`
-	UpdatedAt                    time.Time        `json:"updated_at,omitempty"`
+	Checksums            []*Checksum      `json:"checksums"`
+	CreatedAt            time.Time        `json:"created_at"`
+	FileFormat           string           `json:"file_format"`
+	FileModified         time.Time        `json:"file_modified"`
+	ID                   int64            `json:"id"`
+	Identifier           string           `json:"identifier"`
+	InstitutionID        int64            `json:"institution_id"`
+	IntellectualObjectID int64            `json:"intellectual_object_id"`
+	LastFixityCheck      time.Time        `json:"last_fixity_check"`
+	PremisEvents         []*PremisEvent   `json:"premis_events"`
+	Size                 int64            `json:"size"`
+	State                string           `json:"state"`
+	StorageOption        string           `json:"storage_option"`
+	StorageRecords       []*StorageRecord `json:"storage_records"`
+	UUID                 string           `json:"uuid"`
+	UpdatedAt            time.Time        `json:"updated_at"`
 }
 
 // GenericFileFromJSON converts a JSON representation of a GenericFile
@@ -50,19 +50,39 @@ func (gf *GenericFile) ToJSON() ([]byte, error) {
 	return bytes, nil
 }
 
+// IntellectualObjectIdentifier returns this file's intellectual
+// object identifier, or an error if it can't determine the object
+// identifier.
+func (gf *GenericFile) IntellectualObjectIdentifier() (string, error) {
+	parts := strings.Split(gf.Identifier, "/")
+	if len(parts) > 1 {
+		ident := strings.Join(parts[0:2], "/")
+		return ident, nil
+	}
+	return "", fmt.Errorf("invalid identifier: %s", gf.Identifier)
+}
+
 // PathInBag returns the path of this file within the original bag.
 // Example: If Identifier is "test.edu/bag/data/file.txt", this will
 // return "data/file.txt"
-func (gf *GenericFile) PathInBag() string {
-	return strings.Replace(gf.Identifier, gf.IntellectualObjectIdentifier+"/", "", 1)
+func (gf *GenericFile) PathInBag() (string, error) {
+	parts := strings.Split(gf.Identifier, "/")
+	if len(parts) > 2 {
+		return strings.Join(parts[2:], "/"), nil
+	}
+	return "", fmt.Errorf("invalid identifier: %s", gf.Identifier)
 }
 
 // PathMinusInstitution is the object name plus PathInBag(). In other words,
 // the full Identifier minus the leading institution name.
 // Example: If Identifier is "test.edu/bag/data/file.txt", this will
 // return "bag/data/file.txt"
-func (gf *GenericFile) PathMinusInstitution() string {
-	return strings.Replace(gf.Identifier, gf.InstitutionIdentifier()+"/", "", 1)
+func (gf *GenericFile) PathMinusInstitution() (string, error) {
+	parts := strings.Split(gf.Identifier, "/")
+	if len(parts) > 1 {
+		return strings.Join(parts[1:], "/"), nil
+	}
+	return "", fmt.Errorf("invalid identifier: %s", gf.Identifier)
 }
 
 // InstitutionIdentifier returns the Instition Identifier from the beginning
@@ -75,16 +95,8 @@ func (gf *GenericFile) InstitutionIdentifier() string {
 // IsTagFile returns true if this file's original path in the bag
 // was not in the data (payload) directory, and the
 func (gf *GenericFile) IsTagFile() bool {
-	pathInBag := gf.PathInBag()
+	pathInBag, _ := gf.PathInBag()
 	return !strings.HasPrefix(pathInBag, "data") && !util.LooksLikeManifest(pathInBag) && !util.LooksLikeTagManifest(pathInBag)
-}
-
-// JSON format for Pharos post/put is {"generic_file": <object>}
-// Also note that we don't serialize fields that Pharos doesn't accept.
-func (gf *GenericFile) SerializeForPharos() ([]byte, error) {
-	dataStruct := make(map[string]*GenericFileForPharos)
-	dataStruct["generic_file"] = NewGenericFileForPharos(gf)
-	return json.Marshal(dataStruct)
 }
 
 // GetLatestChecksum returns the most recent checksum digest for the given
@@ -99,34 +111,4 @@ func (gf *GenericFile) GetLatestChecksum(algorithm string) *Checksum {
 		}
 	}
 	return checksum
-}
-
-type GenericFileForPharos struct {
-	Checksums            []*Checksum      `json:"checksums_attributes,omitempty"`
-	FileFormat           string           `json:"file_format"`
-	ID                   int              `json:"id,omitempty"`
-	Identifier           string           `json:"identifier,omitempty"`
-	InstitutionID        int              `json:"institution_id"`
-	IntellectualObjectID int              `json:"intellectual_object_id"`
-	PremisEvents         []*PremisEvent   `json:"premis_events_attributes,omitempty"`
-	Size                 int64            `json:"size"`
-	StorageOption        string           `json:"storage_option"`
-	StorageRecords       []*StorageRecord `json:"storage_records_attributes,omitempty"`
-	UUID                 string           `json:"uuid,omitempty"`
-}
-
-func NewGenericFileForPharos(gf *GenericFile) *GenericFileForPharos {
-	return &GenericFileForPharos{
-		Checksums:            gf.Checksums,
-		FileFormat:           gf.FileFormat,
-		ID:                   gf.ID,
-		Identifier:           gf.Identifier,
-		InstitutionID:        gf.InstitutionID,
-		IntellectualObjectID: gf.IntellectualObjectID,
-		PremisEvents:         gf.PremisEvents,
-		Size:                 gf.Size,
-		StorageOption:        gf.StorageOption,
-		StorageRecords:       gf.StorageRecords,
-		UUID:                 gf.UUID,
-	}
 }

@@ -53,6 +53,6 @@ func NewIngestPreFetch(bufSize, numWorkers, maxAttempts int) *IngestPreFetch {
 	return worker
 }
 
-func createMetadataGatherer(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+func createMetadataGatherer(context *common.Context, workItemID int64, ingestObject *service.IngestObject) ingest.Runnable {
 	return ingest.NewMetadataGatherer(context, workItemID, ingestObject)
 }

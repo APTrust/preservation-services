@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package fixity_test
@@ -18,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Object identifier is loaded as part of Pharos integration fixtures
+// Object identifier is loaded as part of Registry integration fixtures
 var objIdentifier = "institution1.edu/photos"
 var fileIdentifier = "institution1.edu/data/test_http_file.txt"
 
@@ -31,7 +32,7 @@ func setup(t *testing.T) {
 	if !setupHasRun {
 		context := common.NewContext()
 		storageRecords := copyFileToPreservation(t, context)
-		createPharosRecords(t, context, storageRecords)
+		createRegistryRecords(t, context, storageRecords)
 		setupHasRun = true
 	}
 }
@@ -56,10 +57,10 @@ func copyFileToPreservation(t *testing.T, context *common.Context) (records []*r
 	return records
 }
 
-func createPharosRecords(t *testing.T, context *common.Context, records []*registry.StorageRecord) {
+func createRegistryRecords(t *testing.T, context *common.Context, records []*registry.StorageRecord) {
 	// Save a GenericFile record
 	gf := getGenericFile(t, context)
-	resp := context.PharosClient.GenericFileSave(gf)
+	resp := context.RegistryClient.GenericFileSave(gf)
 	require.Nil(t, resp.Error)
 	gf = resp.GenericFile() // now has ID
 
@@ -72,37 +73,37 @@ func createPharosRecords(t *testing.T, context *common.Context, records []*regis
 		Digest:        expectedFixity,
 		GenericFileID: gf.ID,
 		ID:            0,
+		InstitutionID: gf.InstitutionID,
 		UpdatedAt:     now,
 	}
-	resp = context.PharosClient.ChecksumSave(checksum, gf.Identifier)
+	resp = context.RegistryClient.ChecksumCreate(checksum)
 	require.Nil(t, resp.Error)
 
 	// Save the storage records that point to our local
 	// Minio integration test server.
 	for _, sr := range records {
 		sr.GenericFileID = gf.ID
-		resp = context.PharosClient.StorageRecordSave(sr, gf.Identifier)
+		resp = context.RegistryClient.StorageRecordCreate(sr, gf.InstitutionID)
 		require.Nil(t, resp.Error)
 	}
 }
 
 func getGenericFile(t *testing.T, context *common.Context) *registry.GenericFile {
-	resp := context.PharosClient.IntellectualObjectGet(objIdentifier)
+	resp := context.RegistryClient.IntellectualObjectByIdentifier(objIdentifier)
 	require.Nil(t, resp.Error)
 	obj := resp.IntellectualObject()
 	require.NotNil(t, obj)
 	return &registry.GenericFile{
-		FileFormat:                   "text/plain",
-		FileModified:                 time.Now().UTC(),
-		ID:                           0,
-		Identifier:                   fileIdentifier,
-		InstitutionID:                obj.InstitutionID,
-		IntellectualObjectID:         obj.ID,
-		IntellectualObjectIdentifier: obj.Identifier,
-		Size:                         15,
-		State:                        constants.StateActive,
-		StorageOption:                constants.StorageStandard,
-		UUID:                         fileUUID,
+		FileFormat:           "text/plain",
+		FileModified:         time.Now().UTC(),
+		ID:                   0,
+		Identifier:           fileIdentifier,
+		InstitutionID:        obj.InstitutionID,
+		IntellectualObjectID: obj.ID,
+		Size:                 15,
+		State:                constants.StateActive,
+		StorageOption:        constants.StorageStandard,
+		UUID:                 fileUUID,
 	}
 }
 
@@ -129,7 +130,7 @@ func TestSupportingMethods(t *testing.T) {
 	checker := fixity.NewChecker(context, fileIdentifier)
 
 	// Need to get GenericFile with StorageRecords
-	gf := context.PharosClient.GenericFileGet(fileIdentifier).GenericFile()
+	gf := context.RegistryClient.GenericFileByIdentifier(fileIdentifier).GenericFile()
 	actualFixity, url, err := checker.CalculateFixity(gf)
 	assert.Equal(t, expectedFixity, actualFixity)
 	assert.Equal(t, "https://s3.us-east-1.localhost:9899/preservation-va/8dc5ba50-4a53-4cfc-bb27-6f5e799ace53", url)

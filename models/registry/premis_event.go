@@ -6,17 +6,21 @@ import (
 )
 
 type PremisEvent struct {
-	Agent                        string    `json:"agent"`
-	CreatedAt                    time.Time `json:"created_at,omitempty"`
-	DateTime                     time.Time `json:"date_time"`
-	Detail                       string    `json:"detail"`
-	EventType                    string    `json:"event_type"`
-	GenericFileID                int       `json:"generic_file_id,omitempty"`
-	GenericFileIdentifier        string    `json:"generic_file_identifier,omitempty"`
-	ID                           int       `json:"id,omitempty"`
-	Identifier                   string    `json:"identifier"`
-	InstitutionID                int       `json:"institution_id"`
-	IntellectualObjectID         int       `json:"intellectual_object_id"`
+	Agent         string    `json:"agent"`
+	CreatedAt     time.Time `json:"created_at,omitempty"`
+	DateTime      time.Time `json:"date_time"`
+	Detail        string    `json:"detail"`
+	EventType     string    `json:"event_type"`
+	GenericFileID int64     `json:"generic_file_id,omitempty"`
+
+	// GenericFileIdentifier is read-only, from PremisEventView
+	GenericFileIdentifier string `json:"generic_file_identifier,omitempty"`
+	ID                    int64  `json:"id,omitempty"`
+	Identifier            string `json:"identifier"`
+	InstitutionID         int64  `json:"institution_id"`
+	IntellectualObjectID  int64  `json:"intellectual_object_id"`
+
+	// IntellectualObjectIdentifier is read-only, from PremisEventView
 	IntellectualObjectIdentifier string    `json:"intellectual_object_identifier"`
 	Object                       string    `json:"object"`
 	OutcomeDetail                string    `json:"outcome_detail"`
@@ -40,10 +44,4 @@ func (event *PremisEvent) ToJSON() ([]byte, error) {
 		return nil, err
 	}
 	return bytes, nil
-}
-
-// Note that Pharos uses the same format as ToJson() for this
-// object.
-func (event *PremisEvent) SerializeForPharos() ([]byte, error) {
-	return event.ToJSON()
 }

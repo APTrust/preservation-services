@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -8,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -20,7 +22,9 @@ import (
 )
 
 func testFileRestorations() {
+	ctx.Context.Logger.Infof("Starting test of %d restoration files", len(e2e.FilesToRestore))
 	for _, testFile := range e2e.FilesToRestore {
+		ctx.Context.Logger.Infof("Testing restoration file %s", testFile.Identifier)
 		objInfo, err := ctx.Context.S3StatObject(
 			constants.StorageProviderAWS,
 			ctx.TestInstitution.RestoreBucket,
@@ -71,7 +75,7 @@ func testWorkItemAfterRestore(objIdentifier, gfIdentifier string) {
 // and contains all the expected files.
 func validateBag(objIdentifier string) {
 	intelObj := getObject(objIdentifier)
-	pharosFiles := getPharosFiles(objIdentifier)
+	registryFiles := getregistryFiles(intelObj)
 	tarFileName := strings.Split(objIdentifier, "/")[1] + ".tar"
 	pathToBag := path.Join(ctx.Context.Config.BaseWorkingDir, "minio", "aptrust.restore.test.test.edu", "test.edu", tarFileName)
 
@@ -80,40 +84,38 @@ func validateBag(objIdentifier string) {
 	require.Nil(ctx.T, err, objIdentifier)
 	assert.True(ctx.T, len(ingestFiles) > 0, objIdentifier)
 
-	for _, gf := range pharosFiles {
+	for _, gf := range registryFiles {
 
 		// Make sure file was restored with bag
 		restoredFile := ingestFiles[gf.Identifier]
 		require.NotNil(ctx.T, restoredFile, gf.Identifier)
 
-		pharosLatestSha256 := gf.GetLatestChecksum(constants.AlgSha256)
-		require.NotNil(ctx.T, pharosLatestSha256, gf.Identifier)
+		RegistryLatestSha256 := gf.GetLatestChecksum(constants.AlgSha256)
+		require.NotNil(ctx.T, RegistryLatestSha256, gf.Identifier)
 		restoredFileSha256 := restoredFile.GetChecksum(constants.SourceIngest, constants.AlgSha256)
 		require.NotNil(ctx.T, restoredFileSha256, gf.Identifier)
 
 		// Make sure the restored version was the LATEST version
-		assert.Equal(ctx.T, pharosLatestSha256.Digest, restoredFileSha256.Digest, gf.Identifier)
+		assert.Equal(ctx.T, RegistryLatestSha256.Digest, restoredFileSha256.Digest, gf.Identifier)
 	}
 }
 
 func getObject(objIdentifier string) *registry.IntellectualObject {
-	resp := ctx.Context.PharosClient.IntellectualObjectGet(objIdentifier)
+	resp := ctx.Context.RegistryClient.IntellectualObjectByIdentifier(objIdentifier)
 	require.Nil(ctx.T, resp.Error, objIdentifier)
 	intelObj := resp.IntellectualObject()
 	require.NotNil(ctx.T, intelObj, objIdentifier)
 	return intelObj
 }
 
-// Get a list of files belonging to this object from Pharos
-func getPharosFiles(objIdentifier string) []*registry.GenericFile {
+// Get a list of files belonging to this object from Registry
+func getregistryFiles(obj *registry.IntellectualObject) []*registry.GenericFile {
 	params := url.Values{}
-	params.Set("intellectual_object_identifier", objIdentifier)
-	params.Set("include_relations", "true")
-	params.Set("include_storage_records", "true")
+	params.Set("intellectual_object_id", strconv.FormatInt(obj.ID, 10))
 	params.Set("page", "1")
 	params.Set("per_page", "200")
-	resp := ctx.Context.PharosClient.GenericFileList(params)
-	require.Nil(ctx.T, resp.Error, objIdentifier)
+	resp := ctx.Context.RegistryClient.GenericFileList(params)
+	require.Nil(ctx.T, resp.Error, obj.Identifier)
 	require.NotEmpty(ctx.T, resp.GenericFiles())
 	return resp.GenericFiles()
 }

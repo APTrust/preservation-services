@@ -18,7 +18,7 @@ type PreservationUploader struct {
 
 // NewPreservationUploader returns a new PerservationUploader which can
 // all files from S3 staging to preservation storage.
-func NewPreservationUploader(context *common.Context, workItemID int, ingestObject *service.IngestObject) *PreservationUploader {
+func NewPreservationUploader(context *common.Context, workItemID int64, ingestObject *service.IngestObject) *PreservationUploader {
 	return &PreservationUploader{
 		Base: Base{
 			Context:      context,

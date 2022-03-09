@@ -42,10 +42,6 @@ type Config struct {
 	MaxWorkerAttempts          int
 	NsqLookupd                 string
 	NsqURL                     string
-	PharosAPIKey               string `json:"-"`
-	PharosAPIUser              string `json:"-"`
-	PharosAPIVersion           string
-	PharosURL                  string
 	PreservationBuckets        []*PreservationBucket
 	ProfilesDir                string
 	QueueFixityInterval        time.Duration
@@ -55,6 +51,10 @@ type Config struct {
 	RedisRetryMs               time.Duration
 	RedisURL                   string
 	RedisUser                  string `json:"-"`
+	RegistryAPIKey             string `json:"-"`
+	RegistryAPIUser            string `json:"-"`
+	RegistryAPIVersion         string
+	RegistryURL                string
 	RestoreDir                 string
 	S3AWSHost                  string
 	S3Credentials              map[string]*S3Credentials `json:"-"`
@@ -141,10 +141,6 @@ func loadConfig() *Config {
 		MaxWorkerAttempts:          v.GetInt("MAX_WORKER_ATTEMPTS"),
 		NsqLookupd:                 v.GetString("NSQ_LOOKUPD"),
 		NsqURL:                     v.GetString("NSQ_URL"),
-		PharosAPIKey:               v.GetString("PRESERV_PHAROS_API_KEY"),
-		PharosAPIUser:              v.GetString("PRESERV_PHAROS_API_USER"),
-		PharosAPIVersion:           v.GetString("PRESERV_PHAROS_API_VERSION"),
-		PharosURL:                  v.GetString("PRESERV_PHAROS_URL"),
 		ProfilesDir:                v.GetString("PROFILES_DIR"),
 		QueueFixityInterval:        v.GetDuration("QUEUE_FIXITY_INTERVAL"),
 		RedisDefaultDB:             v.GetInt("REDIS_DEFAULT_DB"),
@@ -153,25 +149,29 @@ func loadConfig() *Config {
 		RedisRetryMs:               v.GetDuration("REDIS_RETRY_MS"),
 		RedisURL:                   v.GetString("REDIS_URL"),
 		RedisUser:                  v.GetString("REDIS_USER"),
+		RegistryAPIKey:             v.GetString("PRESERV_REGISTRY_API_KEY"),
+		RegistryAPIUser:            v.GetString("PRESERV_REGISTRY_API_USER"),
+		RegistryAPIVersion:         v.GetString("PRESERV_REGISTRY_API_VERSION"),
+		RegistryURL:                v.GetString("PRESERV_REGISTRY_URL"),
 		RestoreDir:                 v.GetString("RESTORE_DIR"),
 		S3AWSHost:                  v.GetString("S3_AWS_HOST"),
 		S3Credentials: map[string]*S3Credentials{
-			constants.StorageProviderAWS: &S3Credentials{
+			constants.StorageProviderAWS: {
 				Host:      v.GetString("S3_AWS_HOST"),
 				KeyID:     v.GetString("S3_AWS_KEY"),
 				SecretKey: v.GetString("S3_AWS_SECRET"),
 			},
-			constants.StorageProviderLocal: &S3Credentials{
+			constants.StorageProviderLocal: {
 				Host:      v.GetString("S3_LOCAL_HOST"),
 				KeyID:     v.GetString("S3_LOCAL_KEY"),
 				SecretKey: v.GetString("S3_LOCAL_SECRET"),
 			},
-			constants.StorageProviderWasabiOR: &S3Credentials{
+			constants.StorageProviderWasabiOR: {
 				Host:      v.GetString("S3_WASABI_HOST_OR"),
 				KeyID:     v.GetString("S3_WASABI_KEY"),
 				SecretKey: v.GetString("S3_WASABI_SECRET"),
 			},
-			constants.StorageProviderWasabiVA: &S3Credentials{
+			constants.StorageProviderWasabiVA: {
 				Host:      v.GetString("S3_WASABI_HOST_VA"),
 				KeyID:     v.GetString("S3_WASABI_KEY"),
 				SecretKey: v.GetString("S3_WASABI_SECRET"),
@@ -338,8 +338,11 @@ func (config *Config) checkHostSafety() {
 		if !isLocalHost(config.NsqURL) {
 			util.PrintAndExit(fmt.Sprintf("Dev/Test setup cannot point to external NSQ instance %s", config.NsqURL))
 		}
-		if !isLocalHost(config.PharosURL) {
-			util.PrintAndExit(fmt.Sprintf("Dev/Test setup cannot point to external Pharos instance %s", config.PharosURL))
+		if !isLocalHost(config.RegistryURL) {
+			util.PrintAndExit(fmt.Sprintf("Dev/Test setup cannot point to external Registry instance %s", config.RegistryURL))
+		}
+		if !isLocalHost(config.RegistryURL) {
+			util.PrintAndExit(fmt.Sprintf("Dev/Test setup cannot point to external Registry instance %s", config.RegistryURL))
 		}
 		if !isLocalHost(config.RedisURL) {
 			util.PrintAndExit(fmt.Sprintf("Dev/Test setup cannot point to external Redis instance %s", config.RedisURL))
@@ -407,17 +410,17 @@ func (config *Config) checkBasicSettings() {
 	if config.NsqURL == "" {
 		util.PrintAndExit("Config is missing NsqURL")
 	}
-	if config.PharosAPIKey == "" {
-		util.PrintAndExit("Config is missing PharosAPIKey")
+	if config.RegistryAPIKey == "" {
+		util.PrintAndExit("Config is missing RegistryAPIKey")
 	}
-	if config.PharosAPIUser == "" {
-		util.PrintAndExit("Config is missing PharosAPIUser")
+	if config.RegistryAPIUser == "" {
+		util.PrintAndExit("Config is missing RegistryAPIUser")
 	}
-	if config.PharosAPIVersion == "" {
-		util.PrintAndExit("Config is missing PharosAPIVersion")
+	if config.RegistryAPIVersion == "" {
+		util.PrintAndExit("Config is missing RegistryAPIVersion")
 	}
-	if config.PharosURL == "" {
-		util.PrintAndExit("Config is missing PharosURL")
+	if config.RegistryURL == "" {
+		util.PrintAndExit("Config is missing RegistryURL")
 	}
 	if config.ProfilesDir == "" {
 		util.PrintAndExit("Config is missing ProfilesDir")
@@ -442,6 +445,18 @@ func (config *Config) checkBasicSettings() {
 	// if c.RedisUser == "" {
 	// 	util.PrintAndExit("Config is missing RedisUser")
 	// }
+	if config.RegistryAPIKey == "" {
+		util.PrintAndExit("Config is missing RegistryAPIKey")
+	}
+	if config.RegistryAPIUser == "" {
+		util.PrintAndExit("Config is missing RegistryAPIUser")
+	}
+	if config.RegistryAPIVersion == "" {
+		util.PrintAndExit("Config is missing RegistryAPIVersion")
+	}
+	if config.RegistryURL == "" {
+		util.PrintAndExit("Config is missing RegistryURL")
+	}
 	if config.RestoreDir == "" {
 		util.PrintAndExit("Config is missing RestoreDir")
 	}
@@ -519,7 +534,7 @@ func (config *Config) makeDirs() error {
 
 func (config *Config) initPreservationBuckets() {
 	config.PreservationBuckets = []*PreservationBucket{
-		&PreservationBucket{
+		{
 			Bucket:          config.BucketStandardVA,
 			Description:     "AWS Virginia S3 bucket for Standard primary preservation",
 			Host:            config.S3AWSHost,
@@ -529,7 +544,7 @@ func (config *Config) initPreservationBuckets() {
 			RestorePriority: 1,
 			StorageClass:    constants.StorageClassStandard,
 		},
-		&PreservationBucket{
+		{
 			Bucket:          config.BucketStandardOR,
 			Description:     "AWS Oregon Glacier bucket for Standard storage repilication",
 			Host:            config.S3AWSHost,
@@ -539,7 +554,7 @@ func (config *Config) initPreservationBuckets() {
 			RestorePriority: 4,
 			StorageClass:    constants.StorageClassGlacier,
 		},
-		&PreservationBucket{
+		{
 			Bucket:          config.BucketGlacierOH,
 			Description:     "AWS Ohio Glacier storage",
 			Host:            config.S3AWSHost,
@@ -549,7 +564,7 @@ func (config *Config) initPreservationBuckets() {
 			RestorePriority: 6,
 			StorageClass:    constants.StorageClassGlacier,
 		},
-		&PreservationBucket{
+		{
 			Bucket:          config.BucketGlacierOR,
 			Description:     "AWS Oregon Glacier storage",
 			Host:            config.S3AWSHost,
@@ -559,7 +574,7 @@ func (config *Config) initPreservationBuckets() {
 			RestorePriority: 7,
 			StorageClass:    constants.StorageClassGlacier,
 		},
-		&PreservationBucket{
+		{
 			Bucket:          config.BucketGlacierVA,
 			Description:     "AWS Virginia Glacier storage",
 			Host:            config.S3AWSHost,
@@ -569,7 +584,7 @@ func (config *Config) initPreservationBuckets() {
 			RestorePriority: 5,
 			StorageClass:    constants.StorageClassGlacier,
 		},
-		&PreservationBucket{
+		{
 			Bucket:          config.BucketGlacierDeepOH,
 			Description:     "AWS Ohio Glacier deep storage",
 			Host:            config.S3AWSHost,
@@ -579,7 +594,7 @@ func (config *Config) initPreservationBuckets() {
 			RestorePriority: 9,
 			StorageClass:    constants.StorageClassGlacierDeep,
 		},
-		&PreservationBucket{
+		{
 			Bucket:          config.BucketGlacierDeepOR,
 			Description:     "AWS Oregon Glacier deep storage",
 			Host:            config.S3AWSHost,
@@ -589,7 +604,7 @@ func (config *Config) initPreservationBuckets() {
 			RestorePriority: 10,
 			StorageClass:    constants.StorageClassGlacierDeep,
 		},
-		&PreservationBucket{
+		{
 			Bucket:          config.BucketGlacierDeepVA,
 			Description:     "AWS Virginia Glacier deep storage",
 			Host:            config.S3AWSHost,
@@ -599,7 +614,7 @@ func (config *Config) initPreservationBuckets() {
 			RestorePriority: 8,
 			StorageClass:    constants.StorageClassGlacierDeep,
 		},
-		&PreservationBucket{
+		{
 			Bucket:          config.BucketWasabiOR,
 			Description:     "Wasabi Oregon storage",
 			Host:            config.S3WasabiHostOR,
@@ -609,7 +624,7 @@ func (config *Config) initPreservationBuckets() {
 			RestorePriority: 3,
 			StorageClass:    constants.StorageClassWasabi,
 		},
-		&PreservationBucket{
+		{
 			Bucket:          config.BucketWasabiVA,
 			Description:     "Wasabi Virginia storage (us-east-1)",
 			Host:            config.S3WasabiHostVA,
@@ -623,7 +638,7 @@ func (config *Config) initPreservationBuckets() {
 }
 
 // ToJSON serializes the config to JSON for logging purposes.
-// It omits some sensitive data, such as the Pharos API key and
+// It omits some sensitive data, such as the Registry API key and
 // AWS credentials.
 func (config *Config) ToJSON() string {
 	data, _ := json.Marshal(config)

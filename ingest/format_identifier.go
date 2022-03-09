@@ -23,7 +23,7 @@ type FormatIdentifier struct {
 // NewFormatIdentifier creates a new FormatIdentifier. This will panic
 // if the prerequisites for running the format identifier script are
 // not present.
-func NewFormatIdentifier(context *common.Context, workItemID int, ingestObject *service.IngestObject) *FormatIdentifier {
+func NewFormatIdentifier(context *common.Context, workItemID int64, ingestObject *service.IngestObject) *FormatIdentifier {
 	signatureFile := path.Join(context.Config.ProfilesDir, "default.sig")
 	ziggy, err := siegfried.Load(signatureFile)
 	if err != nil {

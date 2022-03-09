@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package deletion_test
@@ -6,6 +7,7 @@ import (
 	ctx "context"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -23,20 +25,26 @@ import (
 )
 
 var objIdentifier = "institution2.edu/springfield"
+var instID = int64(3)
 var fileNames = []string{
 	"doc1",
 	"doc2",
 	"doc3",
 }
 var alreadySaved = make([]string, 0)
+
+// The following are all set the first time createObjectAndFiles is called.
+// This was retrofitted after the creation of the Registry.
 var objectCreated = false
+var savedObj *registry.IntellectualObject
+var savedFiles []*registry.GenericFile
 
 func TestNewManager(t *testing.T) {
 	context := common.NewContext()
 	manager := deletion.NewManager(
 		context,
 		9999,
-		"test.edu/my_object",
+		12345,
 		constants.TypeObject,
 		"requestor@example.com",
 		"approver@example.com",
@@ -44,8 +52,8 @@ func TestNewManager(t *testing.T) {
 	)
 	assert.NotNil(t, manager)
 	assert.Equal(t, context, manager.Context)
-	assert.Equal(t, 9999, manager.WorkItemID)
-	assert.Equal(t, "test.edu/my_object", manager.Identifier)
+	assert.EqualValues(t, 9999, manager.WorkItemID)
+	assert.EqualValues(t, 12345, manager.ObjOrFileID)
 	assert.Equal(t, constants.TypeObject, manager.ItemType)
 	assert.Equal(t, "requestor@example.com", manager.RequestedBy)
 	assert.Equal(t, "approver@example.com", manager.InstApprover)
@@ -55,11 +63,17 @@ func TestNewManager(t *testing.T) {
 func TestRun_SingleFile(t *testing.T) {
 	context := common.NewContext()
 	prepareForTest(t, context)
-	fileIdentifier := "institution2.edu/springfield/doc1"
+	gf := savedFiles[0] // doc1
+
+	resp := context.RegistryClient.GenericFilePrepareForDelete(gf.ID)
+	require.Nil(t, resp.Error)
+	workItem := resp.WorkItem()
+	require.True(t, workItem.ID > 0)
+
 	manager := deletion.NewManager(
 		context,
-		9999,
-		fileIdentifier,
+		workItem.ID,
+		gf.ID,
 		constants.TypeFile,
 		"requestor@example.com",
 		"approver@example.com",
@@ -69,19 +83,24 @@ func TestRun_SingleFile(t *testing.T) {
 	assert.Equal(t, 1, count)
 	assert.Empty(t, errors)
 
-	testItemMarkedDeleted(t, context, fileIdentifier)
-	testStorageRecordsRemoved(t, context, fileIdentifier)
-	testFileDeletionEvents(t, context, fileIdentifier)
+	testItemMarkedDeleted(t, context, constants.TypeFile, gf.ID)
+	testStorageRecordsRemoved(t, context, gf.ID)
+	testFileDeletionEvents(t, context, gf.ID)
 }
 
 func TestRun_Object(t *testing.T) {
 	context := common.NewContext()
 	prepareForTest(t, context)
-	itemID := createDeletionWorkItem(t, context, objIdentifier)
+
+	resp := context.RegistryClient.IntellectualObjectPrepareForDelete(savedObj.ID)
+	require.Nil(t, resp.Error)
+	workItem := resp.WorkItem()
+	require.True(t, workItem.ID > 0)
+
 	manager := deletion.NewManager(
 		context,
-		itemID,
-		objIdentifier,
+		workItem.ID,
+		savedObj.ID,
 		constants.TypeObject,
 		"requestor@example.com",
 		"approver@example.com",
@@ -96,55 +115,58 @@ func TestRun_Object(t *testing.T) {
 	assert.Empty(t, errors)
 
 	// File 2
-	testItemMarkedDeleted(t, context, "institution2.edu/springfield/doc2")
-	testStorageRecordsRemoved(t, context, "institution2.edu/springfield/doc2")
-	testFileDeletionEvents(t, context, "institution2.edu/springfield/doc2")
+	testItemMarkedDeleted(t, context, constants.TypeFile, savedFiles[1].ID)
+	testStorageRecordsRemoved(t, context, savedFiles[1].ID)
+	testFileDeletionEvents(t, context, savedFiles[1].ID)
 
 	// File 3
-	testItemMarkedDeleted(t, context, "institution2.edu/springfield/doc3")
-	testStorageRecordsRemoved(t, context, "institution2.edu/springfield/doc3")
-	testFileDeletionEvents(t, context, "institution2.edu/springfield/doc3")
+	testItemMarkedDeleted(t, context, constants.TypeFile, savedFiles[2].ID)
+	testStorageRecordsRemoved(t, context, savedFiles[2].ID)
+	testFileDeletionEvents(t, context, savedFiles[2].ID)
 
 	// IntellectualObject
-	testItemMarkedDeleted(t, context, "institution2.edu/springfield")
+	testItemMarkedDeleted(t, context, constants.TypeObject, savedObj.ID)
 	testObjectDeletionEvent(t, context)
 }
 
-func testItemMarkedDeleted(t *testing.T, context *common.Context, identifier string) {
-	if identifier == objIdentifier {
-		resp := context.PharosClient.IntellectualObjectGet(identifier)
+func testItemMarkedDeleted(t *testing.T, context *common.Context, itemType string, itemID int64) {
+	if itemType == constants.TypeObject {
+		resp := context.RegistryClient.IntellectualObjectByID(itemID)
 		require.Nil(t, resp.Error)
 		assert.Equal(t, constants.StateDeleted, resp.IntellectualObject().State)
 	} else {
-		resp := context.PharosClient.GenericFileGet(identifier)
+		resp := context.RegistryClient.GenericFileByID(itemID)
 		require.Nil(t, resp.Error)
 		assert.Equal(t, constants.StateDeleted, resp.GenericFile().State)
 	}
 }
 
-func testStorageRecordsRemoved(t *testing.T, context *common.Context, gfIdentifier string) {
-	resp := context.PharosClient.StorageRecordList(gfIdentifier)
+func testStorageRecordsRemoved(t *testing.T, context *common.Context, gfID int64) {
+	values := url.Values{}
+	values.Add("generic_file_id", strconv.FormatInt(gfID, 10))
+	resp := context.RegistryClient.StorageRecordList(values)
 	require.Nil(t, resp.Error)
 	assert.Equal(t, 0, len(resp.StorageRecords()))
 }
 
-func testFileDeletionEvents(t *testing.T, context *common.Context, gfIdentifier string) {
+func testFileDeletionEvents(t *testing.T, context *common.Context, gfID int64) {
 	instId := getInstId(t, context)
 	values := url.Values{}
-	values.Set("file_identifier", gfIdentifier)
+	values.Set("generic_file_id", strconv.FormatInt(gfID, 10))
 	values.Set("event_type", constants.EventDeletion)
 	values.Set("page", "1")
 	values.Set("per_page", "20")
-	resp := context.PharosClient.PremisEventList(values)
+	resp := context.RegistryClient.PremisEventList(values)
 	require.Nil(t, resp.Error)
 	deletionEvents := resp.PremisEvents()
-	assert.Equal(t, 10, len(deletionEvents))
+	// One event for each copy deletion, plus one signalling
+	// that all copies have been deleted.
+	assert.Equal(t, 11, len(deletionEvents))
 	for _, event := range deletionEvents {
-		assert.True(t, strings.Contains(event.OutcomeInformation, "requestor@example.com"))
-		assert.True(t, strings.Contains(event.OutcomeInformation, "approver@example.com"))
-		assert.True(t, strings.Contains(event.OutcomeInformation, "some-admin@aptrust.org"))
-		assert.True(t, strings.Contains(event.Detail, "Deleted one copy of this file from"))
-		assert.True(t, strings.Contains(event.Detail, "localhost:9899"))
+		// Deletion manager and Registry internal log slighly different messages.
+		// The second is for Registry internal, indicating deletion of all copies.
+		assert.True(t, strings.HasSuffix(event.OutcomeInformation, "This event confirms all preservation copies have been deleted.") || strings.HasPrefix(event.OutcomeInformation, "One copy of this file has been deleted from"), event.OutcomeInformation)
+		assert.True(t, (strings.HasPrefix(event.Detail, "Deleted one copy of this file from") || event.Detail == "All copies of this file have been deleted from preservation storage"), event.Detail)
 		assert.Equal(t, constants.StatusSuccess, event.Outcome)
 		assert.Equal(t, objIdentifier, event.IntellectualObjectIdentifier)
 		assert.NotEqual(t, 0, event.IntellectualObjectID)
@@ -154,21 +176,28 @@ func testFileDeletionEvents(t *testing.T, context *common.Context, gfIdentifier 
 
 func testObjectDeletionEvent(t *testing.T, context *common.Context) {
 	values := url.Values{}
-	values.Set("object_identifier", objIdentifier)
-	values.Set("file_identifier", "")
+	values.Set("intellectual_object_id", strconv.FormatInt(savedObj.ID, 10))
 	values.Set("event_type", constants.EventDeletion)
 	values.Set("page", "1")
 	values.Set("per_page", "100")
-	resp := context.PharosClient.PremisEventList(values)
+	resp := context.RegistryClient.PremisEventList(values)
 	require.Nil(t, resp.Error)
-	// Pharos doesn't filter these results properly
-	count := 0
+
+	// There should be one deletion event for the object,
+	// and eleven for each file (one for each of the ten copies
+	// of the file, which we copied to all ten buckets, and one
+	// for the overall deletion).
+	objCount := 0
+	fileCount := 0
 	for _, event := range resp.PremisEvents() {
-		if event.GenericFileIdentifier == "" {
-			count++
+		if event.GenericFileID == 0 {
+			objCount++
+		} else {
+			fileCount++
 		}
 	}
-	assert.Equal(t, 1, count)
+	assert.Equal(t, 1, objCount)
+	assert.Equal(t, 33, fileCount)
 }
 
 func prepareForTest(t *testing.T, context *common.Context) {
@@ -181,7 +210,7 @@ func prepareForTest(t *testing.T, context *common.Context) {
 // the name, ID, and identifier.
 func createObjectAndFiles(t *testing.T, context *common.Context) {
 	if !objectCreated {
-		resp := context.PharosClient.IntellectualObjectGet("institution2.edu/coal")
+		resp := context.RegistryClient.IntellectualObjectByIdentifier("institution2.edu/coal")
 		require.Nil(t, resp.Error)
 		obj := resp.IntellectualObject()
 		require.NotNil(t, obj)
@@ -189,26 +218,27 @@ func createObjectAndFiles(t *testing.T, context *common.Context) {
 		obj.Identifier = objIdentifier
 		obj.BagName = "springfield.tar"
 		obj.State = constants.StateActive
-		resp = context.PharosClient.IntellectualObjectSave(obj)
+		resp = context.RegistryClient.IntellectualObjectSave(obj)
 		require.Nil(t, resp.Error)
-		savedObj := resp.IntellectualObject()
+		savedObj = resp.IntellectualObject()
+		savedFiles = make([]*registry.GenericFile, len(fileNames))
 
-		for _, file := range fileNames {
+		for i, file := range fileNames {
 			gf := &registry.GenericFile{
-				FileFormat:                   "application/ms-word",
-				Identifier:                   fmt.Sprintf("%s/%s", objIdentifier, file),
-				InstitutionID:                savedObj.InstitutionID,
-				IntellectualObjectID:         savedObj.ID,
-				IntellectualObjectIdentifier: savedObj.Identifier,
-				Size:                         500,
-				State:                        "A",
-				StorageOption:                constants.StorageStandard,
-				UUID:                         uuid.New().String(),
+				FileFormat:           "application/ms-word",
+				Identifier:           fmt.Sprintf("%s/%s", objIdentifier, file),
+				InstitutionID:        savedObj.InstitutionID,
+				IntellectualObjectID: savedObj.ID,
+				Size:                 500,
+				State:                "A",
+				StorageOption:        constants.StorageStandard,
+				UUID:                 uuid.New().String(),
 			}
-			resp = context.PharosClient.GenericFileSave(gf)
+			resp = context.RegistryClient.GenericFileSave(gf)
 			require.Nil(t, resp.Error)
+			savedFiles[i] = resp.GenericFile()
 			ingestEvent := getFileIngestEvent(gf)
-			resp = context.PharosClient.PremisEventSave(ingestEvent)
+			resp = context.RegistryClient.PremisEventSave(ingestEvent)
 			require.Nil(t, resp.Error)
 		}
 	}
@@ -228,6 +258,12 @@ func copyFilesToLocalPreservation(t *testing.T, context *common.Context) {
 func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 	pathToFile := testutil.PathToUnitTestBag("example.edu.multipart.b01.of02.tar")
 	gfIdentifier := fmt.Sprintf("%s/%s", objIdentifier, filename)
+
+	resp := context.RegistryClient.GenericFileByIdentifier(gfIdentifier)
+	require.Nil(t, resp.Error)
+	gf := resp.GenericFile()
+	require.NotNil(t, gf)
+
 	for _, preservationBucket := range context.Config.PreservationBuckets {
 		_url := preservationBucket.URLFor(filename)
 		if util.StringListContains(alreadySaved, _url) {
@@ -244,79 +280,39 @@ func copyFileToBuckets(t *testing.T, context *common.Context, filename string) {
 		require.Nil(t, err)
 
 		storageRecord := &registry.StorageRecord{
-			URL: _url,
+			URL:           _url,
+			GenericFileID: gf.ID,
 		}
-		resp := context.PharosClient.StorageRecordSave(storageRecord, gfIdentifier)
+		resp := context.RegistryClient.StorageRecordCreate(storageRecord, gf.InstitutionID)
 		require.Nil(t, resp.Error)
 		alreadySaved = append(alreadySaved, _url)
 	}
 }
 
-// We have to create a deletion WorkItem for this object,
-// or Pharos returns the following error when we call the
-// object's finish_delete endpoint:
-// "There is no existing deletion request for the specified object."
-func createDeletionWorkItem(t *testing.T, context *common.Context, identifier string) int {
-	now := time.Now().UTC()
-	gfIdentifier := ""
-	if identifier != objIdentifier {
-		gfIdentifier = identifier
-	}
-	item := &registry.WorkItem{
-		APTrustApprover:       "some-admin@aptrust.org",
-		Action:                constants.ActionDelete,
-		BagDate:               testutil.Bloomsday,
-		Bucket:                "receiving",
-		CreatedAt:             now,
-		Date:                  now,
-		ETag:                  "1234",
-		GenericFileIdentifier: gfIdentifier,
-		InstApprover:          "approver@example.com",
-		InstitutionID:         getInstId(t, context),
-		Name:                  "springfield.tar",
-		NeedsAdminReview:      false,
-		Note:                  "Deletion requested",
-		ObjectIdentifier:      objIdentifier,
-		Outcome:               "Deleteion requested",
-		QueuedAt:              now,
-		Retry:                 true,
-		Size:                  500,
-		Stage:                 constants.StageRequested,
-		Status:                constants.StatusPending,
-		UpdatedAt:             now,
-		User:                  "requestor@example.com",
-	}
-	resp := context.PharosClient.WorkItemSave(item)
-	require.Nil(t, resp.Error)
-	return resp.WorkItem().ID
-}
-
-func getInstId(t *testing.T, context *common.Context) int {
-	resp := context.PharosClient.InstitutionGet("institution2.edu")
+func getInstId(t *testing.T, context *common.Context) int64 {
+	resp := context.RegistryClient.InstitutionByIdentifier("institution2.edu")
 	require.Nil(t, resp.Error)
 	return resp.Institution().ID
 }
 
-// Sigh... Pharos internal logic requires that this record exist
+// Registry internal logic requires that this record exist
 // before it will allow a deletion to be marked complete.
 func getFileIngestEvent(gf *registry.GenericFile) *registry.PremisEvent {
 	eventId := uuid.New()
 	timestamp := time.Now().UTC().Add(-1 * time.Minute)
 	return &registry.PremisEvent{
-		Identifier:                   eventId.String(),
-		EventType:                    constants.EventIngestion,
-		DateTime:                     timestamp,
-		Detail:                       fmt.Sprintf("Item was ingested"),
-		Outcome:                      constants.StatusSuccess,
-		OutcomeDetail:                "yadda yadda yadda",
-		Object:                       "preservation-services + Minio S3 client",
-		Agent:                        constants.S3ClientName,
-		OutcomeInformation:           "blah blah blah",
-		IntellectualObjectIdentifier: gf.IntellectualObjectIdentifier,
-		GenericFileIdentifier:        gf.Identifier,
-		InstitutionID:                gf.InstitutionID,
-		IntellectualObjectID:         gf.IntellectualObjectID,
-		CreatedAt:                    timestamp,
-		UpdatedAt:                    timestamp,
+		Identifier:           eventId.String(),
+		EventType:            constants.EventIngestion,
+		DateTime:             timestamp,
+		Detail:               fmt.Sprintf("Item was ingested"),
+		Outcome:              constants.StatusSuccess,
+		OutcomeDetail:        "yadda yadda yadda",
+		Object:               "preservation-services + Minio S3 client",
+		Agent:                constants.S3ClientName,
+		OutcomeInformation:   "blah blah blah",
+		InstitutionID:        gf.InstitutionID,
+		IntellectualObjectID: gf.IntellectualObjectID,
+		CreatedAt:            timestamp,
+		UpdatedAt:            timestamp,
 	}
 }

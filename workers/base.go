@@ -45,7 +45,7 @@ type ServiceWorker interface {
 type Base struct {
 
 	// Context contains info about the context in which the worker is
-	// operation, including connections to NSQ, Redis, Pharos, and S3.
+	// operation, including connections to NSQ, Redis, Registry, and S3.
 	Context *common.Context
 
 	// ItemsInProcess keeps track of WorkItem ids that the worker is
@@ -88,7 +88,7 @@ type Base struct {
 	// institutionCache maps institution ids to identifiers. The institution
 	// identifier is typically a domain name like "virginia.edu", "test.org",
 	// etc.
-	institutionCache map[int]string
+	institutionCache map[int64]string
 
 	// NSQConsumer implements HandleMessage to receive messages from NSQ.
 	NSQConsumer *nsq.Consumer
@@ -125,7 +125,7 @@ func (b *Base) RegisterAsNsqConsumer() error {
 // and assign the right IngestItem.Processor type and push the item into
 // the ProcessChannel.
 func (b *Base) HandleMessage(message *nsq.Message) error {
-	// Get the WorkItem from Pharos. If we can't, it's fatal.
+	// Get the WorkItem from Registry. If we can't, it's fatal.
 	workItem, procErr := b.GetWorkItem(message)
 	if procErr != nil && procErr.IsFatal {
 		b.Context.Logger.Error(procErr.Error())
@@ -134,7 +134,7 @@ func (b *Base) HandleMessage(message *nsq.Message) error {
 
 	// If there's any reason to skip this, return nil to tell
 	// NSQ it's done. We haven't yet marked this WorkItem as
-	// started, so do not save it back to Pharos if we're going
+	// started, so do not save it back to Registry if we're going
 	// to skip it. Doing so is the likely cause of a race condition
 	// that resulted in the sporadically stalled items recorded in
 	// https://trello.com/c/AsPdzfLi
@@ -150,7 +150,7 @@ func (b *Base) HandleMessage(message *nsq.Message) error {
 		return err
 	}
 
-	// Tell Pharos and Redis we're starting work on this
+	// Tell Registry and Redis we're starting work on this
 	b.MarkAsStarted(task)
 
 	// Make a note that we're processing this.
@@ -189,19 +189,19 @@ func (b *Base) ProcessItem() {
 func (b *Base) GetWorkItem(message *nsq.Message) (*registry.WorkItem, *service.ProcessingError) {
 	msgBody := strings.TrimSpace(string(message.Body))
 	b.Context.Logger.Info("NSQ Message body: ", msgBody)
-	workItemID, err := strconv.Atoi(string(msgBody))
+	workItemID, err := strconv.ParseInt(string(msgBody), 10, 64)
 	if err != nil || workItemID == 0 {
 		fullErr := fmt.Errorf("Could not get WorkItemId from NSQ message body: %v", err)
 		return nil, b.Error(0, msgBody, fullErr, true)
 	}
-	resp := b.Context.PharosClient.WorkItemGet(workItemID)
+	resp := b.Context.RegistryClient.WorkItemByID(workItemID)
 	if resp.Error != nil {
-		fullErr := fmt.Errorf("Error getting WorkItem %d from Pharos: %v", workItemID, resp.Error)
+		fullErr := fmt.Errorf("Error getting WorkItem %d from Registry: %v", workItemID, resp.Error)
 		return nil, b.Error(workItemID, msgBody, fullErr, true)
 	}
 	workItem := resp.WorkItem()
 	if workItem == nil {
-		fullErr := fmt.Errorf("Pharos returned nil for WorkItem %d", workItemID)
+		fullErr := fmt.Errorf("Registry returned nil for WorkItem %d", workItemID)
 		return nil, b.Error(workItemID, msgBody, fullErr, true)
 	}
 	b.Context.Logger.Info("Got WorkItem", workItem.ID)
@@ -209,7 +209,7 @@ func (b *Base) GetWorkItem(message *nsq.Message) (*registry.WorkItem, *service.P
 }
 
 // Error creates a new ProcessingError.
-func (b *Base) Error(workItemID int, identifier string, err error, isFatal bool) *service.ProcessingError {
+func (b *Base) Error(workItemID int64, identifier string, err error, isFatal bool) *service.ProcessingError {
 	return service.NewProcessingError(
 		workItemID,
 		identifier,
@@ -220,12 +220,12 @@ func (b *Base) Error(workItemID int, identifier string, err error, isFatal bool)
 
 // GetInstitutionIdentifier returns the identifier for the institution
 // with the specified ID.
-func (b *Base) GetInstitutionIdentifier(instID int) (string, error) {
+func (b *Base) GetInstitutionIdentifier(instID int64) (string, error) {
 	if _, ok := b.institutionCache[instID]; !ok {
 		v := url.Values{}
-		v.Add("order", "name")
+		v.Add("sort", "name")
 		v.Add("per_page", "200")
-		resp := b.Context.PharosClient.InstitutionList(v)
+		resp := b.Context.RegistryClient.InstitutionList(v)
 		if resp.Error != nil {
 			return "", resp.Error
 		}
@@ -238,7 +238,7 @@ func (b *Base) GetInstitutionIdentifier(instID int) (string, error) {
 
 // GetWorkResult returns an WorkResult object for this WorkItem. If one
 // already exists in Redis, it returns that. If not, it creates a new one.
-func (b *Base) GetWorkResult(workItemID int) *service.WorkResult {
+func (b *Base) GetWorkResult(workItemID int64) *service.WorkResult {
 	workResult, err := b.Context.RedisClient.WorkResultGet(workItemID, b.Settings.NSQTopic)
 	if err != nil {
 		b.Context.Logger.Infof("No WorkResult in Redis for WorkItem %d. No problem. Creating a new one.", workItemID)
@@ -249,7 +249,7 @@ func (b *Base) GetWorkResult(workItemID int) *service.WorkResult {
 
 // SaveWorkResult saves a WorkResult to Redis and logs an error if any occurs.
 // Will try three times, in case Redis is busy.
-func (b *Base) SaveWorkResult(workItemID int, result *service.WorkResult) error {
+func (b *Base) SaveWorkResult(workItemID int64, result *service.WorkResult) error {
 	// Don't save, because processing is done and we don't
 	// want to leave orphan records in Redis.
 	if b.Settings.NextQueueTopic == "" {
@@ -272,33 +272,33 @@ func (b *Base) SaveWorkResult(workItemID int, result *service.WorkResult) error 
 	return nil
 }
 
-// SaveWorkItem saves a WorkItem back to Pharos.
+// SaveWorkItem saves a WorkItem back to Registry.
 func (b *Base) SaveWorkItem(workItem *registry.WorkItem) error {
-	var resp *network.PharosResponse
+	var resp *network.RegistryResponse
 	for i := 0; i < 5; i++ {
-		resp = b.Context.PharosClient.WorkItemSave(workItem)
+		resp = b.Context.RegistryClient.WorkItemSave(workItem)
 		if resp.Error == nil {
 			break
 		} else {
 			// Main problem here is 502/Bad Gateway, which seems
 			// to happen in particular in the reingest check worker,
-			// where turnaround between calls to Pharos is a fraction
+			// where turnaround between calls to Registry is a fraction
 			// of a second.
 			b.Context.Logger.Errorf(
-				"Error saving WorkItem %d to Pharos "+
+				"Error saving WorkItem %d to Registry "+
 					"(attempt %d, will retry in 1 second): %v",
 				workItem.ID, i+1, resp.Error)
 			time.Sleep(1 * time.Second)
 		}
 	}
 	if resp.Error != nil {
-		b.Context.Logger.Errorf("Error saving WorkItem %d to Pharos "+
+		b.Context.Logger.Errorf("Error saving WorkItem %d to Registry "+
 			"after max attempts: %v",
 			workItem.ID, resp.Error)
 		return resp.Error
 	} else {
 		jsonData, _ := workItem.ToJSON()
-		b.Context.Logger.Infof("Saved WorkItem to Pharos: %s", jsonData)
+		b.Context.Logger.Infof("Saved WorkItem to Registry: %s", jsonData)
 	}
 	return nil
 }
@@ -323,7 +323,7 @@ func (b *Base) OtherWorkerIsHandlingThis(workItem *registry.WorkItem) bool {
 // when NSQ thinks the item has timed out and tries to reassign it to a new
 // worker.
 func (b *Base) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
-	if b.ItemsInProcess.Contains(strconv.Itoa(workItem.ID)) {
+	if b.ItemsInProcess.Contains(strconv.FormatInt(workItem.ID, 10)) {
 		// Node and pid may be empty if this was manually requeued. Reset them.
 		workItem.SetNodeAndPid()
 		b.Context.Logger.Infof("Skipping WorkItem %d because this worker is already working on it host %s, pid %d", workItem.ID, workItem.Node, workItem.Pid)
@@ -336,7 +336,7 @@ func (b *Base) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
 // message to that effect if the WorkItem's Retry flag is false. It returns
 // the value of WorkItem.Retry.
 func (b *Base) ShouldRetry(workItem *registry.WorkItem) bool {
-	if workItem.Retry == false {
+	if !workItem.Retry {
 		message := fmt.Sprintf("Rejecting WorkItem %d because retry = false", workItem.ID)
 		workItem.MarkNoLongerInProgress(
 			workItem.Stage,
@@ -349,17 +349,17 @@ func (b *Base) ShouldRetry(workItem *registry.WorkItem) bool {
 }
 
 // AddToInProcessList adds workItemID to this worker's ItemsInProcess list.
-func (b *Base) AddToInProcessList(workItemID int) {
-	b.ItemsInProcess.Add(strconv.Itoa(workItemID))
+func (b *Base) AddToInProcessList(workItemID int64) {
+	b.ItemsInProcess.Add(strconv.FormatInt(workItemID, 10))
 }
 
 // RemoveFromInProcessList removes workItemID from this worker's
 // ItemsInProcess list.
-func (b *Base) RemoveFromInProcessList(workItemID int) {
-	b.ItemsInProcess.Del(strconv.Itoa(workItemID))
+func (b *Base) RemoveFromInProcessList(workItemID int64) {
+	b.ItemsInProcess.Del(strconv.FormatInt(workItemID, 10))
 }
 
-// MarkAsStarted tells Pharos, Redis, and NSQ that work on this
+// MarkAsStarted tells Registry, Redis, and NSQ that work on this
 // item has started.
 func (b *Base) MarkAsStarted(task *Task) {
 	// Redis...
@@ -371,8 +371,8 @@ func (b *Base) MarkAsStarted(task *Task) {
 	task.WorkResult.Pid = os.Getpid()
 	b.SaveWorkResult(task.WorkItem.ID, task.WorkResult)
 
-	// Pharos...
-	b.Context.Logger.Infof("Telling Pharos we're starting WorkItem %d (%s)", task.WorkItem.ID, task.WorkItem.Name)
+	// Registry...
+	b.Context.Logger.Infof("Telling Registry we're starting WorkItem %d (%s)", task.WorkItem.ID, task.WorkItem.Name)
 	task.WorkItem.MarkInProgress(
 		task.WorkItem.Stage,
 		constants.StatusStarted,
@@ -386,7 +386,7 @@ func (b *Base) MarkAsStarted(task *Task) {
 	task.NSQStart()
 }
 
-// FinishItem updates NSQ and Pharos, finishes and saves the WorkResult,
+// FinishItem updates NSQ and Registry, finishes and saves the WorkResult,
 // and removes this item from the ItemsInProcess list.
 func (b *Base) FinishItem(task *Task) {
 	b.Context.Logger.Infof("Finishing WorkItem %d (%s)", task.WorkItem.ID, task.WorkItem.Name)

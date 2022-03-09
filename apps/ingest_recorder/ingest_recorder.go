@@ -33,7 +33,7 @@ func main() {
 
 func printHelp() {
 	message := `
-ingest_recorder records all ingest metadata in Pharos. This includes
+ingest_recorder records all ingest metadata in the Registry. This includes
 intellectual objects, generic files, premis events, and checksums.`
 	fmt.Println(message)
 	fmt.Println(cli.EnvMessage)

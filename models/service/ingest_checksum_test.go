@@ -20,5 +20,5 @@ func TestIngestChecksumToChecksum(t *testing.T) {
 	assert.Equal(t, ingestChecksum.Algorithm, cs.Algorithm)
 	assert.Equal(t, ingestChecksum.DateTime, cs.DateTime)
 	assert.Equal(t, ingestChecksum.Digest, cs.Digest)
-	assert.Equal(t, 9999, cs.GenericFileID)
+	assert.EqualValues(t, 9999, cs.GenericFileID)
 }

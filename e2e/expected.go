@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e
@@ -280,7 +281,11 @@ func GetFilesByObjectIdentifier(fileList []*registry.GenericFile, objIdentifier 
 		return files, fmt.Errorf("File list cannot be nil")
 	}
 	for _, f := range fileList {
-		if f.IntellectualObjectIdentifier == objIdentifier {
+		ident, err := f.IntellectualObjectIdentifier()
+		if err != nil {
+			return files, err
+		}
+		if ident == objIdentifier {
 			files = append(files, f)
 		}
 	}

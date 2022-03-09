@@ -10,8 +10,8 @@ import (
 // See common.Config.BucketAndKeyFor(url) to extract
 // provider, bucket and key info from the URL.
 type StorageRecord struct {
-	GenericFileID int    `json:"generic_file_id"`
-	ID            int    `json:"id,omitempty"`
+	GenericFileID int64  `json:"generic_file_id"`
+	ID            int64  `json:"id,omitempty"`
 	URL           string `json:"url"`
 }
 
@@ -27,23 +27,12 @@ func StorageRecordFromJSON(jsonData []byte) (*StorageRecord, error) {
 }
 
 // ToJSON converts this StorageRecord to its JSON representation.
-// See also SerializeForPharos.
 func (r *StorageRecord) ToJSON() ([]byte, error) {
 	bytes, err := json.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	return bytes, nil
-}
-
-// SerializeForPharos serializes this record for Pharos. Note that
-// Pharos supports only POST/create, not PUT/update for StorageRecords.
-// Since Pharos assigns the ID and GenericFileID during creation,
-// we only the URL.
-func (r *StorageRecord) SerializeForPharos() ([]byte, error) {
-	dataStruct := make(map[string]string)
-	dataStruct["url"] = r.URL
-	return json.Marshal(dataStruct)
 }
 
 // UUID returns the last component of the URL, which should

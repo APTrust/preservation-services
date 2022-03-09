@@ -36,8 +36,8 @@ func (c *RedisClient) Ping() (string, error) {
 }
 
 // IngestObjectGet returns an IngestObject from Redis.
-func (c *RedisClient) IngestObjectGet(workItemID int, objIdentifier string) (*service.IngestObject, error) {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) IngestObjectGet(workItemID int64, objIdentifier string) (*service.IngestObject, error) {
+	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("object:%s", objIdentifier)
 	data, err := c.client.HGet(key, field).Result()
 	if err != nil {
@@ -48,8 +48,8 @@ func (c *RedisClient) IngestObjectGet(workItemID int, objIdentifier string) (*se
 }
 
 // IngestObjectSave saves an IngestObject to Redis.
-func (c *RedisClient) IngestObjectSave(workItemID int, obj *service.IngestObject) error {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) IngestObjectSave(workItemID int64, obj *service.IngestObject) error {
+	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("object:%s", obj.Identifier())
 	jsonData, err := obj.ToJSON()
 	if err != nil {
@@ -61,16 +61,16 @@ func (c *RedisClient) IngestObjectSave(workItemID int, obj *service.IngestObject
 
 // IngestObjectDelete deletes an IngestObject from Redis.
 // Note that this deletes the object record only, not the file records.
-func (c *RedisClient) IngestObjectDelete(workItemID int, objIdentifier string) error {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) IngestObjectDelete(workItemID int64, objIdentifier string) error {
+	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("object:%s", objIdentifier)
 	_, err := c.client.HDel(key, field).Result()
 	return err
 }
 
 // RestorationObjectGet returns an RestorationObject from Redis.
-func (c *RedisClient) RestorationObjectGet(workItemID int, objIdentifier string) (*service.RestorationObject, error) {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) RestorationObjectGet(workItemID int64, objIdentifier string) (*service.RestorationObject, error) {
+	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("restoration:%s", objIdentifier)
 	data, err := c.client.HGet(key, field).Result()
 	if err != nil {
@@ -81,8 +81,8 @@ func (c *RedisClient) RestorationObjectGet(workItemID int, objIdentifier string)
 }
 
 // RestorationObjectSave saves an RestorationObject to Redis.
-func (c *RedisClient) RestorationObjectSave(workItemID int, obj *service.RestorationObject) error {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) RestorationObjectSave(workItemID int64, obj *service.RestorationObject) error {
+	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("restoration:%s", obj.Identifier)
 	jsonData, err := obj.ToJSON()
 	if err != nil {
@@ -93,16 +93,16 @@ func (c *RedisClient) RestorationObjectSave(workItemID int, obj *service.Restora
 }
 
 // RestorationObjectDelete deletes an RestorationObject from Redis.
-func (c *RedisClient) RestorationObjectDelete(workItemID int, objIdentifier string) error {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) RestorationObjectDelete(workItemID int64, objIdentifier string) error {
+	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("restoration:%s", objIdentifier)
 	_, err := c.client.HDel(key, field).Result()
 	return err
 }
 
 // IngestFileGet returns an IngestFile from Redis.
-func (c *RedisClient) IngestFileGet(workItemID int, fileIdentifier string) (*service.IngestFile, error) {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) IngestFileGet(workItemID int64, fileIdentifier string) (*service.IngestFile, error) {
+	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("file:%s", fileIdentifier)
 	data, err := c.client.HGet(key, field).Result()
 	if err != nil {
@@ -113,8 +113,8 @@ func (c *RedisClient) IngestFileGet(workItemID int, fileIdentifier string) (*ser
 }
 
 // IngestFileSave saves an IngestFile to Redis.
-func (c *RedisClient) IngestFileSave(workItemID int, f *service.IngestFile) error {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) IngestFileSave(workItemID int64, f *service.IngestFile) error {
+	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("file:%s", f.Identifier())
 	jsonData, err := f.ToJSON()
 	if err != nil {
@@ -125,19 +125,19 @@ func (c *RedisClient) IngestFileSave(workItemID int, f *service.IngestFile) erro
 }
 
 // IngestFileDelete deletes an IngestFile from Redis.
-func (c *RedisClient) IngestFileDelete(workItemID int, fileIdentifier string) error {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) IngestFileDelete(workItemID int64, fileIdentifier string) error {
+	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("file:%s", fileIdentifier)
 	_, err := c.client.HDel(key, field).Result()
 	return err
 }
 
-// WorkItemDelete deletes the Redis copy (NOT the Pharos copy) of a WorkItem,
+// WorkItemDelete deletes the Redis copy (NOT the Registry copy) of a WorkItem,
 // along with its associated IngestObject and IngestFile records. Call
 // this only when ingest is complete and no further workers will need to
 // access the working data.
-func (c *RedisClient) WorkItemDelete(workItemID int) (int64, error) {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) WorkItemDelete(workItemID int64) (int64, error) {
+	key := strconv.FormatInt(workItemID, 10)
 	return c.client.Del(key).Result()
 }
 
@@ -149,8 +149,8 @@ func (c *RedisClient) WorkItemDelete(workItemID int) (int64, error) {
 //
 // SCAN can return more or less than the number of items requested.
 // See https://redis.io/commands/scan
-func (c *RedisClient) GetBatchOfFileKeys(workItemID int, offset uint64, limit int64) (map[string]*service.IngestFile, uint64, error) {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) GetBatchOfFileKeys(workItemID int64, offset uint64, limit int64) (map[string]*service.IngestFile, uint64, error) {
+	key := strconv.FormatInt(workItemID, 10)
 	keys, nextOffset, err := c.client.HScan(
 		key,
 		offset,
@@ -249,8 +249,8 @@ func (c *RedisClient) IngestFilesApply(fn service.IngestFileApplyFn, options ser
 	return count, errors
 }
 
-func (c *RedisClient) WorkResultGet(workItemID int, operationName string) (*service.WorkResult, error) {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) WorkResultGet(workItemID int64, operationName string) (*service.WorkResult, error) {
+	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("workresult:%s", operationName)
 	data, err := c.client.HGet(key, field).Result()
 	if err != nil {
@@ -260,8 +260,8 @@ func (c *RedisClient) WorkResultGet(workItemID int, operationName string) (*serv
 	return service.WorkResultFromJSON(data)
 }
 
-func (c *RedisClient) WorkResultSave(workItemID int, result *service.WorkResult) error {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) WorkResultSave(workItemID int64, result *service.WorkResult) error {
+	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("workresult:%s", result.Operation)
 	jsonData, err := result.ToJSON()
 	if err != nil {
@@ -271,8 +271,8 @@ func (c *RedisClient) WorkResultSave(workItemID int, result *service.WorkResult)
 	return err
 }
 
-func (c *RedisClient) WorkResultDelete(workItemID int, operationName string) error {
-	key := strconv.Itoa(workItemID)
+func (c *RedisClient) WorkResultDelete(workItemID int64, operationName string) error {
+	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("workresult:%s", operationName)
 	_, err := c.client.HDel(key, field).Result()
 	return err

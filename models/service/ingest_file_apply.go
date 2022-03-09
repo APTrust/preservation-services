@@ -37,5 +37,5 @@ type IngestFileApplyOptions struct {
 
 	// WorkItemID is the ID of the WorkItem with which the ingest files
 	// are associated.
-	WorkItemID int
+	WorkItemID int64
 }

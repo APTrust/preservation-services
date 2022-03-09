@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package workers_test
@@ -29,7 +30,7 @@ func TestIngestBucketReader_Run(t *testing.T) {
 	reader.RunOnce()
 	assertStatsCount(t, context, preTestCount+4)
 
-	// Make sure the records are in Pharos as well.
+	// Make sure the records are in Registry as well.
 	assertWorkItems(t, context)
 }
 
@@ -51,7 +52,7 @@ func assertWorkItems(t *testing.T, context *common.Context) {
 	for _, file := range files {
 		v := url.Values{}
 		v.Set("name", path.Base(file))
-		resp := context.PharosClient.WorkItemList(v)
+		resp := context.RegistryClient.WorkItemList(v)
 		require.Nil(t, resp.Error)
 		assert.Equal(t, 1, len(resp.WorkItems()))
 	}

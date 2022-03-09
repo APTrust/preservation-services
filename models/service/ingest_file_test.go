@@ -299,9 +299,12 @@ func TestToGenericFile(t *testing.T) {
 	assert.Equal(t, testutil.Bloomsday, gf.FileModified)
 	assert.Equal(t, f.ID, gf.ID)
 	assert.Equal(t, eFileIdent, gf.Identifier)
-	assert.Equal(t, 1234, gf.InstitutionID)
-	assert.Equal(t, 5678, gf.IntellectualObjectID)
-	assert.Equal(t, eObjIdent, gf.IntellectualObjectIdentifier)
+	assert.EqualValues(t, 1234, gf.InstitutionID)
+	assert.EqualValues(t, 5678, gf.IntellectualObjectID)
+
+	objIdentifier, err := gf.IntellectualObjectIdentifier()
+	assert.Nil(t, err)
+	assert.Equal(t, eObjIdent, objIdentifier)
 	assert.Equal(t, int64(400), gf.Size)
 	assert.Equal(t, constants.StateActive, gf.State)
 	assert.Equal(t, constants.StorageStandard, gf.StorageOption)
@@ -477,11 +480,11 @@ func TestIngestFileFindEvent(t *testing.T) {
 	//func (f *IngestFile) FindEvent(eventUUID string) *registry.PremisEvent {
 	ingestFile := &service.IngestFile{}
 	ingestFile.PremisEvents = []*registry.PremisEvent{
-		&registry.PremisEvent{
+		{
 			Identifier: "824de525-5f16-444b-8e77-3e280c25d0fb",
 			Detail:     "Event One",
 		},
-		&registry.PremisEvent{
+		{
 			Identifier: "780ee87f-c379-4e9b-913f-e5a71c514240",
 			Detail:     "Event Two",
 		},
@@ -515,31 +518,31 @@ func getFileForEvents() *service.IngestFile {
 		StorageOption:        constants.StorageStandard,
 		UUID:                 constants.EmptyUUID,
 		Checksums: []*service.IngestChecksum{
-			&service.IngestChecksum{
+			{
 				Algorithm: constants.AlgMd5,
 				DateTime:  testutil.Bloomsday,
 				Digest:    "5555",
 				Source:    constants.SourceManifest,
 			},
-			&service.IngestChecksum{
+			{
 				Algorithm: constants.AlgMd5,
 				DateTime:  testutil.Bloomsday,
 				Digest:    "5555",
 				Source:    constants.SourceIngest,
 			},
-			&service.IngestChecksum{
+			{
 				Algorithm: constants.AlgSha256,
 				DateTime:  testutil.Bloomsday,
 				Digest:    "256256",
 				Source:    constants.SourceManifest,
 			},
-			&service.IngestChecksum{
+			{
 				Algorithm: constants.AlgSha256,
 				DateTime:  testutil.Bloomsday,
 				Digest:    "256256",
 				Source:    constants.SourceIngest,
 			},
-			&service.IngestChecksum{
+			{
 				Algorithm: constants.AlgSha512,
 				DateTime:  testutil.Bloomsday,
 				Digest:    "512512",
@@ -547,12 +550,12 @@ func getFileForEvents() *service.IngestFile {
 			},
 		},
 		StorageRecords: []*service.StorageRecord{
-			&service.StorageRecord{
+			{
 				StoredAt:   testutil.Bloomsday,
 				URL:        "https://example.com/preservation/0987",
 				VerifiedAt: testutil.Bloomsday,
 			},
-			&service.StorageRecord{
+			{
 				StoredAt:   testutil.Bloomsday,
 				URL:        "https://example.com/replication/0987",
 				VerifiedAt: testutil.Bloomsday,
@@ -577,8 +580,8 @@ func TestNewFileIngestEvent(t *testing.T) {
 	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, constants.S3ClientName, event.Agent)
 	assert.Equal(t, "Put using md5 checksum", event.OutcomeInformation)
-	assert.Equal(t, 1234, event.InstitutionID)
-	assert.Equal(t, 5678, event.IntellectualObjectID)
+	assert.EqualValues(t, 1234, event.InstitutionID)
+	assert.EqualValues(t, 5678, event.IntellectualObjectID)
 }
 
 func TestNewFileFixityCheckEvent(t *testing.T) {
@@ -597,8 +600,8 @@ func TestNewFileFixityCheckEvent(t *testing.T) {
 	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "http://golang.org/pkg/crypto/md5/", event.Agent)
 	assert.Equal(t, "Fixity matches", event.OutcomeInformation)
-	assert.Equal(t, 1234, event.InstitutionID)
-	assert.Equal(t, 5678, event.IntellectualObjectID)
+	assert.EqualValues(t, 1234, event.InstitutionID)
+	assert.EqualValues(t, 5678, event.IntellectualObjectID)
 }
 
 func TestNewFileDigestEvent(t *testing.T) {
@@ -617,8 +620,8 @@ func TestNewFileDigestEvent(t *testing.T) {
 	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "http://golang.org/pkg/crypto/sha256/", event.Agent)
 	assert.Equal(t, "Calculated fixity value", event.OutcomeInformation)
-	assert.Equal(t, 1234, event.InstitutionID)
-	assert.Equal(t, 5678, event.IntellectualObjectID)
+	assert.EqualValues(t, 1234, event.InstitutionID)
+	assert.EqualValues(t, 5678, event.IntellectualObjectID)
 }
 
 func TestNewFileIdentifierEvent(t *testing.T) {
@@ -637,8 +640,8 @@ func TestNewFileIdentifierEvent(t *testing.T) {
 	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
 	assert.Equal(t, "Assigned bag/filepath identifier", event.OutcomeInformation)
-	assert.Equal(t, 1234, event.InstitutionID)
-	assert.Equal(t, 5678, event.IntellectualObjectID)
+	assert.EqualValues(t, 1234, event.InstitutionID)
+	assert.EqualValues(t, 5678, event.IntellectualObjectID)
 
 	event, err = f.NewFileIdentifierEvent(f.StorageRecords[0].URL, constants.IdTypeStorageURL)
 	require.Nil(t, err)
@@ -654,8 +657,8 @@ func TestNewFileIdentifierEvent(t *testing.T) {
 	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "http://github.com/google/uuid", event.Agent)
 	assert.Equal(t, "Assigned url identifier", event.OutcomeInformation)
-	assert.Equal(t, 1234, event.InstitutionID)
-	assert.Equal(t, 5678, event.IntellectualObjectID)
+	assert.EqualValues(t, 1234, event.InstitutionID)
+	assert.EqualValues(t, 5678, event.IntellectualObjectID)
 
 	event, err = f.NewFileIdentifierEvent("", constants.IdTypeStorageURL)
 	require.Nil(t, event)
@@ -679,8 +682,8 @@ func TestNewFileReplicationEvent(t *testing.T) {
 	assert.Equal(t, eObjIdent, event.IntellectualObjectIdentifier)
 	assert.Equal(t, "http://github.com/google/uuid", event.Agent)
 	assert.Equal(t, "Replicated to secondary storage", event.OutcomeInformation)
-	assert.Equal(t, 1234, event.InstitutionID)
-	assert.Equal(t, 5678, event.IntellectualObjectID)
+	assert.EqualValues(t, 1234, event.InstitutionID)
+	assert.EqualValues(t, 5678, event.IntellectualObjectID)
 
 	badRecord := &service.StorageRecord{
 		URL: "https://blah/blah/blah",

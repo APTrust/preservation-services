@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package ingest_test
@@ -15,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const fmtWorkItemID = 9877
+const fmtWorkItemID = int64(9877)
 
 func getFormatIdentifier(t *testing.T) *ingest.FormatIdentifier {
 	context := common.NewContext()

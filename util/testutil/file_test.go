@@ -31,15 +31,15 @@ func TestPathToUnitTestBag(t *testing.T) {
 	assert.True(t, strings.HasSuffix(testutil.PathToUnitTestBag("some-bag.tar"), expectedSuffix))
 }
 
-func TestPathPharosFixture(t *testing.T) {
-	p := testutil.PathToPharosFixture("institutions.json")
+func TestPathRegistryFixture(t *testing.T) {
+	p := testutil.PathToRegistryFixture("institutions.json")
 	assert.True(t, strings.Contains(p, "testdata"))
-	assert.True(t, strings.Contains(p, "pharos"))
+	assert.True(t, strings.Contains(p, "registry"))
 	assert.True(t, strings.HasSuffix(p, "institutions.json"))
 }
 
-func TestReadPharosFixture(t *testing.T) {
-	bytes, err := testutil.ReadPharosFixture("institutions.json")
+func TestReadRegistryFixture(t *testing.T) {
+	bytes, err := testutil.ReadRegistryFixture("institutions.json")
 	require.Nil(t, err)
 	assert.True(t, len(bytes) > 100)
 }

@@ -14,8 +14,8 @@ import (
 
 var etag = "12345678"
 var objIdentifier = "test.edu/test-bag"
-var institution = "test.edu"
-var institutionId = 9855
+var instIdentifier = "test.edu"
+var institutionId = int64(9855)
 var bucket = "bucket"
 var s3Key = "test-bag.b001.of200.tar"
 
@@ -53,10 +53,10 @@ func getObjectWithTags() *service.IngestObject {
 }
 
 func TestNewIngestObject(t *testing.T) {
-	obj := service.NewIngestObject(bucket, s3Key, etag, institution, institutionId, int64(500))
+	obj := service.NewIngestObject(bucket, s3Key, etag, instIdentifier, institutionId, int64(500))
 	assert.Equal(t, etag, obj.ETag)
 	assert.Equal(t, objIdentifier, obj.Identifier())
-	assert.Equal(t, institution, obj.Institution)
+	assert.Equal(t, instIdentifier, obj.Institution)
 	assert.NotNil(t, obj.Manifests)
 	assert.NotNil(t, obj.ParsableTagFiles)
 	assert.Equal(t, bucket, obj.S3Bucket)
@@ -68,7 +68,7 @@ func TestNewIngestObject(t *testing.T) {
 }
 
 func TestIngestObjectBagName(t *testing.T) {
-	obj := service.NewIngestObject(bucket, s3Key, etag, institution, institutionId, int64(500))
+	obj := service.NewIngestObject(bucket, s3Key, etag, instIdentifier, institutionId, int64(500))
 	assert.Equal(t, "test-bag", obj.BagName())
 
 	obj.S3Key = "photos.tar"
@@ -76,7 +76,7 @@ func TestIngestObjectBagName(t *testing.T) {
 }
 
 func TestBaseNameOfS3Key(t *testing.T) {
-	obj := service.NewIngestObject(bucket, s3Key, etag, institution, institutionId, int64(500))
+	obj := service.NewIngestObject(bucket, s3Key, etag, instIdentifier, institutionId, int64(500))
 	assert.Equal(t, "test-bag.b001.of200", obj.BaseNameOfS3Key())
 
 	obj.S3Key = "photos.tar"
@@ -84,7 +84,7 @@ func TestBaseNameOfS3Key(t *testing.T) {
 }
 
 func TestIngestObjectIdentifier(t *testing.T) {
-	obj := service.NewIngestObject(bucket, s3Key, etag, institution, institutionId, int64(500))
+	obj := service.NewIngestObject(bucket, s3Key, etag, instIdentifier, institutionId, int64(500))
 	assert.Equal(t, objIdentifier, obj.Identifier())
 
 	obj.Institution = "example.edu"
@@ -274,7 +274,7 @@ func TestToIntellectualObject(t *testing.T) {
 	assert.Equal(t, etag, intelObj.ETag)
 	assert.Equal(t, obj.ID, intelObj.ID)
 	assert.Equal(t, "test.edu/some-bag", intelObj.Identifier)
-	assert.Equal(t, institution, intelObj.Institution)
+	assert.Equal(t, instIdentifier, intelObj.InstitutionIdentifier)
 	assert.Equal(t, institutionId, intelObj.InstitutionID)
 	assert.Equal(t, sourceOrganization, intelObj.SourceOrganization)
 	assert.Equal(t, constants.StateActive, intelObj.State)
@@ -304,7 +304,6 @@ func TestNewObjectCreationEvent(t *testing.T) {
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "Intellectual object created", event.OutcomeDetail)
 	assert.Equal(t, "APTrust preservation services", event.Object)
-	assert.Equal(t, "test.edu/some-bag", event.IntellectualObjectIdentifier)
 	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
 	assert.Equal(t, "Object created, files copied to preservation storage", event.OutcomeInformation)
 }
@@ -319,7 +318,6 @@ func TestNewObjectIngestEvent(t *testing.T) {
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "12 files copied", event.OutcomeDetail)
 	assert.Equal(t, "Minio S3 client", event.Object)
-	assert.Equal(t, "test.edu/some-bag", event.IntellectualObjectIdentifier)
 	assert.Equal(t, constants.S3ClientName, event.Agent)
 	assert.Equal(t, "Multipart put using s3 etags", event.OutcomeInformation)
 }
@@ -334,7 +332,6 @@ func TestNewObjectIdentifierEvent(t *testing.T) {
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "test.edu/some-bag", event.OutcomeDetail)
 	assert.Equal(t, "APTrust preservation services", event.Object)
-	assert.Equal(t, "test.edu/some-bag", event.IntellectualObjectIdentifier)
 	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
 	assert.Equal(t, "Institution domain + tar file name", event.OutcomeInformation)
 }
@@ -349,9 +346,8 @@ func TestNewObjectRightsEvent(t *testing.T) {
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "consortia", event.OutcomeDetail)
 	assert.Equal(t, "APTrust preservation services", event.Object)
-	assert.Equal(t, "test.edu/some-bag", event.IntellectualObjectIdentifier)
 	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
 	assert.Equal(t, "Set access to consortia", event.OutcomeInformation)
 }
 
-const IngestObjectJson = `{"copied_to_staging_at":"0001-01-01T00:00:00Z","deleted_from_receiving_at":"1904-06-16T15:04:05Z","etag":"12345678","error_message":"No error","file_count":0,"has_fetch_txt":false,"id":555,"institution":"test.edu","institution_id":9855,"is_reingest":false,"manifests":["manifest-md5.txt","manifest-sha256.txt"],"parsable_tag_files":["bag-info.txt","aptrust-info.txt"],"recheck_pharos_identifiers":false,"s3_bucket":"aptrust.receiving.test.edu","s3_key":"some-bag.tar","saved_to_registry_at":"0001-01-01T00:00:00Z","serialization":"application/tar","should_delete_from_receiving":false,"size":99999,"storage_option":"Standard","tag_files":["bag-info.txt","aptrust-info.txt","misc/custom-tag-file.txt"],"tag_manifests":["tagmanifest-md5.txt","tagmanifest-sha256.txt"],"tags":[]}`
+const IngestObjectJson = `{"copied_to_staging_at":"0001-01-01T00:00:00Z","deleted_from_receiving_at":"1904-06-16T15:04:05Z","etag":"12345678","error_message":"No error","file_count":0,"has_fetch_txt":false,"id":555,"institution":"test.edu","institution_id":9855,"is_reingest":false,"manifests":["manifest-md5.txt","manifest-sha256.txt"],"parsable_tag_files":["bag-info.txt","aptrust-info.txt"],"recheck_registry_identifiers":false,"s3_bucket":"aptrust.receiving.test.edu","s3_key":"some-bag.tar","saved_to_registry_at":"0001-01-01T00:00:00Z","serialization":"application/tar","should_delete_from_receiving":false,"size":99999,"storage_option":"Standard","tag_files":["bag-info.txt","aptrust-info.txt","misc/custom-tag-file.txt"],"tag_manifests":["tagmanifest-md5.txt","tagmanifest-sha256.txt"],"tags":[]}`

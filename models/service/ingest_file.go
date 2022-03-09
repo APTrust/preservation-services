@@ -22,9 +22,9 @@ type IngestFile struct {
 	FormatIdentifiedAt   time.Time               `json:"format_identified_at,omitempty"`
 	FormatMatchType      string                  `json:"format_match_type,omitempty"`
 	FileModified         time.Time               `json:"file_modified,omitempty"`
-	ID                   int                     `json:"id,omitempty"`
-	InstitutionID        int                     `json:"institution_id,omitempty"`
-	IntellectualObjectID int                     `json:"intellectual_object_id,omitempty"`
+	ID                   int64                   `json:"id,omitempty"`
+	InstitutionID        int64                   `json:"institution_id,omitempty"`
+	IntellectualObjectID int64                   `json:"intellectual_object_id,omitempty"`
 	IsReingest           bool                    `json:"is_reingest"`
 	NeedsSave            bool                    `json:"needs_save"`
 	ObjectIdentifier     string                  `json:"object_identifier"`
@@ -33,9 +33,22 @@ type IngestFile struct {
 	RegistryURLs         []string                `json:"registry_urls"`
 	SavedToRegistryAt    time.Time               `json:"saved_to_registry_at,omitempty"`
 	Size                 int64                   `json:"size"`
-	StorageOption        string                  `json:"storage_option"`
-	StorageRecords       []*StorageRecord        `json:"storage_records"`
-	UUID                 string                  `json:"uuid"`
+
+	// StorageOption comes from the parent object, which gets from the
+	// Storage-Option tag or APTrust-Storage-Option tag in the bag. This
+	// property is set by the recorder, just before IngestFile is converted
+	// to GenericFile to be sent to the Registry.
+	//
+	// We wait to set this because 1) we don't know the requested storage
+	// option until we've parsed the bag's tag files, which often happens
+	// after we've created the IngestFile; and 2) for reingests, we may have
+	// to force the parent object's StorageOption to match that of the
+	// already-ingested version. (That prevents us having divergent versions
+	// in different preservation buckets. This is publicly documented in the
+	// "Note" at https://aptrust.github.io/userguide/bagging/#allowed-storage-option-values)
+	StorageOption  string           `json:"storage_option"`
+	StorageRecords []*StorageRecord `json:"storage_records"`
+	UUID           string           `json:"uuid"`
 }
 
 func NewIngestFile(objIdentifier, pathInBag string) *IngestFile {
@@ -331,7 +344,7 @@ func (f *IngestFile) HasRegistryURL(url string) bool {
 // Note that this list should be generated only once, and the events
 // should be preserved in Redis so that if any part of registry data
 // recording process fails, we can retry and know that we are not
-// creating new PremisEvents in Pharos. When Pharos sees these event
+// creating new PremisEvents in Registry. When Registry sees these event
 // UUIDs already exist, it will not create duplicate entries. If we
 // don't persist events with their UUIDs in Redis intermediate storage,
 // we will be sending new events with new UUIDs each time we retry
@@ -410,6 +423,9 @@ func (f *IngestFile) initIngestEvents() error {
 	return nil
 }
 
+//
+// TODO: Review this. Fix or remove.
+//
 // URI returns the URL of this file's first storage record.
 // TODO: Fix this, because it doesn't map to Pharos' db structure.
 // Pharos allows one URI per generic file, but it should allow
@@ -453,29 +469,38 @@ func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 	}
 	storageRecords := make([]*registry.StorageRecord, 0)
 	for _, r := range f.StorageRecords {
-		// Tell Pharos the file is stored at this URL only if
-		// Pharos doesn't already have a record of it.
+		// Tell Registry the file is stored at this URL only if
+		// Registry doesn't already have a record of it.
 		if !f.HasRegistryURL(r.URL) {
 			storageRecords = append(storageRecords, &registry.StorageRecord{
 				URL: r.URL,
 			})
 		}
 	}
+	var lastFixityCheck time.Time
+	for _, event := range ingestEvents {
+		if event.EventType == constants.EventDigestCalculation {
+			lastFixityCheck = event.DateTime
+		}
+	}
+	if lastFixityCheck.IsZero() {
+		return nil, fmt.Errorf("cannot calculate last fixity check date from digest calculation event")
+	}
 	return &registry.GenericFile{
-		Checksums:                    checksums,
-		FileFormat:                   f.FileFormat,
-		FileModified:                 f.FileModified,
-		ID:                           f.ID,
-		Identifier:                   f.Identifier(),
-		InstitutionID:                f.InstitutionID,
-		IntellectualObjectID:         f.IntellectualObjectID,
-		IntellectualObjectIdentifier: f.ObjectIdentifier,
-		PremisEvents:                 ingestEvents,
-		Size:                         f.Size,
-		State:                        constants.StateActive,
-		StorageOption:                f.StorageOption,
-		StorageRecords:               storageRecords,
-		UUID:                         f.UUID,
+		Checksums:            checksums,
+		FileFormat:           f.FileFormat,
+		FileModified:         f.FileModified,
+		ID:                   f.ID,
+		Identifier:           f.Identifier(),
+		InstitutionID:        f.InstitutionID,
+		IntellectualObjectID: f.IntellectualObjectID,
+		LastFixityCheck:      lastFixityCheck,
+		PremisEvents:         ingestEvents,
+		Size:                 f.Size,
+		State:                constants.StateActive,
+		StorageOption:        f.StorageOption,
+		StorageRecords:       storageRecords,
+		UUID:                 f.UUID,
 	}, nil
 }
 

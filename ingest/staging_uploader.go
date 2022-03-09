@@ -24,7 +24,7 @@ type StagingUploader struct {
 // NewStagingUploader creates a new StagingUploader to unpack the
 // tar file from the receiving bucket and copy each of its files
 // the staging bucket.
-func NewStagingUploader(context *common.Context, workItemID int, ingestObject *service.IngestObject) *StagingUploader {
+func NewStagingUploader(context *common.Context, workItemID int64, ingestObject *service.IngestObject) *StagingUploader {
 	return &StagingUploader{
 		Base{
 			Context:      context,

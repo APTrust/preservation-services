@@ -26,7 +26,7 @@ func TestNewMetadataGatherer(t *testing.T) {
 	g := ingest.NewMetadataGatherer(context, 9999, obj)
 	require.NotNil(t, g)
 	assert.Equal(t, context, g.Context)
-	assert.Equal(t, 9999, g.WorkItemID)
+	assert.EqualValues(t, 9999, g.WorkItemID)
 	assert.Equal(t, obj, g.IngestObject)
 }
 
@@ -215,7 +215,7 @@ func TestStorageOptionIsSetCorrectly(t *testing.T) {
 		pathToBag := testutil.PathToUnitTestBag(bag.Name)
 		setupS3(t, context, bag.Name, pathToBag)
 		obj := getIngestObject(pathToBag, bag.Md5Sum)
-		g := ingest.NewMetadataGatherer(context, 700+i, obj)
+		g := ingest.NewMetadataGatherer(context, int64(700+i), obj)
 
 		fileCount, errors := g.Run()
 		require.Empty(t, errors)

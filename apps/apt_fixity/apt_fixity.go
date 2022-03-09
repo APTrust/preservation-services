@@ -36,7 +36,7 @@ func printHelp() {
 apt_fixity runs as a service to calculate fixity on items in preservation
 storage. It reads generic file identifiers from the NSQ fixity queue,
 calculates fixity on a single copy of a file in S3 (or non-Glacier) storage,
-and records a PREMIS event with the result in Pharos.
+and records a PREMIS event with the result in the Registry.
 `
 	fmt.Println(message)
 	fmt.Println(cli.EnvMessage)

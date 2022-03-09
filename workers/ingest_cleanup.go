@@ -48,6 +48,6 @@ func NewIngestCleanup(bufSize, numWorkers, maxAttempts int) *IngestCleanup {
 	return worker
 }
 
-func createIngestCleanup(context *common.Context, workItemID int, ingestObject *service.IngestObject) ingest.Runnable {
+func createIngestCleanup(context *common.Context, workItemID int64, ingestObject *service.IngestObject) ingest.Runnable {
 	return ingest.NewCleanup(context, workItemID, ingestObject)
 }

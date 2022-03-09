@@ -20,7 +20,7 @@ type IngestBase struct {
 }
 
 // NewIngestBase creates a new IngestBase worker. Param context is a
-// Context object with connections to S3, Redis, Pharos, and NSQ.
+// Context object with connections to S3, Redis, Registry, and NSQ.
 // Param bufSize describes the size of the queue buffers. The values
 // for opnames/topics are listed in constants.IngestOpNames.
 func NewIngestBase(context *common.Context, processorConstructor ingest.BaseConstructor, settings *Settings) *IngestBase {
@@ -28,13 +28,13 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 		Base: Base{
 			Context:              context,
 			Settings:             settings,
-			ItemsInProcess:       service.NewRingList(settings.ChannelBufferSize),
+			ItemsInProcess:       service.NewRingList(settings.ChannelBufferSize * settings.NumberOfWorkers),
 			ProcessChannel:       make(chan *Task, settings.ChannelBufferSize),
 			SuccessChannel:       make(chan *Task, settings.ChannelBufferSize),
 			ErrorChannel:         make(chan *Task, settings.ChannelBufferSize),
 			FatalErrorChannel:    make(chan *Task, settings.ChannelBufferSize),
 			processorConstructor: processorConstructor,
-			institutionCache:     make(map[int]string),
+			institutionCache:     make(map[int64]string),
 		},
 	}
 
@@ -71,7 +71,7 @@ func (b *IngestBase) ProcessSuccessChannel() {
 	for task := range b.SuccessChannel {
 		b.Context.Logger.Infof("WorkItem %d (%s) is in success channel",
 			task.WorkItem.ID, task.WorkItem.Name)
-		// Tell Pharos item succeeded.
+		// Tell Registry item succeeded.
 		task.WorkItem.Note = b.Settings.WorkItemSuccessNote
 		task.WorkItem.Stage = b.Settings.NextWorkItemStage
 		task.WorkItem.Status = constants.StatusPending
@@ -85,11 +85,20 @@ func (b *IngestBase) ProcessSuccessChannel() {
 				b.Context.Logger.Infof("WorkItem %d (%s): Cleaned up cancelled item. Leaving status as Cancelled.",
 					task.WorkItem.ID, task.WorkItem.Name)
 				task.WorkItem.Status = constants.StatusCancelled
+				task.WorkItem.Outcome = "Ingest cancelled"
 			} else {
 				task.WorkItem.Status = constants.StatusSuccess
+				task.WorkItem.Outcome = "Ingest complete"
+				// We shouldn't have to set this, but somehow the cleanup worker
+				// keeps picking up completed items. We need to find the root of that.
+				task.WorkItem.Retry = false
+				task.WorkItem.IntellectualObjectID = task.Processor.IngestObjectGet().ID
+				// TEMP
+				if task.WorkItem.IntellectualObjectID == 0 {
+					panic("ID SHOULD NOT BE ZERO!")
+				}
+				// END TEMP
 			}
-			task.WorkItem.Outcome = "Ingest complete"
-			task.WorkItem.ObjectIdentifier = task.Processor.IngestObjectGet().Identifier()
 		}
 
 		// Push item to next queue.
@@ -113,7 +122,7 @@ func (b *IngestBase) ProcessErrorChannel() {
 			task.WorkItem.ID, task.WorkItem.Name,
 			task.WorkResult.NonFatalErrorMessage())
 
-		// Update WorkItem in Pharos
+		// Update WorkItem in Registry
 		task.WorkItem.Note = task.WorkResult.NonFatalErrorMessage()
 		if task.WorkResult.Attempt >= b.Settings.MaxAttempts {
 			task.WorkItem.Note += fmt.Sprintf(" Will not retry: failed %d times. Interim processing data persists.", task.WorkResult.Attempt)
@@ -159,7 +168,7 @@ func (b *IngestBase) ProcessFatalErrorChannel() {
 			task.WorkItem.ID, task.WorkItem.Name,
 			task.WorkResult.FatalErrorMessage())
 
-		// Update WorkItem for Pharos
+		// Update WorkItem for Registry
 		task.WorkItem.Note = task.WorkResult.FatalErrorMessage()
 		task.WorkItem.Retry = false
 		task.WorkItem.NeedsAdminReview = true
@@ -174,7 +183,7 @@ func (b *IngestBase) ProcessFatalErrorChannel() {
 			task.NextQueueTopic = ""
 		}
 
-		// Update Pharos and Redis, and send to next queue if required.
+		// Update Registry and Redis, and send to next queue if required.
 		b.FinishItem(task)
 
 		// Tell NSQ we're done with this message.
@@ -216,14 +225,36 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 	// It's possible that another worker recently marked this as
 	// "do not retry." If that's the case, skip it.
-	if b.ShouldRetry(workItem) == false {
+	if !b.ShouldRetry(workItem) {
 		return true
+	}
+
+	// DEBUG
+	//if workItem.Stage == constants.StageCleanup {
+	//	j, _ := json.Marshal(workItem)
+	//	b.Context.Logger.Infof("WORKITEM DEBUG: Completed: %t, JSON: %s", workItem.ProcessingHasCompleted(), string(j))
+	//}
+	// END DEBUG
+
+	// TEMP - Find the root of this issue and fix it.
+	// TODO - Find and fix the root of this issue.
+	//
+	// **** This is probably due to the filter problem in Registry.
+	// **** Try removing this guard.
+	if workItem.Stage == constants.StageCleanup {
+		ingestObject, err := b.IngestObjectGet(workItem)
+		if ingestObject == nil || err != nil {
+			message := fmt.Sprintf("Rejecting WorkItem %d because Redis has no IngestObject. Ingest may already be complete.", workItem.ID)
+			b.Context.Logger.Info(message)
+			return true
+		}
 	}
 
 	// Occasionally, NSQ will think an item has timed out because
 	// it took a long time to record. NSQ sends it to a new worker
 	// after the original worker has completed it.
-	if workItem.ProcessingHasCompleted() && workItem.Stage != constants.StageCleanup {
+	// if workItem.ProcessingHasCompleted() && workItem.Stage != constants.StageCleanup {
+	if workItem.ProcessingHasCompleted() {
 		message := fmt.Sprintf("Rejecting WorkItem %d because status is %s", workItem.ID, workItem.Status)
 		b.Context.Logger.Info(message)
 		return true
@@ -251,7 +282,7 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 		return true
 	}
 
-	// There's a newer ingest request in Pharos' WorkItems list,
+	// There's a newer ingest request in Registry' WorkItems list,
 	// and we're not too far along to abandon this.
 	if b.SupersededByNewerRequest(workItem) {
 		b.PushToQueue(workItem, constants.IngestCleanup)
@@ -259,7 +290,7 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	}
 
 	// In this case, there's a newer version of the bag in
-	// the depositor's receiving bucket, and the Pharos WorkItems
+	// the depositor's receiving bucket, and the Registry WorkItems
 	// list my not have even picked it up yet.
 	//
 	// The flag IngestObject.ShouldDeleteFromReceiving stays false
@@ -307,11 +338,11 @@ func (b *IngestBase) FindOtherIngestRequests(workItem *registry.WorkItem) []*reg
 	v := url.Values{}
 	v.Add("per_page", "20")
 	v.Add("name", workItem.Name)
-	v.Add("item_action", constants.ActionIngest)
-	v.Add("sort", "date") // Pharos changes this to 'date desc'
-	resp := b.Context.PharosClient.WorkItemList(v)
+	v.Add("action", constants.ActionIngest)
+	v.Add("sort", "date_processed__desc")
+	resp := b.Context.RegistryClient.WorkItemList(v)
 	if resp.Error != nil {
-		b.Context.Logger.Error("Error getting WorkItems list from Pharos: %v",
+		b.Context.Logger.Error("Error getting WorkItems list from Registry: %v",
 			resp.Error)
 	}
 	return resp.WorkItems()
@@ -326,7 +357,7 @@ func (b *IngestBase) FindOtherIngestRequests(workItem *registry.WorkItem) []*reg
 func (b *IngestBase) FindNewerIngestRequest(workItem *registry.WorkItem) *registry.WorkItem {
 	items := b.FindOtherIngestRequests(workItem)
 	for _, item := range items {
-		if item.Date.After(workItem.Date) && item.ETag != workItem.ETag && !item.ProcessingHasCompleted() {
+		if item.DateProcessed.After(workItem.DateProcessed) && item.ETag != workItem.ETag && !item.ProcessingHasCompleted() {
 			return item
 		}
 	}
@@ -338,7 +369,7 @@ func (b *IngestBase) FindNewerIngestRequest(workItem *registry.WorkItem) *regist
 func (b *IngestBase) StillIngestingOlderVersion(workItem *registry.WorkItem) bool {
 	items := b.FindOtherIngestRequests(workItem)
 	for _, item := range items {
-		if item.Date.Before(workItem.Date) && item.Retry && !item.ProcessingHasCompleted() {
+		if item.BagDate.Before(workItem.BagDate) && item.Retry && !item.ProcessingHasCompleted() {
 			message := fmt.Sprintf("Skipping WorkItem %d because a prior version of this bag is still being ingested in WorkItem %d.", workItem.ID, item.ID)
 			b.Context.Logger.Info(message)
 			workItem.MarkNoLongerInProgress(
@@ -352,7 +383,7 @@ func (b *IngestBase) StillIngestingOlderVersion(workItem *registry.WorkItem) boo
 	return false
 }
 
-// SupersededByNewerRequest returns true if Pharos has an ingest request
+// SupersededByNewerRequest returns true if Registry has an ingest request
 // for this same item that's newer than the one we're processing AND we're
 // not already in a late stage of ingest.
 func (b *IngestBase) SupersededByNewerRequest(workItem *registry.WorkItem) bool {
@@ -445,6 +476,7 @@ func (b *IngestBase) QueueE2E(task *Task) {
 		if task.Processor.IngestObjectGet().IsReingest {
 			e2eTopic = constants.TopicE2EReingest
 		}
+		b.Context.Logger.Infof("Pushing %s (%d) into e2e topic %s", task.WorkItem.Name, task.WorkItem.ID, e2eTopic)
 		QueueE2EWorkItem(b.Context, e2eTopic, task.WorkItem.ID)
 	}
 }

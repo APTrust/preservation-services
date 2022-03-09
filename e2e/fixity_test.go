@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -25,18 +26,12 @@ func testFixityResults() {
 
 func getLatestFixityCheckEvent(gfIdentifier string) *registry.PremisEvent {
 	params := url.Values{}
-	params.Set("file_identifier", gfIdentifier)
+	params.Set("generic_file_identifier", gfIdentifier)
 	params.Set("event_type", constants.EventFixityCheck)
 	params.Set("page", "1")
 	params.Set("per_page", "1")
-
-	// When sort = "date", the PremisEventsController in Pharos
-	// changes it to "date_time desc" which is bad design.
-	// The sort param should be explicit, but if you specify
-	// "date_time desc", the controller discards the param altogether.
-	params.Set("sort", "date")
-
-	resp := ctx.Context.PharosClient.PremisEventList(params)
+	params.Set("sort", "date_time__desc")
+	resp := ctx.Context.RegistryClient.PremisEventList(params)
 	require.Nil(ctx.T, resp.Error, gfIdentifier)
 	return resp.PremisEvent()
 }

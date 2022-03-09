@@ -1,9 +1,11 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
 
 import (
 	s3ctx "context"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/util"
@@ -16,7 +18,7 @@ import (
 // are actually present in the correct preservation buckets.
 //
 // This is called from testStorageRecords. Param gf is the GenericFile
-// record retrieved from Pharos. Param storageRecord is the specific record
+// record retrieved from Registry. Param storageRecord is the specific record
 // to test.
 func testS3File(storageRecord *registry.StorageRecord, gf *registry.GenericFile) {
 	preservationBucket, key, err := ctx.Context.Config.BucketAndKeyFor(storageRecord.URL)
@@ -35,23 +37,14 @@ func testS3File(storageRecord *registry.StorageRecord, gf *registry.GenericFile)
 	require.NotNil(ctx.T, md5, gf.Identifier)
 	require.NotNil(ctx.T, sha256, gf.Identifier)
 
-	// ---- DEBUG ----
-	// ctx.Context.Logger.Info(gf.Identifier)
-	// ctx.Context.Logger.Info(objInfo)
-	// ctx.Context.Logger.Info("UserMetadata...")
-	// for k, v := range objInfo.UserMetadata {
-	// 	ctx.Context.Logger.Infof("%s = %s", k, v)
-	// }
-	// ctx.Context.Logger.Info("Metadata...")
-	// for k, v := range objInfo.Metadata {
-	// 	ctx.Context.Logger.Infof("%s = %s", k, v)
-	// }
-	// ---- DEBUG ----
-
 	// Note that Minio capitalizes our UserMetadata tags.
 	assert.Equal(ctx.T, gf.InstitutionIdentifier(), objInfo.UserMetadata["Institution"])
-	assert.Equal(ctx.T, gf.IntellectualObjectIdentifier, objInfo.UserMetadata["Bag"])
-	assert.Equal(ctx.T, gf.PathInBag(), objInfo.UserMetadata["Bagpath"])
+	objIdentifier, err := gf.IntellectualObjectIdentifier()
+	require.Nil(ctx.T, err)
+	assert.Equal(ctx.T, objIdentifier, objInfo.UserMetadata["Bag"])
+	pathInBag, err := gf.PathInBag()
+	require.Nil(ctx.T, err)
+	assert.Equal(ctx.T, pathInBag, objInfo.UserMetadata["Bagpath"])
 	assert.Equal(ctx.T, md5.Digest, objInfo.UserMetadata["Md5"])
 	assert.Equal(ctx.T, sha256.Digest, objInfo.UserMetadata["Sha256"])
 }

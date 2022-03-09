@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,26 +18,26 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-// Manager deletes files from preservation and ensures that Pharos
+// Manager deletes files from preservation and ensures that Registry
 // IntellectualObjects, GenericFiles, StorageRecords and PremisEvents
 // are updated to reflect the changes.
 type Manager struct {
 	// Context is the context, which includes config settings and
-	// clients to access S3 and Pharos.
+	// clients to access S3 and Registry.
 	Context *common.Context
 
-	// Identifier is the identifier of the GenericFile or IntellectualObject
+	// ObjOrFileID is the ID of the GenericFile or IntellectualObject
 	// we're deleting.
-	Identifier string
+	ObjOrFileID int64
 
 	// ItemType is the type of item we're deleting. It should be one of
 	// constants.TypeFile or constants.TypeObject.
 	ItemType string
 
 	// WorkItemID is the ID of the WorkItem being processed.
-	WorkItemID int
+	WorkItemID int64
 
-	// RequestedBy is the email address of the Pharos user who requested
+	// RequestedBy is the email address of the Registry user who requested
 	// (initiated) this deletion.
 	RequestedBy string
 
@@ -48,18 +49,22 @@ type Manager struct {
 	// approved this deletion. This will be empty unless it was a bulk
 	// deletion request. Normal deletion requests don't need APTrust approval.
 	APTrustApprover string
+
+	// itemIdentifier is used for logging and error reporting
+	itemIdentifier string
 }
 
 // NewManager creates a new deletion.Manager.
-func NewManager(context *common.Context, workItemID int, identifier, itemType, requestedBy, instApprover, aptrustApprover string) *Manager {
+func NewManager(context *common.Context, workItemID, objOrFileID int64, itemType, requestedBy, instApprover, aptrustApprover string) *Manager {
 	return &Manager{
 		Context:         context,
-		Identifier:      identifier,
+		ObjOrFileID:     objOrFileID,
 		ItemType:        itemType,
 		WorkItemID:      workItemID,
 		RequestedBy:     requestedBy,
 		InstApprover:    instApprover,
 		APTrustApprover: aptrustApprover,
+		itemIdentifier:  fmt.Sprintf("%s:%d", itemType, objOrFileID),
 	}
 }
 
@@ -75,12 +80,12 @@ func NewManager(context *common.Context, workItemID int, identifier, itemType, r
 // before calling this method.
 //
 // After deleting files from storage, this method creates deletion PREMIS events
-// in Pharos for each file, and it changes the state of each file from "A" (active)
-// to "D" (deleted). For object deletion, it also changes the Pharos object's
+// in Registry for each file, and it changes the state of each file from "A" (active)
+// to "D" (deleted). For object deletion, it also changes the Registry object's
 // state to "D" if all file deletions succeeded.
 func (m *Manager) Run() (count int, errors []*service.ProcessingError) {
 	if m.RequestedBy == "" || m.InstApprover == "" {
-		return 0, append(errors, m.Error(m.Identifier, fmt.Errorf("Deletion requires email of requestor and institutional approver"), true))
+		return 0, append(errors, m.Error(m.itemIdentifier, fmt.Errorf("Deletion requires email of requestor and institutional approver"), true))
 	}
 	if m.ItemType == constants.TypeFile {
 		count, errors = m.deleteSingleFile()
@@ -105,13 +110,13 @@ func (m *Manager) IngestObjectSave() error {
 // deleteSingleFile is for deleting a single GenericFile. Call this when ItemType
 // is GenericFile.
 func (m *Manager) deleteSingleFile() (count int, errors []*service.ProcessingError) {
-	resp := m.Context.PharosClient.GenericFileGet(m.Identifier)
+	resp := m.Context.RegistryClient.GenericFileByID(m.ObjOrFileID)
 	if resp.Error != nil {
-		return count, append(errors, m.Error(m.Identifier, resp.Error, false))
+		return count, append(errors, m.Error(m.itemIdentifier, resp.Error, false))
 	}
 	gf := resp.GenericFile()
 	if gf == nil {
-		return count, append(errors, m.Error(m.Identifier, fmt.Errorf("Cannot find GenericFile with identifier %s", m.Identifier), false))
+		return count, append(errors, m.Error(m.itemIdentifier, fmt.Errorf("Cannot find GenericFile with id %d", m.ObjOrFileID), false))
 	}
 	errs := m.deleteFile(gf)
 	if len(errs) > 0 {
@@ -124,13 +129,14 @@ func (m *Manager) deleteSingleFile() (count int, errors []*service.ProcessingErr
 // Call this when ItemType is IntellectualObject.
 func (m *Manager) deleteFiles() (count int, errors []*service.ProcessingError) {
 	params := url.Values{}
-	params.Set("intellectual_object_identifier", m.Identifier)
+	params.Set("intellectual_object_id", strconv.FormatInt(m.ObjOrFileID, 10))
 	params.Set("page", "1")
+	params.Set("state", constants.StateActive)
 	params.Set("per_page", "200")
 	for {
-		resp := m.Context.PharosClient.GenericFileList(params)
+		resp := m.Context.RegistryClient.GenericFileList(params)
 		if resp.Error != nil {
-			errors = append(errors, m.Error(m.Identifier, resp.Error, false))
+			errors = append(errors, m.Error(m.itemIdentifier, resp.Error, false))
 			return count, errors
 		}
 		for _, gf := range resp.GenericFiles() {
@@ -144,16 +150,17 @@ func (m *Manager) deleteFiles() (count int, errors []*service.ProcessingError) {
 				count++
 			}
 		}
-		if resp.HasNextPage() {
-			params = resp.ParamsForNextPage()
-		} else {
+		// Because we're filtering on State="A", we can keep getting the first page.
+		// Everything that was on the first page is now marked State="D".
+		// We don't need to call resp.ParamsForNextPage()
+		if !resp.HasNextPage() {
 			break
 		}
 	}
 	if len(errors) == 0 {
 		err := m.markObjectDeleted()
 		if err != nil {
-			errors = append(errors, m.Error(m.Identifier, err, false))
+			errors = append(errors, m.Error(m.itemIdentifier, err, false))
 		}
 	}
 	return count, errors
@@ -161,7 +168,9 @@ func (m *Manager) deleteFiles() (count int, errors []*service.ProcessingError) {
 
 // deleteFile tries to delete all the storage records associated with a file.
 func (m *Manager) deleteFile(gf *registry.GenericFile) (errors []*service.ProcessingError) {
-	resp := m.Context.PharosClient.StorageRecordList(gf.Identifier)
+	params := url.Values{}
+	params.Add("generic_file_id", strconv.FormatInt(gf.ID, 10))
+	resp := m.Context.RegistryClient.StorageRecordList(params)
 	if resp.Error != nil {
 		return append(errors, m.Error(gf.Identifier, resp.Error, false))
 	}
@@ -177,18 +186,13 @@ func (m *Manager) deleteFile(gf *registry.GenericFile) (errors []*service.Proces
 			errors = append(errors, m.Error(gf.Identifier, err, false))
 			continue
 		}
-		err = m.deleteStorageRecordFromPharos(gf, sr)
-		if err != nil {
-			errors = append(errors, m.Error(gf.Identifier, err, false))
-			continue
-		}
 		err = m.saveFileDeletionEvent(gf, sr)
 		if err != nil {
 			errors = append(errors, m.Error(gf.Identifier, err, false))
 		}
 	}
 	if len(errors) == 0 {
-		resp = m.Context.PharosClient.GenericFileFinishDelete(gf.Identifier)
+		resp = m.Context.RegistryClient.GenericFileDelete(gf.ID)
 		if resp.Error != nil {
 			errors = append(errors, m.Error(gf.Identifier, resp.Error, false))
 		}
@@ -227,27 +231,15 @@ func (m *Manager) deleteFromPreservationStorage(bucket *common.PreservationBucke
 	return err
 }
 
-// deleteStorageRecordFromPharos deletes a single StorageRecord from
-// Pharos. It does not touch the GenericFile record.
-//
-// TODO: Pharos also deletes these storage records when we mark
-// the GenericFile deleted. However, it's probably better to do this
-// here, in case we wind up deleting only one of two records. The
-// PremisEvents will keep a record of what happened.
-func (m *Manager) deleteStorageRecordFromPharos(gf *registry.GenericFile, sr *registry.StorageRecord) error {
-	resp := m.Context.PharosClient.StorageRecordDelete(sr.ID)
-	return resp.Error
-}
-
-// saveFileDeletionEvent saves a PremisEvent to Pharos saying we deleted
+// saveFileDeletionEvent saves a PremisEvent to Registry saying we deleted
 // one copy of this file from one preservation bucket. Other copies may
 // exist. Note that we cannot call GenericFileFinishDelete until at least
-// of these deletion events has been record in Pharos.
+// of these deletion events has been record in Registry.
 func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.StorageRecord) error {
 	eventId := uuid.New()
 	now := time.Now().UTC()
 	outcomeDetail := m.RequestedBy
-	outcomeInfo := fmt.Sprintf("File deleted at the request of %s.", m.RequestedBy)
+	outcomeInfo := fmt.Sprintf("One copy of this file has been deleted from %s at the request of %s.", sr.URL, m.RequestedBy)
 	if m.InstApprover != "" {
 		outcomeInfo += fmt.Sprintf(" Institutional approver: %s.", m.InstApprover)
 	}
@@ -255,21 +247,20 @@ func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.S
 		outcomeInfo += fmt.Sprintf(" APTrust approver: %s.", m.APTrustApprover)
 	}
 	event := &registry.PremisEvent{
-		Identifier:                   eventId.String(),
-		EventType:                    constants.EventDeletion,
-		DateTime:                     now,
-		Detail:                       fmt.Sprintf("Deleted one copy of this file from %s", sr.URL),
-		Outcome:                      constants.StatusSuccess,
-		OutcomeDetail:                outcomeDetail,
-		Object:                       "preservation-services + Minio S3 client",
-		Agent:                        constants.S3ClientName,
-		OutcomeInformation:           outcomeInfo,
-		IntellectualObjectIdentifier: gf.IntellectualObjectIdentifier,
-		GenericFileIdentifier:        gf.Identifier,
-		InstitutionID:                gf.InstitutionID,
-		IntellectualObjectID:         gf.IntellectualObjectID,
-		CreatedAt:                    now,
-		UpdatedAt:                    now,
+		Identifier:           eventId.String(),
+		EventType:            constants.EventDeletion,
+		DateTime:             now,
+		Detail:               fmt.Sprintf("Deleted one copy of this file from %s", sr.URL),
+		Outcome:              constants.StatusSuccess,
+		OutcomeDetail:        outcomeDetail,
+		Object:               "preservation-services + Minio S3 client",
+		Agent:                constants.S3ClientName,
+		OutcomeInformation:   outcomeInfo,
+		InstitutionID:        gf.InstitutionID,
+		IntellectualObjectID: gf.IntellectualObjectID,
+		GenericFileID:        gf.ID,
+		CreatedAt:            now,
+		UpdatedAt:            now,
 	}
 
 	// If recording the deletion PREMIS event fails with a 502,
@@ -277,9 +268,11 @@ func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.S
 	// 502s occur sporadically when Pharos is so busy that Nginx
 	// can't forward the request. See https://trello.com/c/pI16xrcD
 	// for this particular ticket.
-	var resp *network.PharosResponse
+	//
+	// TODO: This was a problem in Pharos. It may not be in Registry.
+	var resp *network.RegistryResponse
 	for i := 0; i < 3; i++ {
-		resp = m.Context.PharosClient.PremisEventSave(event)
+		resp = m.Context.RegistryClient.PremisEventSave(event)
 		if resp.Response.StatusCode != http.StatusBadGateway {
 			break
 		}
@@ -288,10 +281,19 @@ func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.S
 	return resp.Error
 }
 
-// markObjectDeleted tells Pharos that this object has been deleted in its
+// markObjectDeleted tells Registry that this object has been deleted in its
 // entirety (all files deleted).
 func (m *Manager) markObjectDeleted() error {
-	resp := m.Context.PharosClient.IntellectualObjectFinishDelete(m.Identifier)
+	// TODO: Add manager.ID. This extra lookup is a temporary measure during the rewrite.
+	resp := m.Context.RegistryClient.IntellectualObjectByID(m.ObjOrFileID)
+	if resp.Error != nil {
+		return resp.Error
+	}
+	obj := resp.IntellectualObject()
+	if obj == nil || obj.ID == 0 {
+		return fmt.Errorf("registry returned empty object for id %d", m.ObjOrFileID)
+	}
+	resp = m.Context.RegistryClient.IntellectualObjectDelete(obj.ID)
 	return resp.Error
 }
 

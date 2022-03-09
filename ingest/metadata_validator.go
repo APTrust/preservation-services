@@ -10,7 +10,6 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
-	//	"github.com/APTrust/preservation-services/util/testutil"
 )
 
 type MetadataValidator struct {
@@ -23,7 +22,7 @@ type MetadataValidator struct {
 // to set validator.Profile to a BagItProfile object before calling Run().
 // This is an unfortunate side effect of the need to conform to a common
 // constructor pattern.
-func NewMetadataValidator(context *common.Context, workItemID int, ingestObject *service.IngestObject) *MetadataValidator {
+func NewMetadataValidator(context *common.Context, workItemID int64, ingestObject *service.IngestObject) *MetadataValidator {
 	profileName := ingestObject.BagItProfileFormat()
 	profile, err := loadProfile(context, profileName)
 	if err != nil {

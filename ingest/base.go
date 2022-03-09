@@ -7,7 +7,7 @@ import (
 	"github.com/APTrust/preservation-services/models/service"
 )
 
-type BaseConstructor func(*common.Context, int, *service.IngestObject) Runnable
+type BaseConstructor func(*common.Context, int64, *service.IngestObject) Runnable
 
 type Runnable interface {
 	Run() (int, []*service.ProcessingError)
@@ -19,7 +19,7 @@ type Runnable interface {
 type Base struct {
 	Context      *common.Context
 	IngestObject *service.IngestObject
-	WorkItemID   int
+	WorkItemID   int64
 }
 
 // IngestObjectGet returns this struct's IngestObject. This satisfies part

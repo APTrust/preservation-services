@@ -1,11 +1,12 @@
+//go:build integration
 // +build integration
 
 package ingest_test
 
 import (
-	//"fmt"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -14,7 +15,7 @@ import (
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
-	//"github.com/APTrust/preservation-services/models/service"
+
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +36,7 @@ func TestNewRecorder(t *testing.T) {
 	require.NotNil(t, recorder)
 	assert.Equal(t, context, recorder.Context)
 	assert.Equal(t, obj, recorder.IngestObject)
-	assert.Equal(t, 333, recorder.WorkItemID)
+	assert.EqualValues(t, 333, recorder.WorkItemID)
 }
 
 func TestRecorderRun(t *testing.T) {
@@ -52,17 +53,17 @@ func TestRecorderRun(t *testing.T) {
 	// deletion.
 	assert.True(t, recorder.IngestObject.ShouldDeleteFromReceiving)
 
-	testNewObjectInPharos(t, recorder)
-	testNewFilesInPharos(t, recorder)
+	testNewObjectInRegistry(t, recorder)
+	testNewFilesInRegistry(t, recorder)
 
 	// Now process an update of the same bag and make
 	// sure all info is recorded correctly.
 	testObjectUpdate(t, context)
 }
 
-func testNewObjectInPharos(t *testing.T, recorder *ingest.Recorder) {
-	client := recorder.Context.PharosClient
-	resp := client.IntellectualObjectGet(recorder.IngestObject.Identifier())
+func testNewObjectInRegistry(t *testing.T, recorder *ingest.Recorder) {
+	client := recorder.Context.RegistryClient
+	resp := client.IntellectualObjectByIdentifier(recorder.IngestObject.Identifier())
 	require.Nil(t, resp.Error)
 	intelObj := resp.IntellectualObject()
 	require.NotNil(t, intelObj)
@@ -77,7 +78,7 @@ func testNewObjectInPharos(t *testing.T, recorder *ingest.Recorder) {
 	assert.Equal(t, 32, len(intelObj.ETag))
 	assert.True(t, intelObj.ID > 0)
 	assert.Equal(t, "test.edu/test.edu.apt-001", intelObj.Identifier)
-	assert.Equal(t, "test.edu", intelObj.Institution)
+	assert.Equal(t, "test.edu", intelObj.InstitutionIdentifier)
 	assert.Equal(t, "bag001", intelObj.InternalSenderIdentifier)
 	assert.Equal(t, "Test bag 001 for integration tests", intelObj.InternalSenderDescription)
 	assert.True(t, intelObj.InstitutionID > 0)
@@ -87,15 +88,15 @@ func testNewObjectInPharos(t *testing.T, recorder *ingest.Recorder) {
 	assert.Equal(t, intelObj.Title, "APTrust Test Bag 001")
 	assert.False(t, intelObj.UpdatedAt.IsZero())
 
-	testObjectEventsInPharos(t, recorder)
+	testObjectEventsInRegistry(t, recorder)
 }
 
-func testObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder) {
-	objIdentifier := recorder.IngestObject.Identifier()
-	client := recorder.Context.PharosClient
+func testObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder) {
+	client := recorder.Context.RegistryClient
 	params := url.Values{}
-	params.Add("object_identifier", objIdentifier)
-	params.Add("per_page", "100")
+	params.Add("intellectual_object_id", strconv.FormatInt(recorder.IngestObject.ID, 10))
+	params.Add("generic_file_id__is_null", "true")
+	params.Add("per_page", "20")
 	params.Add("page", "1")
 
 	resp := client.PremisEventList(params)
@@ -105,9 +106,6 @@ func testObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder) {
 
 	eventTypes := make(map[string]int)
 	for _, event := range events {
-		if event.GenericFileID > 0 {
-			continue // this is a file-level event
-		}
 		if _, ok := eventTypes[event.EventType]; !ok {
 			eventTypes[event.EventType] = 0
 		}
@@ -118,7 +116,7 @@ func testObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder) {
 		assert.NotEmpty(t, event.EventType)
 
 		// No Generic File for object-level events
-		assert.Equal(t, 0, event.GenericFileID)
+		assert.EqualValues(t, 0, event.GenericFileID)
 		assert.Empty(t, event.GenericFileIdentifier)
 
 		assert.NotEmpty(t, event.Identifier)
@@ -136,11 +134,12 @@ func testObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder) {
 	assert.Equal(t, 1, eventTypes[constants.EventIngestion])
 }
 
-func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
+func testNewFilesInRegistry(t *testing.T, recorder *ingest.Recorder) {
 	objIdentifier := recorder.IngestObject.Identifier()
-	client := recorder.Context.PharosClient
+
+	client := recorder.Context.RegistryClient
 	params := url.Values{}
-	params.Add("intellectual_object_identifier", objIdentifier)
+	params.Add("intellectual_object_id", strconv.FormatInt(recorder.IngestObject.ID, 10))
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 	resp := client.GenericFileList(params)
@@ -158,7 +157,8 @@ func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
 		assert.True(t, len(gf.Identifier) > len(objIdentifier))
 		assert.True(t, gf.InstitutionID > 0)
 		assert.True(t, gf.IntellectualObjectID > 0)
-		assert.Equal(t, objIdentifier, gf.IntellectualObjectIdentifier)
+		gfObjIdentifier, _ := gf.IntellectualObjectIdentifier()
+		assert.Equal(t, objIdentifier, gfObjIdentifier)
 		assert.False(t, gf.LastFixityCheck.IsZero())
 		assert.True(t, gf.Size > 0)
 		assert.Equal(t, "A", gf.State)
@@ -166,16 +166,17 @@ func testNewFilesInPharos(t *testing.T, recorder *ingest.Recorder) {
 		assert.True(t, util.LooksLikeUUID(gf.UUID))
 		assert.False(t, gf.UpdatedAt.IsZero())
 
-		testFileEventsInPharos(t, recorder, gf.Identifier)
-		testChecksumsInPharos(t, recorder, gf)
+		testFileEventsInRegistry(t, recorder, gf)
+		testChecksumsInRegistry(t, recorder, gf)
 	}
 }
 
-func testFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentifier string) {
-	objIdentifier := recorder.IngestObject.Identifier()
-	client := recorder.Context.PharosClient
+func testFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
+	objIdentifier, err := gf.IntellectualObjectIdentifier() //recorder.IngestObject.Identifier()
+	require.Nil(t, err)
+	client := recorder.Context.RegistryClient
 	params := url.Values{}
-	params.Add("file_identifier", fileIdentifier)
+	params.Add("generic_file_id", strconv.FormatInt(gf.ID, 10))
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 
@@ -195,11 +196,11 @@ func testFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentif
 		assert.NotEmpty(t, event.Detail)
 		assert.NotEmpty(t, event.EventType)
 		assert.NotEqual(t, 0, event.GenericFileID)
-		assert.Equal(t, fileIdentifier, event.GenericFileIdentifier)
+		assert.Equal(t, gf.Identifier, event.GenericFileIdentifier)
 		assert.NotEmpty(t, event.Identifier)
 		assert.NotEmpty(t, event.InstitutionID)
 		assert.NotEmpty(t, event.IntellectualObjectID, event)
-		assert.Equal(t, objIdentifier, event.IntellectualObjectIdentifier)
+		assert.Equal(t, objIdentifier, event.IntellectualObjectIdentifier, gf.Identifier)
 		assert.NotEmpty(t, event.Object)
 		assert.NotEmpty(t, event.OutcomeDetail)
 		assert.NotEmpty(t, event.OutcomeInformation)
@@ -216,13 +217,13 @@ func testFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentif
 	assert.Equal(t, 1, eventTypes[constants.EventReplication])
 }
 
-func testChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
+func testChecksumsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
 	params := url.Values{}
 	params.Add("generic_file_identifier", gf.Identifier)
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 
-	resp := recorder.Context.PharosClient.ChecksumList(params)
+	resp := recorder.Context.RegistryClient.ChecksumList(params)
 	require.Nil(t, resp.Error)
 	checksums := resp.Checksums()
 	assert.Equal(t, 4, len(checksums))
@@ -306,7 +307,6 @@ func getChangedFileRecord(identifier string) ChangedFile {
 }
 
 func testObjectUpdate(t *testing.T, context *common.Context) {
-	timestamp := time.Now().UTC()
 	bagPath := getBagPath("updated", "test.edu.apt-001.tar")
 	recorder := prepareForRecord(t, bagPath, recorderItemID_02, context)
 	require.NotNil(t, recorder)
@@ -319,12 +319,12 @@ func testObjectUpdate(t *testing.T, context *common.Context) {
 	// deletion.
 	assert.True(t, recorder.IngestObject.ShouldDeleteFromReceiving)
 
-	testUpdatedObjectInPharos(t, recorder, timestamp)
+	testUpdatedObjectInRegistry(t, recorder)
 }
 
-func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
-	client := recorder.Context.PharosClient
-	resp := client.IntellectualObjectGet(recorder.IngestObject.Identifier())
+func testUpdatedObjectInRegistry(t *testing.T, recorder *ingest.Recorder) {
+	client := recorder.Context.RegistryClient
+	resp := client.IntellectualObjectByIdentifier(recorder.IngestObject.Identifier())
 	require.Nil(t, resp.Error)
 	intelObj := resp.IntellectualObject()
 	require.NotNil(t, intelObj)
@@ -339,7 +339,7 @@ func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestam
 	assert.Equal(t, 32, len(intelObj.ETag))
 	assert.True(t, intelObj.ID > 0)
 	assert.Equal(t, "test.edu/test.edu.apt-001", intelObj.Identifier)
-	assert.Equal(t, "test.edu", intelObj.Institution)
+	assert.Equal(t, "test.edu", intelObj.InstitutionIdentifier)
 	assert.Equal(t, "bag-001-updated", intelObj.InternalSenderIdentifier)
 	assert.Equal(t, "Updated APTrust bag 001 - updated", intelObj.InternalSenderDescription)
 	assert.True(t, intelObj.InstitutionID > 0)
@@ -348,71 +348,64 @@ func testUpdatedObjectInPharos(t *testing.T, recorder *ingest.Recorder, timestam
 	assert.Equal(t, intelObj.StorageOption, constants.StorageClassStandard)
 	assert.Equal(t, "APTrust Bag 001 (updated)", intelObj.Title)
 
-	// This should have changed
 	assert.True(t, intelObj.UpdatedAt.After(intelObj.CreatedAt))
 
-	testUpdatedObjectEventsInPharos(t, recorder, timestamp)
-	testUpdatedFilesInPharos(t, recorder, timestamp)
+	testUpdatedObjectEventsInRegistry(t, recorder, intelObj.UpdatedAt)
+	testUpdatedFilesInRegistry(t, recorder, intelObj.UpdatedAt)
 }
 
-func testUpdatedObjectEventsInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
-	objIdentifier := recorder.IngestObject.Identifier()
-	client := recorder.Context.PharosClient
+func testUpdatedObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
+	client := recorder.Context.RegistryClient
 
-	// Because Pharos is so badly broken, we can't reliably retrieve
-	// a list of object-level events. So we have to retrieve all events
-	// created since a specified time and filter them on our own.
 	params := url.Values{}
-	params.Add("object_identifier", objIdentifier)
-	params.Add("created_after", timestamp.Format(time.RFC3339))
-	params.Add("per_page", "200")
+	params.Add("intellectual_object_id", strconv.FormatInt(recorder.IngestObject.ID, 10))
+	params.Add("generic_file_id__is_null", "true")
+	params.Add("per_page", "300")
 	params.Add("page", "1")
 
 	resp := client.PremisEventList(params)
-	//data, _ := resp.RawResponseData()
-	//fmt.Printf(string(data))
+
 	require.Nil(t, resp.Error)
 	events := resp.PremisEvents()
 	require.NotEmpty(t, events)
 
 	eventTypes := make(map[string]int)
 	for _, event := range events {
-		if event.GenericFileID > 0 {
-			continue // this is a file-level event
-		}
 		if _, ok := eventTypes[event.EventType]; !ok {
 			eventTypes[event.EventType] = 0
 		}
 		eventTypes[event.EventType]++
 	}
 
-	// No new creation event, because this is reingest
-	assert.Equal(t, 0, eventTypes[constants.EventCreation])
+	// No new creation event, because this is reingest.
+	// There should be just one, the original.
+	assert.Equal(t, 1, eventTypes[constants.EventCreation])
 
 	// No new identifier assignment for reingest
-	assert.Equal(t, 0, eventTypes[constants.EventIdentifierAssignment])
+	// Should be just one, the original assignment event.
+	assert.Equal(t, 1, eventTypes[constants.EventIdentifierAssignment])
 
-	// Should be one new rights event, since this can be reset
+	// Should be original + one new rights event, since this can be reset
 	// on each ingest.
-	assert.Equal(t, 1, eventTypes[constants.EventAccessAssignment])
+	assert.Equal(t, 2, eventTypes[constants.EventAccessAssignment])
 
 	// There *SHOULD* be a new ingest event for reingest.
-	assert.Equal(t, 1, eventTypes[constants.EventIngestion])
+	// So, one for original ingest plus one for re-ingest = 2.
+	assert.Equal(t, 2, eventTypes[constants.EventIngestion])
 }
 
-func testUpdatedFilesInPharos(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
+func testUpdatedFilesInRegistry(t *testing.T, recorder *ingest.Recorder, timestamp time.Time) {
 	objIdentifier := recorder.IngestObject.Identifier()
-	client := recorder.Context.PharosClient
+	client := recorder.Context.RegistryClient
 	params := url.Values{}
-	params.Add("intellectual_object_identifier", objIdentifier)
-	params.Add("updated_after", timestamp.Format(time.RFC3339))
-	params.Add("per_page", "100")
+	params.Add("intellectual_object_id", strconv.FormatInt(recorder.IngestObject.ID, 10))
+	params.Add("updated_at__gteq", timestamp.Format(time.RFC3339Nano))
+	params.Add("per_page", "300")
 	params.Add("page", "1")
 	resp := client.GenericFileList(params)
-	//data, _ := resp.RawResponseData()
-	//fmt.Println(string(data))
 	require.Nil(t, resp.Error)
 	genericFiles := resp.GenericFiles()
+
 	require.NotEmpty(t, genericFiles)
 	assert.Equal(t, len(changedFiles), len(genericFiles))
 
@@ -435,7 +428,9 @@ func testUpdatedFilesInPharos(t *testing.T, recorder *ingest.Recorder, timestamp
 		assert.True(t, len(gf.Identifier) > len(objIdentifier))
 		assert.True(t, gf.InstitutionID > 0)
 		assert.True(t, gf.IntellectualObjectID > 0)
-		assert.Equal(t, objIdentifier, gf.IntellectualObjectIdentifier)
+		gfObjIdentifier, err := gf.IntellectualObjectIdentifier()
+		assert.Nil(t, err)
+		assert.Equal(t, objIdentifier, gfObjIdentifier)
 		assert.False(t, gf.LastFixityCheck.IsZero())
 		assert.True(t, gf.Size > 0)
 		assert.Equal(t, "A", gf.State)
@@ -443,17 +438,16 @@ func testUpdatedFilesInPharos(t *testing.T, recorder *ingest.Recorder, timestamp
 		assert.True(t, util.LooksLikeUUID(gf.UUID))
 		assert.True(t, gf.UpdatedAt.After(timestamp))
 
-		testUpdatedFileEventsInPharos(t, recorder, gf.Identifier, timestamp)
-		testUpdatedChecksumsInPharos(t, recorder, gf)
+		testUpdatedFileEventsInRegistry(t, recorder, gf, timestamp)
+		testUpdatedChecksumsInRegistry(t, recorder, gf)
 	}
 }
 
-func testUpdatedFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, fileIdentifier string, timestamp time.Time) {
-	objIdentifier := recorder.IngestObject.Identifier()
-	client := recorder.Context.PharosClient
+func testUpdatedFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile, timestamp time.Time) {
+	objIdentifier, _ := gf.IntellectualObjectIdentifier()
+	client := recorder.Context.RegistryClient
 	params := url.Values{}
-	params.Add("file_identifier", fileIdentifier)
-	params.Add("created_after", timestamp.Format(time.RFC3339))
+	params.Add("generic_file_id", strconv.FormatInt(gf.ID, 10))
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 
@@ -473,7 +467,7 @@ func testUpdatedFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, file
 		assert.NotEmpty(t, event.Detail)
 		assert.NotEmpty(t, event.EventType)
 		assert.NotEqual(t, 0, event.GenericFileID)
-		assert.Equal(t, fileIdentifier, event.GenericFileIdentifier)
+		assert.Equal(t, gf.Identifier, event.GenericFileIdentifier)
 		assert.NotEmpty(t, event.Identifier)
 		assert.NotEmpty(t, event.InstitutionID)
 		assert.NotEmpty(t, event.IntellectualObjectID, event)
@@ -484,31 +478,41 @@ func testUpdatedFileEventsInPharos(t *testing.T, recorder *ingest.Recorder, file
 		assert.NotEmpty(t, event.Outcome)
 	}
 
-	changedFile := getChangedFileRecord(fileIdentifier)
+	changedFile := getChangedFileRecord(gf.Identifier)
 
-	// md5, sha1, sha256, sha512
-	assert.Equal(t, 4, eventTypes[constants.EventDigestCalculation], fileIdentifier)
-
-	// 1) semantic identifier assignment, 2) URL identifier assignment
-	// But if this is a reingest of an existing file, no new IDs were
-	// assigned, so there will be zero no identifier assignment events.
+	// There should be a total of two identifier assignment events:
+	// 1) semantic identifier assignment, 2) URL identifier assignment.
+	// We do not assign new identifiers on reingest. We keep the same ones,
+	// so there should be exactly two identifier assignment events after both
+	// initial ingest and reingest.
 	if changedFile.IsReingest {
-		assert.Equal(t, 0, eventTypes[constants.EventIdentifierAssignment], fileIdentifier)
+		assert.Equal(t, 2, eventTypes[constants.EventIdentifierAssignment], gf.Identifier)
+		// reingest should have two ingest events
+		assert.Equal(t, 2, eventTypes[constants.EventIngestion], gf.Identifier)
+		// (md5, sha1, sha256, sha512) x 2
+		// because the file changed on reingest and has new checksums.
+		// The registry keeps current and all historical checksums.
+		assert.Equal(t, 8, eventTypes[constants.EventDigestCalculation], gf.Identifier)
+		// Replication events from two ingests
+		assert.Equal(t, 2, eventTypes[constants.EventReplication], gf.Identifier)
 	} else {
-		assert.Equal(t, 2, eventTypes[constants.EventIdentifierAssignment], fileIdentifier)
+		assert.Equal(t, 2, eventTypes[constants.EventIdentifierAssignment], gf.Identifier)
+		// if not reingest, there should be just one ingest event
+		assert.Equal(t, 1, eventTypes[constants.EventIngestion], gf.Identifier)
+		// (md5, sha1, sha256, sha512) x 1
+		assert.Equal(t, 4, eventTypes[constants.EventDigestCalculation], gf.Identifier)
+		// replication event from one ingest
+		assert.Equal(t, 1, eventTypes[constants.EventReplication], gf.Identifier)
 	}
-
-	assert.Equal(t, 1, eventTypes[constants.EventIngestion], fileIdentifier)
-	assert.Equal(t, 1, eventTypes[constants.EventReplication], fileIdentifier)
 }
 
-func testUpdatedChecksumsInPharos(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
+func testUpdatedChecksumsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *registry.GenericFile) {
 	params := url.Values{}
-	params.Add("generic_file_identifier", gf.Identifier)
+	params.Add("generic_file_id", strconv.FormatInt(gf.ID, 10))
 	params.Add("per_page", "100")
 	params.Add("page", "1")
 
-	resp := recorder.Context.PharosClient.ChecksumList(params)
+	resp := recorder.Context.RegistryClient.ChecksumList(params)
 	require.Nil(t, resp.Error)
 	checksums := resp.Checksums()
 

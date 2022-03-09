@@ -76,7 +76,7 @@ func (q *QueueFixity) run() {
 
 func (q *QueueFixity) queueList() {
 	// Get to work. Note that we don't have to filter on storage option
-	// because Pharos now knows to exclude Glacier-only files from
+	// because Registry now knows to exclude Glacier-only files from
 	// "not_checked_since" queries.
 	perPage := util.Min(100, q.Context.Config.MaxFixityItemsPerRun)
 	params := url.Values{}
@@ -92,7 +92,7 @@ func (q *QueueFixity) queueList() {
 	q.Context.Logger.Infof("Queuing up to %d files not checked since %s to topic %s", q.Context.Config.MaxFixityItemsPerRun, sinceWhen.Format(time.RFC3339), constants.TopicFixity)
 
 	for {
-		resp := q.Context.PharosClient.GenericFileList(params)
+		resp := q.Context.RegistryClient.GenericFileList(params)
 		q.Context.Logger.Infof("GET %s", resp.Request.URL)
 		if resp.Error != nil {
 			q.Context.Logger.Errorf("Error getting GenericFile list from Pharos: %s", resp.Error)
@@ -110,9 +110,9 @@ func (q *QueueFixity) queueList() {
 }
 
 func (q *QueueFixity) queueOne() {
-	resp := q.Context.PharosClient.GenericFileGet(q.Identifier)
+	resp := q.Context.RegistryClient.GenericFileByIdentifier(q.Identifier)
 	if resp.Error != nil {
-		q.Context.Logger.Errorf("Error getting GenericFile list from Pharos: %s", resp.Error)
+		q.Context.Logger.Errorf("Error getting GenericFile list from Registry: %s", resp.Error)
 		return
 	}
 	q.addToNSQ(resp.GenericFile())

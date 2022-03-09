@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package ingest_test
@@ -13,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const verifierItemID = 8944
+const verifierItemID = int64(8944)
 
 func TestNewPreservationVerifier(t *testing.T) {
 	context := common.NewContext()

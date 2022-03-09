@@ -17,24 +17,24 @@ import (
 // to work with that horrid AWS library.
 
 type Context struct {
-	Config       *Config
-	Logger       *logging.Logger
-	NSQClient    *network.NSQClient
-	PharosClient *network.PharosClient
-	RedisClient  *network.RedisClient
-	S3Clients    map[string]*minio.Client
+	Config         *Config
+	Logger         *logging.Logger
+	NSQClient      *network.NSQClient
+	RedisClient    *network.RedisClient
+	RegistryClient *network.RegistryClient
+	S3Clients      map[string]*minio.Client
 }
 
 func NewContext() *Context {
 	config := NewConfig()
 	_logger := getLogger(config)
 	return &Context{
-		Config:       config,
-		Logger:       _logger,
-		NSQClient:    getNsqClient(config),
-		PharosClient: getPharosClient(config, _logger),
-		RedisClient:  getRedisClient(config),
-		S3Clients:    getS3Clients(config, _logger),
+		Config:         config,
+		Logger:         _logger,
+		NSQClient:      getNsqClient(config),
+		RedisClient:    getRedisClient(config),
+		RegistryClient: getRegistryClient(config, _logger),
+		S3Clients:      getS3Clients(config, _logger),
 	}
 }
 
@@ -54,15 +54,15 @@ func getRedisClient(config *Config) *network.RedisClient {
 		config.RedisDefaultDB)
 }
 
-func getPharosClient(config *Config, logger *logging.Logger) *network.PharosClient {
-	client, err := network.NewPharosClient(
-		config.PharosURL,
-		config.PharosAPIVersion,
-		config.PharosAPIUser,
-		config.PharosAPIKey,
+func getRegistryClient(config *Config, logger *logging.Logger) *network.RegistryClient {
+	client, err := network.NewRegistryClient(
+		config.RegistryURL,
+		config.RegistryAPIVersion,
+		config.RegistryAPIUser,
+		config.RegistryAPIKey,
 		logger)
 	if err != nil {
-		msg := fmt.Sprintf("Could not initialize Pharos client: %v", err)
+		msg := fmt.Sprintf("Could not initialize Registry client: %v", err)
 		panic(msg)
 	}
 	return client

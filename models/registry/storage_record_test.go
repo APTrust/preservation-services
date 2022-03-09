@@ -26,12 +26,6 @@ func TestStorageRecordToJson(t *testing.T) {
 	assert.Equal(t, recordJson, string(actualJson))
 }
 
-func TestStorageRecordSerializeForPharos(t *testing.T) {
-	actualJson, err := r.SerializeForPharos()
-	require.Nil(t, err)
-	assert.Equal(t, recordJsonForPharos, string(actualJson))
-}
-
 func TestStorageRecordUUID(t *testing.T) {
 	r := &registry.StorageRecord{
 		URL: "https://example.com/preservation/727800d8-fa5b-4fe8-82c8-78d5dc7bd195",
@@ -40,4 +34,3 @@ func TestStorageRecordUUID(t *testing.T) {
 }
 
 var recordJson = `{"generic_file_id":999,"id":5432,"url":"https://example.com/preservation/homer.simpson"}`
-var recordJsonForPharos = `{"url":"https://example.com/preservation/homer.simpson"}`

@@ -40,16 +40,20 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, int64(5497558138880), config.MaxFileSize)
 	assert.Equal(t, "localhost:4161", config.NsqLookupd)
 	assert.Equal(t, "http://localhost:4151", config.NsqURL)
-	assert.Equal(t, "c3958c7b09e40af1d065020484dafa9b2a35cea0", config.PharosAPIKey)
-	assert.Equal(t, "system@aptrust.org", config.PharosAPIUser)
-	assert.Equal(t, "v2", config.PharosAPIVersion)
-	assert.Equal(t, "http://localhost:9292", config.PharosURL)
+	assert.Equal(t, "password", config.RegistryAPIKey)
+	assert.Equal(t, "system@aptrust.org", config.RegistryAPIUser)
+	assert.Equal(t, "v3", config.RegistryAPIVersion)
+	assert.Equal(t, "http://localhost:8080", config.RegistryURL)
 	assert.Equal(t, 0, config.RedisDefaultDB)
 	assert.Equal(t, "", config.RedisPassword)
 	assert.Equal(t, 3, config.RedisRetries)
 	assert.Equal(t, time.Duration(250*time.Millisecond), config.RedisRetryMs)
 	assert.Equal(t, "localhost:6379", config.RedisURL)
 	assert.Equal(t, "", config.RedisUser)
+	assert.Equal(t, "password", config.RegistryAPIKey)
+	assert.Equal(t, "system@aptrust.org", config.RegistryAPIUser)
+	assert.Equal(t, "v3", config.RegistryAPIVersion)
+	assert.Equal(t, "http://localhost:8080", config.RegistryURL)
 	assert.Equal(t, restoreDir, config.RestoreDir)
 	assert.Equal(t, "staging", config.StagingBucket)
 	assert.Equal(t, time.Duration(250*time.Millisecond), config.StagingUploadRetryMs)
@@ -134,9 +138,11 @@ func TestToJson(t *testing.T) {
 		"BucketWasabiVA",
 		"ConfigName",
 		"IngestTempDir",
-		"PharosAPIVersion",
-		"PharosURL",
+		"RegistryAPIVersion",
+		"RegistryURL",
 		"RedisDefaultDB",
+		"RegistryAPIVersion",
+		"RegistryURL",
 		"WorkerSettings",
 	}
 	for _, key := range expectedKeys {
@@ -144,14 +150,16 @@ func TestToJson(t *testing.T) {
 	}
 
 	sensitiveKeys := []string{
-		"PharosAPIKey",
-		"PharosAPIUser",
+		"RegistryAPIKey",
+		"RegistryAPIUser",
 		"RedisPassword",
+		"RegistryAPIKey",
+		"RegistryAPIUser",
 		"RedisUser",
 		"S3Credentials",
 	}
 	for _, key := range sensitiveKeys {
-		assert.False(t, strings.Contains(jsonString, key))
+		assert.False(t, strings.Contains(jsonString, key), key)
 	}
 }
 

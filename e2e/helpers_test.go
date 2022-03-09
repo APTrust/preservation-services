@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 package e2e_test
@@ -6,6 +7,7 @@ import (
 	s3ctx "context"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -21,10 +23,6 @@ import (
 
 // This file contains helpers to do some setup and
 // housekeeping but don't perform any actual tests.
-
-// -------------------------------------------------------
-// TODO: Refactor. There's a lot of code duplication here.
-// -------------------------------------------------------
 
 // Set up a context for testing.
 func initTestContext(t *testing.T) {
@@ -46,7 +44,7 @@ func initTestContext(t *testing.T) {
 
 // Push some bags into the receiving bucket using Minio.
 // We do this instead of a simple filesystem copy because
-// Pharos WorkItems use ETags to distinguish between versions
+// Registry WorkItems use ETags to distinguish between versions
 // of a bag. Minio creates ETags, file copying doesn't.
 func pushBagsToReceiving(testbags []*e2e.TestBag) {
 	client := ctx.Context.S3Clients[constants.StorageProviderAWS]
@@ -68,6 +66,7 @@ func pushBagsToReceiving(testbags []*e2e.TestBag) {
 func waitForInitialIngestCompletion() {
 	for {
 		if initialIngestsComplete() {
+			ctx.Context.Logger.Infof("E2E: Initial ingests complete")
 			break
 		}
 		time.Sleep(10 * time.Second)
@@ -79,6 +78,7 @@ func waitForInitialIngestCompletion() {
 func waitForReingestCompletion() {
 	for {
 		if reingestsComplete() {
+			ctx.Context.Logger.Infof("E2E: Reingests complete")
 			break
 		}
 		time.Sleep(10 * time.Second)
@@ -88,6 +88,7 @@ func waitForReingestCompletion() {
 func waitForRestorationCompletion() {
 	for {
 		if restorationsComplete() {
+			ctx.Context.Logger.Infof("E2E: Restorations complete")
 			break
 		}
 		time.Sleep(10 * time.Second)
@@ -97,6 +98,7 @@ func waitForRestorationCompletion() {
 func waitForFixityCompletion() {
 	for {
 		if fixitiesComplete() {
+			ctx.Context.Logger.Infof("E2E: Fixities complete")
 			break
 		}
 		time.Sleep(10 * time.Second)
@@ -106,6 +108,7 @@ func waitForFixityCompletion() {
 func waitForDeletionCompletion() {
 	for {
 		if deletionsComplete() {
+			ctx.Context.Logger.Infof("E2E: Deletions complete")
 			break
 		}
 		time.Sleep(10 * time.Second)
@@ -183,7 +186,7 @@ func allItemsInTopic(topicName string, desiredCount int64) bool {
 		ctx.Context.Logger.Infof("Topic %s hasn't been created yet", topicName)
 	} else {
 		ctx.Context.Logger.Infof("Topic %s has depth %d. Want %d", topicName, topicStats.Depth, desiredCount)
-		allComplete = (topicStats.Depth == desiredCount)
+		allComplete = (topicStats.Depth >= desiredCount)
 	}
 	return allComplete
 }
@@ -196,10 +199,10 @@ func objIdentFromFileIdent(gfIdentifier string) string {
 	return strings.Join(parts[0:2], "/")
 }
 
-// Returns an institution record from Pharos. Our "test.edu" institution
+// Returns an institution record from Registry. Our "test.edu" institution
 // will have a different ID each time we test, so we have to look it up.
 func getInstitution(identifier string) *registry.Institution {
-	resp := ctx.Context.PharosClient.InstitutionGet(identifier)
+	resp := ctx.Context.RegistryClient.InstitutionByIdentifier(identifier)
 	assert.NotNil(ctx.T, resp)
 	require.Nil(ctx.T, resp.Error)
 	institution := resp.Institution()
@@ -210,69 +213,88 @@ func getInstitution(identifier string) *registry.Institution {
 func createRestorationWorkItems() (err error) {
 	// create 4 file restorations
 	for _, testFile := range e2e.FilesToRestore {
-		objIdentifier := objIdentFromFileIdent(testFile.Identifier)
-		err = createRestorationWorkItem(objIdentifier, testFile.Identifier)
+		resp := ctx.Context.RegistryClient.GenericFileByIdentifier(testFile.Identifier)
+		gf := resp.GenericFile()
+		if gf == nil {
+			ctx.Context.Logger.Errorf("Registry has no file with identifier %s: %v", testFile.Identifier, resp.Error)
+			return resp.Error
+		}
+		err = createRestorationWorkItem(gf.IntellectualObjectID, gf.ID)
 		if err != nil {
+			ctx.Context.Logger.Errorf("Error creating restoration WorkItem for file %s: %v", testFile.Identifier, err)
 			return err
 		}
+		ctx.Context.Logger.Infof("Created restoration WorkItem for file %s", testFile.Identifier)
 	}
 
 	// create 2 APTrust and 2 BTR bag restorations
 	// one original and one updated bag from APTrust, BTR
 	for _, objIdentifier := range e2e.BagsToRestore {
-		err = createRestorationWorkItem(objIdentifier, "")
+		resp := ctx.Context.RegistryClient.IntellectualObjectByIdentifier(objIdentifier)
+		obj := resp.IntellectualObject()
+		if obj == nil {
+			ctx.Context.Logger.Errorf("Registry has no object with identifier %s: %v", objIdentifier, resp.Error)
+			return resp.Error
+		}
+		err = createRestorationWorkItem(obj.ID, 0)
 		if err != nil {
+			ctx.Context.Logger.Errorf("Error creating restoration WorkItem for object %s: %v", objIdentifier, err)
 			return err
 		}
+		ctx.Context.Logger.Infof("Created restoration WorkItem for object %s", objIdentifier)
 	}
 	return nil
 }
 
-func createRestorationWorkItem(objIdentifier, gfIdentifier string) error {
-	ingestItem, err := getLastIngestRecord(objIdentifier)
+func createRestorationWorkItem(objID, gfID int64) error {
+	ingestItem, err := getLastIngestRecord(objID)
 	if err != nil {
 		return err
 	}
 	utcNow := time.Now().UTC()
-	restorationItem := &registry.WorkItem{
-		Action:                constants.ActionRestore,
-		BagDate:               ingestItem.BagDate,
-		Bucket:                ingestItem.Bucket,
-		CreatedAt:             utcNow,
-		Date:                  ingestItem.Date,
-		ETag:                  ingestItem.ETag,
-		GenericFileIdentifier: gfIdentifier,
-		InstitutionID:         ingestItem.InstitutionID,
-		Name:                  ingestItem.Name,
-		Note:                  "Restoration requested",
-		ObjectIdentifier:      objIdentifier,
-		Outcome:               "Restoration requested",
-		Retry:                 true,
-		Size:                  ingestItem.Size,
-		Stage:                 constants.StageRequested,
-		Status:                constants.StatusPending,
-		User:                  "e2e@aptrust.org",
+	action := constants.ActionRestoreObject
+	if gfID > 0 {
+		action = constants.ActionRestoreFile
 	}
-	resp := ctx.Context.PharosClient.WorkItemSave(restorationItem)
+	restorationItem := &registry.WorkItem{
+		Action:               action,
+		BagDate:              ingestItem.BagDate,
+		Bucket:               ingestItem.Bucket,
+		CreatedAt:            utcNow,
+		DateProcessed:        ingestItem.DateProcessed,
+		ETag:                 ingestItem.ETag,
+		GenericFileID:        gfID,
+		IntellectualObjectID: objID,
+		InstitutionID:        ingestItem.InstitutionID,
+		Name:                 ingestItem.Name,
+		Note:                 "Restoration requested",
+		Outcome:              "Restoration requested",
+		Retry:                true,
+		Size:                 ingestItem.Size,
+		Stage:                constants.StageRequested,
+		Status:               constants.StatusPending,
+		User:                 "e2e@aptrust.org",
+	}
+	resp := ctx.Context.RegistryClient.WorkItemSave(restorationItem)
 	return resp.Error
 }
 
-func getLastIngestRecord(objIdentifier string) (*registry.WorkItem, error) {
+func getLastIngestRecord(objID int64) (*registry.WorkItem, error) {
 	params := url.Values{}
-	params.Set("object_identifier", objIdentifier)
-	params.Set("item_action", constants.ActionIngest)
+	params.Set("intellectual_object_id", strconv.FormatInt(objID, 10))
+	params.Set("action", constants.ActionIngest)
 	params.Set("stage", constants.StageCleanup)
 	params.Set("status", constants.StatusSuccess)
-	params.Set("sort", "date desc")
+	params.Set("sort", "date_processed__desc")
 	params.Set("page", "1")
 	params.Set("per_page", "1")
-	resp := ctx.Context.PharosClient.WorkItemList(params)
+	resp := ctx.Context.RegistryClient.WorkItemList(params)
 	if resp.Error != nil {
 		return nil, resp.Error
 	}
 	items := resp.WorkItems()
 	if len(items) < 1 {
-		return nil, fmt.Errorf("No ingest WorkItems for %s", objIdentifier)
+		return nil, fmt.Errorf("No ingest WorkItems for object %d", objID)
 	}
 	return items[0], nil
 }
@@ -280,52 +302,58 @@ func getLastIngestRecord(objIdentifier string) (*registry.WorkItem, error) {
 func getRestoreWorkItems(objIdentifier, gfIdentifier string) []*registry.WorkItem {
 	params := url.Values{}
 	params.Set("object_identifier", objIdentifier)
-	params.Set("file_identifier", gfIdentifier)
-	params.Set("item_action", constants.ActionRestore)
-	resp := ctx.Context.PharosClient.WorkItemList(params)
+	if gfIdentifier != "" {
+		params.Set("generic_file_identifier", gfIdentifier)
+		params.Set("action", constants.ActionRestoreFile)
+	} else {
+		params.Set("action", constants.ActionRestoreObject)
+	}
+	resp := ctx.Context.RegistryClient.WorkItemList(params)
 	require.Nil(ctx.T, resp.Error)
 	return resp.WorkItems()
 }
 
 func createDeletionWorkItems() {
 	for _, gfIdentifier := range e2e.FilesToDelete {
-		objIdentifier := objIdentFromFileIdent(gfIdentifier)
-		err := createDeletionWorkItem(objIdentifier, gfIdentifier)
-		assert.Nil(ctx.T, err, gfIdentifier)
+		resp := ctx.Context.RegistryClient.GenericFileByIdentifier(gfIdentifier)
+		gf := resp.GenericFile()
+		if gf == nil {
+			ctx.Context.Logger.Errorf("Can't create deletion WorkItem. Registry returned nil GenericFile for identifier %s", gfIdentifier)
+			return
+		}
+		resp = ctx.Context.RegistryClient.GenericFilePrepareForDelete(gf.ID)
+		assert.Nil(ctx.T, resp.Error, gfIdentifier)
+
+		deletionWorkItem := resp.WorkItem()
+		assert.NotNil(ctx.T, deletionWorkItem, gfIdentifier)
+		if deletionWorkItem != nil {
+			err := ctx.Context.NSQClient.Enqueue(constants.TopicDelete, deletionWorkItem.ID)
+			if err == nil {
+				ctx.Context.Logger.Errorf("Queued WorkItem %d in %s for file %s", deletionWorkItem.ID, constants.TopicDelete, gfIdentifier)
+			} else {
+				ctx.Context.Logger.Errorf("Error queueing WorkItem %d in %s for file %s: %v", deletionWorkItem.ID, constants.TopicDelete, gfIdentifier, err)
+			}
+		}
 	}
 	for _, objIdentifier := range e2e.ObjectsToDelete {
-		err := createDeletionWorkItem(objIdentifier, "")
-		assert.Nil(ctx.T, err, objIdentifier)
-	}
-}
+		resp := ctx.Context.RegistryClient.IntellectualObjectByIdentifier(objIdentifier)
+		obj := resp.IntellectualObject()
+		if obj == nil {
+			ctx.Context.Logger.Errorf("Can't create deletion WorkItem. Registry returned nil IntellectualObject for identifier %s", objIdentifier)
+			return
+		}
+		resp = ctx.Context.RegistryClient.IntellectualObjectPrepareForDelete(obj.ID)
+		assert.Nil(ctx.T, resp.Error, objIdentifier)
 
-func createDeletionWorkItem(objIdentifier, gfIdentifier string) error {
-	ctx.Context.Logger.Info("Creating deletion WorkItem for %s - %s", objIdentifier, gfIdentifier)
-	ingestItem, err := getLastIngestRecord(objIdentifier)
-	if err != nil {
-		return err
+		deletionWorkItem := resp.WorkItem()
+		assert.NotNil(ctx.T, deletionWorkItem, objIdentifier)
+		if deletionWorkItem != nil {
+			err := ctx.Context.NSQClient.Enqueue(constants.TopicDelete, deletionWorkItem.ID)
+			if err == nil {
+				ctx.Context.Logger.Errorf("Queued WorkItem %d in %s for object %s", deletionWorkItem.ID, constants.TopicDelete, objIdentifier)
+			} else {
+				ctx.Context.Logger.Errorf("Error queueing WorkItem %d in %s for object %s: %v", deletionWorkItem.ID, constants.TopicDelete, objIdentifier, err)
+			}
+		}
 	}
-	utcNow := time.Now().UTC()
-	deletionItem := &registry.WorkItem{
-		Action:                constants.ActionDelete,
-		BagDate:               ingestItem.BagDate,
-		Bucket:                ingestItem.Bucket,
-		CreatedAt:             utcNow,
-		Date:                  ingestItem.Date,
-		ETag:                  ingestItem.ETag,
-		GenericFileIdentifier: gfIdentifier,
-		InstApprover:          "approver@example.com",
-		InstitutionID:         ingestItem.InstitutionID,
-		Name:                  ingestItem.Name,
-		Note:                  "Deletion requested",
-		ObjectIdentifier:      objIdentifier,
-		Outcome:               "Deletion requested",
-		Retry:                 true,
-		Size:                  ingestItem.Size,
-		Stage:                 constants.StageRequested,
-		Status:                constants.StatusPending,
-		User:                  "e2e@aptrust.org",
-	}
-	resp := ctx.Context.PharosClient.WorkItemSave(deletionItem)
-	return resp.Error
 }

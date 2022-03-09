@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package workers_test
@@ -66,7 +67,7 @@ func initConsumerAndTester(t *testing.T, context *common.Context) {
 	consumer.ConnectToNSQLookupd(context.Config.NsqLookupd)
 }
 
-func initTest(t *testing.T, workItemId int) {
+func initTest(t *testing.T, workItemId int64) {
 	context := common.NewContext()
 	err := context.NSQClient.Enqueue("ingest_task_topic", workItemId)
 	require.Nil(t, err)
