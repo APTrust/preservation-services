@@ -30,7 +30,7 @@ type GlacierRestorer struct {
 }
 
 // NewGlacierRestorer creates a new GlacierRestorer
-func NewGlacierRestorer(context *common.Context, workItemID int, restorationObject *service.RestorationObject) *GlacierRestorer {
+func NewGlacierRestorer(context *common.Context, workItemID int64, restorationObject *service.RestorationObject) *GlacierRestorer {
 	return &GlacierRestorer{
 		Base: Base{
 			Context:           context,
@@ -79,7 +79,7 @@ func (r *GlacierRestorer) Run() (fileCount int, errors []*service.ProcessingErro
 func (r *GlacierRestorer) restoreAllFiles() (completed, pending, errored int, errors []*service.ProcessingError) {
 	pageNumber := 1
 	for {
-		files, err := GetBatchOfFiles(r.Context, r.RestorationObject.Identifier, pageNumber)
+		files, err := GetBatchOfFiles(r.Context, r.RestorationObject.ItemID, pageNumber)
 		if err != nil {
 			errors = append(errors, r.Error(r.RestorationObject.Identifier, err, false))
 			return completed, pending, errored, errors
@@ -106,14 +106,14 @@ func (r *GlacierRestorer) restoreAllFiles() (completed, pending, errored int, er
 
 // Restore a single file from Glacier to S3
 func (r *GlacierRestorer) restoreFile() (restoreStatus int, errors []*service.ProcessingError) {
-	resp := r.Context.PharosClient.GenericFileGet(r.RestorationObject.Identifier)
+	resp := r.Context.RegistryClient.GenericFileByIdentifier(r.RestorationObject.Identifier)
 	if resp.Error != nil {
 		errors = append(errors, r.Error(r.RestorationObject.Identifier, resp.Error, true))
 		return RestoreError, errors
 	}
 	gf := resp.GenericFile()
 	if gf == nil {
-		err := fmt.Errorf("Pharos returned nil for GenericFile %s", r.RestorationObject.Identifier)
+		err := fmt.Errorf("Registry returned nil for GenericFile %s", r.RestorationObject.Identifier)
 		errors = append(errors, r.Error(r.RestorationObject.Identifier, err, true))
 		return RestoreError, errors
 	}

@@ -35,15 +35,14 @@ func BestRestorationSource(context *common.Context, gf *registry.GenericFile) (b
 	return bestSource, storageRecord, err
 }
 
-// GetBatchOfFiles returns a batch of GenericFile records from Pharos.
-func GetBatchOfFiles(context *common.Context, objectIdentifier string, pageNumber int) (genericFiles []*registry.GenericFile, err error) {
+// GetBatchOfFiles returns a batch of GenericFile records from Registry.
+func GetBatchOfFiles(context *common.Context, objectID int64, pageNumber int) (genericFiles []*registry.GenericFile, err error) {
 	params := url.Values{}
-	params.Set("intellectual_object_identifier", objectIdentifier)
+	params.Set("intellectual_object_id", strconv.FormatInt(objectID, 10))
 	params.Set("page", strconv.Itoa(pageNumber))
 	params.Set("per_page", strconv.Itoa(batchSize))
-	params.Set("sort", "name")
+	params.Set("sort", "identifier")
 	params.Set("state", "A")
-	params.Set("include_storage_records", "true")
-	resp := context.PharosClient.GenericFileList(params)
+	resp := context.RegistryClient.GenericFileList(params)
 	return resp.GenericFiles(), resp.Error
 }

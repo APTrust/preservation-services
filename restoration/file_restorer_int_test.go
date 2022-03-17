@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package restoration_test
@@ -15,10 +16,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// This generic file is loaded as part of the Pharos integration
+// This generic file is loaded as part of the Registry integration
 // text fixture set.
 var gfIdentifier = "test.edu/apt-test-restore/data/sample.xml"
-var gfWorkItemID = 56338
+var gfWorkItemID = int64(56338)
 
 // Size, in bytes, of our sample file
 var gfSize = int64(23972)
@@ -27,7 +28,7 @@ func TestNewFileRestorer(t *testing.T) {
 	restorer := restoration.NewBagRestorer(
 		common.NewContext(),
 		gfWorkItemID,
-		getRestorationObject(gfIdentifier))
+		getRestorationObject(t, gfIdentifier, constants.RestorationTypeFile))
 	require.NotNil(t, restorer)
 	require.NotNil(t, restorer.Context)
 	assert.Equal(t, gfWorkItemID, restorer.WorkItemID)
@@ -37,11 +38,11 @@ func TestNewFileRestorer(t *testing.T) {
 func TestFileRestorer_Run(t *testing.T) {
 	context := common.NewContext()
 	setup(t, context) // setup is defined in bag_restorer_int_test.go
-	restObj := getRestorationObject(gfIdentifier)
+	restObj := getRestorationObject(t, gfIdentifier, constants.RestorationTypeFile)
 	restorer := restoration.NewFileRestorer(context, gfWorkItemID, restObj)
 	fileCount, errors := restorer.Run()
 	assert.Equal(t, 1, fileCount)
-	assert.Empty(t, errors)
+	require.Empty(t, errors)
 	testRestoredFile(t, context, restObj)
 }
 

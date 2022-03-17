@@ -40,7 +40,7 @@ class TestRunner
       },
       {
         name: "nsqd",
-        cmd: "#{bin}/nsqd --lookupd-tcp-address=127.0.0.1:4160 --data-path ~/tmp/nsq/",
+        cmd: "#{bin}/nsqd --lookupd-tcp-address=127.0.0.1:4160 --data-path ~/tmp/nsq/ --broadcast-address=127.0.0.1",
         msg: "Started nsqd at 127.0.0.1:4151"
       },
       {
@@ -141,7 +141,7 @@ class TestRunner
     start_ingest_services(["ingest_bucket_reader", "apt_queue", "apt_queue_fixity"])
     puts ">> NSQ: 'http://localhost:4171'"
     puts ">> Minio: 'http://localhost:9899' login/pwd -> minioadmin/minioadmin"
-    puts ">> Pharos: 'http://localhost:9292' login/pwd -> system@aptrust.org/password"
+    puts ">> Registry: 'http://localhost:8080' login/pwd -> system@aptrust.org/password"
 
     puts "Push some bags to aptrust.receiving.test.test.edu"
     puts "on the local minio server, then run the bucket reader"
@@ -154,7 +154,7 @@ class TestRunner
   end
 
 
-  # TODO: Quit if an instance of Pharos is already running on 9292.
+  # TODO: Quit if an instance of Registry is already running on 8080.
   # Note: Don't run apt_queue_fixity service here, because it will queue
   # a bunch of fixture files. The e2e test will queue specific items for
   # fixity checks when it's ready to test that functionality.
@@ -181,12 +181,13 @@ class TestRunner
   def init_for_integration
     clean_test_cache
     make_test_dirs
-    self.pharos_start
-    sleep(5)
-    # Start NSQ, Minio, Redis, and Docker/Pharos
+    self.registry_start
+    sleep(8)
+    # Start NSQ, Minio, Redis, and Registry
     @all_services.each do |svc|
       start_service(svc)
     end
+    sleep(5)
     create_nsq_topics
   end
 
@@ -228,12 +229,18 @@ class TestRunner
       "ingest09_cleanup",
       "restore_object",
       "restore_file",
-      "delete_object",
-      "delete_file",
+      "delete_item",
       "fixity_check",
+      "e2e_deletion_post_test",
+      "e2e_fixity_post_test",
+      "e2e_ingest_post_test",
+      "e2e_reingest_post_test",
+      "e2e_restoration_post_test"
     ]
     topics.each do |t|
+      channel = "#{t}_worker_chan"
       `curl -s -X POST http://127.0.0.1:4151/topic/create?topic=#{t}`
+      `curl -s -X POST http://127.0.0.1:4151/channel/create?topic=#{t}&channel=#{channel}`
     end
   end
 
@@ -271,10 +278,9 @@ class TestRunner
   def env_hash
 	env = {}
 	ENV.each{ |k,v| env[k] = v }
-	env['RAILS_ENV'] = 'integration'
+	# env['APT_ENV'] = 'integration'
     if self.test_name != 'units'
-      env['PHAROS_ROOT'] = ENV['PHAROS_ROOT'] || abort("Set env var PHAROS_ROOT")
-	  env['RBENV_VERSION'] = `cat #{ENV['PHAROS_ROOT']}/.ruby-version`.chomp
+      env['REGISTRY_ROOT'] = ENV['REGISTRY_ROOT'] || abort("Set env var REGISTRY_ROOT")
     end
     if self.test_name == 'e2e'
       env['APT_E2E'] = 'true'
@@ -317,6 +323,12 @@ class TestRunner
       "staging",
       "aptrust.receiving.test.test.edu",
       "aptrust.restore.test.test.edu",
+      "aptrust.receiving.test.institution1.edu",
+      "aptrust.restore.test.institution1.edu",
+      "aptrust.receiving.test.institution2.edu",
+      "aptrust.restore.test.institution2.edu",
+      "aptrust.receiving.test.example.edu",
+      "aptrust.restore.test.example.edu",
     ]
     buckets.each do |bucket|
       full_bucket = File.join(base, "minio", bucket)
@@ -338,54 +350,55 @@ class TestRunner
     File.join(project_root, "bin", os)
   end
 
-  def pharos_start
-	if !@pids['pharos']
-      pharos_reset_db
-      pharos_db_migrate
-      pharos_load_fixtures
-	  env = env_hash
-	  cmd = 'bundle exec rails server'
-	  log_file = log_file_path('pharos')
-	  pharos_pid = Process.spawn(env,
+  # Note: This assumes you have the registry repo source tree
+  # on your machine. It's on GitHub at https://github.com/APTrust/registry
+  def registry_start
+	if !@pids['registry']
+      registry_load_fixtures
+	  # Force copy of env to integration so that registry fixtures load.
+	  env = {}.merge(env_hash)
+	  env['APT_ENV'] = 'integration'
+      # Important! Adding -tags=test here turns on the special
+      # testing endpoints prepare_file_delete and prepare_object_delete,
+      # which are disabled in all non-test environments.
+	  cmd = 'go run -tags=test registry.go'
+	  log_file = log_file_path('registry')
+	  registry_pid = Process.spawn(env,
 								 cmd,
-								 chdir: env['PHAROS_ROOT'],
+								 chdir: env['REGISTRY_ROOT'],
 								 out: [log_file, 'w'],
 								 err: [log_file, 'w'])
-	  Process.detach pharos_pid
-      @pids['pharos'] = pharos_pid
-	  puts "Started Pharos with command '#{cmd}' and pid #{pharos_pid}"
+	  Process.detach registry_pid
+      sleep 3
+
+      # go run compiles an executable, puts it in a temp directory, and
+      # runs it as a new process. We need to get the pid of that process.
+      # Note that the temp dir pattern will be different on linux.
+      # /var/folders works for Mac.
+      registry_process = `ps -ef | grep registry | grep /var/folders`
+      pid = registry_process.split(/\s+/)[2].to_i
+      if pid
+        @pids['registry'] = pid
+      else
+        @pids['registry'] = registry_pid
+      end
+	  puts "Started Registry with command '#{cmd}' and pid #{@pids['registry']}"
 	end
   end
 
-  # reset, migrate, load fixtures
-  def pharos_reset_db
-	puts "Resetting Pharos DB"
-	env = env_hash
-	cmd = 'bundle exec rake db:reset'
-	log_file = log_file_path('pharos')
-	pid = Process.spawn(env, cmd, chdir: env['PHAROS_ROOT'])
-	Process.wait pid
-	puts "Finished resetting Pharos DB"
-  end
-
-  def pharos_db_migrate
-	puts "Migrating Pharos DB"
-	env = env_hash
-	cmd = 'bundle exec rake db:migrate'
-	log_file = log_file_path('pharos')
-	pid = Process.spawn(env, cmd, chdir: env['PHAROS_ROOT'])
-	Process.wait pid
-	puts "Finished migrating Pharos DB"
-  end
-
-  def pharos_load_fixtures
-	puts "Loading Pharos fixtures"
-	env = env_hash
-	cmd = 'bundle exec rake db:fixtures:load'
-	log_file = log_file_path('pharos')
-	pid = Process.spawn(env, cmd, chdir: env['PHAROS_ROOT'])
-	Process.wait pid
-	puts "Finished loading Pharos fixtures"
+  def registry_load_fixtures
+	puts "Loading registry fixtures"
+	env = {}.merge(env_hash)
+	env['APT_ENV'] = 'integration'
+	cmd = 'go run loader/load_fixtures.go'
+	log_file = log_file_path('registry_fixtures')
+	registry_pid = Process.spawn(env,
+								 cmd,
+								 chdir: env['REGISTRY_ROOT'],
+								 out: [log_file, 'w'],
+								 err: [log_file, 'w'])
+	Process.wait
+    puts "Registry fixtures loaded"
   end
 
   def log_file_path(service_name)
@@ -427,8 +440,7 @@ class TestRunner
     puts "  test.rb integration ./network/..."
     puts "  test.rb integration ./network/... --rebuild \n\n"
     puts "Note that running integration tests also runs unit tests."
-    puts "Go files are always rebuilt for testing, but the Pharos"
-    puts "Docker container is only rebuilt when you speficy --rebuild.\n\n"
+    puts "Go files are always rebuilt for testing."
   end
 
 end

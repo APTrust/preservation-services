@@ -47,7 +47,7 @@ type BagRestorer struct {
 
 // NewBagRestorer creates a new BagRestorer to copy files from S3
 // to local disk for packaging.
-func NewBagRestorer(context *common.Context, workItemID int, restorationObject *service.RestorationObject) *BagRestorer {
+func NewBagRestorer(context *common.Context, workItemID int64, restorationObject *service.RestorationObject) *BagRestorer {
 	return &BagRestorer{
 		Base: Base{
 			Context:           context,
@@ -167,7 +167,7 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 	fileCount = 0
 	pageNumber := 1
 	for {
-		files, err := GetBatchOfFiles(r.Context, r.RestorationObject.Identifier, pageNumber)
+		files, err := GetBatchOfFiles(r.Context, r.RestorationObject.ItemID, pageNumber)
 		if err != nil {
 			errors = append(errors, r.Error(r.RestorationObject.Identifier, err, false))
 			return fileCount, errors
@@ -204,16 +204,28 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 // In bags with hundreds of thousands of files, manifests can be several
 // megabytes, but these are rare.
 func (r *BagRestorer) RecordDigests(gf *registry.GenericFile, digests map[string]string) error {
+	atLeastOneChecksumVerified := false
 	for _, alg := range constants.SupportedManifestAlgorithms {
 		digest := digests[alg]
+		// The checksums in the digests map include only those algorithms required
+		// by the BagIt profile. This list may not include all of our supported
+		// algorithms. If the bagger didn't calculate this particular algorithm, it's
+		// because it didn't have to. Move on.
+		if digest == "" {
+			continue
+		}
 		registryChecksum := gf.GetLatestChecksum(alg)
 		if registryChecksum != nil && digest != registryChecksum.Digest {
-			return fmt.Errorf("%s digest mismatch for %s. Pharos says %s, S3 file has %s", alg, gf.Identifier, registryChecksum.Digest, digest)
+			return fmt.Errorf("%s digest mismatch for %s. Registry says %s, S3 file has %s", alg, gf.Identifier, registryChecksum.Digest, digest)
 		}
+		atLeastOneChecksumVerified = true
 		err := r.AppendDigestToManifest(gf, digest, alg)
 		if err != nil {
 			return err
 		}
+	}
+	if !atLeastOneChecksumVerified {
+		return fmt.Errorf("BagRestorer.RecordDigests was not able to verify any checksums for %s", gf.Identifier)
 	}
 	return nil
 }
@@ -224,7 +236,11 @@ func (r *BagRestorer) AppendDigestToManifest(gf *registry.GenericFile, digest, a
 	// Payload digests go into manifest.
 	// Digests of tag files and payload manifests go into tag manifests.
 	fileType := constants.FileTypeManifest
-	if gf.IsTagFile() || util.LooksLikeManifest(gf.PathInBag()) {
+	pathInBag, err := gf.PathInBag()
+	if err != nil {
+		return err
+	}
+	if gf.IsTagFile() || util.LooksLikeManifest(pathInBag) {
 		fileType = constants.FileTypeTagManifest
 	}
 
@@ -240,7 +256,7 @@ func (r *BagRestorer) AppendDigestToManifest(gf *registry.GenericFile, digest, a
 		return err
 	}
 	defer file.Close()
-	_, err = fmt.Fprintf(file, "%s  %s\n", digest, gf.PathInBag())
+	_, err = fmt.Fprintf(file, "%s  %s\n", digest, pathInBag)
 	return err
 }
 
@@ -253,7 +269,7 @@ func (r *BagRestorer) GetManifestPath(algorithm, fileType string) string {
 	} else {
 		filename = fmt.Sprintf("manifest-%s.txt", algorithm)
 	}
-	return path.Join(r.Context.Config.RestoreDir, strconv.Itoa(r.WorkItemID), filename)
+	return path.Join(r.Context.Config.RestoreDir, strconv.FormatInt(r.WorkItemID, 10), filename)
 }
 
 // DeleteStaleManifests deletes any manifests and tag manifests left over
@@ -271,12 +287,17 @@ func (r *BagRestorer) DeleteStaleManifests() error {
 
 // GetTarHeader returns a tar header for the specified GenericFile.
 func (r *BagRestorer) GetTarHeader(gf *registry.GenericFile) *tar.Header {
+	pathMinusInstitution, _ := gf.PathMinusInstitution()
+	modTime := gf.FileModified
+	if modTime.IsZero() {
+		modTime = time.Now().UTC()
+	}
 	return &tar.Header{
-		Name:     gf.PathMinusInstitution(),
+		Name:     pathMinusInstitution,
 		Size:     gf.Size,
 		Typeflag: tar.TypeReg,
 		Mode:     int64(0755),
-		ModTime:  gf.FileModified,
+		ModTime:  modTime,
 	}
 }
 
@@ -301,8 +322,7 @@ func (r *BagRestorer) AddBagItFile() error {
 	}
 
 	gf := &registry.GenericFile{
-		IntellectualObjectIdentifier: r.RestorationObject.Identifier,
-		Identifier:                   fmt.Sprintf("%s/%s", r.RestorationObject.Identifier, "bagit.txt"),
+		Identifier: fmt.Sprintf("%s/%s", r.RestorationObject.Identifier, "bagit.txt"),
 	}
 	for alg, digest := range digests {
 		err = r.AppendDigestToManifest(gf, digest, alg)
@@ -368,8 +388,7 @@ func (r *BagRestorer) _addManifest(manifestFile, manifestType string) error {
 	// tag manifests.
 	if manifestType == constants.FileTypeManifest {
 		gf := &registry.GenericFile{
-			IntellectualObjectIdentifier: r.RestorationObject.Identifier,
-			Identifier:                   fmt.Sprintf("%s/%s", r.RestorationObject.Identifier, manifestName),
+			Identifier: fmt.Sprintf("%s/%s", r.RestorationObject.Identifier, manifestName),
 		}
 		for alg, digest := range digests {
 			err = r.AppendDigestToManifest(gf, digest, alg)

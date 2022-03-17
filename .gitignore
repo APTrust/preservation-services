@@ -21,3 +21,6 @@ bin/go-bin
 # VSCode and copy of .env file are for visual debugging
 .vscode/
 apps/restorer_manual_test/.env.test
+
+# When we pip integration test output to a file...
+testoutput.txt
