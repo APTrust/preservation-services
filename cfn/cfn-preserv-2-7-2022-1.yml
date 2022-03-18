@@ -1,4 +1,106 @@
 Resources:
+  
+  PrefetchScale:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 2 # Required
+      MinCapacity: 1  # Required
+      ResourceId: service/preservation-services/preserv-poc-2-IngestprefetchService-f0T9FDwo8UE6 # Required
+      RoleARN: arn:aws:iam::997427182289:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService # Required
+      ScalableDimension: ecs:service:DesiredCount # Required
+      ServiceNamespace: ecs # Required
+  PrefetchPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: pre_fetch_scale_target # Required
+      PolicyType: TargetTrackingScaling # Required
+      ScalingTargetId: !Ref PrefetchScale
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: 90.0
+
+  
+  FormatIDScale:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 2 # Required
+      MinCapacity: 1  # Required
+      ResourceId: service/preservation-services/preserv-poc-2-erService-nT9uRyctmGJP # Required
+      RoleARN: arn:aws:iam::997427182289:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService # Required
+      ScalableDimension: ecs:service:DesiredCount # Required
+      ServiceNamespace: ecs # Required
+  FormatIDPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: format_id_scale_target # Required
+      PolicyType: TargetTrackingScaling # Required
+      ScalingTargetId: !Ref FormatIDScale
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+        TargetValue: 90.0
+  
+  StageUploadScale:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 2 # Required
+      MinCapacity: 1  # Required
+      ResourceId: service/preservation-services/preserv-poc-2-IngeststaginguploaderService-PvLPt6Wk81ws # Required
+      RoleARN: arn:aws:iam::997427182289:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService # Required
+      ScalableDimension: ecs:service:DesiredCount # Required
+      ServiceNamespace: ecs # Required
+  StageUploadPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: staging_uploader_scale_target # Required
+      PolicyType: TargetTrackingScaling # Required
+      ScalingTargetId: !Ref StageUploadScale
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: 90.0
+  StageUpload2Policy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: staging_uploader_memory_target # Required
+      PolicyType: TargetTrackingScaling # Required 
+      ScalingTargetId: !Ref StageUploadScale
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+        TargetValue: 90.0
+
+  PreservUploadScale:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 2 # Required
+      MinCapacity: 1  # Required
+      ResourceId: service/preservation-services/preserv-poc-2-IngestpreservationuploaderService-IeZTEhlEZVxU # Required
+      RoleARN: arn:aws:iam::997427182289:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService # Required
+      ScalableDimension: ecs:service:DesiredCount # Required
+      ServiceNamespace: ecs # Required
+  PreservUploadPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: preserv_uploader_scale_target # Required
+      PolicyType: TargetTrackingScaling # Required
+      ScalingTargetId: !Ref PreservUploadScale
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: 90.0
+  PreservUpload2Policy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: preserv_uploader_memory_target # Required
+      PolicyType: TargetTrackingScaling # Required
+      ScalingTargetId: !Ref PreservUploadScale
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+        TargetValue: 90.0
+        
   AptdeleteService:
     Properties:
       Cluster:
@@ -71,6 +173,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Aptdelete_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -95,10 +253,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -118,7 +276,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/apt_delete:91641ad-compose-test
+        Image: docker.io/aptrust/apt_delete:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -231,6 +389,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Aptfixity_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -255,10 +469,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -278,7 +492,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/apt_fixity:91641ad-compose-test
+        Image: docker.io/aptrust/apt_fixity:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -391,6 +605,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Aptqueue_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -415,10 +685,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -438,7 +708,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/apt_queue:91641ad-compose-test
+        Image: docker.io/aptrust/apt_queue:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -551,6 +821,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Aptqueuefixity_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -575,10 +901,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -598,7 +924,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/apt_queue_fixity:91641ad-compose-test
+        Image: docker.io/aptrust/apt_queue_fixity:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -710,6 +1036,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Bagrestorer_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -734,10 +1116,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -757,7 +1139,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/bag_restorer:91641ad-compose-test
+        Image: docker.io/aptrust/bag_restorer:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -903,6 +1285,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Filerestorer_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -927,10 +1365,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -950,7 +1388,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/file_restorer:91641ad-compose-test
+        Image: docker.io/aptrust/file_restorer:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1063,6 +1501,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Glacierrestorer_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -1087,10 +1581,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -1110,7 +1604,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/glacier_restorer:91641ad-compose-test
+        Image: docker.io/aptrust/glacier_restorer:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1223,6 +1717,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestbucketreader_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -1247,10 +1797,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -1270,7 +1820,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_bucket_reader:91641ad-compose-test
+        Image: docker.io/aptrust/ingest_bucket_reader:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1383,6 +1933,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestcleanup_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -1407,10 +2013,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -1430,7 +2036,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_cleanup:91641ad-compose-test
+        Image: docker.io/aptrust/ingest_cleanup:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1543,6 +2149,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: er_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -1567,10 +2229,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -1590,7 +2252,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_format_identifier:91641ad-compose-test
+        Image: docker.io/aptrust/ingest_format_identifier:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1702,6 +2364,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestprefetch_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -1726,10 +2444,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -1749,7 +2467,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_pre_fetch:91641ad-compose-test
+        Image: docker.io/aptrust/ingest_pre_fetch:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1863,6 +2581,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestpreservationuploader_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -1887,10 +2661,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -1910,7 +2684,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_preservation_uploader:91641ad-compose-test
+        Image: docker.io/aptrust/ingest_preservation_uploader:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2024,6 +2798,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestpreservationverifier_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -2048,10 +2878,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -2071,7 +2901,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_preservation_verifier:91641ad-compose-test
+        Image: docker.io/aptrust/ingest_preservation_verifier:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2184,6 +3014,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestrecorder_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -2208,10 +3094,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -2231,7 +3117,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_recorder:91641ad-compose-test
+        Image: docker.io/aptrust/ingest_recorder:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2344,6 +3230,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingeststaginguploader_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -2368,10 +3310,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -2391,7 +3333,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_staging_uploader:91641ad-compose-test
+        Image: docker.io/aptrust/ingest_staging_uploader:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2504,6 +3446,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestvalidator_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -2528,10 +3526,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -2551,7 +3549,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_cleanup:b7f293c-compose-test@sha256:e9804120fd775dd06d52e5e49d82b454bdc88ccaf49b48ff6330e6ea17d170fc
+        Image: docker.io/aptrust/ingest_validator:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2668,6 +3666,62 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Reingestmanager_ResolvConf_InitContainer
         Secrets:
+        - Name: APT_DELETE_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_BUFFER_SIZE
+        - Name: APT_DELETE_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_DELETE_WORKERS
+        - Name: APT_FIXITY_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_BUFFER_SIZE
+        - Name: APT_FIXITY_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/APT_FIXITY_WORKERS
+        - Name: FILE_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_BUFFER_SIZE
+        - Name: FILE_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/FILE_RESTORER_WORKERS
+        - Name: GLACIER_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_BUFFER_SIZE
+        - Name: GLACIER_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/GLACIER_RESTORER_WORKERS
+        - Name: INGEST_CLEANUP_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_CLEANUP_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_CLEANUP_WORKERS
+        - Name: INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE
+        - Name: INGEST_FORMAT_IDENTIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_FORMAT_IDENTIFIER_WORKERS
+        - Name: INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_UPLOADER_WORKERS
+        - Name: INGEST_PRE_FETCH_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_BUFFER_SIZE
+        - Name: INGEST_PRE_FETCH_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRE_FETCH_WORKERS
+        - Name: INGEST_STAGING_UPLOADER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_BUFFER_SIZE
+        - Name: INGEST_STAGING_UPLOADER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_STAGING_UPLOADER_WORKERS
+        - Name: INGEST_VALIDATOR_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_BUFFER_SIZE
+        - Name: INGEST_VALIDATOR_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_VALIDATOR_WORKERS
+        - Name: INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIER_CLEANUP_BUFFER_SIZE
+        - Name: INGEST_PRESERVATION_VERIFIER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_PRESERVATION_VERIFIFIER_WORKERS
+        - Name: BAG_RESTORER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_BUFFER_SIZE
+        - Name: BAG_RESTORER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BAG_RESTORER_WORKERS
+        - Name: REINGEST_MANAGER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_BUFFER_SIZE
+        - Name: REINGEST_MANAGER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REINGEST_MANAGER_WORKERS
+        - Name: INGEST_RECORDER_BUFFER_SIZE
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_BUFFER_SIZE
+        - Name: INGEST_RECORDER_WORKERS
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/INGEST_RECORDER_WORKERS
         - Name: BUCKET_GLACIER_DEEP_OH
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/BUCKET_GLACIER_DEEP_OH
         - Name: BUCKET_GLACIER_DEEP_OR
@@ -2692,10 +3746,10 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/NSQ_URL
-        - Name: PRESERV_PHAROS_API_KEY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_API_KEY
-        - Name: PRESERV_PHAROS_URL
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_PHAROS_URL
+        - Name: PRESERV_REGISTRY_API_KEY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_API_KEY
+        - Name: PRESERV_REGISTRY_URL
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/PRESERV_REGISTRY_URL
         - Name: REDIS_URL
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/REDIS_URL
         - Name: S3_AWS_HOST
@@ -2715,7 +3769,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_validator:91641ad-compose-test
+        Image: docker.io/aptrust/reingest_manager:26557dc-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
