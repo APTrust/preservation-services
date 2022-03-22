@@ -75,19 +75,19 @@ func (q *QueueFixity) run() {
 }
 
 func (q *QueueFixity) queueList() {
-	// Get to work. Note that we don't have to filter on storage option
-	// because Registry now knows to exclude Glacier-only files from
-	// "not_checked_since" queries.
 	perPage := util.Min(100, q.Context.Config.MaxFixityItemsPerRun)
 	params := url.Values{}
 	itemsAdded := 0
 	params.Set("per_page", strconv.Itoa(perPage))
 	params.Set("page", "1")
-	params.Set("sort", "last_fixity_check") // takes advantage of SQL index
+	params.Add("storage_option__in", constants.StorageStandard)
+	params.Add("storage_option__in", constants.StorageWasabiVA)
+	params.Add("storage_option__in", constants.StorageWasabiOR)
+	params.Set("sort", "last_fixity_check")
 
 	hours := q.Context.Config.MaxDaysSinceFixityCheck * 24 * -1
 	sinceWhen := time.Now().Add(time.Duration(hours) * time.Hour).UTC()
-	params.Set("not_checked_since", sinceWhen.Format(time.RFC3339))
+	params.Set("last_fixity_check__lteq", sinceWhen.Format(time.RFC3339))
 
 	q.Context.Logger.Infof("Queuing up to %d files not checked since %s to topic %s", q.Context.Config.MaxFixityItemsPerRun, sinceWhen.Format(time.RFC3339), constants.TopicFixity)
 
