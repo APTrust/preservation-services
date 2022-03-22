@@ -1,154 +1,112 @@
 ---
 version: '3.7'
+x-aws-vpc: "vpc-4bd09e2c"
 services:
    ingest_cleanup: &default
-      image: aptrust/ingest_cleanup:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/ingest_cleanup:b7f293c-compose-test
       restart: always
-      volumes:
-         - type: bind
-           source: "${DOCKER_DATA_PATH:-./docker}"
-           target: /app/data
-         - type: bind
-           source: "${DOCKER_DATA_PATH:-./docker}"
-           target: /app/logs
-         - type: bind
-           source: ".env.docker"
-           target: /app/.env
       env_file:
-         - .env.docker
+        - env-file
+      #volumes:
+        #- data:/app
+        #- data:/app/logs
+        #- type: bind
+        #  source: /Users/acr7d/logs # "${DOCKER_DATA_PATH:-./docker}"
+        #  target: /app
+        #- type: bind
+        #  source: /Users/acr7d/logs # "${DOCKER_DATA_PATH:-./docker}"
+        #  target: /app/logs
+        #- type: bind
+        #  source: "~/logs/.env"
+        #  target: /app/.env
       networks:
          - default
-         - gateway
+#         - gateway
    ingest_bucket_reader:
-      image: aptrust/ingest_bucket_reader:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/ingest_bucket_reader:b7f293c-compose-test
       restart: always
       <<: *default
    ingest_format_identifier:
-      image: aptrust/ingest_format_identifier:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/ingest_format_identifier:b7f293c-compose-test
       <<: *default
    ingest_pre_fetch:
-      image: aptrust/ingest_pre_fetch:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/ingest_pre_fetch:b7f293c-compose-test
       <<: *default
    ingest_preservation_uploader:
-      image: aptrust/ingest_preservation_uploader:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/ingest_preservation_uploader:b7f293c-compose-test
       <<: *default
    ingest_preservation_verifier:
-      image: aptrust/ingest_preservation_verifier:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/ingest_preservation_verifier:b7f293c-compose-test
       <<: *default
    ingest_recorder:
-      image: aptrust/ingest_recorder:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/ingest_recorder:b7f293c-compose-test
       <<: *default
    ingest_staging_uploader:
-      image: aptrust/ingest_staging_uploader:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/ingest_staging_uploader:b7f293c-compose-test
       <<: *default
    ingest_validator:
-      image: aptrust/ingest_validator:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/ingest_validator:b7f293c-compose-test
       <<: *default
    reingest_manager:
-      image: aptrust/reingest_manager:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/reingest_manager:b7f293c-compose-test
       <<: *default
    apt_queue:
-      image: aptrust/apt_queue:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/apt_queue:b7f293c-compose-test
       <<: *default
    apt_queue_fixity:
-      image: aptrust/apt_queue_fixity:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/apt_queue_fixity:b7f293c-compose-test
       <<: *default
    apt_delete:
-      image: aptrust/apt_delete:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/apt_delete:b7f293c-compose-test
       <<: *default
    apt_fixity:
-      image: aptrust/apt_fixity:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/apt_fixity:b7f293c-compose-test
       <<: *default
    bag_restorer:
-      image: aptrust/bag_restorer:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/bag_restorer:b7f293c-compose-test
       <<: *default
    file_restorer:
-      image: aptrust/file_restorer:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/file_restorer:b7f293c-compose-test
       <<: *default
    glacier_restorer:
-      image: aptrust/glacier_restorer:${DOCKER_TAG_NAME:-latest}
+      image: aptrust/glacier_restorer:b7f293c-compose-test
       <<: *default
-   nsqlookupd:
-      image: nsqio/nsq:v1.2.0
-      restart: always
-      hostname: nsqlookupd
-      command: /nsqlookupd
-      volumes:
-         - type: bind
-           source: "${DOCKER_DATA_PATH:-./docker}/nsq"
-           target: /data
-      ports:
-         - "4160:4160"
-         - "4161:4161"
-      env_file:
-         - .env.docker
-   nsqd:
-      image: nsqio/nsq:v1.2.0
-      hostname: nsqd
-      restart: always
-      command: /nsqd --lookupd-tcp-address=${NSQ_LOOKUPD_TCP_ADDRESS} --data-path=/data --broadcast-address=${NSQ_BROADCAST_ADDRESS} --msg-timeout=${NSQ_MSG_TIMEOUT} --max-msg-timeout=${NSQ_MAX_MSG_TIMEOUT} --max-msg-size=${NSQ_MAX_MSG_SIZE} -mem-queue-size=${NSQ_MEM_QUEUE_SIZE} -max-req-timeout=${NSQ_MAX_REQ_TIMEOUT} -max-heartbeat-interval=${NSQ_MAX_HEARTBEAT_INTERVAL}
-      volumes:
-         - type: bind
-           source: "${DOCKER_DATA_PATH:-./docker}/nsq"
-           target: /data
-      env_file:
-         - .env.docker
-      networks:
-         default:
-            aliases:
-               - nsqd
-               - "${NSQ_BROADCAST_ADDRESS}"
-         gateway:
-            aliases:
-               - nsqd
-               - "${NSQ_BROADCAST_ADDRESS}"
-      depends_on:
-         - nsqlookupd
-      ports:
-         - "4150:4150"
-         - "4151:4151"
-# TODO: needs labels for basicauth and routable address
-   nsqadmin:
-      image: nsqio/nsq:v1.2.0
-      restart: always
-      command: /nsqadmin --lookupd-http-address=${NSQ_LOOKUPD_HTTP_ADDRESS}
-      depends_on:
-         - nsqlookupd
-      env_file:
-         - .env.docker
-      networks:
-         - default
-         - gateway
-      ports:
-         - "4171:4171"
-      labels:
-         - "traefik.enable=true"
-           # - "traefik.http.routers.nsqadmin.rule=Host(`${VIRTUAL_HOST:-localhost}`)"
-         - "traefik.http.routers.nsqadmin.rule=Host(`${DOCKER_DOMAIN:-localhost}`)"
-         - "traefik.http.routers.nsqadmin.entrypoints=nsqadmin"
-         - "traefik.http.routers.nsqadmin.tls=true"
-         - "traefik.http.routers.nsqadmin.tls.certresolver=le"
-         - "traefik.http.services.nsqadmin.loadbalancer.server.port=4171"
-         - "traefik.http.middlewares.admin.basicauth.users=admin:$$2y$$05$$ngKkHMr5f3AdFbfSZ9fjkO5UQxzdcWVtBoMoGbx/eFXQS3pl42iqu"
-
-
-   redis:
-      image: redis:6.0-alpine
-      restart: always
-      command: redis-server --appendonly yes
-      volumes:
-         - type: bind
-           source: "${DOCKER_DATA_PATH:-./docker}/redis"
-           target: /data
-      env_file:
-         - .env.docker
-      networks:
-         - default
-         - gateway
-      ports:
-         - 6379
+#   nsqlookupd:
+#      image: nsqio/nsq:v1.2.0
+#      restart: always
+#      hostname: nsqlookupd
+#      command: /nsqlookupd -broadcast-address localhost:4160
+#      ports:
+#        - "4160:4160"
+#        - "4161:4161"
+#      networks:
+#         - default
+#         - gateway
+#   nsqd:
+#      image: nsqio/nsq
+#      command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
+#      depends_on:
+#        - nsqlookupd
+#      ports:
+#        - "4150:4150"
+#        - "4151:4151"
+#      networks:
+#         - default
+#         - gateway 
+#   nsqadmin:
+#      image: nsqio/nsq
+#      command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+#      depends_on:
+#        - nsqlookupd
+#      ports:
+#        - "4171:4171"
+#      networks:
+#         - default
+#         - gateway
 networks:
-   gateway:
-      external:
-         name: gateway
+#   gateway:
+#      external:
+#         name: gateway
    default:
+#volumes:
+#  data:
