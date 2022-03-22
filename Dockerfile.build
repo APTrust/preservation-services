@@ -95,6 +95,9 @@ ENV BUCKET_GLACIER_DEEP_VA=glacier-deep-va
 ENV BUCKET_WASABI_OR=wasabi-or
 ENV BUCKET_WASABI_VA=wasabi-va
 
+#LOGGING
+ENV LOG_DIR="~/tmp/logs"
+
 WORKDIR /app
 
 #VOLUME ["/app/tmp"]
