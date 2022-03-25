@@ -178,6 +178,8 @@ func (b *IngestBase) ProcessFatalErrorChannel() {
 		if b.Settings.PushToCleanupOnFatalError && task.WorkItem.Stage != constants.StageCleanup {
 			task.Processor.IngestObjectGet().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterFatalError
 			task.Processor.IngestObjectSave()
+			b.Context.Logger.Errorf("Pushing WorkItem %d (%s) to NSQ cleanup topic due to fatal errors. Delete from receiving bucket = %t",
+				task.WorkItem.ID, task.WorkItem.Name, b.Settings.DeleteFromReceivingAfterFatalError)
 			task.NextQueueTopic = constants.IngestCleanup
 		} else {
 			task.NextQueueTopic = ""
