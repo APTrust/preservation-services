@@ -111,20 +111,12 @@ func (r *IngestBucketReader) WorkItemAlreadyExists(instID int64, name, etag stri
 	v.Set("etag", etag)
 	v.Set("institution_id", strconv.FormatInt(instID, 10))
 	v.Set("page", "1")
-	v.Set("per_page", "100")
+	v.Set("per_page", "10")
 	resp := r.Context.RegistryClient.WorkItemList(v)
 	if resp.Error != nil {
 		return false, resp.Error
 	}
-	// TODO: This should be fixed in registry, but confirm.
-	// Pharos doesn't have good filtering for this, so we do it here.
-	exists := false
-	for _, item := range resp.WorkItems() {
-		if item.Status != constants.StatusCancelled {
-			exists = true
-			break
-		}
-	}
+	exists := len(resp.WorkItems()) > 0
 	return exists, nil
 }
 
