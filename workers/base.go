@@ -493,19 +493,21 @@ func (b *Base) doSigTermCleanup(signal os.Signal) {
 		return
 	}
 	b.sigTermState.Received = true
-	b.Context.Logger.Warning("Container received SIGTERM. Starting graceful shutdown.")
-	b.Context.Logger.Warning("SIGTERM step 1: Disconnect from NSQ")
+	b.Context.Logger.Warning("Worker received SIGTERM. Starting graceful shutdown.")
 
-	// Tell NSQ we can't take any more messages
-	b.NSQConsumer.ChangeMaxInFlight(0)
-
-	// Stop the consumer. nsqd will pick this up
-	// and requeue whatever messages we were working on,
-	// so that other workers can pick them up. See the
-	// section titled "Heartbeats and Timeouts" at
-	// https://nsq.io/overview/internals.html
-	b.NSQConsumer.Stop()
-	b.Context.Logger.Warning("Worker disconnected from nsqd due to SIGTERM.")
+	if b.NSQConsumer != nil {
+		// Stop the consumer. nsqd will pick this up
+		// and requeue whatever messages we were working on,
+		// so that other workers can pick them up. See the
+		// section titled "Heartbeats and Timeouts" at
+		// https://nsq.io/overview/internals.html
+		b.Context.Logger.Warning("SIGTERM step 1: Disconnect from NSQ")
+		b.NSQConsumer.ChangeMaxInFlight(0)
+		b.NSQConsumer.Stop()
+		b.Context.Logger.Warning("Worker disconnected from nsqd due to SIGTERM.")
+	} else {
+		b.Context.Logger.Warning("SIGTERM step 1: No need to stop NSQ consumer because there isn't one.")
+	}
 
 	// Now we have another problem. Even if these items
 	// are requeued, no other worker will pick them up

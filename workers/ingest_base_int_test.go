@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"syscall"
 	"testing"
 	"time"
 
@@ -502,4 +503,42 @@ func TestIngestBase_PushToQueue(t *testing.T) {
 	topic := stats.GetTopic("integration_test_topic")
 	require.NotNil(t, topic)
 	assert.EqualValues(t, 1, topic.MessageCount)
+}
+
+// You can also test this manually:
+//
+// From the project root dir, run ./scripts/test.rb interactive
+//
+// Kill a single worker using one of the following:
+//
+// kill -s TERM <pid>
+// kill -s INT <pid>
+//
+// Or, just hit Control-C to shut down all of the workers.
+// Then grep the logs for SIGTERM (all caps) like so:
+//
+// grep SIGTERM ~/tmp/logs/*.log
+//
+// You should see the following for each worker:
+//
+// SIGTERM step 1: Disconnect from NSQ
+// Worker disconnected from nsqd due to SIGTERM.
+// SIGTERM step 2: Release WorkItems
+// SIGTERM: Done releasing WorkItems
+// SIGTERM: Graceful shutdown steps complete. Waiting for SIGKILL.
+func TestIngestBase_SignalHandler(t *testing.T) {
+	ingestBase := getIngestBase()
+	sigTermState := ingestBase.GetSigTermState()
+	assert.False(t, sigTermState.Received)
+	assert.False(t, sigTermState.Completed)
+	assert.Empty(t, sigTermState.ItemsInProcess)
+	assert.Empty(t, sigTermState.ItemsReleased)
+	assert.Empty(t, sigTermState.FailedReleases)
+
+	ingestBase.KillChannel <- syscall.SIGTERM
+	time.Sleep(500 * time.Millisecond)
+
+	sigTermState = ingestBase.GetSigTermState()
+	assert.True(t, sigTermState.Received)
+	assert.True(t, sigTermState.Completed)
 }

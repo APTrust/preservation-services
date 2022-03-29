@@ -3,6 +3,8 @@ package workers
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -44,6 +46,9 @@ func NewFileRestorer(bufSize, numWorkers, maxAttempts int) *FileRestorer {
 			KillChannel:       make(chan os.Signal, 1),
 		},
 	}
+
+	// Handle SIGTERM & SIGINT
+	signal.Notify(restorer.KillChannel, syscall.SIGTERM, syscall.SIGINT)
 
 	// Set these methods on base with our custom versions.
 	// These methods are not defined at all in base. Failing

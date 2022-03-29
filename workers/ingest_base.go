@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
@@ -39,6 +41,9 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 			institutionCache:     make(map[int64]string),
 		},
 	}
+
+	// Handle SIGTERM & SIGINT
+	signal.Notify(ingestBase.KillChannel, syscall.SIGTERM, syscall.SIGINT)
 
 	// Set these methods on base with our custom versions.
 	// These methods are not defined at all in base. Failing
