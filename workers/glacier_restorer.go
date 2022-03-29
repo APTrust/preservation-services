@@ -2,6 +2,7 @@ package workers
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -47,6 +48,7 @@ func NewGlacierRestorer(bufSize, numWorkers, maxAttempts int) *GlacierRestorer {
 			SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			ErrorChannel:      make(chan *Task, settings.ChannelBufferSize),
 			FatalErrorChannel: make(chan *Task, settings.ChannelBufferSize),
+			KillChannel:       make(chan os.Signal, 1),
 		},
 	}
 

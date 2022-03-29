@@ -3,6 +3,7 @@ package workers
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -33,6 +34,7 @@ func NewIngestBase(context *common.Context, processorConstructor ingest.BaseCons
 			SuccessChannel:       make(chan *Task, settings.ChannelBufferSize),
 			ErrorChannel:         make(chan *Task, settings.ChannelBufferSize),
 			FatalErrorChannel:    make(chan *Task, settings.ChannelBufferSize),
+			KillChannel:          make(chan os.Signal, 1),
 			processorConstructor: processorConstructor,
 			institutionCache:     make(map[int64]string),
 		},

@@ -1,10 +1,11 @@
 package service_test
 
 import (
+	"testing"
+
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestNewRingList(t *testing.T) {
@@ -57,4 +58,23 @@ func TestDel(t *testing.T) {
 	assert.False(t, ringList.Contains("two"))
 	assert.False(t, ringList.Contains("three"))
 	assert.False(t, ringList.Contains("four"))
+}
+
+func TestItems(t *testing.T) {
+	ringList := service.NewRingList(10)
+	require.NotNil(t, ringList)
+
+	ringList.Add("one")
+	ringList.Add("")
+	ringList.Add("two")
+	ringList.Add("three")
+	ringList.Add("")
+	ringList.Add("four")
+	expected := []string{
+		"one",
+		"two",
+		"three",
+		"four",
+	}
+	assert.Equal(t, expected, ringList.Items())
 }

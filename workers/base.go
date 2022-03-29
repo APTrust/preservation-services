@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -70,6 +71,9 @@ type Base struct {
 	// ProcessChannel with one or more fatal errors. These items
 	// typically should not be retried.
 	FatalErrorChannel chan *Task
+
+	// KillChannel handles SIGTERM and SIGINT.
+	KillChannel chan os.Signal
 
 	// Settings contains information on what to do in post-processing
 	// in the SuccessChannel, ErrorChannel, and FatalErrorChannel.
@@ -168,20 +172,29 @@ func (b *Base) HandleMessage(message *nsq.Message) error {
 // task to the SuccessChannel, the ErrorChannel, or the
 // FatalErrorChannel, depending on the outcome.
 func (b *Base) ProcessItem() {
-	for task := range b.ProcessChannel {
-		b.Context.Logger.Infof("WorkItem %d (%s) is in ProcessChannel", task.WorkItem.ID, task.WorkItem.Name)
-		count, errors := task.Processor.Run()
-		task.WorkResult.Errors = errors
-
-		b.Context.Logger.Infof("WorkItem %d: count %d", task.WorkItem.ID, count)
-
-		if task.WorkResult.HasFatalErrors() {
-			b.FatalErrorChannel <- task
-		} else if task.WorkResult.HasErrors() {
-			b.ErrorChannel <- task
-		} else {
-			b.SuccessChannel <- task
+	for {
+		select {
+		case signal := <-b.KillChannel:
+			b.DoSigTermCleanup(signal)
+		case task := <-b.ProcessChannel:
+			b.processItem(task)
 		}
+	}
+}
+
+func (b *Base) processItem(task *Task) {
+	b.Context.Logger.Infof("WorkItem %d (%s) is in ProcessChannel", task.WorkItem.ID, task.WorkItem.Name)
+	count, errors := task.Processor.Run()
+	task.WorkResult.Errors = errors
+
+	b.Context.Logger.Infof("WorkItem %d: count %d", task.WorkItem.ID, count)
+
+	if task.WorkResult.HasFatalErrors() {
+		b.FatalErrorChannel <- task
+	} else if task.WorkResult.HasErrors() {
+		b.ErrorChannel <- task
+	} else {
+		b.SuccessChannel <- task
 	}
 }
 
@@ -416,4 +429,100 @@ func (b *Base) PushToQueue(workItem *registry.WorkItem, nsqTopic string) {
 		b.Context.Logger.Infof("Pushed WorkItem %d (%s/%s) to NSQ topic %s",
 			workItem.ID, workItem.Bucket, workItem.Name, nsqTopic)
 	}
+}
+
+// DoSigTermCleanup handles SIGTERM and SIGINT. AWS's Elastic Scaling
+// service issues SIGTERM before SIGKILL, so we have time to clean up.
+// If we've set stopTimeout to two minutes, we have two minutes to wrap
+// up loose ends. For more on stopTimeout, see:
+// https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#container_definition_timeout
+//
+// We don't worry about items in the SuccessChannel, ErrorChannel or
+// FatalError channel, because those chanels just do housekeeping, updating
+// Redis, NSQ and Registry. That takes less than second under normal load,
+// and maybe 3 seconds under the heaviest loads. There's typically only one
+// item in those channels at any given time, and maybe a max of four items
+// in the worst case. Those channels can complete their work without
+// intervetion in the two minutes between SIGTERM and SIGKILL.
+//
+// The ProcessChannel is another issue. It may be working on tasks that take
+// several minutes or even several hours each. When we get SIGKILL, those tasks
+// die before they complete. That's OK, because Redis has enough info for the
+// next worker, in some other container, to resume the dead task.
+//
+// However, SIGKILL leaves us with the following problems that this function
+// must remediate:
+//
+// 1. Our NSQ messages have very long timeouts, up to 12 hours, and for good
+// reason. (Try calculating checksums or doing network copies on 1TB files.)
+// We want nsqd to know immediately that this worker is no longer active, so
+// it doesn't wait 12 hours to requeue tasks for other workers.
+//
+// 2. We have to update this worker's WorkItems in Registry, clearing out the
+// Node and PID settings, so other workers can claim this item. So long as the
+// item has a non-empty Node and PID, other workers will think someone owns it,
+// and they won't touch it.
+func (b *Base) DoSigTermCleanup(signal os.Signal) {
+	if signal != syscall.SIGINT && signal != syscall.SIGTERM {
+		return
+	}
+	b.Context.Logger.Warning("Container received SIGTERM. Starting graceful shutdown.")
+	b.Context.Logger.Warning("SIGTERM step 1: Disconnect from NSQ")
+
+	// Tell NSQ we can't take any more messages
+	b.NSQConsumer.ChangeMaxInFlight(0)
+
+	// Stop the consumer. nsqd will pick this up
+	// and requeue whatever messages we were working on,
+	// so that other workers can pick them up. See the
+	// section titled "Heartbeats and Timeouts" at
+	// https://nsq.io/overview/internals.html
+	b.NSQConsumer.Stop()
+	b.Context.Logger.Warning("Worker disconnected from nsqd due to SIGTERM.")
+
+	// Now we have another problem. Even if these items
+	// are requeued, no other worker will pick them up
+	// because the WorkItem record in Registry says this
+	// worker node and pid is still actively working on
+	// the item. We need to update the Registry WorkItem
+	// record to indicate that this worker no longer owns
+	// it.
+	b.Context.Logger.Warning("SIGTERM step 2: Release WorkItems")
+	for _, strItemID := range b.ItemsInProcess.Items() {
+		itemID, err := strconv.ParseInt(strItemID, 10, 64)
+		if err != nil {
+			releaseErr := b.sigTermReleaseWorkItem(itemID)
+			if releaseErr != nil {
+				b.Context.Logger.Errorf("Could not release WorkItem %d after SIGTERM: %v", itemID, releaseErr)
+			} else {
+				b.Context.Logger.Warningf("Released WorkItem %d due to SIGTERM", itemID)
+			}
+		}
+	}
+	b.Context.Logger.Warning("SIGTERM: Done releasing WorkItems")
+	b.Context.Logger.Warning("SIGTERM: Graceful shutdown steps complete. Waiting for SIGKILL.")
+}
+
+// sigTermReleaseWorkItem clears the Node and PID, and sets the status
+// to Pending on the specified WorkItem. This is used only when our worker
+// gets a SIGTERM.
+func (b *Base) sigTermReleaseWorkItem(itemID int64) error {
+	resp := b.Context.RegistryClient.WorkItemByID(itemID)
+	if resp.Error != nil {
+		return resp.Error
+	}
+	item := resp.WorkItem()
+	if item.Node != "" {
+		// We haven't claimed this item yet,
+		// so there's no need to release it.
+		return nil
+	}
+	hostname, _ := os.Hostname()
+	item.Node = ""
+	item.Pid = 0
+	item.Status = constants.StatusPending
+	if !strings.Contains(item.Note, hostname) {
+		item.Note = fmt.Sprintf("%s - Waiting for new worker because container %s was killed", item.Note, hostname)
+	}
+	return b.SaveWorkItem(item)
 }

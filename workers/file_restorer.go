@@ -2,6 +2,7 @@ package workers
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -40,6 +41,7 @@ func NewFileRestorer(bufSize, numWorkers, maxAttempts int) *FileRestorer {
 			SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			ErrorChannel:      make(chan *Task, settings.ChannelBufferSize),
 			FatalErrorChannel: make(chan *Task, settings.ChannelBufferSize),
+			KillChannel:       make(chan os.Signal, 1),
 		},
 	}
 
