@@ -42,6 +42,27 @@ type ServiceWorker interface {
 	PushToQueue(*registry.WorkItem, string)
 }
 
+// SigTermState contains info about whether the current worker
+// received SIGTERM (or SIGINT), and if so, what action it took
+// in response to the signal.
+type SigTermState struct {
+	// Received indicates whether this worker received SIGTERM
+	// or SIGINT.
+	Received bool
+	// Completed indicates whether this worker completed all of
+	// its SIGTERM cleanup tasks.
+	Completed bool
+	// ItemsInProcess is the number of items this worker was
+	// working on when SIGTERM was received.
+	ItemsInProcess int
+	// ItemsRelease is the number of WorkItems this worker released
+	// in Registry by clearing the WorkItem's Node and PID settings.
+	ItemsReleased int
+	// FailedToRelease is the number of WorkItems this worker tried
+	// unsuccessfully to release.
+	FailedReleases int
+}
+
 // Base contains the fundamental structures common to all workers.
 type Base struct {
 
@@ -100,6 +121,11 @@ type Base struct {
 	// processorConstructor is a function that returns an instance of
 	// *ingest.Base that will handle the processing for this worker.
 	processorConstructor ingest.BaseConstructor
+
+	// sigTermState contains info about whether the current worker received
+	// SIGTERM or SIGINT, and what cleanup work it did after receiving the
+	// signal.
+	sigTermState SigTermState
 }
 
 // RegisterAsNsqConsumer registers this worker as an NSQ consumer on
@@ -175,7 +201,7 @@ func (b *Base) ProcessItem() {
 	for {
 		select {
 		case signal := <-b.KillChannel:
-			b.DoSigTermCleanup(signal)
+			b.doSigTermCleanup(signal)
 		case task := <-b.ProcessChannel:
 			b.processItem(task)
 		}
@@ -431,7 +457,7 @@ func (b *Base) PushToQueue(workItem *registry.WorkItem, nsqTopic string) {
 	}
 }
 
-// DoSigTermCleanup handles SIGTERM and SIGINT. AWS's Elastic Scaling
+// doSigTermCleanup handles SIGTERM and SIGINT. AWS's Elastic Scaling
 // service issues SIGTERM before SIGKILL, so we have time to clean up.
 // If we've set stopTimeout to two minutes, we have two minutes to wrap
 // up loose ends. For more on stopTimeout, see:
@@ -462,10 +488,11 @@ func (b *Base) PushToQueue(workItem *registry.WorkItem, nsqTopic string) {
 // Node and PID settings, so other workers can claim this item. So long as the
 // item has a non-empty Node and PID, other workers will think someone owns it,
 // and they won't touch it.
-func (b *Base) DoSigTermCleanup(signal os.Signal) {
+func (b *Base) doSigTermCleanup(signal os.Signal) {
 	if signal != syscall.SIGINT && signal != syscall.SIGTERM {
 		return
 	}
+	b.sigTermState.Received = true
 	b.Context.Logger.Warning("Container received SIGTERM. Starting graceful shutdown.")
 	b.Context.Logger.Warning("SIGTERM step 1: Disconnect from NSQ")
 
@@ -488,17 +515,22 @@ func (b *Base) DoSigTermCleanup(signal os.Signal) {
 	// record to indicate that this worker no longer owns
 	// it.
 	b.Context.Logger.Warning("SIGTERM step 2: Release WorkItems")
-	for _, strItemID := range b.ItemsInProcess.Items() {
+	itemsInProcess := b.ItemsInProcess.Items()
+	b.sigTermState.ItemsInProcess = len(itemsInProcess)
+	for _, strItemID := range itemsInProcess {
 		itemID, err := strconv.ParseInt(strItemID, 10, 64)
 		if err != nil {
 			releaseErr := b.sigTermReleaseWorkItem(itemID)
 			if releaseErr != nil {
+				b.sigTermState.FailedReleases += 1
 				b.Context.Logger.Errorf("Could not release WorkItem %d after SIGTERM: %v", itemID, releaseErr)
 			} else {
+				b.sigTermState.ItemsReleased += 1
 				b.Context.Logger.Warningf("Released WorkItem %d due to SIGTERM", itemID)
 			}
 		}
 	}
+	b.sigTermState.Completed = true
 	b.Context.Logger.Warning("SIGTERM: Done releasing WorkItems")
 	b.Context.Logger.Warning("SIGTERM: Graceful shutdown steps complete. Waiting for SIGKILL.")
 }
@@ -525,4 +557,11 @@ func (b *Base) sigTermReleaseWorkItem(itemID int64) error {
 		item.Note = fmt.Sprintf("%s - Waiting for new worker because container %s was killed", item.Note, hostname)
 	}
 	return b.SaveWorkItem(item)
+}
+
+// GetSigTermState returns this worker's SigTermState object, which
+// contains info about whether this worker received SIGTERM or SIGINT
+// and what action it took.
+func (b *Base) GetSigTermState() SigTermState {
+	return b.sigTermState
 }
