@@ -102,7 +102,7 @@ func (q *QueueFixity) queueList() {
 				itemsAdded += 1
 			}
 		}
-		if resp.HasNextPage() == false || itemsAdded >= q.Context.Config.MaxFixityItemsPerRun {
+		if !resp.HasNextPage() || itemsAdded >= q.Context.Config.MaxFixityItemsPerRun {
 			break
 		}
 		params = resp.ParamsForNextPage()

@@ -65,7 +65,7 @@ func (q *APTQueue) run() {
 			}
 		}
 		q.Context.Logger.Info("HasNextPage =", resp.HasNextPage())
-		if resp.HasNextPage() == false {
+		if !resp.HasNextPage() {
 			break
 		}
 		params = resp.ParamsForNextPage()

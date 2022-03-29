@@ -189,7 +189,7 @@ func (d *Deleter) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 	// It's possible that another worker recently marked this as
 	// "do not retry." If that's the case, skip it.
-	if d.ShouldRetry(workItem) == false {
+	if !d.ShouldRetry(workItem) {
 		return true
 	}
 

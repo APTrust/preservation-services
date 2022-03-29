@@ -177,7 +177,7 @@ func (r *GlacierRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 	// It's possible that another worker recently marked this as
 	// "do not retry." If that's the case, skip it.
-	if r.ShouldRetry(workItem) == false {
+	if !r.ShouldRetry(workItem) {
 		return true
 	}
 
