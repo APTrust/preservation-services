@@ -40,13 +40,13 @@ func (list *RingList) Add(item string) {
 func (list *RingList) Contains(item string) bool {
 	exists := false
 	list.mutex.RLock()
+	defer list.mutex.RUnlock()
 	for _, value := range list.items {
 		if value == item {
 			exists = true
 			break
 		}
 	}
-	list.mutex.RUnlock()
 	return exists
 }
 
@@ -57,10 +57,23 @@ func (list *RingList) Del(item string) {
 		return
 	}
 	list.mutex.RLock()
+	defer list.mutex.RUnlock()
 	for i, value := range list.items {
 		if value == item {
 			list.items[i] = ""
 		}
 	}
-	list.mutex.RUnlock()
+}
+
+// Items returns the non-empty items in this ring list.
+func (list *RingList) Items() []string {
+	list.mutex.Lock()
+	defer list.mutex.Unlock()
+	items := make([]string, 0)
+	for _, item := range list.items {
+		if item != "" {
+			items = append(items, item)
+		}
+	}
+	return items
 }

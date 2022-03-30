@@ -212,6 +212,7 @@ var CompletedStatusValues = []string{
 	StatusCancelled,
 	StatusFailed,
 	StatusSuccess,
+	StatusSuspended,
 }
 
 var IncompleteStatusValues = []string{

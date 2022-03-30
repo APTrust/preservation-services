@@ -2,6 +2,9 @@ package workers
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -47,8 +50,12 @@ func NewGlacierRestorer(bufSize, numWorkers, maxAttempts int) *GlacierRestorer {
 			SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			ErrorChannel:      make(chan *Task, settings.ChannelBufferSize),
 			FatalErrorChannel: make(chan *Task, settings.ChannelBufferSize),
+			KillChannel:       make(chan os.Signal, 1),
 		},
 	}
+
+	// Handle SIGTERM & SIGINT
+	signal.Notify(restorer.KillChannel, syscall.SIGTERM, syscall.SIGINT)
 
 	// Set these methods on base with our custom versions.
 	// These methods are not defined at all in base. Failing
@@ -177,7 +184,7 @@ func (r *GlacierRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 	// It's possible that another worker recently marked this as
 	// "do not retry." If that's the case, skip it.
-	if r.ShouldRetry(workItem) == false {
+	if !r.ShouldRetry(workItem) {
 		return true
 	}
 

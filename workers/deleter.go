@@ -2,6 +2,9 @@ package workers
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -41,8 +44,12 @@ func NewDeleter(bufSize, numWorkers, maxAttempts int) *Deleter {
 			SuccessChannel:    make(chan *Task, settings.ChannelBufferSize),
 			ErrorChannel:      make(chan *Task, settings.ChannelBufferSize),
 			FatalErrorChannel: make(chan *Task, settings.ChannelBufferSize),
+			KillChannel:       make(chan os.Signal, 1),
 		},
 	}
+
+	// Handle SIGTERM & SIGINT
+	signal.Notify(deleter.KillChannel, syscall.SIGTERM, syscall.SIGINT)
 
 	// Set these methods on base with our custom versions.
 	// These methods are not defined at all in base. Failing
@@ -189,7 +196,7 @@ func (d *Deleter) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 	// It's possible that another worker recently marked this as
 	// "do not retry." If that's the case, skip it.
-	if d.ShouldRetry(workItem) == false {
+	if !d.ShouldRetry(workItem) {
 		return true
 	}
 

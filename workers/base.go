@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -14,6 +15,7 @@ import (
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/network"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/nsqio/go-nsq"
 )
 
@@ -39,6 +41,27 @@ type ServiceWorker interface {
 	MarkAsStarted(*Task)
 	FinishItem(*Task)
 	PushToQueue(*registry.WorkItem, string)
+}
+
+// SigTermState contains info about whether the current worker
+// received SIGTERM (or SIGINT), and if so, what action it took
+// in response to the signal.
+type SigTermState struct {
+	// Received indicates whether this worker received SIGTERM
+	// or SIGINT.
+	Received bool
+	// Completed indicates whether this worker completed all of
+	// its SIGTERM cleanup tasks.
+	Completed bool
+	// ItemsInProcess is the number of items this worker was
+	// working on when SIGTERM was received.
+	ItemsInProcess int
+	// ItemsRelease is the number of WorkItems this worker released
+	// in Registry by clearing the WorkItem's Node and PID settings.
+	ItemsReleased int
+	// FailedToRelease is the number of WorkItems this worker tried
+	// unsuccessfully to release.
+	FailedReleases int
 }
 
 // Base contains the fundamental structures common to all workers.
@@ -71,6 +94,9 @@ type Base struct {
 	// typically should not be retried.
 	FatalErrorChannel chan *Task
 
+	// KillChannel handles SIGTERM and SIGINT.
+	KillChannel chan os.Signal
+
 	// Settings contains information on what to do in post-processing
 	// in the SuccessChannel, ErrorChannel, and FatalErrorChannel.
 	Settings *Settings
@@ -96,6 +122,11 @@ type Base struct {
 	// processorConstructor is a function that returns an instance of
 	// *ingest.Base that will handle the processing for this worker.
 	processorConstructor ingest.BaseConstructor
+
+	// sigTermState contains info about whether the current worker received
+	// SIGTERM or SIGINT, and what cleanup work it did after receiving the
+	// signal.
+	sigTermState SigTermState
 }
 
 // RegisterAsNsqConsumer registers this worker as an NSQ consumer on
@@ -168,20 +199,29 @@ func (b *Base) HandleMessage(message *nsq.Message) error {
 // task to the SuccessChannel, the ErrorChannel, or the
 // FatalErrorChannel, depending on the outcome.
 func (b *Base) ProcessItem() {
-	for task := range b.ProcessChannel {
-		b.Context.Logger.Infof("WorkItem %d (%s) is in ProcessChannel", task.WorkItem.ID, task.WorkItem.Name)
-		count, errors := task.Processor.Run()
-		task.WorkResult.Errors = errors
-
-		b.Context.Logger.Infof("WorkItem %d: count %d", task.WorkItem.ID, count)
-
-		if task.WorkResult.HasFatalErrors() {
-			b.FatalErrorChannel <- task
-		} else if task.WorkResult.HasErrors() {
-			b.ErrorChannel <- task
-		} else {
-			b.SuccessChannel <- task
+	for {
+		select {
+		case signal := <-b.KillChannel:
+			b.doSigTermCleanup(signal)
+		case task := <-b.ProcessChannel:
+			b.processItem(task)
 		}
+	}
+}
+
+func (b *Base) processItem(task *Task) {
+	b.Context.Logger.Infof("WorkItem %d (%s) is in ProcessChannel", task.WorkItem.ID, task.WorkItem.Name)
+	count, errors := task.Processor.Run()
+	task.WorkResult.Errors = errors
+
+	b.Context.Logger.Infof("WorkItem %d: count %d", task.WorkItem.ID, count)
+
+	if task.WorkResult.HasFatalErrors() {
+		b.FatalErrorChannel <- task
+	} else if task.WorkResult.HasErrors() {
+		b.ErrorChannel <- task
+	} else {
+		b.SuccessChannel <- task
 	}
 }
 
@@ -333,11 +373,22 @@ func (b *Base) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
 }
 
 // ShouldRetry marks a WorkItem as no longer in progress and logs a
-// message to that effect if the WorkItem's Retry flag is false. It returns
-// the value of WorkItem.Retry.
+// message to that effect if the WorkItem's Retry flag is false, or if
+// the item is cancelled or in some other completed state.
+//
+// This returns true or false, indicating whether the worker should
+// proceed with processing.
 func (b *Base) ShouldRetry(workItem *registry.WorkItem) bool {
+	message := ""
+	retry := true
 	if !workItem.Retry {
-		message := fmt.Sprintf("Rejecting WorkItem %d because retry = false", workItem.ID)
+		message = fmt.Sprintf("Rejecting WorkItem %d because retry = false", workItem.ID)
+		retry = false
+	} else if util.StringListContains(constants.CompletedStatusValues, workItem.Status) {
+		message = fmt.Sprintf("Rejecting WorkItem %d because status = %s", workItem.ID, workItem.Status)
+		retry = false
+	}
+	if !retry {
 		workItem.MarkNoLongerInProgress(
 			workItem.Stage,
 			workItem.Status,
@@ -345,7 +396,7 @@ func (b *Base) ShouldRetry(workItem *registry.WorkItem) bool {
 		)
 		b.Context.Logger.Info(message)
 	}
-	return workItem.Retry
+	return retry
 }
 
 // AddToInProcessList adds workItemID to this worker's ItemsInProcess list.
@@ -416,4 +467,115 @@ func (b *Base) PushToQueue(workItem *registry.WorkItem, nsqTopic string) {
 		b.Context.Logger.Infof("Pushed WorkItem %d (%s/%s) to NSQ topic %s",
 			workItem.ID, workItem.Bucket, workItem.Name, nsqTopic)
 	}
+}
+
+// doSigTermCleanup handles SIGTERM and SIGINT. AWS's Elastic Scaling
+// service issues SIGTERM before SIGKILL, so we have time to clean up.
+// If we've set stopTimeout to two minutes, we have two minutes to wrap
+// up loose ends. For more on stopTimeout, see:
+// https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#container_definition_timeout
+//
+// We don't worry about items in the SuccessChannel, ErrorChannel or
+// FatalError channel, because those chanels just do housekeeping, updating
+// Redis, NSQ and Registry. That takes less than second under normal load,
+// and maybe 3 seconds under the heaviest loads. There's typically only one
+// item in those channels at any given time, and maybe a max of four items
+// in the worst case. Those channels can complete their work without
+// intervetion in the two minutes between SIGTERM and SIGKILL.
+//
+// The ProcessChannel is another issue. It may be working on tasks that take
+// several minutes or even several hours each. When we get SIGKILL, those tasks
+// die before they complete. That's OK, because Redis has enough info for the
+// next worker, in some other container, to resume the dead task.
+//
+// However, SIGKILL leaves us with the following problems that this function
+// must remediate:
+//
+// 1. Our NSQ messages have very long timeouts, up to 12 hours, and for good
+// reason. (Try calculating checksums or doing network copies on 1TB files.)
+// We want nsqd to know immediately that this worker is no longer active, so
+// it doesn't wait 12 hours to requeue tasks for other workers.
+//
+// 2. We have to update this worker's WorkItems in Registry, clearing out the
+// Node and PID settings, so other workers can claim this item. So long as the
+// item has a non-empty Node and PID, other workers will think someone owns it,
+// and they won't touch it.
+func (b *Base) doSigTermCleanup(signal os.Signal) {
+	if signal != syscall.SIGINT && signal != syscall.SIGTERM {
+		return
+	}
+	b.sigTermState.Received = true
+	b.Context.Logger.Warning("Worker received SIGTERM. Starting graceful shutdown.")
+
+	if b.NSQConsumer != nil {
+		// Stop the consumer. nsqd will pick this up
+		// and requeue whatever messages we were working on,
+		// so that other workers can pick them up. See the
+		// section titled "Heartbeats and Timeouts" at
+		// https://nsq.io/overview/internals.html
+		b.Context.Logger.Warning("SIGTERM step 1: Disconnect from NSQ")
+		b.NSQConsumer.ChangeMaxInFlight(0)
+		b.NSQConsumer.Stop()
+		b.Context.Logger.Warning("Worker disconnected from nsqd due to SIGTERM.")
+	} else {
+		b.Context.Logger.Warning("SIGTERM step 1: No need to stop NSQ consumer because there isn't one.")
+	}
+
+	// Now we have another problem. Even if these items
+	// are requeued, no other worker will pick them up
+	// because the WorkItem record in Registry says this
+	// worker node and pid is still actively working on
+	// the item. We need to update the Registry WorkItem
+	// record to indicate that this worker no longer owns
+	// it.
+	b.Context.Logger.Warning("SIGTERM step 2: Release WorkItems")
+	itemsInProcess := b.ItemsInProcess.Items()
+	b.sigTermState.ItemsInProcess = len(itemsInProcess)
+	for _, strItemID := range itemsInProcess {
+		itemID, err := strconv.ParseInt(strItemID, 10, 64)
+		if err != nil {
+			releaseErr := b.sigTermReleaseWorkItem(itemID)
+			if releaseErr != nil {
+				b.sigTermState.FailedReleases += 1
+				b.Context.Logger.Errorf("Could not release WorkItem %d after SIGTERM: %v", itemID, releaseErr)
+			} else {
+				b.sigTermState.ItemsReleased += 1
+				b.Context.Logger.Warningf("Released WorkItem %d due to SIGTERM", itemID)
+			}
+		}
+	}
+	b.sigTermState.Completed = true
+	b.Context.Logger.Warning("SIGTERM: Done releasing WorkItems")
+	b.Context.Logger.Warning("SIGTERM: Graceful shutdown steps complete. Waiting for SIGKILL.")
+}
+
+// sigTermReleaseWorkItem clears the Node and PID, and sets the status
+// to Pending on the specified WorkItem. This is used only when our worker
+// gets a SIGTERM.
+func (b *Base) sigTermReleaseWorkItem(itemID int64) error {
+	resp := b.Context.RegistryClient.WorkItemByID(itemID)
+	if resp.Error != nil {
+		return resp.Error
+	}
+	item := resp.WorkItem()
+	if item.Node != "" {
+		// We haven't claimed this item yet,
+		// so there's no need to release it.
+		return nil
+	}
+	hostname, _ := os.Hostname()
+	item.Node = ""
+	item.Pid = 0
+	item.Status = constants.StatusPending
+	if !strings.Contains(item.Note, hostname) {
+		item.Note = fmt.Sprintf("%s - Waiting for new worker because container %s was killed", item.Note, hostname)
+	}
+	return b.SaveWorkItem(item)
+}
+
+// GetSigTermState returns this worker's SigTermState object, which
+// contains info about whether this worker received SIGTERM or SIGINT
+// and what action it took.
+func (b *Base) GetSigTermState() SigTermState {
+	return b.sigTermState
 }
