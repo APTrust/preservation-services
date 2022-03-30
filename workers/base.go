@@ -15,6 +15,7 @@ import (
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/network"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/nsqio/go-nsq"
 )
 
@@ -372,11 +373,22 @@ func (b *Base) ImAlreadyProcessingThis(workItem *registry.WorkItem) bool {
 }
 
 // ShouldRetry marks a WorkItem as no longer in progress and logs a
-// message to that effect if the WorkItem's Retry flag is false. It returns
-// the value of WorkItem.Retry.
+// message to that effect if the WorkItem's Retry flag is false, or if
+// the item is cancelled or in some other completed state.
+//
+// This returns true or false, indicating whether the worker should
+// proceed with processing.
 func (b *Base) ShouldRetry(workItem *registry.WorkItem) bool {
+	message := ""
+	retry := true
 	if !workItem.Retry {
-		message := fmt.Sprintf("Rejecting WorkItem %d because retry = false", workItem.ID)
+		message = fmt.Sprintf("Rejecting WorkItem %d because retry = false", workItem.ID)
+		retry = false
+	} else if util.StringListContains(constants.CompletedStatusValues, workItem.Status) {
+		message = fmt.Sprintf("Rejecting WorkItem %d because status = %s", workItem.ID, workItem.Status)
+		retry = false
+	}
+	if !retry {
 		workItem.MarkNoLongerInProgress(
 			workItem.Stage,
 			workItem.Status,
@@ -384,7 +396,7 @@ func (b *Base) ShouldRetry(workItem *registry.WorkItem) bool {
 		)
 		b.Context.Logger.Info(message)
 	}
-	return workItem.Retry
+	return retry
 }
 
 // AddToInProcessList adds workItemID to this worker's ItemsInProcess list.

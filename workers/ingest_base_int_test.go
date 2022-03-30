@@ -505,6 +505,29 @@ func TestIngestBase_PushToQueue(t *testing.T) {
 	assert.EqualValues(t, 1, topic.MessageCount)
 }
 
+func TestIngestBase_ShouldRetry(t *testing.T) {
+	ingestBase := getIngestBase()
+	workItem := &registry.WorkItem{}
+	for _, status := range constants.CompletedStatusValues {
+		workItem.Status = status
+		workItem.Retry = true
+		// Should be false because status is completed.
+		assert.False(t, ingestBase.ShouldRetry(workItem))
+		// Should be false because status is completed AND retry flag is false.
+		workItem.Retry = false
+		assert.False(t, ingestBase.ShouldRetry(workItem))
+	}
+	for _, status := range constants.IncompleteStatusValues {
+		workItem.Status = status
+		workItem.Retry = true
+		// Should be true because status is incomplete and retry flag is true.
+		assert.True(t, ingestBase.ShouldRetry(workItem))
+		// Should be false because, although status is incomplete, retry flag is false.
+		workItem.Retry = false
+		assert.False(t, ingestBase.ShouldRetry(workItem))
+	}
+}
+
 // You can also test this manually:
 //
 // From the project root dir, run ./scripts/test.rb interactive
