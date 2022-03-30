@@ -280,7 +280,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/apt_delete:84ebad9-compose-test
+        Image: docker.io/aptrust/apt_delete:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -500,7 +500,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/apt_fixity:84ebad9-compose-test
+        Image: docker.io/aptrust/apt_fixity:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -720,7 +720,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/apt_queue:84ebad9-compose-test
+        Image: docker.io/aptrust/apt_queue:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -940,7 +940,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/apt_queue_fixity:84ebad9-compose-test
+        Image: docker.io/aptrust/apt_queue_fixity:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1159,7 +1159,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/bag_restorer:84ebad9-compose-test
+        Image: docker.io/aptrust/bag_restorer:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1412,7 +1412,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/file_restorer:84ebad9-compose-test
+        Image: docker.io/aptrust/file_restorer:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1632,7 +1632,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/glacier_restorer:84ebad9-compose-test
+        Image: docker.io/aptrust/glacier_restorer:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1852,7 +1852,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_bucket_reader:84ebad9-compose-test
+        Image: docker.io/aptrust/ingest_bucket_reader:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2072,7 +2072,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_cleanup:84ebad9-compose-test
+        Image: docker.io/aptrust/ingest_cleanup:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2292,7 +2292,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_format_identifier:84ebad9-compose-test
+        Image: docker.io/aptrust/ingest_format_identifier:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2511,7 +2511,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_pre_fetch:84ebad9-compose-test
+        Image: docker.io/aptrust/ingest_pre_fetch:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2732,7 +2732,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_preservation_uploader:84ebad9-compose-test
+        Image: docker.io/aptrust/ingest_preservation_uploader:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2953,7 +2953,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_preservation_verifier:84ebad9-compose-test
+        Image: docker.io/aptrust/ingest_preservation_verifier:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3173,7 +3173,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_recorder:84ebad9-compose-test
+        Image: docker.io/aptrust/ingest_recorder:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3393,7 +3393,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_staging_uploader:84ebad9-compose-test
+        Image: docker.io/aptrust/ingest_staging_uploader:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3613,7 +3613,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_validator:84ebad9-compose-test
+        Image: docker.io/aptrust/ingest_validator:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3837,7 +3837,7 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/reingest_manager:84ebad9-compose-test
+        Image: docker.io/aptrust/reingest_manager:5bf5139-compose-test
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
