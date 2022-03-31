@@ -61,6 +61,7 @@ func (v *PreservationVerifier) getVerifyFunction() func(*service.IngestFile) (er
 				record.ETag = strings.Replace(objInfo.ETag, "\"", "", -1)
 				record.Size = objInfo.Size
 				if record.Size == ingestFile.Size {
+					v.Context.Logger.Infof("Verified %s (%s) is in %s %s with size %d and etag %s", ingestFile.Identifier(), ingestFile.UUID, record.Provider, record.Bucket, record.Size, record.ETag)
 					record.VerifiedAt = time.Now().UTC()
 				} else {
 					err = fmt.Errorf("Preservation size %d does not match recorded file size %d", record.Size, ingestFile.Size)
