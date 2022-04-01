@@ -79,6 +79,10 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 
 		defer s3Object.Close()
 
+		// TODO: Make sure s3Object is not nil?
+		// Seems we shouldn't have to, but something is causing a nil
+		// pointer exception inside of Siegfried. See Trello bug at
+		// https://trello.com/c/ctfWzXZj
 		identifications, err := fi.Siegfried.Identify(s3Object, ingestFile.PathInBag, "")
 
 		if err != nil {
