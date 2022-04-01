@@ -173,6 +173,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Aptdelete_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY 
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -280,7 +282,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/apt_delete:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/apt_delete:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -393,6 +396,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Aptfixity_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -500,7 +505,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/apt_fixity:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/apt_fixity:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -613,6 +619,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Aptqueue_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -720,7 +728,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/apt_queue:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/apt_queue:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -833,6 +842,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Aptqueuefixity_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -940,7 +951,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/apt_queue_fixity:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/apt_queue_fixity:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1052,6 +1064,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Bagrestorer_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -1159,7 +1173,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/bag_restorer:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/bag_restorer:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1305,6 +1320,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Filerestorer_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -1412,7 +1429,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/file_restorer:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/file_restorer:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1525,6 +1543,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Glacierrestorer_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -1632,7 +1652,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/glacier_restorer:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/glacier_restorer:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1745,6 +1766,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestbucketreader_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -1852,7 +1875,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_bucket_reader:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/ingest_bucket_reader:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1965,6 +1989,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestcleanup_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -2072,7 +2098,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_cleanup:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/ingest_cleanup:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2185,6 +2212,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: er_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -2292,7 +2321,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_format_identifier:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/ingest_format_identifier:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2404,6 +2434,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestprefetch_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -2511,7 +2543,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_pre_fetch:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/ingest_pre_fetch:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2625,6 +2658,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestpreservationuploader_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -2732,7 +2767,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_preservation_uploader:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/ingest_preservation_uploader:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2846,6 +2882,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestpreservationverifier_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -2953,7 +2991,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_preservation_verifier:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/ingest_preservation_verifier:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3066,6 +3105,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestrecorder_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -3173,7 +3214,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_recorder:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/ingest_recorder:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3286,6 +3328,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingeststaginguploader_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -3393,7 +3437,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_staging_uploader:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/ingest_staging_uploader:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3506,6 +3551,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Ingestvalidator_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -3613,7 +3660,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/ingest_validator:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/ingest_validator:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3730,6 +3778,8 @@ Resources:
         - Condition: SUCCESS
           ContainerName: Reingestmanager_ResolvConf_InitContainer
         Secrets:
+        - Name: MAX_DAYS_SINCE_LAST_FIXITY
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -3837,7 +3887,8 @@ Resources:
         - Name: STAGING_BUCKET
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
-        Image: docker.io/aptrust/reingest_manager:5bf5139-compose-test
+        StopTimeout: 120
+        Image: docker.io/aptrust/reingest_manager:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
