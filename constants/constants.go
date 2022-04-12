@@ -208,6 +208,11 @@ var StorageOptions = []string{
 	StorageWasabiVA,
 }
 
+var WasabiStorageOptions = []string{
+	StorageWasabiOR,
+	StorageWasabiVA,
+}
+
 var CompletedStatusValues = []string{
 	StatusCancelled,
 	StatusFailed,

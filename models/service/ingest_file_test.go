@@ -451,7 +451,7 @@ func TestGetPutOptions(t *testing.T) {
 	ingestFile := &service.IngestFile{
 		FileFormat:       "image/jpeg",
 		ObjectIdentifier: "example.edu/bag-of-photos",
-		PathInBag:        "data/image.jpg",
+		PathInBag:        "data/image  with   spaces&?:Junk.jpg",
 	}
 	ingestFile.SetChecksum(
 		&service.IngestChecksum{
@@ -466,14 +466,24 @@ func TestGetPutOptions(t *testing.T) {
 			Source:    constants.SourceIngest,
 		})
 
-	opts, err := ingestFile.GetPutOptions()
-	require.Nil(t, err)
-	assert.Equal(t, "example.edu", opts.UserMetadata["institution"])
-	assert.Equal(t, "example.edu/bag-of-photos", opts.UserMetadata["bag"])
-	assert.Equal(t, "data/image.jpg", opts.UserMetadata["bagpath"])
-	assert.Equal(t, "12345", opts.UserMetadata["md5"])
-	assert.Equal(t, "98765", opts.UserMetadata["sha256"])
-	assert.Equal(t, "image/jpeg", opts.ContentType)
+	for _, storageOption := range constants.StorageOptions {
+		ingestFile.StorageOption = storageOption
+		opts, err := ingestFile.GetPutOptions()
+		require.Nil(t, err)
+		assert.Equal(t, "example.edu", opts.UserMetadata["institution"])
+		assert.Equal(t, "example.edu/bag-of-photos", opts.UserMetadata["bag"])
+		assert.Equal(t, "12345", opts.UserMetadata["md5"])
+		assert.Equal(t, "98765", opts.UserMetadata["sha256"])
+		assert.Equal(t, "image/jpeg", opts.ContentType)
+
+		if strings.Contains(storageOption, "Wasabi") {
+			assert.Equal(t, "data%2Fimage++with+++spaces%26%3F%3AJunk.jpg", opts.UserMetadata["bagpath-encoded"])
+			assert.Empty(t, opts.UserMetadata["bagpath"])
+		} else {
+			assert.Equal(t, "data/image  with   spaces&?:Junk.jpg", opts.UserMetadata["bagpath"])
+			assert.Empty(t, opts.UserMetadata["bagpath-encoded"])
+		}
+	}
 }
 
 func TestIngestFileFindEvent(t *testing.T) {

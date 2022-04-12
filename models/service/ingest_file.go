@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -282,15 +283,22 @@ func (f *IngestFile) GetPutOptions() (minio.PutObjectOptions, error) {
 	if sha256 == nil {
 		return emptyOpts, fmt.Errorf("%s has no ingest sha256 checksum", f.Identifier())
 	}
+
+	userMetadata := map[string]string{
+		"institution": f.Institution(),
+		"bag":         f.ObjectIdentifier,
+		"md5":         md5.Digest,
+		"sha256":      sha256.Digest,
+	}
+	if util.StringListContains(constants.WasabiStorageOptions, f.StorageOption) {
+		userMetadata["bagpath-encoded"] = url.QueryEscape(f.PathInBag)
+	} else {
+		userMetadata["bagpath"] = f.PathInBag
+	}
+
 	return minio.PutObjectOptions{
-		UserMetadata: map[string]string{
-			"institution": f.Institution(),
-			"bag":         f.ObjectIdentifier,
-			"bagpath":     f.PathInBag,
-			"md5":         md5.Digest,
-			"sha256":      sha256.Digest,
-		},
-		ContentType: f.FileFormat,
+		UserMetadata: userMetadata,
+		ContentType:  f.FileFormat,
 	}, nil
 }
 
