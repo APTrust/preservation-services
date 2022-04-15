@@ -1,105 +1,105 @@
 Resources:
   
-  PrefetchScale:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Properties:
-      MaxCapacity: 2 # Required
-      MinCapacity: 1  # Required
-      ResourceId: service/preservation-services/preserv-poc-2-IngestprefetchService-f0T9FDwo8UE6 # Required
-      RoleARN: arn:aws:iam::997427182289:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService # Required
-      ScalableDimension: ecs:service:DesiredCount # Required
-      ServiceNamespace: ecs # Required
-  PrefetchPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: pre_fetch_scale_target # Required
-      PolicyType: TargetTrackingScaling # Required
-      ScalingTargetId: !Ref PrefetchScale
-      TargetTrackingScalingPolicyConfiguration:
-        PredefinedMetricSpecification:
-          PredefinedMetricType: ECSServiceAverageCPUUtilization
-        TargetValue: 90.0
+#  PrefetchScale:
+#    Type: AWS::ApplicationAutoScaling::ScalableTarget
+#    Properties:
+#      MaxCapacity: 2 # Required
+#      MinCapacity: 1  # Required
+#      ResourceId: service/preservation-services/preserv-poc-2-IngestprefetchService-f0T9FDwo8UE6 # Required
+#      RoleARN: arn:aws:iam::997427182289:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService # Required
+#      ScalableDimension: ecs:service:DesiredCount # Required
+#      ServiceNamespace: ecs # Required
+#  PrefetchPolicy:
+#    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+#    Properties:
+#      PolicyName: pre_fetch_scale_target # Required
+#      PolicyType: TargetTrackingScaling # Required
+#      ScalingTargetId: !Ref PrefetchScale
+#      TargetTrackingScalingPolicyConfiguration:
+#        PredefinedMetricSpecification:
+#          PredefinedMetricType: ECSServiceAverageCPUUtilization
+#        TargetValue: 90.0
 
   
-  FormatIDScale:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Properties:
-      MaxCapacity: 2 # Required
-      MinCapacity: 1  # Required
-      ResourceId: service/preservation-services/preserv-poc-2-erService-nT9uRyctmGJP # Required
-      RoleARN: arn:aws:iam::997427182289:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService # Required
-      ScalableDimension: ecs:service:DesiredCount # Required
-      ServiceNamespace: ecs # Required
-  FormatIDPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: format_id_scale_target # Required
-      PolicyType: TargetTrackingScaling # Required
-      ScalingTargetId: !Ref FormatIDScale
-      TargetTrackingScalingPolicyConfiguration:
-        PredefinedMetricSpecification: 
-          PredefinedMetricType: ECSServiceAverageMemoryUtilization
-        TargetValue: 90.0
-  
-  StageUploadScale:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Properties:
-      MaxCapacity: 2 # Required
-      MinCapacity: 1  # Required
-      ResourceId: service/preservation-services/preserv-poc-2-IngeststaginguploaderService-PvLPt6Wk81ws # Required
-      RoleARN: arn:aws:iam::997427182289:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService # Required
-      ScalableDimension: ecs:service:DesiredCount # Required
-      ServiceNamespace: ecs # Required
-  StageUploadPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: staging_uploader_scale_target # Required
-      PolicyType: TargetTrackingScaling # Required
-      ScalingTargetId: !Ref StageUploadScale
-      TargetTrackingScalingPolicyConfiguration:
-        PredefinedMetricSpecification: 
-          PredefinedMetricType: ECSServiceAverageCPUUtilization
-        TargetValue: 90.0
-  StageUpload2Policy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: staging_uploader_memory_target # Required
-      PolicyType: TargetTrackingScaling # Required 
-      ScalingTargetId: !Ref StageUploadScale
-      TargetTrackingScalingPolicyConfiguration:
-        PredefinedMetricSpecification: 
-          PredefinedMetricType: ECSServiceAverageMemoryUtilization
-        TargetValue: 90.0
-
-  PreservUploadScale:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Properties:
-      MaxCapacity: 2 # Required
-      MinCapacity: 1  # Required
-      ResourceId: service/preservation-services/preserv-poc-2-IngestpreservationuploaderService-IeZTEhlEZVxU # Required
-      RoleARN: arn:aws:iam::997427182289:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService # Required
-      ScalableDimension: ecs:service:DesiredCount # Required
-      ServiceNamespace: ecs # Required
-  PreservUploadPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: preserv_uploader_scale_target # Required
-      PolicyType: TargetTrackingScaling # Required
-      ScalingTargetId: !Ref PreservUploadScale
-      TargetTrackingScalingPolicyConfiguration:
-        PredefinedMetricSpecification: 
-          PredefinedMetricType: ECSServiceAverageCPUUtilization
-        TargetValue: 90.0
-  PreservUpload2Policy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: preserv_uploader_memory_target # Required
-      PolicyType: TargetTrackingScaling # Required
-      ScalingTargetId: !Ref PreservUploadScale
-      TargetTrackingScalingPolicyConfiguration:
-        PredefinedMetricSpecification: 
-          PredefinedMetricType: ECSServiceAverageMemoryUtilization
-        TargetValue: 90.0
+#  FormatIDScale:
+#    Type: AWS::ApplicationAutoScaling::ScalableTarget
+#    Properties:
+#      MaxCapacity: 2 # Required
+#      MinCapacity: 1  # Required
+#      ResourceId: service/preservation-services/preserv-poc-2-erService-nT9uRyctmGJP # Required
+#      RoleARN: arn:aws:iam::997427182289:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService # Required
+#      ScalableDimension: ecs:service:DesiredCount # Required
+#      ServiceNamespace: ecs # Required
+#  FormatIDPolicy:
+#    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+#    Properties:
+#      PolicyName: format_id_scale_target # Required
+#      PolicyType: TargetTrackingScaling # Required
+#     ScalingTargetId: !Ref FormatIDScale
+#      TargetTrackingScalingPolicyConfiguration:
+#        PredefinedMetricSpecification: 
+#          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+#        TargetValue: 90.0
+#  
+#  StageUploadScale:
+#    Type: AWS::ApplicationAutoScaling::ScalableTarget
+#    Properties:
+#      MaxCapacity: 2 # Required
+#      MinCapacity: 1  # Required
+#      ResourceId: service/preservation-services/preserv-poc-2-IngeststaginguploaderService-PvLPt6Wk81ws # Required
+#      RoleARN: arn:aws:iam::997427182289:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService # Required
+#      ScalableDimension: ecs:service:DesiredCount # Required
+#      ServiceNamespace: ecs # Required
+#  StageUploadPolicy:
+#    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+#    Properties:
+#      PolicyName: staging_uploader_scale_target # Required
+#      PolicyType: TargetTrackingScaling # Required
+#      ScalingTargetId: !Ref StageUploadScale
+#      TargetTrackingScalingPolicyConfiguration:
+#        PredefinedMetricSpecification: 
+#          PredefinedMetricType: ECSServiceAverageCPUUtilization
+#        TargetValue: 90.0
+#  StageUpload2Policy:
+#    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+#    Properties:
+#      PolicyName: staging_uploader_memory_target # Required
+#      PolicyType: TargetTrackingScaling # Required 
+#      ScalingTargetId: !Ref StageUploadScale
+#      TargetTrackingScalingPolicyConfiguration:
+#        PredefinedMetricSpecification: 
+#          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+#        TargetValue: 90.0
+#
+#  PreservUploadScale:
+#    Type: AWS::ApplicationAutoScaling::ScalableTarget
+#    Properties:
+#      MaxCapacity: 2 # Required
+#      MinCapacity: 1  # Required
+#      ResourceId: service/preservation-services/preserv-poc-2-IngestpreservationuploaderService-IeZTEhlEZVxU # Required
+#      RoleARN: arn:aws:iam::997427182289:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService # Required
+#      ScalableDimension: ecs:service:DesiredCount # Required
+#      ServiceNamespace: ecs # Required
+#  PreservUploadPolicy:
+#    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+#    Properties:
+#      PolicyName: preserv_uploader_scale_target # Required
+#      PolicyType: TargetTrackingScaling # Required
+#      ScalingTargetId: !Ref PreservUploadScale
+#      TargetTrackingScalingPolicyConfiguration:
+#       PredefinedMetricSpecification: 
+#         PredefinedMetricType: ECSServiceAverageCPUUtilization
+#        TargetValue: 90.0
+#  PreservUpload2Policy:
+#    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+#    Properties:
+#      PolicyName: preserv_uploader_memory_target # Required
+#      PolicyType: TargetTrackingScaling # Required
+#      ScalingTargetId: !Ref PreservUploadScale
+#      TargetTrackingScalingPolicyConfiguration:
+#        PredefinedMetricSpecification: 
+#          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+#        TargetValue: 90.0
         
   AptdeleteService:
     Properties:
@@ -283,7 +283,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_delete:a5031e8-master
+        Image: docker.io/aptrust/apt_delete:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -506,7 +506,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_fixity:a5031e8-master
+        Image: docker.io/aptrust/apt_fixity:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -729,7 +729,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_queue:a5031e8-master
+        Image: docker.io/aptrust/apt_queue:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -952,7 +952,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_queue_fixity:a5031e8-master
+        Image: docker.io/aptrust/apt_queue_fixity:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1174,7 +1174,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/bag_restorer:a5031e8-master
+        Image: docker.io/aptrust/bag_restorer:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1430,7 +1430,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/file_restorer:a5031e8-master
+        Image: docker.io/aptrust/file_restorer:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1653,7 +1653,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/glacier_restorer:a5031e8-master
+        Image: docker.io/aptrust/glacier_restorer:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1876,7 +1876,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_bucket_reader:a5031e8-master
+        Image: docker.io/aptrust/ingest_bucket_reader:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2099,7 +2099,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_cleanup:a5031e8-master
+        Image: docker.io/aptrust/ingest_cleanup:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2322,7 +2322,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_format_identifier:a5031e8-master
+        Image: docker.io/aptrust/ingest_format_identifier:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2544,7 +2544,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_pre_fetch:a5031e8-master
+        Image: docker.io/aptrust/ingest_pre_fetch:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2768,7 +2768,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_uploader:a5031e8-master
+        Image: docker.io/aptrust/ingest_preservation_uploader:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2992,7 +2992,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_verifier:a5031e8-master
+        Image: docker.io/aptrust/ingest_preservation_verifier:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3215,7 +3215,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_recorder:a5031e8-master
+        Image: docker.io/aptrust/ingest_recorder:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3438,7 +3438,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_staging_uploader:a5031e8-master
+        Image: docker.io/aptrust/ingest_staging_uploader:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3661,7 +3661,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_validator:a5031e8-master
+        Image: docker.io/aptrust/ingest_validator:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3888,7 +3888,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/reingest_manager:a5031e8-master
+        Image: docker.io/aptrust/reingest_manager:f44963c-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
