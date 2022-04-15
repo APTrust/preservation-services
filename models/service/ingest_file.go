@@ -285,15 +285,12 @@ func (f *IngestFile) GetPutOptions() (minio.PutObjectOptions, error) {
 	}
 
 	userMetadata := map[string]string{
-		"institution": f.Institution(),
-		"bag":         f.ObjectIdentifier,
-		"md5":         md5.Digest,
-		"sha256":      sha256.Digest,
-	}
-	if util.StringListContains(constants.WasabiStorageOptions, f.StorageOption) {
-		userMetadata["bagpath-encoded"] = url.QueryEscape(f.PathInBag)
-	} else {
-		userMetadata["bagpath"] = f.PathInBag
+		"institution":     f.Institution(),
+		"bag":             f.ObjectIdentifier,
+		"md5":             md5.Digest,
+		"sha256":          sha256.Digest,
+		"bagpath":         f.PathInBag,
+		"bagpath-encoded": url.QueryEscape(f.PathInBag),
 	}
 
 	return minio.PutObjectOptions{

@@ -475,14 +475,8 @@ func TestGetPutOptions(t *testing.T) {
 		assert.Equal(t, "12345", opts.UserMetadata["md5"])
 		assert.Equal(t, "98765", opts.UserMetadata["sha256"])
 		assert.Equal(t, "image/jpeg", opts.ContentType)
-
-		if strings.Contains(storageOption, "Wasabi") {
-			assert.Equal(t, "data%2Fimage++with+++spaces%26%3F%3AJunk.jpg", opts.UserMetadata["bagpath-encoded"])
-			assert.Empty(t, opts.UserMetadata["bagpath"])
-		} else {
-			assert.Equal(t, "data/image  with   spaces&?:Junk.jpg", opts.UserMetadata["bagpath"])
-			assert.Empty(t, opts.UserMetadata["bagpath-encoded"])
-		}
+		assert.Equal(t, "data/image  with   spaces&?:Junk.jpg", opts.UserMetadata["bagpath"])
+		assert.Equal(t, "data%2Fimage++with+++spaces%26%3F%3AJunk.jpg", opts.UserMetadata["bagpath-encoded"])
 	}
 }
 

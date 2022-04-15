@@ -5,6 +5,8 @@ package e2e_test
 
 import (
 	s3ctx "context"
+	"net/url"
+	"strings"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
@@ -44,7 +46,11 @@ func testS3File(storageRecord *registry.StorageRecord, gf *registry.GenericFile)
 	assert.Equal(ctx.T, objIdentifier, objInfo.UserMetadata["Bag"])
 	pathInBag, err := gf.PathInBag()
 	require.Nil(ctx.T, err)
-	assert.Equal(ctx.T, pathInBag, objInfo.UserMetadata["Bagpath"])
+	if strings.Contains(gf.StorageOption, "Wasabi") {
+		assert.Equal(ctx.T, url.QueryEscape(pathInBag), objInfo.UserMetadata["Bagpath-Encoded"])
+	} else {
+		assert.Equal(ctx.T, pathInBag, objInfo.UserMetadata["Bagpath"])
+	}
 	assert.Equal(ctx.T, md5.Digest, objInfo.UserMetadata["Md5"])
 	assert.Equal(ctx.T, sha256.Digest, objInfo.UserMetadata["Sha256"])
 }

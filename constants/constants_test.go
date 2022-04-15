@@ -111,8 +111,8 @@ func TestTopicFor(t *testing.T) {
 	}
 }
 
-func TestWasabiStorageOptions(t *testing.T) {
-	assert.True(t, util.StringListContains(constants.WasabiStorageOptions, constants.StorageWasabiOR))
-	assert.True(t, util.StringListContains(constants.WasabiStorageOptions, constants.StorageWasabiVA))
-	assert.False(t, util.StringListContains(constants.WasabiStorageOptions, constants.StorageStandard))
+func TestWasabiStorageProviders(t *testing.T) {
+	assert.True(t, util.StringListContains(constants.WasabiStorageProviders, constants.StorageWasabiOR))
+	assert.True(t, util.StringListContains(constants.WasabiStorageProviders, constants.StorageWasabiVA))
+	assert.False(t, util.StringListContains(constants.WasabiStorageProviders, constants.StorageStandard))
 }

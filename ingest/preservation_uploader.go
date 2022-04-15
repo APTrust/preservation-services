@@ -8,6 +8,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -179,6 +180,16 @@ func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.Ing
 	if err != nil {
 		uploader.Context.Logger.Infof("Error getting PutOptions for %s (%s/%s): %v", ingestFile.Identifier(), preservationBucket.Provider, preservationBucket.Bucket, err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
+	}
+
+	// Work-around for Wasabi multispace header bug. https://trello.com/c/SDasvwk8
+	// For Wasabi, use bagpath-encoded header. For all others, use bagpath.
+	// Note that UserMetadata initially contains both.
+	if util.StringListContains(constants.WasabiStorageProviders, preservationBucket.Provider) {
+		delete(putOptions.UserMetadata, "bagpath") // or else Wasabi rejects this
+		uploader.Context.Logger.Infof("For Wasabi, using header 'bagpath-encoded' with value %s", putOptions.UserMetadata["bagpath-encoded"])
+	} else {
+		delete(putOptions.UserMetadata, "bagpath-encoded") // not necessary for other providers
 	}
 
 	uploader.Context.Logger.Infof("Copying %s (%s) from %s to %s using PutObject()", ingestFile.Identifier(), ingestFile.UUID, uploader.Context.Config.StagingBucket, preservationBucket.Bucket)

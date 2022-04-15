@@ -196,6 +196,11 @@ var StorageProviders = []string{
 	StorageProviderWasabiVA,
 }
 
+var WasabiStorageProviders = []string{
+	StorageProviderWasabiOR,
+	StorageProviderWasabiVA,
+}
+
 var StorageOptions = []string{
 	StorageGlacierDeepOH,
 	StorageGlacierDeepOR,
@@ -204,11 +209,6 @@ var StorageOptions = []string{
 	StorageGlacierOR,
 	StorageGlacierVA,
 	StorageStandard,
-	StorageWasabiOR,
-	StorageWasabiVA,
-}
-
-var WasabiStorageOptions = []string{
 	StorageWasabiOR,
 	StorageWasabiVA,
 }
