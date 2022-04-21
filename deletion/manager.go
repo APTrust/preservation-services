@@ -3,18 +3,14 @@ package deletion
 import (
 	ctx "context"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
-	"github.com/APTrust/preservation-services/network"
-	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -186,10 +182,6 @@ func (m *Manager) deleteFile(gf *registry.GenericFile) (errors []*service.Proces
 			errors = append(errors, m.Error(gf.Identifier, err, false))
 			continue
 		}
-		err = m.saveFileDeletionEvent(gf, sr)
-		if err != nil {
-			errors = append(errors, m.Error(gf.Identifier, err, false))
-		}
 	}
 	if len(errors) == 0 {
 		resp = m.Context.RegistryClient.GenericFileDelete(gf.ID)
@@ -229,56 +221,6 @@ func (m *Manager) deleteFromPreservationStorage(bucket *common.PreservationBucke
 	// Other errors are permission denied, bucket does not exist, conflict,
 	// request limit. These need to be reported.
 	return err
-}
-
-// saveFileDeletionEvent saves a PremisEvent to Registry saying we deleted
-// one copy of this file from one preservation bucket. Other copies may
-// exist. Note that we cannot call GenericFileFinishDelete until at least
-// of these deletion events has been record in Registry.
-func (m *Manager) saveFileDeletionEvent(gf *registry.GenericFile, sr *registry.StorageRecord) error {
-	eventId := uuid.New()
-	now := time.Now().UTC()
-	outcomeDetail := m.RequestedBy
-	outcomeInfo := fmt.Sprintf("One copy of this file has been deleted from %s at the request of %s.", sr.URL, m.RequestedBy)
-	if m.InstApprover != "" {
-		outcomeInfo += fmt.Sprintf(" Institutional approver: %s.", m.InstApprover)
-	}
-	if m.APTrustApprover != "" {
-		outcomeInfo += fmt.Sprintf(" APTrust approver: %s.", m.APTrustApprover)
-	}
-	event := &registry.PremisEvent{
-		Identifier:           eventId.String(),
-		EventType:            constants.EventDeletion,
-		DateTime:             now,
-		Detail:               fmt.Sprintf("Deleted one copy of this file from %s", sr.URL),
-		Outcome:              constants.StatusSuccess,
-		OutcomeDetail:        outcomeDetail,
-		Object:               "preservation-services + Minio S3 client",
-		Agent:                constants.S3ClientName,
-		OutcomeInformation:   outcomeInfo,
-		InstitutionID:        gf.InstitutionID,
-		IntellectualObjectID: gf.IntellectualObjectID,
-		GenericFileID:        gf.ID,
-		CreatedAt:            now,
-		UpdatedAt:            now,
-	}
-
-	// If recording the deletion PREMIS event fails with a 502,
-	// then we won't be able to change the GenericFile state to "D".
-	// 502s occur sporadically when Pharos is so busy that Nginx
-	// can't forward the request. See https://trello.com/c/pI16xrcD
-	// for this particular ticket.
-	//
-	// TODO: This was a problem in Pharos. It may not be in Registry.
-	var resp *network.RegistryResponse
-	for i := 0; i < 3; i++ {
-		resp = m.Context.RegistryClient.PremisEventSave(event)
-		if resp.Response.StatusCode != http.StatusBadGateway {
-			break
-		}
-		time.Sleep(1 * time.Second)
-	}
-	return resp.Error
 }
 
 // markObjectDeleted tells Registry that this object has been deleted in its

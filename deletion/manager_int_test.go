@@ -161,7 +161,7 @@ func testFileDeletionEvents(t *testing.T, context *common.Context, gfID int64) {
 	deletionEvents := resp.PremisEvents()
 	// One event for each copy deletion, plus one signalling
 	// that all copies have been deleted.
-	assert.Equal(t, 11, len(deletionEvents))
+	assert.Equal(t, 1, len(deletionEvents))
 	for _, event := range deletionEvents {
 		// Deletion manager and Registry internal log slighly different messages.
 		// The second is for Registry internal, indicating deletion of all copies.
@@ -184,9 +184,7 @@ func testObjectDeletionEvent(t *testing.T, context *common.Context) {
 	require.Nil(t, resp.Error)
 
 	// There should be one deletion event for the object,
-	// and eleven for each file (one for each of the ten copies
-	// of the file, which we copied to all ten buckets, and one
-	// for the overall deletion).
+	// and one for each file.
 	objCount := 0
 	fileCount := 0
 	for _, event := range resp.PremisEvents() {
@@ -197,7 +195,7 @@ func testObjectDeletionEvent(t *testing.T, context *common.Context) {
 		}
 	}
 	assert.Equal(t, 1, objCount)
-	assert.Equal(t, 33, fileCount)
+	assert.Equal(t, 3, fileCount)
 }
 
 func prepareForTest(t *testing.T, context *common.Context) {
