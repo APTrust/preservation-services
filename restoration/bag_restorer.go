@@ -2,8 +2,10 @@ package restoration
 
 import (
 	"archive/tar"
+	"bytes"
 	ctx "context"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"strconv"
@@ -11,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
@@ -164,6 +167,7 @@ func (r *BagRestorer) initUploader() {
 // restoreAllPreservedFiles restores all files from the preservation bucket
 // to the restoration bucket in the form of a tar archive.
 func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*service.ProcessingError) {
+	isObjectRestoration := r.RestorationObject.RestorationType == constants.RestorationTypeObject
 	fileCount = 0
 	pageNumber := 1
 	for {
@@ -173,7 +177,13 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 			return fileCount, errors
 		}
 		for _, gf := range files {
-			digests, err := r.AddToTarFile(gf)
+			var digests map[string]string
+			filename, _ := gf.PathInBag()
+			if isObjectRestoration && filename == "bag-info.txt" {
+				digests, err = r.RewriteBagInfo(gf)
+			} else {
+				digests, err = r.AddToTarFile(gf)
+			}
 			if err != nil {
 				r.Context.Logger.Errorf("Error adding %s: %v", gf.Identifier, err)
 				errors = append(errors, r.Error(gf.Identifier, err, true))
@@ -181,11 +191,15 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 			} else {
 				r.Context.Logger.Infof("Added %s", gf.Identifier)
 			}
-			err = r.RecordDigests(gf, digests)
-			if err != nil {
-				r.Context.Logger.Errorf("Error recording digests for %s: %v", gf.Identifier, err)
-				errors = append(errors, r.Error(gf.Identifier, err, true))
-				return fileCount, errors
+			// Verify checksums on all files, except bag-info.txt. That one will not
+			// match what's in the registry, because we've rewritten it.
+			if !isObjectRestoration || (isObjectRestoration && filename != "bag-info.txt") {
+				err = r.RecordDigests(gf, digests)
+				if err != nil {
+					r.Context.Logger.Errorf("Error recording digests for %s: %v", gf.Identifier, err)
+					errors = append(errors, r.Error(gf.Identifier, err, true))
+					return fileCount, errors
+				}
 			}
 			fileCount++
 		}
@@ -404,20 +418,121 @@ func (r *BagRestorer) _addManifest(manifestFile, manifestType string) error {
 // AddToTarFile adds a GenericFile to the TarPipeWriter. The contents
 // go through the TarPipeWriter to restoration bucket.
 func (r *BagRestorer) AddToTarFile(gf *registry.GenericFile) (digests map[string]string, err error) {
-	digests = make(map[string]string)
-	b, _, err := BestRestorationSource(r.Context, gf)
+	obj, digests, err := r.getS3Object(gf)
 	if err != nil {
 		return digests, err
 	}
-	r.Context.Logger.Infof("Getting %s from %s with UUID %s", gf.Identifier, b.Bucket, gf.UUID)
-	client := r.Context.S3Clients[b.Provider]
-	obj, err := client.GetObject(ctx.Background(), b.Bucket, gf.UUID, minio.GetObjectOptions{})
+	defer obj.Close()
+	// Add header and file data to tarPipeWriter
+	tarHeader := r.GetTarHeader(gf)
+	return r.tarPipeWriter.AddFile(tarHeader, obj, r.RestorationObject.ManifestAlgorithms())
+}
+
+// RewriteBagInfo updates this bag's bag-info.txt file. Depositors want
+// us to preserve this file because it often contains meaningful information
+// that helps with local restoration. However, we need to rewrite outdated
+// tag values when we restore. Specifically:
+//
+// 1. Payload-Oxum. If the depositor added or deleted files after the initial
+// ingest of this bag, the file count and byte count of the Payload-Oxum will
+// not match what's in the restored bag, and validators will reject the bag as
+// invalid. Payload-Oxum must match what we're actually restoring.
+//
+// 2. Bagging-Software. The original bag was not made with our restoration
+// bagger. The restored bag is.
+//
+// 3. Bagging-Date. This should be set to today, not to the original bag date.
+//
+// 4. Bag-Size. This may have changed if files were added or deleted after
+// initial ingest.
+//
+// We can preserve the original tags by prepending "Original-" to their names.
+func (r *BagRestorer) RewriteBagInfo(gf *registry.GenericFile) (digests map[string]string, err error) {
+	obj, digests, err := r.getS3Object(gf)
 	if err != nil {
 		return digests, err
 	}
 	defer obj.Close()
 
-	// Add header and file data to tarPipeWriter
+	// Normally, it would be dangerous to read an S3 object into a buffer
+	// because it could run us out of memory. However, bag-info.txt files
+	// tend to be < 1kb in size, maxing out at around 20kb.
+	buf := make([]byte, gf.Size)
+	n, err := obj.Read(buf)
+	if n != int(gf.Size) {
+		return digests, fmt.Errorf("during restoration, error reading bag-info.txt from preservation bucket: read only %d of %d bytes", n, gf.Size)
+	}
+	if err != nil && err != io.EOF {
+		return digests, fmt.Errorf("during restoration, error reading bag-info.txt from preservation bucket: %v", err)
+	}
+	reader := bytes.NewReader(buf)
+	tags, err := bagit.ParseTagFile(reader, "bag-info.txt")
+
+	resp := r.Context.RegistryClient.IntellectualObjectByID(r.RestorationObject.ItemID)
+	if resp.Error != nil {
+		return digests, fmt.Errorf("error during bag-info.txt rewrite: %v", resp.Error)
+	}
+	intelObj := resp.IntellectualObject()
+	newTags := RewriteTags(tags, intelObj.Size, intelObj.FileCount)
+
+	// Write tags out to string or buffer that supports Read() and Seek()
+	readSeeker, byteCount := TagsToReadSeeker(newTags)
+
+	// Now add it and the header to tarPipeWriter. We have to alter
+	// gf.Size before we get the tar header, because our rewritten tag
+	// file is longer than the original. And be sure to reset gf.Size
+	// afterward, so we don't accidentally persist incorrect data to
+	// Redis or the Registry DB.
+	oldSize := gf.Size
+	gf.Size = byteCount
+	defer func() { gf.Size = oldSize }()
 	tarHeader := r.GetTarHeader(gf)
-	return r.tarPipeWriter.AddFile(tarHeader, obj, r.RestorationObject.ManifestAlgorithms())
+	return r.tarPipeWriter.AddFile(tarHeader, readSeeker, r.RestorationObject.ManifestAlgorithms())
+}
+
+func RewriteTags(tags []*bagit.Tag, objSize, fileCount int64) []*bagit.Tag {
+	oxum := fmt.Sprintf("%d.%d", objSize, fileCount)
+	originalTags := make([]*bagit.Tag, 0)
+	for _, tag := range tags {
+		if tag.TagName == "Payload-Oxum" {
+			originalTags = append(originalTags, bagit.NewTag("bag-info.txt", "Original-Payload-Oxum", tag.Value))
+			tag.Value = oxum
+		} else if tag.TagName == "Bagging-Date" {
+			originalTags = append(originalTags, bagit.NewTag("bag-info.txt", "Original-Bagging-Date", tag.Value))
+			tag.Value = time.Now().UTC().Format(time.RFC3339)
+		} else if tag.TagName == "Bag-Size" {
+			originalTags = append(originalTags, bagit.NewTag("bag-info.txt", "Original-Bag-Size", tag.Value))
+			tag.Value = util.ToHumanSize(objSize)
+		} else if tag.TagName == "Bagging-Software" {
+			originalTags = append(originalTags, bagit.NewTag("bag-info.txt", "Original-Bagging-Software", tag.Value))
+			tag.Value = constants.RestorationBaggingSoftware
+		}
+	}
+	return append(tags, originalTags...)
+}
+
+// TagsToReadSeeker converts a slice of Tags to a ReadSeeker that we can
+// use to copy data into our tar file. This also returns the length of
+// the newly serialized tags.
+func TagsToReadSeeker(tags []*bagit.Tag) (io.ReadSeeker, int64) {
+	lines := make([]string, len(tags))
+	for i, tag := range tags {
+		lines[i] = fmt.Sprintf("%s: %s", tag.TagName, tag.Value)
+	}
+	serializedTags := strings.Join(lines, "\n")
+	return strings.NewReader(serializedTags), int64(len([]byte(serializedTags)))
+}
+
+// getS3Object returns a *minio.Object and digest map for the specified
+// GenericFile, so we can stream it to wherever it needs to go.
+func (r *BagRestorer) getS3Object(gf *registry.GenericFile) (obj *minio.Object, digests map[string]string, err error) {
+	digests = make(map[string]string)
+	b, _, err := BestRestorationSource(r.Context, gf)
+	if err != nil {
+		return nil, digests, err
+	}
+	r.Context.Logger.Infof("Getting %s from %s with UUID %s", gf.Identifier, b.Bucket, gf.UUID)
+	client := r.Context.S3Clients[b.Provider]
+	obj, err = client.GetObject(ctx.Background(), b.Bucket, gf.UUID, minio.GetObjectOptions{})
+	return obj, digests, err
 }

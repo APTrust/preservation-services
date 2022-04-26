@@ -221,3 +221,18 @@ func EstimatedChunkSize(totalSize float64) uint64 {
 
 	return uint64(math.Ceil(size))
 }
+
+// ToHumanSize returns size in human-readable format.
+func ToHumanSize(size int64) string {
+	sizes := []string{"Bytes", "KB", "MB", "GB", "TB"}
+	hs := float64(size)
+	i := 0
+	suffix := ""
+	for i, suffix = range sizes {
+		hs = float64(size) / math.Pow(1024, float64(i))
+		if hs < 1024 {
+			break
+		}
+	}
+	return fmt.Sprintf("%.2f %s", hs, suffix)
+}

@@ -78,6 +78,7 @@ const (
 	RegionWasabiUSEast1        = "us-east-1" // Wasabi Virginia
 	RegionWasabiUSEast2        = "us-east-2" // Wasabi Virginia (2)
 	RegionWasabiUSWest1        = "us-west-1" // Wasabi Oregon
+	RestorationBaggingSoftware = "APTrust preservation-services restoration bagger"
 	RestorationSourceGlacier   = "glacier"
 	RestorationSourceS3        = "s3"
 	RestorationTypeFile        = "file"

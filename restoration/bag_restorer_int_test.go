@@ -6,10 +6,13 @@ package restoration_test
 import (
 	ctx "context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"path"
+	"strings"
 	"testing"
 
+	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
@@ -25,7 +28,7 @@ import (
 
 var bagRestorerSetupCompleted = false
 
-// const workItemID = 334455
+// These ids are in the test fixture data
 const aptrustObject = "test.edu/apt-test-restore"
 const btrObject = "test.edu/btr-512-test-restore"
 
@@ -199,6 +202,20 @@ func testRestoredBag(t *testing.T, context *common.Context, item RestorationItem
 
 	assert.Equal(t, len(expectedFiles), fileCount)
 
+	// Quick spot check: make sure tag rewrite occurred.
+	// We test the content of these rewrites elsewhere.
+	foundOriginal := false
+	foundReplacement := false
+	for _, tag := range m.IngestObject.Tags {
+		if tag.TagName == "Original-Payload-Oxum" {
+			foundOriginal = true
+		} else if tag.TagName == "Payload-Oxum" {
+			foundReplacement = true
+		}
+	}
+	assert.True(t, foundOriginal, "bag-info.txt is missing Original-Payload-Oxum")
+	assert.True(t, foundReplacement, "bag-info.txt is missing replacement Payload-Oxum")
+
 	// Validate the bag
 	v := ingest.NewMetadataValidator(context, item.WorkItemID, ingestObj)
 	fileCount, errors = v.Run()
@@ -226,8 +243,8 @@ func testExpectedFiles(t *testing.T, context *common.Context, item RestorationIt
 func testBestRestorationSource(t *testing.T, r *restoration.BagRestorer) {
 	gf := &registry.GenericFile{
 		StorageRecords: []*registry.StorageRecord{
-			&registry.StorageRecord{URL: "https://s3.us-east-1.localhost:9899/preservation-va/file.txt"},
-			&registry.StorageRecord{URL: "https://s3.us-west-2.localhost:9899/preservation-or/file.txt"},
+			{URL: "https://s3.us-east-1.localhost:9899/preservation-va/file.txt"},
+			{URL: "https://s3.us-west-2.localhost:9899/preservation-or/file.txt"},
 		},
 	}
 	preservationBucket, _, err := restoration.BestRestorationSource(r.Context, gf)
@@ -247,4 +264,49 @@ func testCleanup(t *testing.T, r *restoration.BagRestorer) {
 func testRestorationURL(t *testing.T, restObj *service.RestorationObject) {
 	expectedURL := fmt.Sprintf("%s%s/%s.tar", constants.AWSBucketPrefix, restObj.RestorationTarget, restObj.Identifier)
 	assert.Equal(t, expectedURL, restObj.URL)
+}
+
+func TestRewriteTags(t *testing.T) {
+	tags := []*bagit.Tag{
+		{
+			TagFile: "bag-info.txt",
+			TagName: "Payload-Oxum",
+			Value:   "1234.5",
+		},
+		{
+			TagFile: "bag-info.txt",
+			TagName: "Bagging-Date",
+			Value:   "2022-04-26",
+		},
+		{
+			TagFile: "bag-info.txt",
+			TagName: "Bagging-Software",
+			Value:   "The Legend of Baggy Pants",
+		},
+		{
+			TagFile: "bag-info.txt",
+			TagName: "Bag-Size",
+			Value:   "1.04 K",
+		},
+		{
+			TagFile: "bag-info.txt",
+			TagName: "Spongebob",
+			Value:   "Squarepants",
+		},
+	}
+	newTags := restoration.RewriteTags(tags, 345000, 12)
+	readSeeker, size := restoration.TagsToReadSeeker(newTags)
+	assert.EqualValues(t, 311, size)
+	buf := new(strings.Builder)
+	_, err := io.Copy(buf, readSeeker)
+	require.Nil(t, err)
+	str := buf.String()
+	assert.Contains(t, str, "Payload-Oxum: 345000.12")
+	assert.Contains(t, str, "Original-Payload-Oxum: 1234.5")
+	assert.Contains(t, str, "Bagging-Date: ")
+	assert.Contains(t, str, "Original-Bagging-Date: 2022-04-26")
+	assert.Contains(t, str, "Bagging-Software: APTrust preservation-services restoration bagger")
+	assert.Contains(t, str, "Original-Bagging-Software: The Legend of Baggy Pants")
+	assert.Contains(t, str, "Bag-Size: 336.91 KB")
+	assert.Contains(t, str, "Original-Bag-Size: 1.04 K")
 }
