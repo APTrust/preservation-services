@@ -25,7 +25,7 @@ import (
 
 var bagRestorerSetupCompleted = false
 
-// const workItemID = 334455
+// These ids are in the test fixture data
 const aptrustObject = "test.edu/apt-test-restore"
 const btrObject = "test.edu/btr-512-test-restore"
 

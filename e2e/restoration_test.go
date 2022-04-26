@@ -96,7 +96,12 @@ func validateBag(objIdentifier string) {
 		require.NotNil(ctx.T, restoredFileSha256, gf.Identifier)
 
 		// Make sure the restored version was the LATEST version
-		assert.Equal(ctx.T, RegistryLatestSha256.Digest, restoredFileSha256.Digest, gf.Identifier)
+		// But we can't know the fixity values of restored bag-info.txt
+		// files because we rewrite those during restoration. 
+		filename, _ := gf.PathInBag()
+		if filename != "bag-info.txt" {
+			assert.Equal(ctx.T, RegistryLatestSha256.Digest, restoredFileSha256.Digest, gf.Identifier)
+		}
 	}
 }
 
