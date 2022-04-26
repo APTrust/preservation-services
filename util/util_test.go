@@ -1,12 +1,13 @@
 package util_test
 
 import (
-	"github.com/APTrust/preservation-services/util"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/APTrust/preservation-services/util"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStringListContains(t *testing.T) {
@@ -323,4 +324,12 @@ func TestEstimatedChunkSize(t *testing.T) {
 	// 100 MB total size -> ~5 MB chunks
 	assert.Equal(t, uint64(5242880), util.EstimatedChunkSize(float64(100*mb)))
 
+}
+
+func TestToHumanSize(t *testing.T) {
+	assert.Equal(t, "818.00 Bytes", util.ToHumanSize(818))
+	assert.Equal(t, "872.43 KB", util.ToHumanSize(893367))
+	assert.Equal(t, "36.77 MB", util.ToHumanSize(38555662))
+	assert.Equal(t, "517.40 GB", util.ToHumanSize(555555555556))
+	assert.Equal(t, "31.44 TB", util.ToHumanSize(34567893456789))
 }
