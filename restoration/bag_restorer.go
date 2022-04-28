@@ -473,7 +473,7 @@ func (r *BagRestorer) RewriteBagInfo(gf *registry.GenericFile) (digests map[stri
 		return digests, fmt.Errorf("error during bag-info.txt rewrite: %v", resp.Error)
 	}
 	intelObj := resp.IntellectualObject()
-	newTags := RewriteTags(tags, intelObj.Size, intelObj.FileCount)
+	newTags := RewriteTags(tags, intelObj.PayloadSize, intelObj.PayloadFileCount)
 
 	// Write tags out to string or buffer that supports Read() and Seek()
 	readSeeker, byteCount := TagsToReadSeeker(newTags)

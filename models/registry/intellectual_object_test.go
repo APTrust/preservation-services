@@ -26,15 +26,17 @@ var obj = &registry.IntellectualObject{
 	InstitutionID:             301,
 	InternalSenderDescription: "int-sender-desc",
 	InternalSenderIdentifier:  "int-sender-ident",
-	Size:                      int64(8088),
+	Size:                      8088,
 	SourceOrganization:        "Test University",
 	State:                     "A",
 	StorageOption:             constants.StorageWasabiOR,
 	Title:                     "Thirteen Ways of Looking at a Blackbird",
 	UpdatedAt:                 testutil.Bloomsday,
+	PayloadFileCount:          18,
+	PayloadSize:               7900,
 }
 
-var objJson = `{"access":"consortia","alt_identifier":"alt-1234","bag_group_identifier":"group-1","bagit_profile_identifier":"https://example.com/profile.json","bag_name":"BagOfTricks","created_at":"1904-06-16T15:04:05Z","description":"Bag of tricks","etag":"987654","file_count":19,"size":8088,"id":28,"identifier":"test.edu/BagOfTricks","internal_sender_description":"int-sender-desc","internal_sender_identifier":"int-sender-ident","institution_identifier":"test.edu","institution_id":301,"source_organization":"Test University","state":"A","storage_option":"Wasabi-OR","title":"Thirteen Ways of Looking at a Blackbird","updated_at":"1904-06-16T15:04:05Z"}`
+var objJson = `{"access":"consortia","alt_identifier":"alt-1234","bag_group_identifier":"group-1","bagit_profile_identifier":"https://example.com/profile.json","bag_name":"BagOfTricks","created_at":"1904-06-16T15:04:05Z","description":"Bag of tricks","etag":"987654","file_count":19,"size":8088,"id":28,"identifier":"test.edu/BagOfTricks","internal_sender_description":"int-sender-desc","internal_sender_identifier":"int-sender-ident","institution_identifier":"test.edu","institution_id":301,"payload_file_count":18,"payload_size":7900,"source_organization":"Test University","state":"A","storage_option":"Wasabi-OR","title":"Thirteen Ways of Looking at a Blackbird","updated_at":"1904-06-16T15:04:05Z"}`
 
 func TestIntellectualObjectFromJson(t *testing.T) {
 	intelObj, err := registry.IntellectualObjectFromJSON([]byte(objJson))

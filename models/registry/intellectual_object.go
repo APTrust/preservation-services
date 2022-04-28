@@ -24,6 +24,8 @@ type IntellectualObject struct {
 	InternalSenderIdentifier  string    `json:"internal_sender_identifier"`
 	InstitutionIdentifier     string    `json:"institution_identifier"`
 	InstitutionID             int64     `json:"institution_id"`
+	PayloadFileCount          int64     `json:"payload_file_count"`
+	PayloadSize               int64     `json:"payload_size"`
 	SourceOrganization        string    `json:"source_organization"`
 	State                     string    `json:"state"`
 	StorageOption             string    `json:"storage_option"`
