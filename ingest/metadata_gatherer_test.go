@@ -224,3 +224,35 @@ func TestStorageOptionIsSetCorrectly(t *testing.T) {
 		assert.Equal(t, bag.StorageOption, obj.StorageOption)
 	}
 }
+
+// This bag contains an incorrect BTR BagIt Profile URL, generated
+// by an older version of DART. We expect to run across this in
+// production, as many depositors have older DART software.
+var keyToBTRProfileBag = "btr-bad-profile-identifier.tar"
+var pathToBTRProfileBag = testutil.PathToUnitTestBag(keyToBTRProfileBag)
+var btrProfileBagMd5 = "cee12a705ff053c5fc34b3d77d66808a"
+var btrProfileBagSize = int64(43520)
+
+func TestBadBTRIdentifier(t *testing.T) {
+	// btr-bad-profile-identifier.tar
+
+	context := common.NewContext()
+	setupS3(t, context, keyToBTRProfileBag, pathToBTRProfileBag)
+	obj := getIngestObject(pathToBTRProfileBag, btrProfileBagMd5)
+	g := ingest.NewMetadataGatherer(context, 225589, obj)
+
+	fileCount, errors := g.Run()
+	require.Empty(t, errors)
+	assert.True(t, fileCount > 0)
+
+	// We're only testing to see that the bad profile identifier was fixed.
+	// Bad value "https://raw.githubusercontent.com/APTrust/dart/master/profiles/btr-v0.1.json"
+	// should be replaced with good value, constants.BTRProfileIdentifier
+	for _, tag := range g.IngestObject.Tags {
+		if tag.TagName == "BagIt-Profile-Identifier" && tag.TagFile == "bag-info.txt" {
+			assert.Equal(t, constants.BTRProfileIdentifier, tag.Value)
+			break
+		}
+	}
+
+}

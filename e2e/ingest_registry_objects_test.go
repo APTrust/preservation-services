@@ -4,6 +4,9 @@
 package e2e_test
 
 import (
+	"strings"
+
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,7 +41,16 @@ func testObjAgainstExpected(RegistryObj, expectedObj *registry.IntellectualObjec
 	assert.Equal(t, RegistryObj.State, expectedObj.State, expectedObj.Identifier)
 	assert.Equal(t, RegistryObj.BagGroupIdentifier, expectedObj.BagGroupIdentifier, expectedObj.Identifier)
 	assert.Equal(t, RegistryObj.StorageOption, expectedObj.StorageOption, expectedObj.Identifier)
-	assert.Equal(t, RegistryObj.BagItProfileIdentifier, expectedObj.BagItProfileIdentifier, expectedObj.Identifier)
+
+	// Special - Part of https://trello.com/c/k14P6teL/924-filter-by-btr-bagit-profile-not-working
+	// BTR test bags contain bad BTR profile identifier from DART.
+	// These identifiers should be corrected during ingest to match constants.BTRProfileIdentifier.
+	if strings.Contains(RegistryObj.Identifier, "btr") {
+		assert.Equal(t, RegistryObj.BagItProfileIdentifier, constants.BTRProfileIdentifier, expectedObj.Identifier)
+	} else {
+		assert.Equal(t, RegistryObj.BagItProfileIdentifier, expectedObj.BagItProfileIdentifier, expectedObj.Identifier)
+	}
+
 	assert.Equal(t, RegistryObj.SourceOrganization, expectedObj.SourceOrganization, expectedObj.Identifier)
 	assert.Equal(t, RegistryObj.InternalSenderIdentifier, expectedObj.InternalSenderIdentifier, expectedObj.Identifier)
 	assert.Equal(t, RegistryObj.InternalSenderDescription, expectedObj.InternalSenderDescription, expectedObj.Identifier)
