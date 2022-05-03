@@ -1,5 +1,5 @@
 Resources:
-  
+
 #  PrefetchScale:
 #    Type: AWS::ApplicationAutoScaling::ScalableTarget
 #    Properties:
@@ -20,7 +20,7 @@ Resources:
 #          PredefinedMetricType: ECSServiceAverageCPUUtilization
 #        TargetValue: 90.0
 
-  
+
 #  FormatIDScale:
 #    Type: AWS::ApplicationAutoScaling::ScalableTarget
 #    Properties:
@@ -37,10 +37,10 @@ Resources:
 #      PolicyType: TargetTrackingScaling # Required
 #     ScalingTargetId: !Ref FormatIDScale
 #      TargetTrackingScalingPolicyConfiguration:
-#        PredefinedMetricSpecification: 
+#        PredefinedMetricSpecification:
 #          PredefinedMetricType: ECSServiceAverageMemoryUtilization
 #        TargetValue: 90.0
-#  
+#
 #  StageUploadScale:
 #    Type: AWS::ApplicationAutoScaling::ScalableTarget
 #    Properties:
@@ -57,17 +57,17 @@ Resources:
 #      PolicyType: TargetTrackingScaling # Required
 #      ScalingTargetId: !Ref StageUploadScale
 #      TargetTrackingScalingPolicyConfiguration:
-#        PredefinedMetricSpecification: 
+#        PredefinedMetricSpecification:
 #          PredefinedMetricType: ECSServiceAverageCPUUtilization
 #        TargetValue: 90.0
 #  StageUpload2Policy:
 #    Type: AWS::ApplicationAutoScaling::ScalingPolicy
 #    Properties:
 #      PolicyName: staging_uploader_memory_target # Required
-#      PolicyType: TargetTrackingScaling # Required 
+#      PolicyType: TargetTrackingScaling # Required
 #      ScalingTargetId: !Ref StageUploadScale
 #      TargetTrackingScalingPolicyConfiguration:
-#        PredefinedMetricSpecification: 
+#        PredefinedMetricSpecification:
 #          PredefinedMetricType: ECSServiceAverageMemoryUtilization
 #        TargetValue: 90.0
 #
@@ -87,7 +87,7 @@ Resources:
 #      PolicyType: TargetTrackingScaling # Required
 #      ScalingTargetId: !Ref PreservUploadScale
 #      TargetTrackingScalingPolicyConfiguration:
-#       PredefinedMetricSpecification: 
+#       PredefinedMetricSpecification:
 #         PredefinedMetricType: ECSServiceAverageCPUUtilization
 #        TargetValue: 90.0
 #  PreservUpload2Policy:
@@ -97,10 +97,10 @@ Resources:
 #      PolicyType: TargetTrackingScaling # Required
 #      ScalingTargetId: !Ref PreservUploadScale
 #      TargetTrackingScalingPolicyConfiguration:
-#        PredefinedMetricSpecification: 
+#        PredefinedMetricSpecification:
 #          PredefinedMetricType: ECSServiceAverageMemoryUtilization
 #        TargetValue: 90.0
-        
+
   AptdeleteService:
     Properties:
       Cluster:
@@ -174,7 +174,7 @@ Resources:
           ContainerName: Aptdelete_ResolvConf_InitContainer
         Secrets:
         - Name: MAX_DAYS_SINCE_LAST_FIXITY
-          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY 
+          ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/MAX_DAYS_SINCE_LAST_FIXITY
         - Name: LOG_DIR
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/LOG_DIR
         - Name: APT_DELETE_BUFFER_SIZE
@@ -283,7 +283,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_delete:e9b8c3d-master
+        Image: docker.io/aptrust/apt_delete:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -506,7 +506,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_fixity:e9b8c3d-master
+        Image: docker.io/aptrust/apt_fixity:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -729,7 +729,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_queue:e9b8c3d-master
+        Image: docker.io/aptrust/apt_queue:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -952,7 +952,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_queue_fixity:e9b8c3d-master
+        Image: docker.io/aptrust/apt_queue_fixity:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1174,7 +1174,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/bag_restorer:e9b8c3d-master
+        Image: docker.io/aptrust/bag_restorer:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1430,7 +1430,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/file_restorer:e9b8c3d-master
+        Image: docker.io/aptrust/file_restorer:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1653,7 +1653,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/glacier_restorer:e9b8c3d-master
+        Image: docker.io/aptrust/glacier_restorer:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1876,7 +1876,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_bucket_reader:e9b8c3d-master
+        Image: docker.io/aptrust/ingest_bucket_reader:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2099,7 +2099,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_cleanup:e9b8c3d-master
+        Image: docker.io/aptrust/ingest_cleanup:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2322,7 +2322,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_format_identifier:e9b8c3d-master
+        Image: docker.io/aptrust/ingest_format_identifier:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2544,7 +2544,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_pre_fetch:e9b8c3d-master
+        Image: docker.io/aptrust/ingest_pre_fetch:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2768,7 +2768,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_uploader:e9b8c3d-master
+        Image: docker.io/aptrust/ingest_preservation_uploader:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2992,7 +2992,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_verifier:e9b8c3d-master
+        Image: docker.io/aptrust/ingest_preservation_verifier:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3215,7 +3215,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_recorder:e9b8c3d-master
+        Image: docker.io/aptrust/ingest_recorder:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3438,7 +3438,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_staging_uploader:e9b8c3d-master
+        Image: docker.io/aptrust/ingest_staging_uploader:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3661,7 +3661,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_validator:e9b8c3d-master
+        Image: docker.io/aptrust/ingest_validator:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3888,7 +3888,7 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/reingest_manager:e9b8c3d-master
+        Image: docker.io/aptrust/reingest_manager:cb7dce4-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
