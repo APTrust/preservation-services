@@ -89,6 +89,10 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 		// extension-based identification on all-caps extensions lile .HTML, .PDF,
 		// etc. We seem to get a lot of these all-caps files from old Windows systems.
 		// https://trello.com/c/KDaWqqv0
+		//
+		// Looking at files in staging, this issue seems to affect only a small
+		// handful of extensions. The most common is .JPG, which does not get
+		// tagged as image/jpeg, while .jpg does.
 		identifications, err := fi.Siegfried.Identify(s3Object, strings.ToLower(ingestFile.PathInBag), "")
 
 		if err != nil {
