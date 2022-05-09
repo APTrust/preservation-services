@@ -204,25 +204,21 @@ func TestBag_TagSampleGood(t *testing.T) {
 	assert.Equal(t, 0, len(validator.Errors))
 }
 
-// Skip this for now. We want to test allowing escaped control characters
-// to see if Preserv bag validation agrees with DART bag validation.
-// https://trello.com/c/eeUsSrHK
-//
-//func TestBag_SampleIllegalControl(t *testing.T) {
-//	pathToBag := testutil.PathToUnitTestBag("test.edu.sample_illegal_control.tar")
-//	validator := setupValidatorAndObject(t,
-//		constants.BagItProfileDefault, pathToBag, "", validationID, true)
-//	assert.False(t, validator.IsValid())
-//	assert.Equal(t, 1, len(validator.Errors))
-//
-//	expected := []string{
-//		"File name 'data/datastream\\u007f.txt' contains one or more illegal control characters",
-//	}
-//
-//	for _, msg := range expected {
-//		assert.True(t, util.StringListContains(validator.Errors, msg))
-//	}
-//}
+func TestBag_SampleIllegalControl(t *testing.T) {
+	pathToBag := testutil.PathToUnitTestBag("test.edu.sample_illegal_control.tar")
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
+	assert.False(t, validator.IsValid())
+	assert.Equal(t, 1, len(validator.Errors))
+
+	expected := []string{
+		"File name 'data/datastream\\u007f.txt' contains one or more illegal control characters",
+	}
+
+	for _, msg := range expected {
+		assert.True(t, util.StringListContains(validator.Errors, msg))
+	}
+}
 
 // ------ BTR Bags ------
 
