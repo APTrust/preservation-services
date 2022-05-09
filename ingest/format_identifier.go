@@ -4,6 +4,7 @@ import (
 	ctx "context"
 	"fmt"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -83,7 +84,12 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 		// Seems we shouldn't have to, but something is causing a nil
 		// pointer exception inside of Siegfried. See Trello bug at
 		// https://trello.com/c/ctfWzXZj
-		identifications, err := fi.Siegfried.Identify(s3Object, ingestFile.PathInBag, "")
+		//
+		// Pass file name to Siegfried in lower-case because it can't do
+		// extension-based identification on all-caps extensions lile .HTML, .PDF,
+		// etc. We seem to get a lot of these all-caps files from old Windows systems.
+		// https://trello.com/c/KDaWqqv0
+		identifications, err := fi.Siegfried.Identify(s3Object, strings.ToLower(ingestFile.PathInBag), "")
 
 		if err != nil {
 			// Siegfried can encounter a number of errors,
