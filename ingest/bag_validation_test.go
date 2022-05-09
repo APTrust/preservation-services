@@ -1,12 +1,13 @@
 package ingest_test
 
 import (
+	"testing"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 // Note: In these tests, the last param to setUpValidatorAndObject
@@ -203,21 +204,25 @@ func TestBag_TagSampleGood(t *testing.T) {
 	assert.Equal(t, 0, len(validator.Errors))
 }
 
-func TestBag_SampleIllegalControl(t *testing.T) {
-	pathToBag := testutil.PathToUnitTestBag("test.edu.sample_illegal_control.tar")
-	validator := setupValidatorAndObject(t,
-		constants.BagItProfileDefault, pathToBag, "", validationID, true)
-	assert.False(t, validator.IsValid())
-	assert.Equal(t, 1, len(validator.Errors))
-
-	expected := []string{
-		"File name 'data/datastream\\u007f.txt' contains one or more illegal control characters",
-	}
-
-	for _, msg := range expected {
-		assert.True(t, util.StringListContains(validator.Errors, msg))
-	}
-}
+// Skip this for now. We want to test allowing escaped control characters
+// to see if Preserv bag validation agrees with DART bag validation.
+// https://trello.com/c/eeUsSrHK
+//
+//func TestBag_SampleIllegalControl(t *testing.T) {
+//	pathToBag := testutil.PathToUnitTestBag("test.edu.sample_illegal_control.tar")
+//	validator := setupValidatorAndObject(t,
+//		constants.BagItProfileDefault, pathToBag, "", validationID, true)
+//	assert.False(t, validator.IsValid())
+//	assert.Equal(t, 1, len(validator.Errors))
+//
+//	expected := []string{
+//		"File name 'data/datastream\\u007f.txt' contains one or more illegal control characters",
+//	}
+//
+//	for _, msg := range expected {
+//		assert.True(t, util.StringListContains(validator.Errors, msg))
+//	}
+//}
 
 // ------ BTR Bags ------
 

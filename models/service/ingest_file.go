@@ -169,8 +169,12 @@ func (f *IngestFile) GetStorageRecord(provider, bucket string) *StorageRecord {
 func (f *IngestFile) IdentifierIsLegal() (bool, error) {
 	var err error
 	identifier := f.Identifier()
-	ok := !util.ContainsControlCharacter(identifier) &&
-		!util.ContainsEscapedControl(identifier)
+	// ok := !util.ContainsControlCharacter(identifier) &&
+	//	!util.ContainsEscapedControl(identifier)
+	// Issue https://trello.com/c/eeUsSrHK -
+	// try allowing escaped control chars while still
+	// preventing raw control chars in file names.
+	ok := !util.ContainsControlCharacter(identifier)
 	if !ok {
 		err = fmt.Errorf("File name '%s' contains one or more "+
 			"illegal control characters", f.PathInBag)
