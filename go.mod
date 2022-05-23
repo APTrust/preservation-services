@@ -10,7 +10,7 @@ require (
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/nsqio/nsq v1.2.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/richardlehane/siegfried v1.9.2
+	github.com/richardlehane/siegfried v1.9.3
 	github.com/spf13/viper v1.11.0
 	github.com/stretchr/testify v1.7.1
 )
