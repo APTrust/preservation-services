@@ -86,24 +86,23 @@ Resources:
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA 
-      ServiceName: ecs-aptdelete
+      ServiceName: ecs-delete
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - AptdeleteServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: service
+      - Key: Service
         Value: preserv
       - Key: Environment
         Value: !Ref DNS
-      TaskDefinition:
-        Ref: AptdeleteTaskDefinition
+      TaskDefinition: !Ref AptdeleteTaskDefinition
     
   AptdeleteServiceDiscoveryEntry: 
     Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"apt_delete" service discovery entry in Cloud Map'
+      Description: '"aptdelete" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -111,7 +110,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: aptdelete
+      Name: delete
       NamespaceId: 
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -253,14 +252,14 @@ Resources:
           Options:
             awslogs-group: !Ref LogGroup
             awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: aptdelete
-        Name: aptdelete
+            awslogs-stream-prefix: delete
+        Name: delete
       Cpu: "256"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       TaskRoleArn: 
         Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: aptdelete
+      Family: delete
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -292,14 +291,14 @@ Resources:
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
-      ServiceName: aptfixity
+      ServiceName: ecs-fixity
       ServiceRegistries:   
       - RegistryArn:
           Fn::GetAtt:
           - AptfixityServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: service
+      - Key: Service
         Value: preserv
       - Key: Environment
         Value: !Ref "DNS"
@@ -309,7 +308,7 @@ Resources:
   AptfixityServiceDiscoveryEntry: 
     Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"apt_fixity" service discovery entry in Cloud Map'
+      Description: '"aptfixity" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -317,12 +316,12 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: aptfixity
+      Name: fixity
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
   AptfixityTaskDefinition: 
-    Type: AWS::ECS::TaskDefiniton
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
@@ -451,15 +450,15 @@ Resources:
           ValueFrom: arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_fixity:9d8b9c2-master
+        Image: docker.io/aptrust/apt_fixity:a5031e8-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
           Options:
             awslogs-group: !Ref LogGroup
             awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: aptfixity
-        Name: aptfixity
+            awslogs-stream-prefix: fixity
+        Name: fixity
       Cpu: "256"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
@@ -496,10 +495,10 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
-      PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
-      ServiceName: ecs-aptqueue
-      ServiceRegistries:
+      PropagateTags: SERVICE 
+      SchedulingStrategy: REPLICA
+      ServiceName: ecs-queue
+      ServiceRegistries:   
       - RegistryArn:
           Fn::GetAtt:
           - AptqueueServiceDiscoveryEntry
@@ -509,13 +508,12 @@ Resources:
         Value: preserv
       - Key: Environment
         Value: !Ref "DNS"
-      TaskDefinition:
-        Ref: AptqueueTaskDefinition
+      TaskDefinition: !Ref AptqueueTaskDefinition
   
   AptqueueServiceDiscoveryEntry: 
     Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"apt_queue" service discovery entry in Cloud Map'
+      Description: '"aptqueue" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -523,7 +521,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: aptqueue
+      Name: queue
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -542,7 +540,7 @@ Resources:
           Options:
             awslogs-group: !Ref LogGroup
             awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: side
+            awslogs-stream-prefix: sidecar
         Name: Aptqueue_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -665,8 +663,8 @@ Resources:
           Options:
             awslogs-group: !Ref LogGroup
             awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: aptqueue
-        Name: aptqueue
+            awslogs-stream-prefix: queue
+        Name: queue
       Cpu: "256"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
@@ -677,29 +675,9 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-  AptqueueTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: apt_queue
-    Type: AWS::IAM::Role
-  AptqueuefixityService:
+  
+  AptqueuefixityService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -716,29 +694,31 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
+      SchedulingStrategy:  REPLICA
+      ServiceName: ecs-queuefixity
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - AptqueuefixityServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: apt_queue_fixity
-      TaskDefinition:
-        Ref: AptqueuefixityTaskDefinition
-    Type: AWS::ECS::Service
-  AptqueuefixityServiceDiscoveryEntry:
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref AptqueuefixityTaskDefinition
+    
+  AptqueuefixityServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"apt_queue_fixity" service discovery entry in Cloud Map'
+      Description: '"aptqueuefixity" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -746,26 +726,26 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: apt_queue_fixity
-      NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  AptqueuefixityTaskDefinition:
+      Name: queuefixity
+      NamespaceId: 
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
+  
+  AptqueuefixityTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: Aptqueuefixity_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -886,42 +866,21 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
-        Name: apt_queue_fixity
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: aptqueuefixity
+        Name: queuefixity
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt AptqueuefixityTaskExecutionRole.Arn
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-apt_queue_fixity
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  AptqueuefixityTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: apt_queue_fixity
-    Type: AWS::IAM::Role
-  BagrestorerService:
+    
+  BagrestorerService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -938,29 +897,31 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
+      SchedulingStrategy: REPLICA 
+      ServiceName: ecs-bagrestorer
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - BagrestorerServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: bag_restorer
-      TaskDefinition:
-        Ref: BagrestorerTaskDefinition
-    Type: AWS::ECS::Service
-  BagrestorerServiceDiscoveryEntry:
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref BagrestorerTaskDefinition
+    
+  BagrestorerServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"bag_restorer" service discovery entry in Cloud Map'
+      Description: '"bagrestorer" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -968,26 +929,25 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: bag_restorer
+      Name: bagrestorer
       NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  BagrestorerTaskDefinition:
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
+  BagrestorerTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: Bagrestorer_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -1108,45 +1068,24 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
-        Name: bag_restorer
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: bagrestorer
+        Name: bagrestorer
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt BagrestorerTaskExecutionRole.Arn
-      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-bag_restorer
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  BagrestorerTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: bag_restorer
-    Type: AWS::IAM::Role
   
   
-  FilerestorerService:
+  FilerestorerService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -1163,29 +1102,31 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
+      SchedulingStrategy: REPLICA 
+      ServiceName: ecs-filerestorer
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - FilerestorerServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: file_restorer
-      TaskDefinition:
-        Ref: FilerestorerTaskDefinition
-    Type: AWS::ECS::Service
-  FilerestorerServiceDiscoveryEntry:
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref FilerestorerTaskDefinition
+    
+  FilerestorerServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"file_restorer" service discovery entry in Cloud Map'
+      Description: '"filerestorer" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -1193,26 +1134,25 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: file_restorer
-      NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  FilerestorerTaskDefinition:
+      Name: filerestorer
+      NamespaceId: 
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
+  FilerestorerTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services.local
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref: AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: Filerestorer_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -1333,43 +1273,23 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
-        Name: file_restorer
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: filerestorer
+        Name: filerestorer
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt FilerestorerTaskExecutionRole.Arn
-      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-file_restorer
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  FilerestorerTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: file_restorer
-    Type: AWS::IAM::Role
-  GlacierrestorerService:
+    
+  GlacierrestorerService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -1386,29 +1306,31 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
+      SchedulingStrategy: REPLICA 
+      ServiceName: ecs-glacierrestorer
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - GlacierrestorerServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: glacier_restorer
-      TaskDefinition:
-        Ref: GlacierrestorerTaskDefinition
-    Type: AWS::ECS::Service
-  GlacierrestorerServiceDiscoveryEntry:
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref GlacierrestorerTaskDefinition
+    
+  GlacierrestorerServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"glacier_restorer" service discovery entry in Cloud Map'
+      Description: '"glacierrestorer" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -1416,26 +1338,26 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: glacier_restorer
+      Name: glacierrestorer
       NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  GlacierrestorerTaskDefinition:
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
+  
+  GlacierrestorerTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: Glacierrestorer_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -1556,43 +1478,23 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
-        Name: glacier_restorer
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: glacierrestorer
+        Name: glacierrestorer
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt GlacierrestorerTaskExecutionRole.Arn
-      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-glacier_restorer
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  GlacierrestorerTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: glacier_restorer
-    Type: AWS::IAM::Role
-  IngestbucketreaderService:
+    
+  IngestbucketreaderService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -1609,29 +1511,31 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
+      ServiceName: ecs-ingestbucketreader
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - IngestbucketreaderServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_bucket_reader
-      TaskDefinition:
-        Ref: IngestbucketreaderTaskDefinition
-    Type: AWS::ECS::Service
-  IngestbucketreaderServiceDiscoveryEntry:
+      - Key: Environment 
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref IngestbucketreaderTaskDefinition
+    
+  IngestbucketreaderServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"ingest_bucket_reader" service discovery entry in Cloud Map'
+      Description: '"ingestbucketreader" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -1639,26 +1543,24 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingest_bucket_reader
+      Name: ingestbucketreader
       NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
   IngestbucketreaderTaskDefinition:
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:sidecar
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: Ingestbucketreader_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -1779,43 +1681,24 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
-        Name: ingest_bucket_reader
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: ingestbucketreader
+        Name: ingestbucketreader
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt IngestbucketreaderTaskExecutionRole.Arn
-      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-ingest_bucket_reader
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
     Type: AWS::ECS::TaskDefinition
-  IngestbucketreaderTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_bucket_reader
-    Type: AWS::IAM::Role
-  IngestcleanupService:
+  
+  IngestcleanupService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -1832,29 +1715,32 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
+      SchedulingStrategy: REPLICA 
+      ServiceName: ecs-ingestcleanup
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - IngestcleanupServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_cleanup
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
       TaskDefinition:
         Ref: IngestcleanupTaskDefinition
-    Type: AWS::ECS::Service
-  IngestcleanupServiceDiscoveryEntry:
+    
+  IngestcleanupServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"ingest_cleanup" service discovery entry in Cloud Map'
+      Description: '"ingestcleanup" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -1862,26 +1748,26 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingest_cleanup
+      Name: ingestcleanup
       NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  IngestcleanupTaskDefinition:
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
+  
+  IngestcleanupTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: Ingestcleanup_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -2002,43 +1888,24 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
-        Name: ingest_cleanup
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: ingestcleanup
+        Name: ingestcleanup
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt IngestcleanupTaskExecutionRole.Arn
-      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-ingest_cleanup
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  IngestcleanupTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_cleanup
-    Type: AWS::IAM::Role
-  erService:
+    
+  
+  erService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -2055,27 +1922,30 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
+      ServiceName: ecs-formatidentifier
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - erServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_format_identifier
-      TaskDefinition:
-        Ref: erTaskDefinition
-    Type: AWS::ECS::Service
-  erServiceDiscoveryEntry:
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref erTaskDefinition
+    
+  
+  erServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"ingest_format_identifier" service discovery entry in Cloud Map'
       DnsConfig:
@@ -2087,24 +1957,24 @@ Resources:
         FailureThreshold: 1
       Name: ingest_format_identifier
       NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  erTaskDefinition:
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
+  
+  erTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: er_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -2225,42 +2095,22 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: ingestformatidentifier
         Name: ingest_format_identifier
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt IngestformatidentifierTaskExecutionRole.Arn
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-ingest_format_identifier
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  IngestformatidentifierTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_format_identifier
-    Type: AWS::IAM::Role
-  IngestprefetchService:
+    
+  
+  IngestprefetchService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -2277,29 +2127,32 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
+      SchedulingStrategy: REPLICA 
+      ServiceName: ecs-ingestprefetch
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - IngestprefetchServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_pre_fetch
-      TaskDefinition:
-        Ref: IngestprefetchTaskDefinition
-    Type: AWS::ECS::Service
-  IngestprefetchServiceDiscoveryEntry:
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref IngestprefetchTaskDefinition
+    
+  
+  IngestprefetchServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"ingest_pre_fetch" service discovery entry in Cloud Map'
+      Description: '"ingestprefetch" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -2307,26 +2160,26 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingest_pre_fetch
+      Name: ingestprefetch
       NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  IngestprefetchTaskDefinition:
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
+  
+  IngestprefetchTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: Ingestprefetch_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -2447,43 +2300,25 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: ingestprefetch
         Name: ingest_pre_fetch
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt IngestprefetchTaskExecutionRole.Arn
-      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-ingest_pre_fetch
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  IngestprefetchTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_pre_fetch
-    Type: AWS::IAM::Role
-  IngestpreservationuploaderService:
+    
+  
+  
+  IngestpreservationuploaderService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -2500,29 +2335,32 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
+      SchedulingStrategy: REPLICA 
+      ServiceName: ecs-ingestuploader
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - IngestpreservationuploaderServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_preservation_uploader
-      TaskDefinition:
-        Ref: IngestpreservationuploaderTaskDefinition
-    Type: AWS::ECS::Service
-  IngestpreservationuploaderServiceDiscoveryEntry:
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref IngestpreservationuploaderTaskDefinition
+    
+  
+  IngestpreservationuploaderServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"ingest_preservation_uploader" service discovery entry in Cloud
+      Description: '"ingestpreservationuploader" service discovery entry in Cloud
         Map'
       DnsConfig:
         DnsRecords:
@@ -2531,26 +2369,26 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingest_preservation_uploader
+      Name: ingestuploader
       NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  IngestpreservationuploaderTaskDefinition:
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
+  
+  IngestpreservationuploaderTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: Ingestpreservationuploader_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -2671,43 +2509,23 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: ingestpreservuploader
         Name: ingest_preservation_uploader
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt IngestpreservationuploaderTaskExecutionRole.Arn
-      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-ingest_preservation_uploader
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  IngestpreservationuploaderTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_preservation_uploader
-    Type: AWS::IAM::Role
-  IngestpreservationverifierService:
+  
+  IngestpreservationverifierService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -2724,10 +2542,11 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -2737,16 +2556,17 @@ Resources:
           - IngestpreservationverifierServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_preservation_verifier
-      TaskDefinition:
-        Ref: IngestpreservationverifierTaskDefinition
-    Type: AWS::ECS::Service
-  IngestpreservationverifierServiceDiscoveryEntry:
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref IngestpreservationverifierTaskDefinition
+    
+  
+  IngestpreservationverifierServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"ingest_preservation_verifier" service discovery entry in Cloud
+      Description: '"ingestpreservationverifier" service discovery entry in Cloud
         Map'
       DnsConfig:
         DnsRecords:
@@ -2755,26 +2575,26 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingest_preservation_verifier
+      Name: ingestpreservationverifier
       NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  IngestpreservationverifierTaskDefinition:
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
+  
+  IngestpreservationverifierTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: Ingestpreservationverifier_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -2895,43 +2715,25 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: ingestpreservvarifier
         Name: ingest_preservation_verifier
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt IngestpreservationverifierTaskExecutionRole.Arn
-      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-ingest_preservation_verifier
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  IngestpreservationverifierTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_preservation_verifier
-    Type: AWS::IAM::Role
-  IngestrecorderService:
+    
+
+  
+  IngestrecorderService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -2948,29 +2750,32 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
+      SchedulingStrategy: REPLICA 
+      ServiceName: ecs-ingestrecorder
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - IngestrecorderServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_recorder
-      TaskDefinition:
-        Ref: IngestrecorderTaskDefinition
-    Type: AWS::ECS::Service
-  IngestrecorderServiceDiscoveryEntry:
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref IngestrecorderTaskDefinition
+    
+  
+  IngestrecorderServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"ingest_recorder" service discovery entry in Cloud Map'
+      Description: '"ingestrecorder" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -2978,26 +2783,26 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingest_recorder
+      Name: ingestrecorder
       NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  IngestrecorderTaskDefinition:
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
+  
+  IngestrecorderTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: Ingestrecorder_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -3118,43 +2923,25 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
-        Name: ingest_recorder
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: ingestrecorder
+        Name: ingestrecorder
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt IngestrecorderTaskExecutionRole.Arn
-      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-ingest_recorder
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  IngestrecorderTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_recorder
-    Type: AWS::IAM::Role
-  IngeststaginguploaderService:
+    
+  
+  
+  IngeststaginguploaderService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -3171,29 +2958,32 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
+      SchedulingStrategy: REPLICA 
+      ServiceName: ecs-staginguploader
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - IngeststaginguploaderServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_staging_uploader
-      TaskDefinition:
-        Ref: IngeststaginguploaderTaskDefinition
-    Type: AWS::ECS::Service
-  IngeststaginguploaderServiceDiscoveryEntry:
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref IngeststaginguploaderTaskDefinition
+    
+  
+  IngeststaginguploaderServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"ingest_staging_uploader" service discovery entry in Cloud Map'
+      Description: '"ingeststaginguploader" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -3201,26 +2991,26 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingest_staging_uploader
+      Name: staginguploader
       NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  IngeststaginguploaderTaskDefinition:
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
+  
+  IngeststaginguploaderTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar 
         Name: Ingeststaginguploader_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -3341,43 +3131,25 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
-        Name: ingest_staging_uploader
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: ingeststaginguploader
+        Name: staginguploader
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt IngeststaginguploaderTaskExecutionRole.Arn
-      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-ingest_staging_uploader
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  IngeststaginguploaderTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_staging_uploader
-    Type: AWS::IAM::Role
-  IngestvalidatorService:
+    
+  
+  
+  IngestvalidatorService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -3394,29 +3166,31 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
+      SchedulingStrategy: REPLICA 
+      ServiceName: ecs-ingestvalidator
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - IngestvalidatorServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_validator
-      TaskDefinition:
-        Ref: IngestvalidatorTaskDefinition
-    Type: AWS::ECS::Service
-  IngestvalidatorServiceDiscoveryEntry:
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref IngestvalidatorTaskDefinition
+  
+  IngestvalidatorServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"ingest_validator" service discovery entry in Cloud Map'
+      Description: '"ingestvalidator" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -3424,26 +3198,25 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingest_validator
+      Name: ingestvalidator
       NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  IngestvalidatorTaskDefinition:
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+      
+  IngestvalidatorTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: Ingestvalidator_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -3564,44 +3337,24 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
-        Name: ingest_validator
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: ingestvalidator
+        Name: ingestvalidator
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt IngestvalidatorTaskExecutionRole.Arn
-      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-ingest_validator
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  IngestvalidatorTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: ingest_validator
-    Type: AWS::IAM::Role
+    
   
-  ReingestmanagerService:
+  ReingestmanagerService: 
+    Type: AWS::ECS::Service
     Properties:
       Cluster:
         Fn::GetAtt:
@@ -3618,29 +3371,32 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
-          - Ref: DefaultNetwork
+          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
+          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - subnet-316bbe78
-          - subnet-a53ee38b
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
+      SchedulingStrategy: REPLICA 
+      ServiceName: ecs-reingestmanager
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - ReingestmanagerServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: reingest_manager
-      TaskDefinition:
-        Ref: ReingestmanagerTaskDefinition
-    Type: AWS::ECS::Service
-  ReingestmanagerServiceDiscoveryEntry:
+      - Key: Environment
+        Value: !Ref "DNS"
+      - Key: Service
+        Value: preserv
+      TaskDefinition: !Ref ReingestmanagerTaskDefinition
+    
+  
+  ReingestmanagerServiceDiscoveryEntry: 
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"reingest_manager" service discovery entry in Cloud Map'
+      Description: '"reingestmanager" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -3648,26 +3404,26 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: reingest_manager
+      Name: reingestmanager
       NamespaceId:
-        Ref: CloudMap
-    Type: AWS::ServiceDiscovery::Service
-  ReingestmanagerTaskDefinition:
+        Fn::ImportValue: !Sub "NameSpace-${DNS}"
+    
+  
+  ReingestmanagerTaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
       - Command:
         - us-east-1.compute.internal
-        - preservation-services
+        - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:1.0
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: sidecar
         Name: Reingestmanager_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -3788,39 +3544,20 @@ Resources:
         LogConfiguration:
           LogDriver: awslogs
           Options:
-            awslogs-group:
-              Ref: LogGroup
-            awslogs-region:
-              Ref: AWS::Region
-            awslogs-stream-prefix: preservation-services
-        Name: reingest_manager
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: reingestmanager
+        Name: reingestmanager
       Cpu: "256"
-      ExecutionRoleArn: !GetAtt ReingestmanagerTaskExecutionRole.Arn
-      TaskRoleArn: arn:aws:iam::997427182289:role/preserv-staging-poc-role
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
       Family: preservation-services-reingest_manager
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    Type: AWS::ECS::TaskDefinition
-  ReingestmanagerTaskExecutionRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Condition: {}
-          Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
-      Tags:
-      - Key: com.docker.compose.project
-        Value: preservation-services
-      - Key: com.docker.compose.service
-        Value: reingest_manager
-    Type: AWS::IAM::Role
+    
+  
+  
