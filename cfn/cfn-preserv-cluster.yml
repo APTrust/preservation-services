@@ -1,18 +1,11 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-
-
 Parameters:
   
   DNS:
     Description: Staging private Namespace
     Type: String
     Default: staging
-  
-  VPCID: 
-    Description: Staging private Namespace
-    Type: String
-    Default: vpc-apt-staging
   
   ClusterName: 
     Description: The Name of the Fargate cluster hosting Preservation Services.
@@ -110,7 +103,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: delete
+      Name: delete.preserv
       NamespaceId: 
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -256,9 +249,9 @@ Resources:
         Name: delete
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: delete
       Memory: "512"
       NetworkMode: awsvpc
@@ -316,7 +309,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: fixity
+      Name: fixity.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -461,10 +454,10 @@ Resources:
         Name: fixity
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-apt_fixity
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: aptfixity
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -521,7 +514,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: queue
+      Name: queue.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -667,10 +660,10 @@ Resources:
         Name: queue
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-apt_queue
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: aptqueue
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -726,7 +719,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: queuefixity
+      Name: queuefixity.preserv
       NamespaceId: 
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -872,8 +865,10 @@ Resources:
         Name: queuefixity
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-apt_queue_fixity
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: aptqueuefixity
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -929,7 +924,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: bagrestorer
+      Name: bagrestorer.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -1074,10 +1069,10 @@ Resources:
         Name: bagrestorer
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-bag_restorer
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: bagrestorer
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -1134,7 +1129,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: filerestorer
+      Name: filerestorer.preserv
       NamespaceId: 
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -1151,7 +1146,7 @@ Resources:
           LogDriver: awslogs
           Options:
             awslogs-group: !Ref LogGroup
-            awslogs-region: !Ref: AWS::Region
+            awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: sidecar
         Name: Filerestorer_ResolvConf_InitContainer
       - DependsOn:
@@ -1279,10 +1274,10 @@ Resources:
         Name: filerestorer
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-file_restorer
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: filerestorer
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -1338,7 +1333,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: glacierrestorer
+      Name: glacierrestorer.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -1484,10 +1479,10 @@ Resources:
         Name: glacierrestorer
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-glacier_restorer
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: glacierrestorer
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -1543,7 +1538,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingestbucketreader
+      Name: bucketreader.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -1554,7 +1549,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:sidecar
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -1683,14 +1678,14 @@ Resources:
           Options:
             awslogs-group: !Ref LogGroup
             awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: ingestbucketreader
-        Name: ingestbucketreader
+            awslogs-stream-prefix: bucketreader
+        Name: bucketreader
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-ingest_bucket_reader
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: ingestbucketreader
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -1748,7 +1743,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingestcleanup
+      Name: ingestcleanup.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -1894,10 +1889,10 @@ Resources:
         Name: ingestcleanup
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-ingest_cleanup
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: ingestcleanup
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -1947,7 +1942,7 @@ Resources:
   erServiceDiscoveryEntry: 
     Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: '"ingest_format_identifier" service discovery entry in Cloud Map'
+      Description: '"ingestformatidentifier" service discovery entry in Cloud Map'
       DnsConfig:
         DnsRecords:
         - TTL: 60
@@ -1955,7 +1950,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingest_format_identifier
+      Name: formatidentifier.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -2098,11 +2093,13 @@ Resources:
             awslogs-group: !Ref LogGroup
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: ingestformatidentifier
-        Name: ingest_format_identifier
+        Name: formatidentifier
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-ingest_format_identifier
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: formatidentifier
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -2135,7 +2132,7 @@ Resources:
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA 
-      ServiceName: ecs-ingestprefetch
+      ServiceName: ecs-prefetch
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
@@ -2160,7 +2157,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingestprefetch
+      Name: prefetch.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -2302,14 +2299,14 @@ Resources:
           Options:
             awslogs-group: !Ref LogGroup
             awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: ingestprefetch
-        Name: ingest_pre_fetch
+            awslogs-stream-prefix: prefetch
+        Name: prefetch
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-ingest_pre_fetch
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: prefetch
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -2369,7 +2366,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingestuploader
+      Name: ingestuploader.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -2511,14 +2508,14 @@ Resources:
           Options:
             awslogs-group: !Ref LogGroup
             awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: ingestpreservuploader
-        Name: ingest_preservation_uploader
+            awslogs-stream-prefix: ingestuploader
+        Name: ingestuploader
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-ingest_preservation_uploader
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: ingestuploader
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -2549,7 +2546,8 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
+      SchedulingStrategy: REPLICA 
+      ServiceName: ecs-ingestverifier
       ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
@@ -2575,7 +2573,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingestpreservationverifier
+      Name: ingestverifier.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -2717,20 +2715,18 @@ Resources:
           Options:
             awslogs-group: !Ref LogGroup
             awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: ingestpreservvarifier
-        Name: ingest_preservation_verifier
+            awslogs-stream-prefix: ingestverifier
+        Name: ingestverifier
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-ingest_preservation_verifier
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: ingestverifier
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-
   
   IngestrecorderService: 
     Type: AWS::ECS::Service
@@ -2783,7 +2779,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingestrecorder
+      Name: ingestrecorder.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -2929,10 +2925,10 @@ Resources:
         Name: ingestrecorder
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-ingest_recorder
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: ingestrecorder
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -2991,7 +2987,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: staginguploader
+      Name: staginguploader.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -3133,14 +3129,14 @@ Resources:
           Options:
             awslogs-group: !Ref LogGroup
             awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: ingeststaginguploader
+            awslogs-stream-prefix: staginguploader
         Name: staginguploader
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-ingest_staging_uploader
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: staginguploader
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -3198,7 +3194,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: ingestvalidator
+      Name: ingestvalidator.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
       
@@ -3343,10 +3339,10 @@ Resources:
         Name: ingestvalidator
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
-      Family: preservation-services-ingest_validator
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
+      Family: ingestvalidator
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -3404,7 +3400,7 @@ Resources:
         RoutingPolicy: MULTIVALUE
       HealthCheckCustomConfig:
         FailureThreshold: 1
-      Name: reingestmanager
+      Name: reingestmanager.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
     
@@ -3550,9 +3546,9 @@ Resources:
         Name: reingestmanager
       Cpu: "256"
       ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
-        Fn::ImportValue: !Sub "NSQTaskRole-${DNS}"
+        Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: preservation-services-reingest_manager
       Memory: "512"
       NetworkMode: awsvpc
