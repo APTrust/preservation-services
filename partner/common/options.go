@@ -19,14 +19,9 @@ type Options struct {
 	APTrustAPIKey string
 	// APTrustAPIKeyFrom tells whether the API key came from the config
 	// file or the environment.
-	APTrustAPIKeyFrom string
-	// APTrustAPIKey is the user email address to connect to APTrust REST API.
 	APTrustAPIUser string
 	// APTrustAPIUserFrom tells whether the API user came from the config
 	// file or the environment.
-	APTrustAPIUserFrom string
-	// ETag is the etag of an S3 upload. This is for tools that look up
-	// bags by etag.
 	ETag string
 	// SecretAccessKey is the AWS Secret Access Key used to access your
 	// S3 bucket.
@@ -45,16 +40,16 @@ type Options struct {
 // VerifyOutputFormat makes sure the user specified a valid output format.
 func (opts *Options) VerifyOutputFormat() {
 	if opts.OutputFormat != "text" && opts.OutputFormat != "json" {
-		opts.addError("Param -format must be either 'text' or 'json'")
+		opts.AddError("Param -format must be either 'text' or 'json'")
 	}
 }
 
 func (opts *Options) VerifyRequiredAPICredentials() {
 	if opts.APTrustAPIUser == "" {
-		opts.addError("Cannot find APTrust API user in environment or config file")
+		opts.AddError("Cannot find APTrust API user in environment or config file")
 	}
 	if opts.APTrustAPIKey == "" {
-		opts.addError("Cannot find APTrust API key in environment or config file")
+		opts.AddError("Cannot find APTrust API key in environment or config file")
 	}
 }
 
@@ -66,7 +61,7 @@ func (opts *Options) VerifyRequiredAPICredentials() {
 // load them from the config file, if we can. If the user specified
 // a config file, use that. Otherwise, use the default config file
 // in ~/.aptrust_partner.conf or %HOMEPATH%\.aptrust_partner.conf
-func (opts *Options) MergeConfigFileOptions(action string) {
+func (opts *Options) MergeConfigFileOptions() {
 	partnerConfig := &PartnerConfig{}
 	var err error
 	partnerConfig, err = LoadPartnerConfig(opts.PathToConfigFile)
@@ -82,8 +77,8 @@ func (opts *Options) MergeConfigFileOptions(action string) {
 	}
 }
 
-// addError adds an error to Options.Errors
-func (opts *Options) addError(message string) {
+// AddError adds an error to Options.Errors
+func (opts *Options) AddError(message string) {
 	if opts.errors == nil {
 		opts.errors = make([]string, 0)
 	}

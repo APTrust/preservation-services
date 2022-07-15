@@ -185,8 +185,8 @@ func printOpts(opts *common.Options) {
 	}
 	fmt.Println("Runtime options:")
 	fmt.Println("  Config File:", configFile)
-	fmt.Println("  APTrust API User:", opts.APTrustAPIUser, "(from", opts.APTrustAPIUserFrom, ")")
-	fmt.Println("  APTrust API Key:", opts.APTrustAPIKey, "(from", opts.APTrustAPIKeyFrom, ")")
+	fmt.Println("  APTrust API User:", opts.APTrustAPIUser)
+	fmt.Println("  APTrust API Key:", opts.APTrustAPIKey)
 	fmt.Println("  APTrust REST URL:", opts.RegistryURL)
 	fmt.Println("  Output Format:", opts.OutputFormat)
 	fmt.Println("  Debug:", opts.Debug)
@@ -198,7 +198,7 @@ func printOpts(opts *common.Options) {
 // environment, and/or config file.
 func getUserOptions() *common.Options {
 	opts := parseCommandLine()
-	opts.MergeConfigFileOptions("check_ingest")
+	opts.MergeConfigFileOptions()
 	opts.VerifyOutputFormat()
 	opts.VerifyRequiredAPICredentials()
 	return opts
