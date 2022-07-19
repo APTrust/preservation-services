@@ -1,5 +1,10 @@
 AWSTemplateFormatVersion: 2010-09-09
 
+Description: >-
+    Creates the Preservation Services cluster of docker containers for the APTrust environments. These resources may be needed to scale frequently
+    and be updated to be kept secure. 
+
+
 Parameters:
   
   DNS:
@@ -39,7 +44,9 @@ Resources:
           Value: enabled 
       Configuration: 
         ExecuteCommandConfiguration: 
-          Logging: DEFAULT 
+          Logging: OVERRIDE
+          LogConfiguration:
+            CloudWatchLogGroupName: /ecs/registry 
       Tags:
       - Key: Name
         Value: !Sub 'ecs-preserv-${DNS}'
@@ -65,7 +72,8 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 1 
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -248,9 +256,9 @@ Resources:
             awslogs-stream-prefix: delete
         Name: delete
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: delete
       Memory: "512"
@@ -271,6 +279,7 @@ Resources:
       DeploymentController:
         Type: ECS
       DesiredCount: 1
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -453,9 +462,9 @@ Resources:
             awslogs-stream-prefix: fixity
         Name: fixity
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: aptfixity
       Memory: "512"
@@ -477,6 +486,7 @@ Resources:
       DeploymentController:
         Type: ECS
       DesiredCount: 1
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -659,9 +669,9 @@ Resources:
             awslogs-stream-prefix: queue
         Name: queue
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: aptqueue
       Memory: "512"
@@ -682,6 +692,7 @@ Resources:
       DeploymentController:
         Type: ECS
       DesiredCount: 1
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -864,9 +875,9 @@ Resources:
             awslogs-stream-prefix: aptqueuefixity
         Name: queuefixity
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: queuefixity
       Memory: "512"
@@ -887,6 +898,7 @@ Resources:
       DeploymentController:
         Type: ECS
       DesiredCount: 1
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -1068,9 +1080,9 @@ Resources:
             awslogs-stream-prefix: bagrestorer
         Name: bagrestorer
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: bagrestorer
       Memory: "512"
@@ -1091,7 +1103,8 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 1 
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -1273,9 +1286,9 @@ Resources:
             awslogs-stream-prefix: filerestorer
         Name: filerestorer
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: filerestorer
       Memory: "512"
@@ -1295,7 +1308,8 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 1 
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -1478,9 +1492,9 @@ Resources:
             awslogs-stream-prefix: glacierrestorer
         Name: glacierrestorer
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: glacierrestorer
       Memory: "512"
@@ -1500,7 +1514,8 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 1 
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -1681,9 +1696,9 @@ Resources:
             awslogs-stream-prefix: bucketreader
         Name: bucketreader
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: bucketreader
       Memory: "512"
@@ -1704,7 +1719,8 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 1 
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -1888,9 +1904,9 @@ Resources:
             awslogs-stream-prefix: ingestcleanup
         Name: cleanup
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: cleanup
       Memory: "512"
@@ -1911,7 +1927,8 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 1 
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -2095,9 +2112,9 @@ Resources:
             awslogs-stream-prefix: ingestformatidentifier
         Name: formatidentifier
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: formatidentifier
       Memory: "512"
@@ -2118,7 +2135,8 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 1 
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -2302,9 +2320,9 @@ Resources:
             awslogs-stream-prefix: prefetch
         Name: prefetch
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: prefetch
       Memory: "512"
@@ -2326,7 +2344,8 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 1 
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -2511,9 +2530,9 @@ Resources:
             awslogs-stream-prefix: ingestuploader
         Name: uploader
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: uploader
       Memory: "512"
@@ -2533,7 +2552,8 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 1 
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -2718,9 +2738,9 @@ Resources:
             awslogs-stream-prefix: ingestverifier
         Name: verifier
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: verifier
       Memory: "512"
@@ -2740,7 +2760,8 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 1 
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -2924,9 +2945,9 @@ Resources:
             awslogs-stream-prefix: ingestrecorder
         Name: recorder
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: recorder
       Memory: "512"
@@ -2948,7 +2969,8 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 1 
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -3132,9 +3154,9 @@ Resources:
             awslogs-stream-prefix: staginguploader
         Name: staginguploader
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: staginguploader
       Memory: "512"
@@ -3157,6 +3179,7 @@ Resources:
       DeploymentController:
         Type: ECS
       DesiredCount: 1
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -3338,9 +3361,9 @@ Resources:
             awslogs-stream-prefix: ingestvalidator
         Name: validator
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: validator
       Memory: "512"
@@ -3362,6 +3385,7 @@ Resources:
       DeploymentController:
         Type: ECS
       DesiredCount: 1
+      EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -3545,9 +3569,9 @@ Resources:
             awslogs-stream-prefix: reingestmanager
         Name: reingestmanager
       Cpu: "256"
-      ExecutionRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       TaskRoleArn: 
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: preservation-services-reingest_manager
       Memory: "512"
