@@ -26,6 +26,10 @@ Parameters:
     Description: The environment for the paramter store nomenclature. 
     Type: String
     Default: STAGING
+    AllowedValues:
+        - STAGING
+        - DEMO
+        - PROD
 
 Resources:
 
