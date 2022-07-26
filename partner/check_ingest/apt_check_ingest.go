@@ -4,16 +4,25 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/APTrust/preservation-services/constants"
-	"github.com/APTrust/preservation-services/models/registry"
-	"github.com/APTrust/preservation-services/network"
-	"github.com/APTrust/preservation-services/partner/common"
-	"github.com/op/go-logging"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/APTrust/preservation-services/constants"
+	"github.com/APTrust/preservation-services/models/registry"
+	"github.com/APTrust/preservation-services/network"
+	"github.com/APTrust/preservation-services/partner/common"
+	"github.com/APTrust/preservation-services/util"
+	"github.com/op/go-logging"
 )
+
+var ValidEnvironments = []string{
+	"demo",
+	"local",
+	"production",
+	"staging",
+}
 
 type OutputObject struct {
 	WorkItem           *registry.WorkItem
@@ -58,8 +67,8 @@ func main() {
 	}
 	params := url.Values{}
 	params.Set("name", fileToCheck)
-	params.Set("item_action", constants.ActionIngest)
-	params.Set("sort", "date")
+	params.Set("action", constants.ActionIngest)
+	params.Set("sort", "date_processed")
 	if opts.ETag != "" {
 		params.Set("etag", opts.ETag)
 	}
@@ -230,15 +239,22 @@ func parseCommandLine() *common.Options {
 		os.Exit(common.EXIT_NO_OP)
 	}
 
-	if registryEnv != "production" && registryEnv != "demo" {
+	if !util.StringListContains(ValidEnvironments, registryEnv) {
 		fmt.Fprintln(os.Stderr, "Invalid value for -env:", registryEnv)
 		printUsage()
 		os.Exit(common.EXIT_USER_ERR)
 	}
 
 	registryUrl := "https://repo.aptrust.org"
-	if registryEnv == "demo" {
+	switch registryEnv {
+	case "demo":
 		registryUrl = "https://demo.aptrust.org"
+	case "staging":
+		// Note: The staging system is currently at registry.aptrust.org.
+		// We should change this to registry.aptrust.org soon.
+		registryUrl = "https://staging.aptrust.org"
+	case "local":
+		registryUrl = "http://localhost:8080"
 	}
 	return &common.Options{
 		PathToConfigFile: pathToConfigFile,
@@ -268,7 +284,7 @@ See https://wiki.aptrust.org/Partner_Tools for more info on the
 APTrust config file.
 
 Usage: apt_check_ingest [--config=<path to config file>] \
-			[--env=<production|demo>] \
+			[--env=<production|demo|staging>] \
 			[--etag=<etag>] \
 			[--format=<json|text>] \
 			[--debug] <filename.tar>

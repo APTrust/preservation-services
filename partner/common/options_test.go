@@ -1,14 +1,13 @@
 package common_test
 
 import (
+	"path/filepath"
+	"testing"
+
 	"github.com/APTrust/preservation-services/partner/common"
 	"github.com/APTrust/preservation-services/util/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	//"os"
-	"path/filepath"
-	//"strings"
-	"testing"
 )
 
 func TestVerifyOutputFormat(t *testing.T) {
