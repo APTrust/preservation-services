@@ -4,7 +4,6 @@ Description: >-
     Creates the Preservation Services cluster of docker containers for the APTrust environments. These resources may be needed to scale frequently
     and be updated to be kept secure. 
 
-
 Parameters:
   
   DNS:
@@ -17,7 +16,7 @@ Parameters:
       - prod 
   
   FamTag:
-    Description: Provides a family tag based on the environment for the family of each container/task definition. (p)rod, (s)taging, (d)emo .
+    Description: Provides a family tag based on the environment for the family of each container/task definition; (p)rod, (s)taging, (d)emo.
     Type: String
     Default: s 
     AllowedValues: 
@@ -40,7 +39,7 @@ Parameters:
     Default: 3
   
   Envn:
-    Description: The environment for the paramter store nomenclature. 
+    Description: The environment for the parameter store nomenclature. 
     Type: String
     Default: STAGING
     AllowedValues:
