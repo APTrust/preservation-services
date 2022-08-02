@@ -10,13 +10,30 @@ Parameters:
   DNS:
     Description: Staging private Namespace
     Type: String
-    Default: staging
+    Default: staging 
+    AllowedValues: 
+      - staging 
+      - demo 
+      - prod 
   
+  FamTag:
+    Description: Provides a family tag based on the environment for the family of each container/task definition. (p)rod, (s)taging, (d)emo .
+    Type: String
+    Default: s 
+    AllowedValues: 
+      - s 
+      - d 
+      - p
+
   ClusterName: 
     Description: The Name of the Fargate cluster hosting Preservation Services.
     Type: String
     Default: ecs-preserv-staging 
-  
+    AllowedValues: 
+      - ecs-preserv-staging
+      - ecs-preserv-demo 
+      - ecs-preserv-prod
+      
   MaxContainers:
     Description: Maximum number of containers desired for the scaling services.
     Type: Number
@@ -273,7 +290,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: delete
+      Family: !Sub 'delete-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -479,7 +496,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: aptfixity
+      Family: !Sub 'aptfixity-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -686,7 +703,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: aptqueue
+      Family: !Sub 'aptqueue-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -892,7 +909,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: queuefixity
+      Family: !Sub 'queuefixity-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -1097,7 +1114,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: bagrestorer
+      Family: !Sub 'bagrestorer-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -1303,7 +1320,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: filerestorer
+      Family: !Sub 'filerestorer-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -1509,7 +1526,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: glacierrestorer
+      Family: !Sub 'glacierrestorer-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -1713,7 +1730,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: bucketreader
+      Family: !Sub 'bucketreader-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -1921,7 +1938,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: cleanup
+      Family: !Sub 'cleanup-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -2129,7 +2146,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: formatidentifier
+      Family: !Sub 'formatidentifier-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -2337,7 +2354,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: prefetch
+      Family: !Sub 'prefetch-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -2547,7 +2564,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: uploader
+      Family: !Sub 'uploader-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -2755,7 +2772,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: verifier
+      Family: !Sub 'verifier-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -2962,7 +2979,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: recorder
+      Family: !Sub 'recorder-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -3171,7 +3188,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: staginguploader
+      Family: !Sub 'staginguploader-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -3378,7 +3395,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: validator
+      Family: !Sub 'validator-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -3586,7 +3603,7 @@ Resources:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn: 
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
-      Family: preservation-services-reingest_manager
+      Family: !Sub 'reingestmanager-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
