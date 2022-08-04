@@ -14,6 +14,79 @@ import (
 	"github.com/richardlehane/siegfried"
 )
 
+// CrashableFormats are extensions of file types the frequently cause
+// Siegfried's MS-CFB reader to panic, bringing down the format identifier
+// worker with it. We'd rather skip these than crash the worker, because
+// requeueing will just crash the worker again.
+var CrashableFormats = map[string]string{
+	".accda":  "Microsoft Access",
+	".accdb":  "Microsoft Access",
+	".accde":  "Microsoft Access",
+	".accdr":  "Microsoft Access",
+	".accdt":  "Microsoft Access",
+	".ade":    "Microsoft Access",
+	".adn":    "Microsoft Access",
+	".adp":    "Microsoft Access",
+	".cdb":    "Microsoft Access",
+	".doc":    "Microsoft Word",
+	".docb":   "Microsoft Word",
+	".docm":   "Microsoft Word",
+	".docx":   "Microsoft Word",
+	".dot":    "Microsoft Word",
+	".dotx":   "Microsoft Word",
+	".ecf":    "Outlook Add-In",
+	".laccdb": "Microsoft Access",
+	".ldb":    "Microsoft Access",
+	".maf":    "Microsoft Access",
+	".mam":    "Microsoft Access",
+	".maq":    "Microsoft Access",
+	".mar":    "Microsoft Access",
+	".mat":    "Microsoft Access",
+	".mda":    "Microsoft Access",
+	".mdb":    "Microsoft Access",
+	".mde":    "Microsoft Access",
+	".mdf":    "Microsoft Access",
+	".mdn":    "Microsoft Access",
+	".mdw":    "Microsoft Access",
+	".one":    "Microsoft One Note",
+	".ost":    "Microsoft Outlook",
+	".pa":     "Microsoft Powerpoint",
+	".pot":    "Microsoft Powerpoint",
+	".potm":   "Microsoft Powerpoint",
+	".potx":   "Microsoft Powerpoint",
+	".ppa":    "Microsoft Powerpoint",
+	".ppam":   "Microsoft Powerpoint",
+	".pps":    "Microsoft Powerpoint",
+	".ppsm":   "Microsoft Powerpoint",
+	".ppsx":   "Microsoft Powerpoint",
+	".ppt":    "Microsoft Powerpoint",
+	".pptm":   "Microsoft Powerpoint",
+	".pptx":   "Microsoft Powerpoint",
+	".pst":    "Microsoft Outlook",
+	".sldm":   "Microsoft Powerpoint",
+	".sldx":   "Microsoft Powerpoint",
+	".wbk":    "Microsoft Word",
+	".wll":    "Microsoft Word",
+	".wwl":    "Microsoft Word",
+	".xla_":   "Microsoft Excel",
+	".xla":    "Microsoft Excel",
+	".xla5":   "Microsoft Excel",
+	".xla8":   "Microsoft Excel",
+	".xlam":   "Microsoft Excel",
+	".xll_":   "Microsoft Excel",
+	".xll":    "Microsoft Excel",
+	".xlm":    "Microsoft Excel",
+	".xls":    "Microsoft Excel",
+	".xlsb":   "Microsoft Excel",
+	".xlsm":   "Microsoft Excel",
+	".xlsx":   "Microsoft Excel",
+	".xlt":    "Microsoft Excel",
+	".xltm":   "Microsoft Excel",
+	".xltx":   "Microsoft Excel",
+	".xlw":    "Microsoft Excel",
+	".xps":    "Windows XML document for printing",
+}
+
 // FormatIdentifier streams an S3 file, through Siegfried, which uses
 // the PRONOM registry to identify formats.
 type FormatIdentifier struct {
@@ -60,6 +133,14 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 		}
 		// No point in identifying these. They're mostly .keep or __init__.py
 		if ingestFile.Size == int64(0) {
+			return errors
+		}
+
+		// Don't try to parse files that will crash Siegfried
+		ext := path.Ext(ingestFile.PathInBag)
+		crashable := CrashableFormats[ext]
+		if crashable != "" {
+			fi.Context.Logger.Infof("Skipping crashable format (%s): %s", crashable, ingestFile.PathInBag)
 			return errors
 		}
 
