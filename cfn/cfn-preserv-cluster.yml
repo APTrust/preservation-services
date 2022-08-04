@@ -2,44 +2,44 @@ AWSTemplateFormatVersion: 2010-09-09
 
 Description: >-
     Creates the Preservation Services cluster of docker containers for the APTrust environments. These resources may be needed to scale frequently
-    and be updated to be kept secure. 
+    and be updated to be kept secure.
 
 Parameters:
-  
+
   DNS:
     Description: Staging private Namespace
     Type: String
-    Default: staging 
-    AllowedValues: 
-      - staging 
-      - demo 
-      - prod 
-  
+    Default: staging
+    AllowedValues:
+      - staging
+      - demo
+      - prod
+
   FamTag:
     Description: Provides a family tag based on the environment for the family of each container/task definition; (p)rod, (s)taging, (d)emo.
     Type: String
-    Default: s 
-    AllowedValues: 
-      - s 
-      - d 
+    Default: s
+    AllowedValues:
+      - s
+      - d
       - p
 
-  ClusterName: 
+  ClusterName:
     Description: The Name of the Fargate cluster hosting Preservation Services.
     Type: String
-    Default: ecs-preserv-staging 
-    AllowedValues: 
+    Default: ecs-preserv-staging
+    AllowedValues:
       - ecs-preserv-staging
-      - ecs-preserv-demo 
+      - ecs-preserv-demo
       - ecs-preserv-prod
-      
+
   MaxContainers:
     Description: Maximum number of containers desired for the scaling services.
     Type: Number
     Default: 3
-  
+
   Envn:
-    Description: The environment for the parameter store nomenclature. 
+    Description: The environment for the parameter store nomenclature.
     Type: String
     Default: STAGING
     AllowedValues:
@@ -51,37 +51,37 @@ Resources:
 
   PreservCapacityProviderAssociation:
     Type: AWS::ECS::ClusterCapacityProviderAssociations
-    Properties: 
-      CapacityProviders: 
+    Properties:
+      CapacityProviders:
         - FARGATE
-        - FARGATE_SPOT 
+        - FARGATE_SPOT
       Cluster: !Ref Cluster
-      DefaultCapacityProviderStrategy: 
-        - CapacityProvider: FARGATE 
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: FARGATE
           Weight: 1
-          Base: 1 
-        - CapacityProvider: FARGATE_SPOT 
-          Weight: 1 
+          Base: 1
+        - CapacityProvider: FARGATE_SPOT
+          Weight: 1
           Base: 0
-  
+
   Cluster:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Ref ClusterName
-      ClusterSettings: 
+      ClusterSettings:
         - Name: containerInsights
-          Value: enabled 
-      Configuration: 
-        ExecuteCommandConfiguration: 
+          Value: enabled
+      Configuration:
+        ExecuteCommandConfiguration:
           Logging: OVERRIDE
           LogConfiguration:
-            CloudWatchLogGroupName: !Sub '/ecs/${DNS}/registry' 
+            CloudWatchLogGroupName: !Sub '/ecs/${DNS}/registry'
       Tags:
       - Key: Name
         Value: !Sub 'ecs-preserv-${DNS}'
       - Key: Environment
         Value: !Ref DNS
-      - Key: Service 
+      - Key: Service
         Value: preserv
 
   LogGroup:
@@ -89,7 +89,7 @@ Resources:
     Properties:
       LogGroupName: !Sub '/ecs/${DNS}/preserv'
 
-  AptdeleteService: 
+  AptdeleteService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -101,7 +101,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1 
+      DesiredCount: 1
       EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -115,7 +115,7 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
+      SchedulingStrategy: REPLICA
       ServiceName: ecs-delete
       ServiceRegistries:
       - RegistryArn:
@@ -128,8 +128,8 @@ Resources:
       - Key: Environment
         Value: !Ref DNS
       TaskDefinition: !Ref AptdeleteTaskDefinition
-    
-  AptdeleteServiceDiscoveryEntry: 
+
+  AptdeleteServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"aptdelete" service discovery entry in Cloud Map'
@@ -141,11 +141,11 @@ Resources:
       HealthCheckCustomConfig:
         FailureThreshold: 1
       Name: delete.preserv
-      NamespaceId: 
+      NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  
-  AptdeleteTaskDefinition: 
+
+
+  AptdeleteTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -275,7 +275,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_delete:9d8b9c2-master
+        Image: docker.io/aptrust/apt_delete:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -285,17 +285,17 @@ Resources:
             awslogs-stream-prefix: delete
         Name: delete
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'delete-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-  AptfixityService: 
+
+  AptfixityService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -312,7 +312,7 @@ Resources:
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED 
+          AssignPublicIp: ENABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -323,7 +323,7 @@ Resources:
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
       ServiceName: ecs-fixity
-      ServiceRegistries:   
+      ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - AptfixityServiceDiscoveryEntry
@@ -334,9 +334,9 @@ Resources:
       - Key: Environment
         Value: !Ref "DNS"
       TaskDefinition: !Ref AptfixityTaskDefinition
-    
-  
-  AptfixityServiceDiscoveryEntry: 
+
+
+  AptfixityServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"aptfixity" service discovery entry in Cloud Map'
@@ -350,8 +350,8 @@ Resources:
       Name: fixity.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  AptfixityTaskDefinition: 
+
+  AptfixityTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -481,7 +481,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_fixity:a5031e8-master
+        Image: docker.io/aptrust/apt_fixity:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -491,18 +491,18 @@ Resources:
             awslogs-stream-prefix: fixity
         Name: fixity
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'aptfixity-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-  
-  AptqueueService: 
+
+
+  AptqueueService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -527,10 +527,10 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
-      PropagateTags: SERVICE 
+      PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
       ServiceName: ecs-queue
-      ServiceRegistries:   
+      ServiceRegistries:
       - RegistryArn:
           Fn::GetAtt:
           - AptqueueServiceDiscoveryEntry
@@ -541,8 +541,8 @@ Resources:
       - Key: Environment
         Value: !Ref "DNS"
       TaskDefinition: !Ref AptqueueTaskDefinition
-  
-  AptqueueServiceDiscoveryEntry: 
+
+  AptqueueServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"aptqueue" service discovery entry in Cloud Map'
@@ -556,9 +556,9 @@ Resources:
       Name: queue.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  
-  AptqueueTaskDefinition: 
+
+
+  AptqueueTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -688,7 +688,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_queue:9d8b9c2-master
+        Image: docker.io/aptrust/apt_queue:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -698,17 +698,17 @@ Resources:
             awslogs-stream-prefix: queue
         Name: queue
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'aptqueue-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-  
-  AptqueuefixityService: 
+
+  AptqueuefixityService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -747,8 +747,8 @@ Resources:
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref AptqueuefixityTaskDefinition
-    
-  AptqueuefixityServiceDiscoveryEntry: 
+
+  AptqueuefixityServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"aptqueuefixity" service discovery entry in Cloud Map'
@@ -760,11 +760,11 @@ Resources:
       HealthCheckCustomConfig:
         FailureThreshold: 1
       Name: queuefixity.preserv
-      NamespaceId: 
+      NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  
-  AptqueuefixityTaskDefinition: 
+
+
+  AptqueuefixityTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -894,7 +894,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_queue_fixity:9d8b9c2-master
+        Image: docker.io/aptrust/apt_queue_fixity:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -904,17 +904,17 @@ Resources:
             awslogs-stream-prefix: aptqueuefixity
         Name: queuefixity
       Cpu: "256"
-      TaskRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
-      ExecutionRoleArn: 
+      TaskRoleArn:
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'queuefixity-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-  BagrestorerService: 
+
+  BagrestorerService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -940,7 +940,7 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
+      SchedulingStrategy: REPLICA
       ServiceName: ecs-bagrestorer
       ServiceRegistries:
       - RegistryArn:
@@ -953,8 +953,8 @@ Resources:
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref BagrestorerTaskDefinition
-    
-  BagrestorerServiceDiscoveryEntry: 
+
+  BagrestorerServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"bagrestorer" service discovery entry in Cloud Map'
@@ -968,8 +968,8 @@ Resources:
       Name: bagrestorer.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  BagrestorerTaskDefinition: 
+
+  BagrestorerTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -1099,7 +1099,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/bag_restorer:9d8b9c2-master
+        Image: docker.io/aptrust/bag_restorer:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1109,18 +1109,18 @@ Resources:
             awslogs-stream-prefix: bagrestorer
         Name: bagrestorer
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'bagrestorer-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-  
-  
-  FilerestorerService: 
+
+
+  FilerestorerService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -1132,7 +1132,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1 
+      DesiredCount: 1
       EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -1146,7 +1146,7 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
+      SchedulingStrategy: REPLICA
       ServiceName: ecs-filerestorer
       ServiceRegistries:
       - RegistryArn:
@@ -1159,8 +1159,8 @@ Resources:
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref FilerestorerTaskDefinition
-    
-  FilerestorerServiceDiscoveryEntry: 
+
+  FilerestorerServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"filerestorer" service discovery entry in Cloud Map'
@@ -1172,10 +1172,10 @@ Resources:
       HealthCheckCustomConfig:
         FailureThreshold: 1
       Name: filerestorer.preserv
-      NamespaceId: 
+      NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  FilerestorerTaskDefinition: 
+
+  FilerestorerTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -1305,7 +1305,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/file_restorer:9d8b9c2-master
+        Image: docker.io/aptrust/file_restorer:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1315,17 +1315,17 @@ Resources:
             awslogs-stream-prefix: filerestorer
         Name: filerestorer
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'filerestorer-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-  GlacierrestorerService: 
+
+  GlacierrestorerService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -1337,7 +1337,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1 
+      DesiredCount: 1
       EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -1351,7 +1351,7 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
+      SchedulingStrategy: REPLICA
       ServiceName: ecs-glacierrestorer
       ServiceRegistries:
       - RegistryArn:
@@ -1364,8 +1364,8 @@ Resources:
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref GlacierrestorerTaskDefinition
-    
-  GlacierrestorerServiceDiscoveryEntry: 
+
+  GlacierrestorerServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"glacierrestorer" service discovery entry in Cloud Map'
@@ -1379,9 +1379,9 @@ Resources:
       Name: glacierrestorer.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  
-  GlacierrestorerTaskDefinition: 
+
+
+  GlacierrestorerTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -1511,7 +1511,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/glacier_restorer:9d8b9c2-master
+        Image: docker.io/aptrust/glacier_restorer:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1521,17 +1521,17 @@ Resources:
             awslogs-stream-prefix: glacierrestorer
         Name: glacierrestorer
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'glacierrestorer-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-  IngestbucketreaderService: 
+
+  IngestbucketreaderService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -1543,7 +1543,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1 
+      DesiredCount: 1
       EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -1565,13 +1565,13 @@ Resources:
           - IngestbucketreaderServiceDiscoveryEntry
           - Arn
       Tags:
-      - Key: Environment 
+      - Key: Environment
         Value: !Ref "DNS"
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestbucketreaderTaskDefinition
-    
-  IngestbucketreaderServiceDiscoveryEntry: 
+
+  IngestbucketreaderServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"ingestbucketreader" service discovery entry in Cloud Map'
@@ -1585,7 +1585,7 @@ Resources:
       Name: bucketreader.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
+
   IngestbucketreaderTaskDefinition:
     Properties:
       ContainerDefinitions:
@@ -1715,7 +1715,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_bucket_reader:9d8b9c2-master
+        Image: docker.io/aptrust/ingest_bucket_reader:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1725,9 +1725,9 @@ Resources:
             awslogs-stream-prefix: bucketreader
         Name: bucketreader
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'bucketreader-${FamTag}'
       Memory: "512"
@@ -1735,8 +1735,8 @@ Resources:
       RequiresCompatibilities:
       - FARGATE
     Type: AWS::ECS::TaskDefinition
-  
-  IngestcleanupService: 
+
+  IngestcleanupService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -1748,7 +1748,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1 
+      DesiredCount: 1
       EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -1762,7 +1762,7 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
+      SchedulingStrategy: REPLICA
       ServiceName: ecs-cleanup
       ServiceRegistries:
       - RegistryArn:
@@ -1776,8 +1776,8 @@ Resources:
         Value: preserv
       TaskDefinition:
         Ref: IngestcleanupTaskDefinition
-    
-  IngestcleanupServiceDiscoveryEntry: 
+
+  IngestcleanupServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"ingestcleanup" service discovery entry in Cloud Map'
@@ -1791,9 +1791,9 @@ Resources:
       Name: cleanup.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  
-  IngestcleanupTaskDefinition: 
+
+
+  IngestcleanupTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -1923,7 +1923,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_cleanup:9d8b9c2-master
+        Image: docker.io/aptrust/ingest_cleanup:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1933,18 +1933,18 @@ Resources:
             awslogs-stream-prefix: ingestcleanup
         Name: cleanup
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'cleanup-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-  
-  erService: 
+
+
+  erService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -1956,7 +1956,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1 
+      DesiredCount: 1
       EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -1983,9 +1983,9 @@ Resources:
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref erTaskDefinition
-    
-  
-  erServiceDiscoveryEntry: 
+
+
+  erServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"ingestformatidentifier" service discovery entry in Cloud Map'
@@ -1999,9 +1999,9 @@ Resources:
       Name: formatidentifier.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  
-  erTaskDefinition: 
+
+
+  erTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -2131,7 +2131,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_format_identifier:9d8b9c2-master
+        Image: docker.io/aptrust/ingest_format_identifier:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2141,18 +2141,18 @@ Resources:
             awslogs-stream-prefix: ingestformatidentifier
         Name: formatidentifier
       Cpu: "256"
-      TaskRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
-      ExecutionRoleArn: 
+      TaskRoleArn:
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'formatidentifier-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-  
-  IngestprefetchService: 
+
+
+  IngestprefetchService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -2164,7 +2164,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1 
+      DesiredCount: 1
       EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -2178,7 +2178,7 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
+      SchedulingStrategy: REPLICA
       ServiceName: ecs-prefetch
       ServiceRegistries:
       - RegistryArn:
@@ -2191,9 +2191,9 @@ Resources:
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestprefetchTaskDefinition
-    
-  
-  IngestprefetchServiceDiscoveryEntry: 
+
+
+  IngestprefetchServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"ingestprefetch" service discovery entry in Cloud Map'
@@ -2207,9 +2207,9 @@ Resources:
       Name: prefetch.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  
-  IngestprefetchTaskDefinition: 
+
+
+  IngestprefetchTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -2339,7 +2339,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_pre_fetch:9d8b9c2-master
+        Image: docker.io/aptrust/ingest_pre_fetch:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2349,19 +2349,19 @@ Resources:
             awslogs-stream-prefix: prefetch
         Name: prefetch
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'prefetch-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-  
-  
-  IngestpreservationuploaderService: 
+
+
+
+  IngestpreservationuploaderService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -2373,7 +2373,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1 
+      DesiredCount: 1
       EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -2387,7 +2387,7 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
+      SchedulingStrategy: REPLICA
       ServiceName: ecs-uploader
       ServiceRegistries:
       - RegistryArn:
@@ -2400,9 +2400,9 @@ Resources:
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestpreservationuploaderTaskDefinition
-    
-  
-  IngestpreservationuploaderServiceDiscoveryEntry: 
+
+
+  IngestpreservationuploaderServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"ingestpreservationuploader" service discovery entry in Cloud
@@ -2417,9 +2417,9 @@ Resources:
       Name: uploader.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  
-  IngestpreservationuploaderTaskDefinition: 
+
+
+  IngestpreservationuploaderTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -2549,7 +2549,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_uploader:9d8b9c2-master
+        Image: docker.io/aptrust/ingest_preservation_uploader:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2559,17 +2559,17 @@ Resources:
             awslogs-stream-prefix: ingestuploader
         Name: uploader
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'uploader-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-  
-  IngestpreservationverifierService: 
+
+  IngestpreservationverifierService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -2581,7 +2581,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1 
+      DesiredCount: 1
       EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -2595,7 +2595,7 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
+      SchedulingStrategy: REPLICA
       ServiceName: ecs-verifier
       ServiceRegistries:
       - RegistryArn:
@@ -2608,9 +2608,9 @@ Resources:
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestpreservationverifierTaskDefinition
-    
-  
-  IngestpreservationverifierServiceDiscoveryEntry: 
+
+
+  IngestpreservationverifierServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"ingestpreservationverifier" service discovery entry in Cloud
@@ -2625,9 +2625,9 @@ Resources:
       Name: verifier.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  
-  IngestpreservationverifierTaskDefinition: 
+
+
+  IngestpreservationverifierTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -2757,7 +2757,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_verifier:9d8b9c2-master
+        Image: docker.io/aptrust/ingest_preservation_verifier:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2767,17 +2767,17 @@ Resources:
             awslogs-stream-prefix: ingestverifier
         Name: verifier
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'verifier-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-  
-  IngestrecorderService: 
+
+  IngestrecorderService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -2789,7 +2789,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1 
+      DesiredCount: 1
       EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -2803,7 +2803,7 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
+      SchedulingStrategy: REPLICA
       ServiceName: ecs-recorder
       ServiceRegistries:
       - RegistryArn:
@@ -2816,9 +2816,9 @@ Resources:
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestrecorderTaskDefinition
-    
-  
-  IngestrecorderServiceDiscoveryEntry: 
+
+
+  IngestrecorderServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"ingestrecorder" service discovery entry in Cloud Map'
@@ -2832,9 +2832,9 @@ Resources:
       Name: recorder.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  
-  IngestrecorderTaskDefinition: 
+
+
+  IngestrecorderTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -2964,7 +2964,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_recorder:9d8b9c2-master
+        Image: docker.io/aptrust/ingest_recorder:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2974,19 +2974,19 @@ Resources:
             awslogs-stream-prefix: ingestrecorder
         Name: recorder
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'recorder-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-  
-  
-  IngeststaginguploaderService: 
+
+
+
+  IngeststaginguploaderService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -2998,7 +2998,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1 
+      DesiredCount: 1
       EnableExecuteCommand: true
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -3012,7 +3012,7 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
+      SchedulingStrategy: REPLICA
       ServiceName: ecs-staginguploader
       ServiceRegistries:
       - RegistryArn:
@@ -3025,9 +3025,9 @@ Resources:
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngeststaginguploaderTaskDefinition
-    
-  
-  IngeststaginguploaderServiceDiscoveryEntry: 
+
+
+  IngeststaginguploaderServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"ingeststaginguploader" service discovery entry in Cloud Map'
@@ -3041,9 +3041,9 @@ Resources:
       Name: staginguploader.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  
-  IngeststaginguploaderTaskDefinition: 
+
+
+  IngeststaginguploaderTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -3057,7 +3057,7 @@ Resources:
           Options:
             awslogs-group: !Ref LogGroup
             awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: sidecar 
+            awslogs-stream-prefix: sidecar
         Name: Ingeststaginguploader_ResolvConf_InitContainer
       - DependsOn:
         - Condition: SUCCESS
@@ -3173,7 +3173,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_staging_uploader:9d8b9c2-master
+        Image: docker.io/aptrust/ingest_staging_uploader:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3183,19 +3183,19 @@ Resources:
             awslogs-stream-prefix: staginguploader
         Name: staginguploader
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'staginguploader-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-  
-  
-  IngestvalidatorService: 
+
+
+
+  IngestvalidatorService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -3221,7 +3221,7 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
+      SchedulingStrategy: REPLICA
       ServiceName: ecs-validator
       ServiceRegistries:
       - RegistryArn:
@@ -3234,8 +3234,8 @@ Resources:
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestvalidatorTaskDefinition
-  
-  IngestvalidatorServiceDiscoveryEntry: 
+
+  IngestvalidatorServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"ingestvalidator" service discovery entry in Cloud Map'
@@ -3249,8 +3249,8 @@ Resources:
       Name: validator.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-      
-  IngestvalidatorTaskDefinition: 
+
+  IngestvalidatorTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -3380,7 +3380,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_validator:9d8b9c2-master
+        Image: docker.io/aptrust/ingest_validator:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3390,18 +3390,18 @@ Resources:
             awslogs-stream-prefix: ingestvalidator
         Name: validator
       Cpu: "256"
-      TaskRoleArn: 
-        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}" 
-      ExecutionRoleArn: 
+      TaskRoleArn:
+        Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'validator-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-    
-  
-  ReingestmanagerService: 
+
+
+  ReingestmanagerService:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
@@ -3427,7 +3427,7 @@ Resources:
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA 
+      SchedulingStrategy: REPLICA
       ServiceName: ecs-reingestmanager
       ServiceRegistries:
       - RegistryArn:
@@ -3440,9 +3440,9 @@ Resources:
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref ReingestmanagerTaskDefinition
-    
-  
-  ReingestmanagerServiceDiscoveryEntry: 
+
+
+  ReingestmanagerServiceDiscoveryEntry:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Description: '"reingestmanager" service discovery entry in Cloud Map'
@@ -3456,9 +3456,9 @@ Resources:
       Name: reingestmanager.preserv
       NamespaceId:
         Fn::ImportValue: !Sub "NameSpace-${DNS}"
-    
-  
-  ReingestmanagerTaskDefinition: 
+
+
+  ReingestmanagerTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -3588,7 +3588,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/reingest_manager:9d8b9c2-master
+        Image: docker.io/aptrust/reingest_manager:6ae5b5f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3598,18 +3598,18 @@ Resources:
             awslogs-stream-prefix: reingestmanager
         Name: reingestmanager
       Cpu: "256"
-      TaskRoleArn: 
+      TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
-      ExecutionRoleArn: 
+      ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'reingestmanager-${FamTag}'
       Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-  
+
   #Scaling and Alarms for Preserv-Services
-  
+
   AutoScalingStagingUpLoadTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -3622,7 +3622,7 @@ Resources:
           - !GetAtt IngeststaginguploaderService.Name
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
-      RoleARN: 
+      RoleARN:
         Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
 
   ScaleStagingUpPolicy:
@@ -3652,7 +3652,7 @@ Resources:
         StepAdjustments:
           - MetricIntervalUpperBound: 0
             ScalingAdjustment: -1
-  
+
   AlarmHighMemoryStagingUploader:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -3666,7 +3666,7 @@ Resources:
       Dimensions:
         - Name: ClusterName
           Value: !Sub "ecs-preserv-${DNS}"
-        - Name: ServiceName 
+        - Name: ServiceName
           Value: ecs-staginguploader
       EvaluationPeriods: 3
       # the metric name can be found in the console on the screen before a metric is graphed
@@ -3679,7 +3679,7 @@ Resources:
       Period: 60
       Threshold: 350
       TreatMissingData: ignore
-           
+
   AutoScalingPrefetchTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -3692,7 +3692,7 @@ Resources:
           - !GetAtt IngestprefetchService.Name
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
-      RoleARN: 
+      RoleARN:
         Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
 
   ScaleUpPrefetchPolicy:
@@ -3722,7 +3722,7 @@ Resources:
         StepAdjustments:
           - MetricIntervalUpperBound: 0
             ScalingAdjustment: -1
-  
+
   AlarmHighCPUPrefetch:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -3736,7 +3736,7 @@ Resources:
       Dimensions:
         - Name: ClusterName
           Value: !Sub "ecs-preserv-${DNS}"
-        - Name: ServiceName 
+        - Name: ServiceName
           Value: ecs-prefetch
       EvaluationPeriods: 3
       # the metric name can be found in the console on the screen before a metric is graphed
@@ -3748,9 +3748,9 @@ Resources:
       Statistic: Sum
       Period: 60
       Threshold: 70
-      TreatMissingData: ignore 
-  
-  
+      TreatMissingData: ignore
+
+
   AutoScalingFormatIdTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -3763,9 +3763,9 @@ Resources:
           - !GetAtt erService.Name
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
-      RoleARN: 
-        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"  
-  
+      RoleARN:
+        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+
   ScaleUpFormatIdPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -3793,7 +3793,7 @@ Resources:
         StepAdjustments:
           - MetricIntervalUpperBound: 0
             ScalingAdjustment: -1
-  
+
   AlarmHighMemoryFormatId:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -3807,7 +3807,7 @@ Resources:
       Dimensions:
         - Name: ClusterName
           Value: !Sub "ecs-preserv-${DNS}"
-        - Name: ServiceName 
+        - Name: ServiceName
           Value: ecs-formatidentifier
       EvaluationPeriods: 3
       # the metric name can be found in the console on the screen before a metric is graphed
@@ -3819,7 +3819,7 @@ Resources:
       Statistic: Sum
       Period: 60
       Threshold: 300
-      TreatMissingData: ignore 
+      TreatMissingData: ignore
 
   AutoScalingPreservUploadTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
@@ -3833,9 +3833,9 @@ Resources:
           - !GetAtt IngestpreservationuploaderService.Name
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
-      RoleARN: 
-        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"  
-  
+      RoleARN:
+        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+
   ScaleUpPreservUploadPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -3863,7 +3863,7 @@ Resources:
         StepAdjustments:
           - MetricIntervalUpperBound: 0
             ScalingAdjustment: -1
-  
+
   AlarmHighMemoryPreservUpload:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -3877,7 +3877,7 @@ Resources:
       Dimensions:
         - Name: ClusterName
           Value: !Sub "ecs-preserv-${DNS}"
-        - Name: ServiceName 
+        - Name: ServiceName
           Value: ecs-uploader
       EvaluationPeriods: 3
       # the metric name can be found in the console on the screen before a metric is graphed
@@ -3889,6 +3889,4 @@ Resources:
       Statistic: Sum
       Period: 60
       Threshold: 350
-      TreatMissingData: ignore 
-
-  
+      TreatMissingData: ignore
