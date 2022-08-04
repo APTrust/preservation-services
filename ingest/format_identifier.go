@@ -173,6 +173,7 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 		// Looking at files in staging, this issue seems to affect only a small
 		// handful of extensions. The most common is .JPG, which does not get
 		// tagged as image/jpeg, while .jpg does.
+		fi.Context.Logger.Infof("Starting ID of %s", ingestFile.Identifier())
 		identifications, err := fi.Siegfried.Identify(s3Object, strings.ToLower(ingestFile.PathInBag), "")
 
 		if err != nil {
