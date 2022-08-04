@@ -3677,7 +3677,7 @@ Resources:
         - !Ref ScaleDownStagingUpPolicy
       Statistic: Sum
       Period: 60
-      Threshold: 65
+      Threshold: 350
       TreatMissingData: ignore
            
   AutoScalingPrefetchTarget:
@@ -3802,7 +3802,7 @@ Resources:
         - !Ref ScaleUpFormatIdPolicy
       AlarmDescription: 'Scaling alarm based on memory usage for ecs-formatidentifier'
       ComparisonOperator: GreaterThanThreshold
-      DatapointsToAlarm: 2
+      DatapointsToAlarm: 1
       # the dimensions can be found in the console after selecting a namespace to filter by
       Dimensions:
         - Name: ClusterName
@@ -3818,7 +3818,7 @@ Resources:
         - !Ref ScaleDownFormatIdPolicy
       Statistic: Sum
       Period: 60
-      Threshold: 65
+      Threshold: 300
       TreatMissingData: ignore 
 
   AutoScalingPreservUploadTarget:
@@ -3888,7 +3888,7 @@ Resources:
         - !Ref ScaleDownPreservUploadPolicy
       Statistic: Sum
       Period: 60
-      Threshold: 65
+      Threshold: 350
       TreatMissingData: ignore 
 
   
