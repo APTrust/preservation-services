@@ -137,10 +137,9 @@ func (fi *FormatIdentifier) Run() (int, []*service.ProcessingError) {
 		}
 
 		// Don't try to parse files that will crash Siegfried
-		ext := path.Ext(ingestFile.PathInBag)
-		crashable := CrashableFormats[ext]
-		if crashable != "" {
-			fi.Context.Logger.Infof("Skipping crashable format (%s): %s", crashable, ingestFile.PathInBag)
+		crashable, fileType := IsCrashableExtension(ingestFile.PathInBag)
+		if crashable {
+			fi.Context.Logger.Infof("Skipping crashable format (%s): %s", fileType, ingestFile.PathInBag)
 			return errors
 		}
 
@@ -251,4 +250,19 @@ func GetMimeTypeFromLabels(labels [][2]string) (mimeType string, basis string) {
 		}
 	}
 	return mimeType, basis
+}
+
+// IsCrashableExtension returns true if file has an extension that may
+// crash Siegfried.
+func IsCrashableExtension(filename string) (bool, string) {
+	// Don't try to parse files that will crash Siegfried
+	ext := path.Ext(filename)
+	fileType := CrashableFormats[ext]
+	if fileType != "" {
+		return true, fileType
+	}
+	if strings.HasPrefix(ext, ".smbdelete") {
+		return true, "SMB Delete"
+	}
+	return false, ""
 }
