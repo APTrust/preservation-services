@@ -1,6 +1,10 @@
 package constants
 
 // From https://github.com/samuelneff/MimeTypeMap/blob/master/src/MimeTypes/MimeTypeMap.cs
+// with a few additions from
+// https://www.sitepoint.com/mime-types-complete-list/
+//
+// All keys (file extensions) are normalized to lower case.
 
 var MimeTypeForExtension = map[string]string{
 	".323":                    "text/h323",
@@ -28,8 +32,8 @@ var MimeTypeForExtension = map[string]string{
 	".ade":                    "application/msaccess",
 	".adobebridge":            "application/x-bridge-url",
 	".adp":                    "application/msaccess",
-	".ADT":                    "audio/vnd.dlna.adts",
-	".ADTS":                   "audio/aac",
+	".adt":                    "audio/vnd.dlna.adts",
+	".adts":                   "audio/aac",
 	".afm":                    "application/octet-stream",
 	".ai":                     "application/postscript",
 	".aif":                    "audio/aiff",
@@ -50,6 +54,7 @@ var MimeTypeForExtension = map[string]string{
 	".asi":                    "application/octet-stream",
 	".asm":                    "text/plain",
 	".asmx":                   "application/xml",
+	".asp":                    "text/asp",
 	".aspx":                   "application/xml",
 	".asr":                    "video/x-ms-asf",
 	".asx":                    "video/x-ms-asf",
@@ -63,6 +68,7 @@ var MimeTypeForExtension = map[string]string{
 	".bcpio":                  "application/x-bcpio",
 	".bin":                    "application/octet-stream",
 	".bmp":                    "image/bmp",
+	".brk":                    "chemical/x-pdb",
 	".c":                      "text/plain",
 	".cab":                    "application/octet-stream",
 	".caf":                    "audio/x-caf",
@@ -133,6 +139,7 @@ var MimeTypeForExtension = map[string]string{
 	".eml":                    "message/rfc822",
 	".emf":                    "image/emf",
 	".emz":                    "application/octet-stream",
+	".ent":                    "chemical/x-pdb",
 	".eot":                    "application/vnd.ms-fontobject",
 	".eps":                    "application/postscript",
 	".erb":                    "text/x-html-erb",
@@ -158,6 +165,7 @@ var MimeTypeForExtension = map[string]string{
 	".gpx":                    "application/gpx+xml",
 	".group":                  "text/x-ms-group",
 	".gsm":                    "audio/x-gsm",
+	".gsp":                    "application/x-gsp",
 	".gtar":                   "application/x-gtar",
 	".gz":                     "application/x-gzip",
 	".h":                      "text/plain",
@@ -351,6 +359,7 @@ var MimeTypeForExtension = map[string]string{
 	".pct":                    "image/pict",
 	".pcx":                    "application/octet-stream",
 	".pcz":                    "application/octet-stream",
+	".pdb":                    "chemical/x-pdb",
 	".pdf":                    "application/pdf",
 	".pfb":                    "application/octet-stream",
 	".pfm":                    "application/octet-stream",
@@ -362,6 +371,7 @@ var MimeTypeForExtension = map[string]string{
 	".pkgdef":                 "text/plain",
 	".pkgundef":               "text/plain",
 	".pko":                    "application/vnd.ms-pki.pko",
+	".pl":                     "text/plain",
 	".pls":                    "audio/scpls",
 	".pma":                    "application/x-perfmon",
 	".pmc":                    "application/x-perfmon",
@@ -469,9 +479,11 @@ var MimeTypeForExtension = map[string]string{
 	".spc":                    "application/x-pkcs7-certificates",
 	".spl":                    "application/futuresplash",
 	".spx":                    "audio/ogg",
+	".sql":                    "text/plain",
 	".src":                    "application/x-wais-source",
 	".srf":                    "text/plain",
 	".SSISDeploymentManifest": "text/xml",
+	".ssisdeploymentmanifest": "text/xml",
 	".ssm":                    "application/streamingmedia",
 	".sst":                    "application/vnd.ms-pki.certstore",
 	".stl":                    "application/vnd.ms-pki.stl",

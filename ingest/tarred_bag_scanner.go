@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -120,7 +121,8 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 	//
 	// As of Feb 2022, set ingestFile.StorageOption in the recorder.
 
-	ingestFile.FileFormat = constants.MimeTypeForExtension[filepath.Ext(pathInBag)]
+	lcExtension := strings.ToLower(filepath.Ext(pathInBag))
+	ingestFile.FileFormat = constants.MimeTypeForExtension[lcExtension]
 	if ingestFile.FileFormat == "" {
 		ingestFile.FileFormat = "application/binary"
 	}
