@@ -88,7 +88,7 @@ func TestRegistryInstitutionList(t *testing.T) {
 	assert.NotNil(t, resp)
 	assert.Nil(t, resp.Error)
 	assert.Equal(t,
-		fmt.Sprintf("/admin-api/v3/institutions/?%s", v.Encode()),
+		fmt.Sprintf("/admin-api/v3/institutions?%s", v.Encode()),
 		resp.Request.URL.Opaque)
 	institutions := resp.Institutions()
 	assert.Equal(t, 5, len(institutions))
@@ -288,7 +288,7 @@ func TestGenericFileList(t *testing.T) {
 	resp := client.GenericFileList(v)
 	assert.NotNil(t, resp)
 	require.Nil(t, resp.Error)
-	assert.Equal(t, fmt.Sprintf("/admin-api/v3/files/?%s", v.Encode()), resp.Request.URL.Opaque)
+	assert.Equal(t, fmt.Sprintf("/admin-api/v3/files?%s", v.Encode()), resp.Request.URL.Opaque)
 	files := resp.GenericFiles()
 
 	lastIdentifier := ""
@@ -448,7 +448,7 @@ func TestRegistryChecksumList(t *testing.T) {
 	resp := client.ChecksumList(v)
 	assert.NotNil(t, resp)
 	require.Nil(t, resp.Error)
-	assert.Equal(t, fmt.Sprintf("/admin-api/v3/checksums/?%s", v.Encode()), resp.Request.URL.Opaque)
+	assert.Equal(t, fmt.Sprintf("/admin-api/v3/checksums?%s", v.Encode()), resp.Request.URL.Opaque)
 	checksums := resp.Checksums()
 	lastGFID := int64(0)
 	assert.Equal(t, 3, len(checksums))
@@ -535,7 +535,7 @@ func TestRegistryPremisEventList(t *testing.T) {
 	resp := client.PremisEventList(v)
 	assert.NotNil(t, resp)
 	require.Nil(t, resp.Error)
-	assert.Equal(t, fmt.Sprintf("/admin-api/v3/events/?%s", v.Encode()), resp.Request.URL.Opaque)
+	assert.Equal(t, fmt.Sprintf("/admin-api/v3/events?%s", v.Encode()), resp.Request.URL.Opaque)
 	events := resp.PremisEvents()
 
 	lastIdentifier := ""
@@ -575,7 +575,7 @@ func TestRegistryStorageRecordList(t *testing.T) {
 	resp := client.StorageRecordList(v)
 	assert.NotNil(t, resp)
 	require.Nil(t, resp.Error)
-	assert.Equal(t, "/admin-api/v3/storage_records/?generic_file_id=1&per_page=100&sort=url__asc", resp.Request.URL.Opaque)
+	assert.Equal(t, "/admin-api/v3/storage_records?generic_file_id=1&per_page=100&sort=url__asc", resp.Request.URL.Opaque)
 	records := resp.StorageRecords()
 
 	lastUrl := ""
@@ -612,7 +612,7 @@ func TestWorkItemList(t *testing.T) {
 	resp := client.WorkItemList(v)
 	assert.NotNil(t, resp)
 	require.Nil(t, resp.Error)
-	assert.Equal(t, fmt.Sprintf("/admin-api/v3/items/?%s", v.Encode()), resp.Request.URL.Opaque)
+	assert.Equal(t, fmt.Sprintf("/admin-api/v3/items?%s", v.Encode()), resp.Request.URL.Opaque)
 	items := resp.WorkItems()
 	lastName := "zzzzzz"
 	assert.Equal(t, 14, len(items))

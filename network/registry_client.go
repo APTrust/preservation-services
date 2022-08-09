@@ -99,7 +99,7 @@ func (client *RegistryClient) InstitutionList(params url.Values) *RegistryRespon
 	resp.institutions = make([]*registry.Institution, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/institutions/?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/admin-api/%s/institutions?%s", client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -375,7 +375,7 @@ func (client *RegistryClient) GenericFileList(params url.Values) *RegistryRespon
 	resp.files = make([]*registry.GenericFile, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/files/?%s",
+	relativeURL := fmt.Sprintf("/admin-api/%s/files?%s",
 		client.APIVersion,
 		//institutionIdentifier,
 		encodeParams(params))
@@ -591,7 +591,7 @@ func (client *RegistryClient) ChecksumList(params url.Values) *RegistryResponse 
 	resp.checksums = make([]*registry.Checksum, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/checksums/?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/admin-api/%s/checksums?%s", client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -693,7 +693,7 @@ func (client *RegistryClient) PremisEventList(params url.Values) *RegistryRespon
 	resp.events = make([]*registry.PremisEvent, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/events/?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/admin-api/%s/events?%s", client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -795,7 +795,7 @@ func (client *RegistryClient) StorageRecordList(params url.Values) *RegistryResp
 	resp.storageRecords = make([]*registry.StorageRecord, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/storage_records/?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/admin-api/%s/storage_records?%s", client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -867,7 +867,7 @@ func (client *RegistryClient) WorkItemList(params url.Values) *RegistryResponse 
 	resp.workItems = make([]*registry.WorkItem, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/items/?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/admin-api/%s/items?%s", client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
