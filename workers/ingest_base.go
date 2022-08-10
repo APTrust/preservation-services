@@ -329,7 +329,7 @@ func (b *IngestBase) IngestObjectGet(workItem *registry.WorkItem) (*service.Inge
 		return ingestObject, nil
 	}
 	if err != nil && b.Settings.NSQTopic != constants.IngestPreFetch {
-		return nil, fmt.Errorf("Ingest object not found in Redis: %v", err)
+		return nil, fmt.Errorf("Ingest object not found in Redis: %v. This bag may have been deleted from the receiving bucket due to validation failure or completed ingest.", err)
 	}
 	return service.NewIngestObject(
 		workItem.Bucket,
