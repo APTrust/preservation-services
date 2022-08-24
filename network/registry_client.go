@@ -46,7 +46,22 @@ func NewRegistryClient(HostURL, APIVersion, APIUser, APIKey string, logger *logg
 		//MaxIdleConnsPerHost: 2,
 		DisableKeepAlives: false,
 		ForceAttemptHTTP2: true,
-	}
+	} 
+	
+	// This is a workaround for a bug in the Go net/http transport,
+	// which never refreshes DNS lookups, even when TTL says to refresh
+	// every minute. See https://github.com/golang/go/issues/23427
+	// 
+	// There's a proposed fix at https://github.com/golang/go/issues/54429,
+	// but it's probably months away. Until then, we use this workaround
+	// created by the person who filed the initial bug report.
+	go func(tr *http.Transport) {
+		for {
+			time.Sleep(5 * time.Second)
+			tr.CloseIdleConnections()
+		}
+	}(transport)
+
 	httpClient := &http.Client{Jar: cookieJar, Transport: transport}
 	return &RegistryClient{
 		HostURL:    HostURL,
