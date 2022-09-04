@@ -47,11 +47,11 @@ Parameters:
         - STAGING
         - DEMO
         - PROD
-  
+
   LogDays:
     Description: 'Sets the number of days for retaining logs. Can be set according to Cluster'
     Type: Number
-    AllowedValues: [1, 7, 14, 30, 90] 
+    AllowedValues: [1, 7, 14, 30, 90]
     Default: 30
 
 Resources:
@@ -98,10 +98,10 @@ Resources:
       LogGroupName: !Sub '/ecs/${DNS}/preserv'
       RetentionInDays: !Ref 'LogDays'
       Tags:
-        - Key: Environment 
+        - Key: Environment
           Value: !Ref DNS
-        - Key: Service 
-          Value: preserv 
+        - Key: Service
+          Value: preserv
 
   AptdeleteService:
     Type: AWS::ECS::Service
@@ -289,7 +289,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_delete:1b3fd8a-master
+        Image: docker.io/aptrust/apt_delete:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -495,7 +495,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_fixity:1b3fd8a-master
+        Image: docker.io/aptrust/apt_fixity:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -702,7 +702,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_queue:1b3fd8a-master
+        Image: docker.io/aptrust/apt_queue:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -908,7 +908,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_queue_fixity:1b3fd8a-master
+        Image: docker.io/aptrust/apt_queue_fixity:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1113,7 +1113,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/bag_restorer:1b3fd8a-master
+        Image: docker.io/aptrust/bag_restorer:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1319,7 +1319,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/file_restorer:1b3fd8a-master
+        Image: docker.io/aptrust/file_restorer:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1525,7 +1525,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/glacier_restorer:1b3fd8a-master
+        Image: docker.io/aptrust/glacier_restorer:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1729,7 +1729,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_bucket_reader:1b3fd8a-master
+        Image: docker.io/aptrust/ingest_bucket_reader:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1937,7 +1937,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_cleanup:1b3fd8a-master
+        Image: docker.io/aptrust/ingest_cleanup:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2145,7 +2145,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_format_identifier:1b3fd8a-master
+        Image: docker.io/aptrust/ingest_format_identifier:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2353,7 +2353,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_pre_fetch:1b3fd8a-master
+        Image: docker.io/aptrust/ingest_pre_fetch:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2563,7 +2563,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_uploader:1b3fd8a-master
+        Image: docker.io/aptrust/ingest_preservation_uploader:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2771,7 +2771,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_verifier:1b3fd8a-master
+        Image: docker.io/aptrust/ingest_preservation_verifier:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2978,7 +2978,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_recorder:1b3fd8a-master
+        Image: docker.io/aptrust/ingest_recorder:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3187,7 +3187,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_staging_uploader:1b3fd8a-master
+        Image: docker.io/aptrust/ingest_staging_uploader:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3394,7 +3394,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_validator:1b3fd8a-master
+        Image: docker.io/aptrust/ingest_validator:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3602,7 +3602,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/reingest_manager:1b3fd8a-master
+        Image: docker.io/aptrust/reingest_manager:4b43522-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
