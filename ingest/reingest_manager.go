@@ -1,9 +1,6 @@
 package ingest
 
 import (
-	"net/url"
-	"strconv"
-
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
@@ -122,26 +119,14 @@ func (r *ReingestManager) ProcessFiles() (int, []*service.ProcessingError) {
 		registryFile := resp.GenericFile()
 		if registryFile != nil {
 			ingestFile.ID = registryFile.ID
+			for _, sr := range registryFile.StorageRecords {
+				if !ingestFile.HasRegistryURL(sr.URL) {
+					ingestFile.RegistryURLs = append(ingestFile.RegistryURLs, sr.URL)
+				}
+			}
 			r.FlagChanges(ingestFile, registryFile)
 		}
 
-		// Get a list of preservation storage URLs for this file
-		// that Registry already knows about. We'll need this later
-		// in the record phase. Registry has a unique constraint on
-		// these storage URLs, and if we try to re-save a StorageRecord
-		// whose URL is already in the DB, we'll get a unique constraint
-		// error.
-		params := url.Values{}
-		params.Add("generic_file_id", strconv.FormatInt(ingestFile.ID, 10))
-		resp = r.Context.RegistryClient.StorageRecordList(params)
-		if resp.Error != nil {
-			return append(errors, r.Error(ingestFile.Identifier(), resp.Error, false))
-		}
-		for _, sr := range resp.StorageRecords() {
-			if !ingestFile.HasRegistryURL(sr.URL) {
-				ingestFile.RegistryURLs = append(ingestFile.RegistryURLs, sr.URL)
-			}
-		}
 		return errors
 	}
 	options := service.IngestFileApplyOptions{
@@ -154,36 +139,6 @@ func (r *ReingestManager) ProcessFiles() (int, []*service.ProcessingError) {
 	return r.Context.RedisClient.IngestFilesApply(processFile, options)
 }
 
-// ProcessFile requests a GenericFile object from Registry. If Registry returns
-// a record, we know the file has been ingested before. We compare the checksum
-// of the Registry version with the checksum of the version we're about to
-// ingest. If they match, we flag our copy of the GenericFile as "no need to
-// store."
-//
-// If the file exists in Registry, this method updates our local GenericFile
-// UUID to match the Registry file's UUID, so that when we do store the
-// file, we overwrite the previous version.
-//
-// This returns true if it updated the IngestFile record Redis. It returns
-// an error if it has trouble communicating with Registry or Redis.
-func (r *ReingestManager) ProcessFile(ingestFile *service.IngestFile) (bool, error) {
-	updatedInRedis := false
-	resp := r.Context.RegistryClient.GenericFileByIdentifier(ingestFile.Identifier())
-	if resp.Error != nil {
-		return updatedInRedis, resp.Error
-	}
-	registryFile := resp.GenericFile()
-	if registryFile != nil {
-		r.FlagChanges(ingestFile, registryFile)
-		err := r.IngestFileSave(ingestFile)
-		if err != nil {
-			return updatedInRedis, err
-		}
-		updatedInRedis = true
-	}
-	return updatedInRedis, nil
-}
-
 // FlagChanges checks to see if the checksums on the IngestFile match the
 // checksums on Registry' GenericFile. If not, this flags the file as needing
 // to be re-copied to preservation storage. If checksums match, this flags
@@ -193,19 +148,10 @@ func (r *ReingestManager) ProcessFile(ingestFile *service.IngestFile) (bool, err
 // ingest. It returns an error if it has trouble getting info from Registry.
 func (r *ReingestManager) FlagChanges(ingestFile *service.IngestFile, registryFile *registry.GenericFile) (bool, error) {
 	fileChanged := false
-	params := url.Values{}
-	params.Add("generic_file_identifier", ingestFile.Identifier())
-	params.Add("sort", "datetime__desc")
-
-	resp := r.Context.RegistryClient.ChecksumList(params)
-	if resp.Error != nil {
-		r.Context.Logger.Errorf("Error getting checksums for generic file %s. Assuming this is a reingest. Error: %v", ingestFile.Identifier(), resp.Error)
-		return fileChanged, resp.Error
-	}
 
 	r.SetStorageOption(ingestFile, registryFile)
 
-	newestChecksumsFromRegistry := r.GetNewest(resp.Checksums())
+	newestChecksumsFromRegistry := r.GetNewest(registryFile.Checksums)
 	if r.ChecksumChanged(ingestFile, newestChecksumsFromRegistry) {
 		fileChanged = true
 		r.FlagForUpdate(ingestFile, registryFile)
