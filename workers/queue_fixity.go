@@ -93,7 +93,13 @@ func (q *QueueFixity) queueList() {
 
 	for {
 		resp := q.Context.RegistryClient.GenericFileList(params)
-		q.Context.Logger.Infof("GET %s", resp.Request.URL)
+		if resp == nil {
+			q.Context.Logger.Errorf("Registry response is nil for params %v", params)
+			continue
+		}
+		if resp.Request != nil && resp.Request.URL != nil {
+			q.Context.Logger.Infof("GET %s", resp.Request.URL)
+		}
 		if resp.Error != nil {
 			q.Context.Logger.Errorf("Error getting GenericFile list from Pharos: %s", resp.Error)
 		}
