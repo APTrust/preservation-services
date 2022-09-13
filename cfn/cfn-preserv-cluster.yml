@@ -93,7 +93,6 @@ Resources:
 
   LogGroup:
     Type: AWS::Logs::LogGroup
-    DeletionPolicy: Retain
     Properties:
       LogGroupName: !Sub '/ecs/${DNS}/preserv'
       RetentionInDays: !Ref 'LogDays'
