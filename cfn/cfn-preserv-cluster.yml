@@ -56,25 +56,19 @@ Parameters:
 
 Resources:
 
-  PreservCapacityProviderAssociation:
-    Type: AWS::ECS::ClusterCapacityProviderAssociations
-    Properties:
-      CapacityProviders:
-        - FARGATE
-        - FARGATE_SPOT
-      Cluster: !Ref Cluster
-      DefaultCapacityProviderStrategy:
-        - CapacityProvider: FARGATE
-          Weight: 1
-          Base: 1
-        - CapacityProvider: FARGATE_SPOT
-          Weight: 1
-          Base: 0
-
   Cluster:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Ref ClusterName
+      CapacityProviders:
+        - FARGATE  
+        - FARGATE_SPOT
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: FARGATE 
+          Weight: 1
+          Base: 1
+        - CapacityProvider: FARGATE_SPOT
+          Weight: 2
       ClusterSettings:
         - Name: containerInsights
           Value: enabled
@@ -93,6 +87,7 @@ Resources:
 
   LogGroup:
     Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
     Properties:
       LogGroupName: !Sub '/ecs/${DNS}/preserv'
       RetentionInDays: !Ref 'LogDays'
@@ -116,7 +111,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+     # LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -322,7 +317,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -529,7 +524,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -735,7 +730,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -941,7 +936,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -1147,7 +1142,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -1352,7 +1347,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -1558,7 +1553,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -1763,7 +1758,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -1971,7 +1966,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -2179,7 +2174,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -2388,7 +2383,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -2596,7 +2591,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -2804,7 +2799,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -3013,7 +3008,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -3222,7 +3217,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -3428,7 +3423,7 @@ Resources:
         Type: ECS
       DesiredCount: 1
       EnableExecuteCommand: true
-      LaunchType: FARGATE
+    #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
