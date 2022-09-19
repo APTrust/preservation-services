@@ -82,8 +82,11 @@ func TestRegionIsEmbedded(t *testing.T) {
 	b.Host = "amazonaws.com"
 	assert.False(t, b.RegionIsEmbeddedInHostName())
 
-	b.Host = "s3.us-west-1.amazonaws.com"
+	b.Host = "s3.us-east-2.amazonaws.com"
 	assert.True(t, b.RegionIsEmbeddedInHostName())
+
+	b.Host = "s3.us-west-1.amazonaws.com"
+	assert.False(t, b.RegionIsEmbeddedInHostName())
 
 	b.Host = "wasabisys.com"
 	assert.False(t, b.RegionIsEmbeddedInHostName())
@@ -92,5 +95,5 @@ func TestRegionIsEmbedded(t *testing.T) {
 	assert.False(t, b.RegionIsEmbeddedInHostName())
 
 	b.Host = "s3.us-west-1.wasabisys.com"
-	assert.True(t, b.RegionIsEmbeddedInHostName())
+	assert.False(t, b.RegionIsEmbeddedInHostName())
 }
