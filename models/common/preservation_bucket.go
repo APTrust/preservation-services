@@ -2,8 +2,11 @@ package common
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
+
+var HostWithRegionPrefix = regexp.MustCompile("^[Ss]3\\.\\w{2}-\\w+-\\d\\.")
 
 type PreservationBucket struct {
 	Bucket      string
@@ -49,5 +52,5 @@ func (b *PreservationBucket) GetHostNameWithRegion() string {
 }
 
 func (b *PreservationBucket) RegionIsEmbeddedInHostName() bool {
-	return strings.Contains(b.Host, b.Region)
+	return HostWithRegionPrefix.MatchString(b.Host)
 }
