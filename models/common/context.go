@@ -81,8 +81,9 @@ func getS3Clients(config *Config, logger *logging.Logger) map[string]*minio.Clie
 		client, err := minio.New(
 			creds.Host,
 			&minio.Options{
-				Creds:  credentials.NewStaticV4(creds.KeyID, creds.SecretKey, ""),
-				Secure: useSSL,
+				BucketLookup: minio.BucketLookupPath,
+				Creds:        credentials.NewStaticV4(creds.KeyID, creds.SecretKey, ""),
+				Secure:       useSSL,
 			})
 		if err != nil {
 			panic(err)
