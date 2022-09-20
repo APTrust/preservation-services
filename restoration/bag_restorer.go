@@ -532,7 +532,7 @@ func (r *BagRestorer) getS3Object(gf *registry.GenericFile) (obj *minio.Object, 
 		return nil, digests, err
 	}
 	r.Context.Logger.Infof("Getting %s from %s with UUID %s", gf.Identifier, b.Bucket, gf.UUID)
-	client := r.Context.S3Clients[b.Provider]
+	client := r.Context.S3Clients[b.Bucket]
 	obj, err = client.GetObject(ctx.Background(), b.Bucket, gf.UUID, minio.GetObjectOptions{})
 	return obj, digests, err
 }

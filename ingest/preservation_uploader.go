@@ -217,10 +217,10 @@ func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.Ing
 	return nil
 }
 
-func (uploader *PreservationUploader) getS3Client(provider string) (*minio.Client, error) {
-	client := uploader.Context.S3Clients[provider]
+func (uploader *PreservationUploader) getS3Client(providerOrBucket string) (*minio.Client, error) {
+	client := uploader.Context.S3Clients[providerOrBucket]
 	if client == nil {
-		return nil, fmt.Errorf("Cannot find S3 client for provider %s", provider)
+		return nil, fmt.Errorf("Cannot find S3 client for provider or bucket %s", providerOrBucket)
 	}
 	return client, nil
 }

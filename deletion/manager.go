@@ -196,7 +196,7 @@ func (m *Manager) deleteFile(gf *registry.GenericFile) (errors []*service.Proces
 // in this S3/Glacier bucket. Note that a file may be saved in multiple
 // buckets. This deletes from just one of those buckets.
 func (m *Manager) deleteFromPreservationStorage(bucket *common.PreservationBucket, key string) error {
-	client := m.Context.S3Clients[bucket.Provider]
+	client := m.Context.S3Clients[bucket.Bucket]
 	if client == nil {
 		return fmt.Errorf("No S3 client for provider %s", bucket.Provider)
 	}

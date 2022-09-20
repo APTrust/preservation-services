@@ -120,7 +120,7 @@ func (c *Checker) CalculateFixity(gf *registry.GenericFile) (fixity, url string,
 		c.Context.Logger.Errorf("Could not find restoration source for %s: %v", gf.Identifier, err)
 		return "", "", err
 	}
-	client := c.Context.S3Clients[preservationBucket.Provider]
+	client := c.Context.S3Clients[preservationBucket.Bucket]
 	if client == nil {
 		err = fmt.Errorf("Cannot find S3 client for provider %s", preservationBucket.Provider)
 		c.Context.Logger.Error(err.Error())

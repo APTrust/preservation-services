@@ -26,8 +26,9 @@ type Context struct {
 	// S3Clients is a map of S3 clients, where key
 	// is either a generic host name like "s3.amazonaws.com"
 	// or a specific bucket name, like "aptrust.preservation.oregon".
-	// We use bucket name keys only when copying items to long-term
-	// preservation buckets. This is a fix for https://trello.com/c/1yExAPkV
+	// We use bucket name keys only when writing to and reading from
+	// long-term preservation buckets.
+	// This is a fix for https://trello.com/c/1yExAPkV
 	S3Clients map[string]*minio.Client
 }
 
