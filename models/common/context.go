@@ -121,9 +121,12 @@ func getS3Clients(config *Config, logger *logging.Logger) map[string]*minio.Clie
 
 func (context *Context) S3StatObject(provider, bucket, key string) (minio.ObjectInfo, error) {
 	emptyInfo := minio.ObjectInfo{}
-	client := context.S3Clients[provider]
+	client := context.S3Clients[bucket]
 	if client == nil {
-		return emptyInfo, fmt.Errorf("No S3 client for provider %s", provider)
+		client = context.S3Clients[provider]
+	}
+	if client == nil {
+		return emptyInfo, fmt.Errorf("No S3 client for provider %s or bucket %s", provider, bucket)
 	}
 	//client.TraceOn(GetTracer(context.Logger))
 	info, err := client.StatObject(ctx.Background(), bucket, key, minio.StatObjectOptions{})
@@ -132,9 +135,12 @@ func (context *Context) S3StatObject(provider, bucket, key string) (minio.Object
 }
 
 func (context *Context) S3GetObject(provider, bucket, key string) (*minio.Object, error) {
-	client := context.S3Clients[provider]
+	client := context.S3Clients[bucket]
 	if client == nil {
-		return nil, fmt.Errorf("No S3 client for provider %s", provider)
+		client = context.S3Clients[provider]
+	}
+	if client == nil {
+		return nil, fmt.Errorf("No S3 client for provider %s or bucket %s", provider, bucket)
 	}
 	return client.GetObject(ctx.Background(), bucket, key, minio.GetObjectOptions{})
 }
