@@ -160,7 +160,11 @@ func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.Ing
 		uploader.Context.Logger.Error(ingestFile.Identifier(), err)
 		return uploader.Error(ingestFile.Identifier(), err, false)
 	}
-	destClient, err := uploader.getS3Client(preservationBucket.Provider)
+	// Note that, while we normally just get a general client for the S3 provider,
+	// Minio gets confused about which regions buckets are in. So in this case,
+	// we get a specific client for the target bucket, with the region explicitly
+	// pre-set. See https://trello.com/c/1yExAPkV
+	destClient, err := uploader.getS3Client(preservationBucket.Bucket)
 	if err != nil {
 		uploader.Context.Logger.Error(ingestFile.Identifier(), err)
 		return uploader.Error(ingestFile.Identifier(), err, false)

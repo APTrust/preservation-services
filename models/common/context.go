@@ -22,7 +22,13 @@ type Context struct {
 	NSQClient      *network.NSQClient
 	RedisClient    *network.RedisClient
 	RegistryClient *network.RegistryClient
-	S3Clients      map[string]*minio.Client
+
+	// S3Clients is a map of S3 clients, where key
+	// is either a generic host name like "s3.amazonaws.com"
+	// or a specific bucket name, like "aptrust.preservation.oregon".
+	// We use bucket name keys only when copying items to long-term
+	// preservation buckets. This is a fix for https://trello.com/c/1yExAPkV
+	S3Clients map[string]*minio.Client
 }
 
 func NewContext() *Context {
@@ -69,7 +75,7 @@ func getRegistryClient(config *Config, logger *logging.Logger) *network.Registry
 }
 
 func getS3Clients(config *Config, logger *logging.Logger) map[string]*minio.Client {
-	s3Clients := make(map[string]*minio.Client, len(config.S3Credentials))
+	s3Clients := make(map[string]*minio.Client, len(config.PreservationBuckets)+len(config.S3Credentials))
 	useSSL := true
 	if config.ConfigName == "dev" || config.ConfigName == "test" {
 		useSSL = false // talking to localhost in dev and test
@@ -81,14 +87,33 @@ func getS3Clients(config *Config, logger *logging.Logger) map[string]*minio.Clie
 		client, err := minio.New(
 			creds.Host,
 			&minio.Options{
-				BucketLookup: minio.BucketLookupPath,
-				Creds:        credentials.NewStaticV4(creds.KeyID, creds.SecretKey, ""),
-				Secure:       useSSL,
+				Creds:  credentials.NewStaticV4(creds.KeyID, creds.SecretKey, ""),
+				Secure: useSSL,
 			})
 		if err != nil {
 			panic(err)
 		}
 		s3Clients[provider] = client
+		logger.Infof("Added general S3 client for provider %s", provider)
+
+		// Add clients for specific preservation buckets, with region set explicitly.
+		// https://trello.com/c/1yExAPkV
+		for _, bucket := range config.PreservationBuckets {
+			if bucket.Host == creds.Host {
+				client, err := minio.New(
+					creds.Host,
+					&minio.Options{
+						Creds:  credentials.NewStaticV4(creds.KeyID, creds.SecretKey, ""),
+						Region: bucket.Region,
+						Secure: useSSL,
+					})
+				if err != nil {
+					panic(err)
+				}
+				s3Clients[bucket.Bucket] = client
+				logger.Infof("Added bucket-specific S3 client for bucket %s in region %s at provider %s", bucket.Bucket, bucket.Region, provider)
+			}
+		}
 	}
 	return s3Clients
 }
