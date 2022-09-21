@@ -35,9 +35,11 @@ func (b *PreservationBucket) URLFor(key string) string {
 
 // HostsURL returns true if the given URL is hosted by this PreservationBucket.
 func (b *PreservationBucket) HostsURL(url string) bool {
-	// Wasabi host names already include region.
-	// AWS host names don't (in our system).
-	return strings.HasPrefix(url, fmt.Sprintf("https://%s/%s/", b.GetHostNameWithRegion(), b.Bucket))
+	// Wasabi urls include region.
+	// Older AWS urls do not include region; newer ones do.
+	urlWithRegion := fmt.Sprintf("https://%s/%s/", b.GetHostNameWithRegion(), b.Bucket)
+	urlWithoutRegion := fmt.Sprintf("https://%s/%s/", b.Host, b.Bucket)
+	return strings.HasPrefix(url, urlWithRegion) || strings.HasPrefix(url, urlWithoutRegion)
 }
 
 func (b *PreservationBucket) GetHostNameWithRegion() string {

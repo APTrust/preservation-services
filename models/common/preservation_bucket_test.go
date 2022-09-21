@@ -34,15 +34,30 @@ func TestPreservationBucketURLFor(t *testing.T) {
 
 func TestHostsURL(t *testing.T) {
 	preservationBucket := getBucket()
+
+	// Should match url with correct region.
 	url1 := "https://s3.us-east-2.flava.flave/test-bucket/abc"
-	url2 := "https://s3.us-west-1.flava.flave/test-bucket/xyz"
 	assert.True(t, preservationBucket.HostsURL(url1))
+
+	// Should not match url with wrong region.
+	url2 := "https://s3.us-west-1.flava.flave/test-bucket/xyz"
 	assert.False(t, preservationBucket.HostsURL(url2))
+
+	// Should match url with no region.
+	url3 := "https://s3.flava.flave/test-bucket/xyz"
+	assert.True(t, preservationBucket.HostsURL(url3))
 
 	preservationBucket.Provider = constants.StorageProviderWasabiOR
 	preservationBucket.Region = constants.RegionWasabiUSWest1
+
+	// Wrong region -> no match
 	assert.False(t, preservationBucket.HostsURL(url1))
+
+	// Right region matches
 	assert.True(t, preservationBucket.HostsURL(url2))
+
+	// URL without region matches
+	assert.True(t, preservationBucket.HostsURL(url3))
 }
 
 func TestGetHostNameWithRegion(t *testing.T) {
