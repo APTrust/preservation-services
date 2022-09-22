@@ -83,6 +83,7 @@ func (q *QueueFixity) queueList() {
 	params.Add("storage_option__in", constants.StorageStandard)
 	params.Add("storage_option__in", constants.StorageWasabiVA)
 	params.Add("storage_option__in", constants.StorageWasabiOR)
+	params.Add("state", constants.StateActive)
 	params.Set("sort", "last_fixity_check")
 
 	hours := q.Context.Config.MaxDaysSinceFixityCheck * 24 * -1
