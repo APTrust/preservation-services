@@ -124,7 +124,7 @@ push: ## Push the Docker image up to the registry
 
 update-template: ## Update Cloudformation template with latest container version
 	@echo "Overwriting container revision and branch from the CFN template to the CFN deployment YAML document."
-	sed 's/registry:multi/registry:$(REVISION)-$(BRANCH)/g' cfn/cfn-registry-cluster.tmpl > cfn/cfn-registry-cluster.tmpl2
+	sed 's/multi/$(REVISION)-$(BRANCH)/g' cfn/cfn-preserv-cluster.tmpl > cfn/cfn-preserv-cluster.yml
 
 clean: ## Clean the generated/compiles files
 	@echo "TBD"
