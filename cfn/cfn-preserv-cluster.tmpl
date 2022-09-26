@@ -281,6 +281,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL               
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/apt_delete:multi
@@ -487,6 +493,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/apt_fixity:multi
@@ -694,6 +706,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/apt_queue:multi
@@ -899,7 +917,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/apt_queue_fixity:multi
@@ -1104,7 +1128,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/bag_restorer:multi
@@ -1310,7 +1340,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/file_restorer:multi
@@ -1516,7 +1552,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/glacier_restorer:multi
@@ -1720,7 +1762,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/ingest_bucket_reader:multi
@@ -1928,7 +1976,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/ingest_cleanup:multi
@@ -2136,7 +2190,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/ingest_format_identifier:multi
@@ -2344,7 +2404,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/ingest_pre_fetch:multi
@@ -2554,7 +2620,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/ingest_preservation_uploader:multi
@@ -2762,7 +2834,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/ingest_preservation_verifier:multi
@@ -2969,7 +3047,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL 
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/ingest_recorder:multi
@@ -3178,7 +3262,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/ingest_staging_uploader:multi
@@ -3385,7 +3475,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/ingest_validator:multi
@@ -3593,7 +3689,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+        - Name: QUEUE_FIXITY_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
+        - Name: MAX_FIXITY_ITEMS_PER_RUN
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
+        - Name: APT_QUEUE_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/reingest_manager:multi
