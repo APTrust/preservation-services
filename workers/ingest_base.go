@@ -351,6 +351,7 @@ func (b *IngestBase) FindOtherIngestRequests(workItem *registry.WorkItem) []*reg
 	v := url.Values{}
 	v.Add("per_page", "20")
 	v.Add("name", workItem.Name)
+	v.Add("institution_id", fmt.Sprintf("%d", workItem.InstitutionID))
 	v.Add("action", constants.ActionIngest)
 	v.Add("sort", "date_processed__desc")
 	resp := b.Context.RegistryClient.WorkItemList(v)
