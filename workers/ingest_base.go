@@ -252,6 +252,10 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	// **** Try removing this guard.
 	if workItem.Stage == constants.StageCleanup {
 		ingestObject, err := b.IngestObjectGet(workItem)
+		if err != nil {
+			b.Context.Logger.Error(err.Error())
+			workItem.Note = err.Error()
+		}
 		if ingestObject == nil || err != nil {
 			message := fmt.Sprintf("Rejecting WorkItem %d because Redis has no IngestObject. Ingest may already be complete.", workItem.ID)
 			b.Context.Logger.Info(message)
