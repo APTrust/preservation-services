@@ -298,6 +298,10 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	// There's a newer ingest request in Registry' WorkItems list,
 	// and we're not too far along to abandon this.
 	if b.SupersededByNewerRequest(workItem) {
+		resp := b.Context.RegistryClient.WorkItemSave(workItem)
+		if resp.Error != nil {
+			b.Context.Logger.Warningf("Error trying to tell Registry that WorkItem %d should be cancelled because newer bag was uploaded. %v", workItem.ID, resp.Error)
+		}
 		b.PushToQueue(workItem, constants.IngestCleanup)
 		return true
 	}
@@ -403,7 +407,7 @@ func (b *IngestBase) StillIngestingOlderVersion(workItem *registry.WorkItem) boo
 func (b *IngestBase) SupersededByNewerRequest(workItem *registry.WorkItem) bool {
 	newerWorkItem := b.FindNewerIngestRequest(workItem)
 	if newerWorkItem != nil && !b.IsLateStageOfIngest() {
-		message := fmt.Sprintf("Skipping WorkItem %d because a newer version of this bag is waiting to be ingested in WorkItem %d", workItem.ID, newerWorkItem.ID)
+		message := fmt.Sprintf("Skipping WorkItem %d because a newer version of this bag is waiting to be ingested in WorkItem %d. Staging files and Redis data will remain until APTrust admin cleans them out.", workItem.ID, newerWorkItem.ID)
 		b.Context.Logger.Info(message)
 		workItem.MarkNoLongerInProgress(
 			workItem.Stage,
@@ -411,6 +415,7 @@ func (b *IngestBase) SupersededByNewerRequest(workItem *registry.WorkItem) bool 
 			message,
 		)
 		workItem.Retry = false
+		workItem.NeedsAdminReview = true
 		return true
 	}
 	return false

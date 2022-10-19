@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -394,6 +395,10 @@ func TestIngestBase_ShouldAbandonForNewerVersion(t *testing.T) {
 	ingestBase := getIngestBase()
 	item := copyWorkItem(t, testWorkItem)
 
+	resp := ingestBase.Context.RegistryClient.WorkItemSave(item)
+	require.Nil(t, resp.Error)
+	item = resp.WorkItem()
+
 	// False because ETag of item in S3 receving matches
 	// ETag of WorkItem
 	assert.False(t, ingestBase.ShouldAbandonForNewerVersion(item))
@@ -402,8 +407,25 @@ func TestIngestBase_ShouldAbandonForNewerVersion(t *testing.T) {
 	item.ETag = "12341234123412341234123412341234"
 	assert.True(t, ingestBase.ShouldAbandonForNewerVersion(item))
 
-	// False, because even though ETag no longer matches,
-	// we too far into the ingest process to turn back.
+	// Make sure we set the right properties on this after
+	// determining we should abandon it, and that it was saved
+	// to the Registry.
+	resp = ingestBase.Context.RegistryClient.WorkItemByID(item.ID)
+	require.Nil(t, resp.Error)
+	savedItem := resp.WorkItem()
+	require.NotNil(t, savedItem)
+	assert.Equal(t, constants.StageReceive, savedItem.Stage)
+	assert.Equal(t, constants.StatusCancelled, savedItem.Status)
+	assert.True(t, strings.Contains(savedItem.Note, "a newer version of this bag is waiting to be ingested"))
+	assert.True(t, savedItem.NeedsAdminReview)
+	assert.False(t, savedItem.Retry)
+
+	// Get a fresh copy of the item for this test.
+	item = copyWorkItem(t, testWorkItem)
+	item.ETag = "12341234123412341234123412341234"
+
+	// Test should return false, because even though ETag no longer
+	// matches, we're too far into the ingest process to turn back.
 	ingestBase.Settings.NSQTopic = constants.IngestStorage
 	assert.False(t, ingestBase.ShouldAbandonForNewerVersion(item))
 }
