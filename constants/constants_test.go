@@ -19,7 +19,7 @@ type Item struct {
 var items = []Item{
 	Item{
 		Action:         constants.ActionIngest,
-		Stage:          constants.StageRequested,
+		Stage:          constants.StageReceive,
 		FileIdentifier: "",
 		Expected:       constants.IngestPreFetch,
 	},
@@ -115,4 +115,42 @@ func TestWasabiStorageProviders(t *testing.T) {
 	assert.True(t, util.StringListContains(constants.WasabiStorageProviders, constants.StorageWasabiOR))
 	assert.True(t, util.StringListContains(constants.WasabiStorageProviders, constants.StorageWasabiVA))
 	assert.False(t, util.StringListContains(constants.WasabiStorageProviders, constants.StorageStandard))
+}
+
+func TestIngestStageFor(t *testing.T) {
+	stage, err := constants.IngestStageFor(constants.IngestPreFetch)
+	assert.Nil(t, err)
+	assert.Equal(t, constants.StageReceive, stage)
+
+	stage, err = constants.IngestStageFor(constants.IngestValidation)
+	assert.Nil(t, err)
+	assert.Equal(t, constants.StageValidate, stage)
+
+	stage, err = constants.IngestStageFor(constants.IngestReingestCheck)
+	assert.Nil(t, err)
+	assert.Equal(t, constants.StageReingestCheck, stage)
+
+	stage, err = constants.IngestStageFor(constants.IngestStaging)
+	assert.Nil(t, err)
+	assert.Equal(t, constants.StageCopyToStaging, stage)
+
+	stage, err = constants.IngestStageFor(constants.IngestFormatIdentification)
+	assert.Nil(t, err)
+	assert.Equal(t, constants.StageFormatIdentification, stage)
+
+	stage, err = constants.IngestStageFor(constants.IngestStorage)
+	assert.Nil(t, err)
+	assert.Equal(t, constants.StageStore, stage)
+
+	stage, err = constants.IngestStageFor(constants.IngestStorageValidation)
+	assert.Nil(t, err)
+	assert.Equal(t, constants.StageStorageValidation, stage)
+
+	stage, err = constants.IngestStageFor(constants.IngestRecord)
+	assert.Nil(t, err)
+	assert.Equal(t, constants.StageRecord, stage)
+
+	stage, err = constants.IngestStageFor(constants.IngestCleanup)
+	assert.Nil(t, err)
+	assert.Equal(t, constants.StageCleanup, stage)
 }

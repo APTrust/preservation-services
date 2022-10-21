@@ -239,6 +239,11 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 		return true
 	}
 
+	if !b.IsCorrectStage(workItem.Stage) {
+		b.Context.Logger.Warningf("Rejecting WorkItem %d because its stage is %s.", workItem.ID, workItem.Stage)
+		return true
+	}
+
 	// DEBUG
 	//if workItem.Stage == constants.StageCleanup {
 	//	j, _ := json.Marshal(workItem)
@@ -320,6 +325,18 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	}
 
 	return false
+}
+
+// IsCorrectStage returns true if the WorkItem's stage matches the
+// the ingest stage that this worker is supposed to be processing.
+func (b *Base) IsCorrectStage(workItemStage string) bool {
+	workerStage, err := constants.IngestStageFor(b.Settings.NSQTopic)
+	if err != nil {
+		b.Context.Logger.Errorf("Constants has no stage info for NSQ topic %s", b.Settings.NSQTopic)
+		return false
+	}
+	b.Context.Logger.Infof("DEBUG: Topic = %s,  WorkerStage = %s, WorkItem.Stage = %s", b.Settings.NSQTopic, workerStage, workItemStage)
+	return workerStage == workItemStage
 }
 
 // IngestObjectGet returns the IngestObject for the specified WorkItem from

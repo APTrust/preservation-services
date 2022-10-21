@@ -355,6 +355,17 @@ func TestIngestBase_ImAlreadyProcessingThis(t *testing.T) {
 	assert.True(t, ingestBase.ImAlreadyProcessingThis(testWorkItem))
 }
 
+func TestIngestBase_IsCorrectStage(t *testing.T) {
+	ingestBase := getIngestBase()
+	lastStage := constants.StageCleanup
+	for _, s := range constants.IngestStages {
+		ingestBase.Settings.NSQTopic = s.NSQTopic
+		assert.True(t, ingestBase.IsCorrectStage(s.Name))
+		assert.False(t, ingestBase.IsCorrectStage(lastStage))
+		lastStage = s.Name
+	}
+}
+
 func TestIngestBase_Add_Remove_InProcessList(t *testing.T) {
 	ingestBase := getIngestBase()
 

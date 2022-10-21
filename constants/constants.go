@@ -243,23 +243,16 @@ var ManifestTypes = []string{
 	FileTypeTagManifest,
 }
 
-var ingestTopics = map[string]string{
-	ActionIngest + StageRequested:            IngestPreFetch,
-	ActionIngest + StageValidate:             IngestValidation,
-	ActionIngest + StageReingestCheck:        IngestReingestCheck,
-	ActionIngest + StageCopyToStaging:        IngestStaging,
-	ActionIngest + StageFormatIdentification: IngestFormatIdentification,
-	ActionIngest + StageStore:                IngestStorage,
-	ActionIngest + StageStorageValidation:    IngestStorageValidation,
-	ActionIngest + StageRecord:               IngestRecord,
-	ActionIngest + StageCleanup:              IngestCleanup,
-}
-
 // TopicFor returns the NSQ topic for the specified action and stage.
 // Param fileIdentifier may be GenericFile.Identifier or an empty string.
 func TopicFor(action, stage, fileIdentifier string) (topic string, err error) {
 	if action == ActionIngest {
-		topic = ingestTopics[action+stage]
+		//topic = ingestTopics[action+stage]
+		for _, s := range IngestStages {
+			if s.Name == stage {
+				topic = s.NSQTopic
+			}
+		}
 	} else if action == ActionFixityCheck {
 		topic = TopicFixity
 	} else if action == ActionRestoreFile {
@@ -275,4 +268,16 @@ func TopicFor(action, stage, fileIdentifier string) (topic string, err error) {
 		err = fmt.Errorf("No NSQ topic for %s/%s", action, stage)
 	}
 	return topic, err
+}
+
+func IngestStageFor(topic string) (stage string, err error) {
+	for _, s := range IngestStages {
+		if s.NSQTopic == topic {
+			stage = s.Name
+		}
+	}
+	if stage == "" {
+		err = fmt.Errorf("Cannot map NSQ topic %s to any ingest stage", topic)
+	}
+	return stage, err
 }
