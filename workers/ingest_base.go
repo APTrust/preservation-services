@@ -180,6 +180,7 @@ func (b *IngestBase) ProcessFatalErrorChannel() {
 		task.WorkItem.Retry = false
 		task.WorkItem.NeedsAdminReview = true
 		task.WorkItem.Status = constants.StatusFailed
+		task.WorkItem.Outcome = "Ingest failed due to fatal error."
 
 		// NSQ
 		if b.Settings.PushToCleanupOnFatalError && task.WorkItem.Stage != constants.StageCleanup {
