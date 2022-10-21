@@ -90,6 +90,9 @@ func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingErr
 	err = m.scan(scanner)
 	if err != nil {
 		isFatal := strings.Contains(err.Error(), "unexpected EOF")
+		if isFatal {
+			err = fmt.Errorf("Got unexpected EOF while trying to parse bag. Tar file in receiving bucket is corrupt or format is invalid.")
+		}
 		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, isFatal))
 	}
 
