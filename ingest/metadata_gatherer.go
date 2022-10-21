@@ -89,7 +89,8 @@ func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingErr
 
 	err = m.scan(scanner)
 	if err != nil {
-		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, false))
+		isFatal := strings.Contains(err.Error(), "unexpected EOF")
+		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, isFatal))
 	}
 
 	// Special action for staging system, where re-deployments can leave
