@@ -87,9 +87,9 @@ class TestRunner
     names += extra_services
     names.each do |name|
       ingest_services.push({
-        name: name,
-        cmd: "#{self.ingest_bin_dir}/#{name}",
-        msg: "Started #{name}"})
+                             name: name,
+                             cmd: "#{self.ingest_bin_dir}/#{name}",
+                             msg: "Started #{name}"})
     end
     ingest_services
   end
@@ -171,7 +171,7 @@ class TestRunner
     puts cmd
     pid = Process.spawn(env_hash, cmd, chdir: project_root)
     Process.wait pid
-    self.print_results
+    self.print_results    
   end
 
 
@@ -249,7 +249,7 @@ class TestRunner
     pid = Process.spawn(env_hash, svc[:cmd], out: log_file, err: log_file)
     Process.detach pid
     log_started(svc, pid, log_file)
-	  @pids[svc[:name]] = pid
+	@pids[svc[:name]] = pid
   end
 
   def log_started(svc, pid, log_file)
@@ -274,7 +274,7 @@ class TestRunner
     begin
   	  Process.kill('TERM', pid)
   	rescue
-	    puts "Hmm... Couldn't kill #{name}."
+	  puts "Hmm... Couldn't kill #{name}."
       puts "Check system processes to see if a version "
       puts "of that process is lingering from a previous test run."
 	end
@@ -396,10 +396,10 @@ class TestRunner
 	  cmd = 'go run -tags=test registry.go'
 	  log_file = log_file_path('registry')
 	  registry_pid = Process.spawn(env,
-								 cmd,
-								 chdir: env['REGISTRY_ROOT'],
-								 out: [log_file, 'w'],
-								 err: [log_file, 'w'])
+								   cmd,
+								   chdir: env['REGISTRY_ROOT'],
+								   out: [log_file, 'w'],
+								   err: [log_file, 'w'])
 	  Process.detach registry_pid
       sleep 3
 
@@ -444,10 +444,11 @@ class TestRunner
       stop_service(name, pid)
     end
     @services_stopped = true
-    puts "Elapsed time: #{Time.now - @start_time} seconds"
   end
 
   def print_results
+    puts "\n"
+    puts "Elapsed time: #{Time.now - @start_time} seconds"
     puts "Logs are in #{File.join(ENV['HOME'], "tmp", "logs")}"
     if $?.success?
       puts "\n\n    **** 😁 PASS 😁 **** \n\n".force_encoding('utf-8')
