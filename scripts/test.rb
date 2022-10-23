@@ -20,7 +20,7 @@ class TestRunner
     bin = self.bin_dir
     @unit_services = [
       {
-        name: "redis",
+        name: "redis-server",
         cmd: "#{bin}/redis-server --dir ~/tmp/redis/",
         msg: "Redis is running on 127.0.0.1:6379"
       },
@@ -44,7 +44,7 @@ class TestRunner
         msg: "Started nsqd at 127.0.0.1:4151"
       },
       {
-        name: "nsqdadmin",
+        name: "nsqadmin",
         cmd: "#{bin}/nsqadmin --lookupd-http-address=127.0.0.1:4161",
         msg: "Started nsqadmin at 127.0.0.1:4171"
       }
@@ -164,7 +164,7 @@ class TestRunner
     start_ingest_services(["ingest_bucket_reader", "apt_queue"])
 
     puts "Giving the workers some time to finish"
-    sleep(10)
+    sleep(15)
 
     puts "Starting end-to-end tests..."
     cmd = "go test -p 1 -tags=e2e ./e2e/..."
@@ -249,7 +249,7 @@ class TestRunner
     pid = Process.spawn(env_hash, svc[:cmd], out: log_file, err: log_file)
     Process.detach pid
     log_started(svc, pid, log_file)
-	@pids[svc[:name]] = pid
+	  @pids[svc[:name]] = pid
   end
 
   def log_started(svc, pid, log_file)
@@ -265,14 +265,46 @@ class TestRunner
       puts "Pid for #{name} is zero. Can't kill that..."
 	  return
 	end
-	puts "Stopping #{name} service (pid #{pid})"
-	begin
-	  Process.kill('TERM', pid)
-	rescue
-	  puts "Hmm... Couldn't kill #{name}."
+    os = (/darwin/ =~ RUBY_PLATFORM) ? "osx" : "linux"
+    if os == "linux"
+      stop_service_linux(name)
+      return
+    end
+    puts "Stopping #{name} service (pid #{pid})"
+    begin
+  	  Process.kill('TERM', pid)
+  	rescue
+	    puts "Hmm... Couldn't kill #{name}."
       puts "Check system processes to see if a version "
       puts "of that process is lingering from a previous test run."
 	end
+  end
+
+  # This method exists because Process.spawn on Linux returns the
+  # pid of a short-lived parent process, which creates the service
+  # and then exits. That means we can't know the pid of the actual
+  # service we want to kill.
+  #
+  # Note that killing a process by name carries some risk. This will
+  # kill ALL nsq, redis, minio, and registry processes. That should
+  # be OK on dev/test systems, but if you're wondering where your
+  # redis/minio/nsq/registry process went, it went down this drain.
+  #
+  # If you're running these tests in a system that has its own long-
+  # running minio/redis/nsq services, the tests will likely fail
+  # anyway because those services will hold on to stale data.
+  def stop_service_linux(name)
+    pids = `pidof #{name}`
+    pids.split(' ').each do |pid|
+      begin
+        Process.kill('TERM', pid.to_i)
+        puts "(Linux) Killed #{name} with pid #{pid}"
+      rescue
+        puts "Hmm... Couldn't kill #{name}."
+        puts "Check system processes to see if a version "
+        puts "of that process is lingering from a previous test run."
+      end
+    end
   end
 
   def env_hash
