@@ -21,7 +21,10 @@ import (
 
 // Object identifier is loaded as part of Registry integration fixtures
 var objIdentifier = "institution1.edu/photos"
-var fileIdentifier = "institution1.edu/data/test_http_file.txt"
+var fileIdentifier = "institution1.edu/photos/data/test_http_file.txt"
+
+// This will have a non-zero value after setup
+var genericFileID = int64(0)
 
 var fileUUID = "8dc5ba50-4a53-4cfc-bb27-6f5e799ace53"
 var expectedFixity = "504bb0ab957b554163bb242266dbac895f0fdcd63a1885c573099d901636b0a7"
@@ -63,6 +66,7 @@ func createRegistryRecords(t *testing.T, context *common.Context, records []*reg
 	resp := context.RegistryClient.GenericFileSave(gf)
 	require.Nil(t, resp.Error)
 	gf = resp.GenericFile() // now has ID
+	genericFileID = gf.ID
 
 	// Save a sha256 checksum
 	now := time.Now().UTC()
@@ -109,16 +113,17 @@ func getGenericFile(t *testing.T, context *common.Context) *registry.GenericFile
 
 func TestNewChecker(t *testing.T) {
 	context := common.NewContext()
-	checker := fixity.NewChecker(context, fileIdentifier)
+	checker := fixity.NewChecker(context, genericFileID)
 	require.NotNil(t, checker)
 	assert.Equal(t, context, checker.Context)
-	assert.Equal(t, fileIdentifier, checker.Identifier)
+	assert.Equal(t, genericFileID, checker.GenericFileID)
 }
 
 func TestRun_FixityMatch(t *testing.T) {
 	setup(t)
+	require.NotEmpty(t, genericFileID, "GenericFile.ID was not set during setup()")
 	context := common.NewContext()
-	checker := fixity.NewChecker(context, fileIdentifier)
+	checker := fixity.NewChecker(context, genericFileID)
 	count, errors := checker.Run()
 	assert.Equal(t, 1, count)
 	assert.Empty(t, errors)
@@ -127,7 +132,7 @@ func TestRun_FixityMatch(t *testing.T) {
 func TestSupportingMethods(t *testing.T) {
 	setup(t)
 	context := common.NewContext()
-	checker := fixity.NewChecker(context, fileIdentifier)
+	checker := fixity.NewChecker(context, genericFileID)
 
 	// Need to get GenericFile with StorageRecords
 	gf := context.RegistryClient.GenericFileByIdentifier(fileIdentifier).GenericFile()

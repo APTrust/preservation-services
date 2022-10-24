@@ -117,7 +117,9 @@ func waitForDeletionCompletion() {
 
 func queueFixityItems() {
 	for _, testFile := range e2e.FilesForFixityCheck {
-		err := ctx.Context.NSQClient.EnqueueString(constants.TopicFixity, testFile.Identifier)
+		gf := ctx.Context.RegistryClient.GenericFileByIdentifier(testFile.Identifier).GenericFile()
+		require.NotNil(ctx.T, gf)
+		err := ctx.Context.NSQClient.Enqueue(constants.TopicFixity, gf.ID)
 		require.Nil(ctx.T, err, testFile.Identifier)
 	}
 }

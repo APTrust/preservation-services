@@ -25,16 +25,19 @@ type Checker struct {
 	// clients to access S3 and Registry.
 	Context *common.Context
 
-	// Identifier is the identifier of the GenericFile whose fixity
+	// GenericFileIdentifier is the identifier of the GenericFile whose fixity
 	// we're checking.
-	Identifier string
+	GenericFileIdentifier string
+
+	// ID of the file we're checking.
+	GenericFileID int64
 }
 
 // NewChecker creates a new fixity.Checker.
-func NewChecker(context *common.Context, identifier string) *Checker {
+func NewChecker(context *common.Context, gfId int64) *Checker {
 	return &Checker{
-		Context:    context,
-		Identifier: identifier,
+		Context:       context,
+		GenericFileID: gfId,
 	}
 }
 
@@ -62,7 +65,7 @@ func (c *Checker) Run() (count int, errors []*service.ProcessingError) {
 		errors = append(errors, c.Error(err, true))
 		return 0, errors
 	}
-	c.Context.Logger.Infof("Preservation file %s has fixity %s", gf.Identifier, actualFixity)
+	c.Context.Logger.Infof("Preservation file %s (%d) has fixity %s", gf.Identifier, gf.ID, actualFixity)
 	fixityMatched, err := c.RecordFixityEvent(gf, url, checksum.Digest, actualFixity)
 	if err != nil {
 		errors = append(errors, c.Error(err, true))
@@ -70,20 +73,22 @@ func (c *Checker) Run() (count int, errors []*service.ProcessingError) {
 	}
 	count = 1
 	if !fixityMatched {
-		err = fmt.Errorf("Fixity mismatch for %s in %s. Expected %s, got %s.", gf.Identifier, url, checksum.Digest, actualFixity)
+		err = fmt.Errorf("Fixity mismatch for %s (%d) in %s. Expected %s, got %s.", gf.Identifier, gf.ID, url, checksum.Digest, actualFixity)
 		errors = append(errors, c.Error(err, true))
 	} else {
-		c.Context.Logger.Infof("Fixity matched for %s", gf.Identifier)
+		c.Context.Logger.Infof("Fixity matched for %s (%d)", gf.Identifier, gf.ID)
 	}
 	return count, errors
 }
 
 func (c *Checker) GetGenericFile() (*registry.GenericFile, error) {
-	resp := c.Context.RegistryClient.GenericFileByIdentifier(c.Identifier)
+	resp := c.Context.RegistryClient.GenericFileByID(c.GenericFileID)
 	if resp.Error != nil {
 		return nil, resp.Error
 	}
-	return resp.GenericFile(), nil
+	gf := resp.GenericFile()
+	c.GenericFileIdentifier = gf.Identifier
+	return gf, nil
 }
 
 func (c *Checker) IsGlacierOnlyFile(gf *registry.GenericFile) bool {
@@ -92,7 +97,7 @@ func (c *Checker) IsGlacierOnlyFile(gf *registry.GenericFile) bool {
 
 func (c *Checker) GetLatestSha256() (checksum *registry.Checksum, err error) {
 	params := url.Values{}
-	params.Set("generic_file_identifier", c.Identifier)
+	params.Set("generic_file_id", fmt.Sprintf("%d", c.GenericFileID))
 	params.Set("algorithm", constants.AlgSha256)
 	resp := c.Context.RegistryClient.ChecksumList(params)
 	if resp.Error != nil {
@@ -106,9 +111,9 @@ func (c *Checker) GetLatestSha256() (checksum *registry.Checksum, err error) {
 		}
 	}
 	if checksum == nil {
-		err = fmt.Errorf("Registry returned no sha256 checksum for file %s", c.Identifier)
+		err = fmt.Errorf("Registry returned no sha256 checksum for file %s", c.GenericFileIdentifier)
 	} else {
-		c.Context.Logger.Infof("Got checksum %s for file %s", checksum.Digest, c.Identifier)
+		c.Context.Logger.Infof("Got checksum %s for file %s", checksum.Digest, c.GenericFileIdentifier)
 	}
 	return checksum, err
 }
@@ -117,7 +122,7 @@ func (c *Checker) CalculateFixity(gf *registry.GenericFile) (fixity, url string,
 	// TODO: Stream S3 download through sha256 hash.
 	preservationBucket, storageRecord, err := restoration.BestRestorationSource(c.Context, gf)
 	if err != nil {
-		c.Context.Logger.Errorf("Could not find restoration source for %s: %v", gf.Identifier, err)
+		c.Context.Logger.Errorf("Could not find restoration source for %s (%d): %v", gf.Identifier, gf.ID, err)
 		return "", "", err
 	}
 	client := c.Context.S3Clients[preservationBucket.Bucket]
@@ -126,7 +131,7 @@ func (c *Checker) CalculateFixity(gf *registry.GenericFile) (fixity, url string,
 		c.Context.Logger.Error(err.Error())
 		return "", "", err
 	}
-	c.Context.Logger.Infof("Checking %s for file %s with UUID %s", preservationBucket.Bucket, gf.Identifier, gf.UUID)
+	c.Context.Logger.Infof("Checking %s for file %s (%d) with UUID %s", preservationBucket.Bucket, gf.Identifier, gf.ID, gf.UUID)
 	obj, err := client.GetObject(
 		ctx.Background(),
 		preservationBucket.Bucket,
@@ -134,7 +139,7 @@ func (c *Checker) CalculateFixity(gf *registry.GenericFile) (fixity, url string,
 		minio.GetObjectOptions{},
 	)
 	if err != nil {
-		err = fmt.Errorf("Error getting %s from S3 (%s): %v", gf.Identifier, storageRecord.URL, err)
+		err = fmt.Errorf("Error getting %s (%d) from S3 (%s): %v", gf.Identifier, gf.ID, storageRecord.URL, err)
 		return "", storageRecord.URL, err
 	}
 	defer obj.Close()
@@ -209,7 +214,7 @@ func (c *Checker) IngestObjectSave() error {
 func (c *Checker) Error(err error, isFatal bool) *service.ProcessingError {
 	return service.NewProcessingError(
 		0,
-		c.Identifier,
+		c.GenericFileIdentifier,
 		err.Error(),
 		isFatal,
 	)

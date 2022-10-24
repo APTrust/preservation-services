@@ -2,7 +2,7 @@ package workers
 
 import (
 	"fmt"
-	"strings"
+	"strconv"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -98,13 +98,17 @@ func (c *FixityChecker) RegisterAsNsqConsumer() error {
 // This method omits a lot of WorkItem housekeeping that the other workers
 // need to do.
 func (c *FixityChecker) HandleMessage(message *nsq.Message) error {
-	gfIdentifier := strings.TrimSpace(string(message.Body))
-	task, err := c.GetTaskObject(message, gfIdentifier)
+	gfId, err := strconv.ParseInt(string(message.Body), 10, 64)
 	if err != nil {
-		c.Context.Logger.Errorf("Could not get Task for WorkItem %s: %v", gfIdentifier, err)
+		c.Context.Logger.Errorf("Invalid GenericFile.ID: cannot convert '%s' to integer", string(message.Body))
 		return err
 	}
-	c.Context.Logger.Infof("Starting attempt %d for %s", message.Attempts, gfIdentifier)
+	task, err := c.GetTaskObject(message, gfId)
+	if err != nil {
+		c.Context.Logger.Errorf("Could not get Task for GenericFile ID %d: %v", gfId, err)
+		return err
+	}
+	c.Context.Logger.Infof("Starting attempt %d for %d", message.Attempts, gfId)
 	c.ProcessChannel <- task
 	return nil
 }
@@ -115,14 +119,14 @@ func (c *FixityChecker) HandleMessage(message *nsq.Message) error {
 func (c *FixityChecker) ProcessItem() {
 	for task := range c.ProcessChannel {
 		task.NSQStart()
-		c.Context.Logger.Infof("GenericFile %s is in ProcessChannel", task.WorkItem.GenericFileIdentifier)
+		c.Context.Logger.Infof("GenericFile %d is in ProcessChannel", task.WorkItem.GenericFileID)
 		task.WorkResult.Start()
 		count, errors := task.Processor.Run()
 		task.WorkResult.Errors = errors
 		task.WorkResult.Finish()
 
 		// TODO: Test that items are going into the right channel here...
-		c.Context.Logger.Infof("GenericFile %s: count %d, errors %d", task.WorkItem.GenericFileIdentifier, count, len(errors))
+		c.Context.Logger.Infof("GenericFile %d: count %d, errors %d", task.WorkItem.GenericFileID, count, len(errors))
 
 		if task.WorkResult.HasFatalErrors() {
 			c.FatalErrorChannel <- task
@@ -136,45 +140,51 @@ func (c *FixityChecker) ProcessItem() {
 
 func (c *FixityChecker) ProcessSuccessChannel() {
 	for task := range c.SuccessChannel {
-		c.Context.Logger.Infof("File %s: fixity matched", task.WorkItem.GenericFileIdentifier)
+		c.Context.Logger.Infof("File %d: fixity matched", task.WorkItem.GenericFileID)
 		task.NSQFinish()
 		// When running e2e tests, queue this item for post tests
-		QueueE2EIdentifier(c.Context, constants.TopicE2EFixity, task.WorkItem.GenericFileIdentifier)
+		// As of Oct 2022, we're queueing with ID instead of identifier.
+		// https://trello.com/c/Xk6msteb
+		QueueE2EIdentifier(c.Context, constants.TopicE2EFixity, fmt.Sprintf("%d", task.WorkItem.GenericFileID))
 	}
 }
 
 func (c *FixityChecker) ProcessErrorChannel() {
 	for task := range c.ErrorChannel {
 		shouldRequeue := int(task.NSQMessage.Attempts) < c.Settings.MaxAttempts
-		c.Context.Logger.Warningf("File %s is in error channel", task.WorkItem.GenericFileIdentifier)
-		c.Context.Logger.Warningf("Non-fatal errors for file %s: %s", task.WorkItem.GenericFileIdentifier, task.WorkResult.NonFatalErrorMessage())
+		c.Context.Logger.Warningf("File %d is in error channel", task.WorkItem.GenericFileID)
+		c.Context.Logger.Warningf("Non-fatal errors for file %d: %s", task.WorkItem.GenericFileID, task.WorkResult.NonFatalErrorMessage())
 		if shouldRequeue {
-			c.Context.Logger.Infof("Requeueing %s", task.WorkItem.GenericFileIdentifier)
+			c.Context.Logger.Infof("Requeueing %d", task.WorkItem.GenericFileID)
 			task.NSQRequeue(c.Settings.RequeueTimeout)
 		} else {
-			c.Context.Logger.Infof("Not requeueing %s: max attempts exceeded", task.WorkItem.GenericFileIdentifier)
+			c.Context.Logger.Warningf("Not requeueing %d: max attempts exceeded", task.WorkItem.GenericFileID)
 			task.NSQFinish()
 			// When running e2e tests, queue this item for post tests
-			QueueE2EIdentifier(c.Context, constants.TopicE2EFixity, task.WorkItem.GenericFileIdentifier)
+			// As of Oct 2022, we're queueing with ID instead of identifier.
+			// https://trello.com/c/Xk6msteb
+			QueueE2EIdentifier(c.Context, constants.TopicE2EFixity, fmt.Sprintf("%d", task.WorkItem.GenericFileID))
 		}
 	}
 }
 
 func (c *FixityChecker) ProcessFatalErrorChannel() {
 	for task := range c.FatalErrorChannel {
-		c.Context.Logger.Errorf("File %s is in fatal error channel", task.WorkItem.GenericFileIdentifier)
-		c.Context.Logger.Errorf("Fatal errors for file %s: %s", task.WorkItem.GenericFileIdentifier, task.WorkResult.FatalErrorMessage())
+		c.Context.Logger.Errorf("File %d is in fatal error channel", task.WorkItem.GenericFileID)
+		c.Context.Logger.Errorf("Fatal errors for file %d: %s", task.WorkItem.GenericFileID, task.WorkResult.FatalErrorMessage())
 		task.NSQFinish()
 		// When running e2e tests, queue this item for post tests
-		QueueE2EIdentifier(c.Context, constants.TopicE2EFixity, task.WorkItem.GenericFileIdentifier)
+		// As of Oct 2022, we're queueing with ID instead of identifier.
+		// https://trello.com/c/Xk6msteb
+		QueueE2EIdentifier(c.Context, constants.TopicE2EFixity, fmt.Sprintf("%d", task.WorkItem.GenericFileID))
 	}
 }
 
-func (c *FixityChecker) GetTaskObject(message *nsq.Message, gfIdentifier string) (*Task, error) {
-	fixityChecker := fixity.NewChecker(c.Context, gfIdentifier)
+func (c *FixityChecker) GetTaskObject(message *nsq.Message, gfId int64) (*Task, error) {
+	fixityChecker := fixity.NewChecker(c.Context, gfId)
 	workItem := &registry.WorkItem{
-		ID:                    -1,
-		GenericFileIdentifier: gfIdentifier,
+		ID:            -1,
+		GenericFileID: gfId,
 	}
 	workResult := service.NewWorkResult(constants.ActionFixityCheck)
 	workResult.Attempt = int(message.Attempts)

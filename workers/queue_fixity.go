@@ -126,11 +126,11 @@ func (q *QueueFixity) queueOne() {
 }
 
 func (q *QueueFixity) addToNSQ(gf *registry.GenericFile) bool {
-	err := q.Context.NSQClient.EnqueueString(constants.TopicFixity, gf.Identifier)
+	err := q.Context.NSQClient.Enqueue(constants.TopicFixity, gf.ID)
 	if err != nil {
-		q.Context.Logger.Errorf("Error sending '%s' to %s: %v", gf.Identifier, constants.TopicFixity, err)
+		q.Context.Logger.Errorf("Error sending '%s' (%d) to %s: %v", gf.Identifier, gf.ID, constants.TopicFixity, err)
 		return false
 	}
-	q.Context.Logger.Infof("Added '%s' to %s", gf.Identifier, constants.TopicFixity)
+	q.Context.Logger.Infof("Added '%s' (%d) to %s", gf.Identifier, gf.ID, constants.TopicFixity)
 	return true
 }

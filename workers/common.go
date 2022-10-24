@@ -130,7 +130,7 @@ func QueueE2EIdentifier(context *common.Context, topic, identifier string) {
 		if err != nil {
 			context.Logger.Errorf("E2E Queue Error %s/%d: %v", topic, identifier, err)
 		} else {
-			context.Logger.Infof("Queued E2E item %s/%d", topic, identifier)
+			context.Logger.Infof("Queued E2E item %s/%s", topic, identifier)
 		}
 	}
 }
