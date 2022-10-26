@@ -615,7 +615,7 @@ func TestWorkItemList(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("/admin-api/v3/items?%s", v.Encode()), resp.Request.URL.Opaque)
 	items := resp.WorkItems()
 	lastName := "zzzzzz"
-	assert.Equal(t, 14, len(items))
+	assert.Equal(t, 13, len(items))
 	for _, item := range items {
 		assert.EqualValues(t, 2, item.InstitutionID)
 		assert.Equal(t, constants.ActionIngest, item.Action)
