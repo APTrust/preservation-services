@@ -171,7 +171,7 @@ class TestRunner
     puts cmd
     pid = Process.spawn(env_hash, cmd, chdir: project_root)
     Process.wait pid
-    self.print_results    
+    self.print_results
   end
 
 
@@ -467,6 +467,7 @@ class TestRunner
     puts "  test.rb integration             # Run integration tests"
     puts "  test.rb integration --rebuild   # Rebuild Docker & run integration"
     puts "  test.rb e2e                     # Run end to end tests"
+    puts "  test.rb interactive             # Run interactive tests"
     puts "\n"
     puts "To run unit tests in a single directory:"
     puts "  test.rb units ./ingest/..."
@@ -474,6 +475,15 @@ class TestRunner
     puts "  test.rb integration ./network/... --rebuild \n\n"
     puts "Note that running integration tests also runs unit tests."
     puts "Go files are always rebuilt for testing."
+    puts "\n"
+    puts "The interactive option doesn't run any automated tests."
+    puts "It spins up a whole APTrust environment on your local machine"
+    puts "and lets you push bags through ingest and restoration."
+    puts "Use this option to test new features and tricky bags, or to"
+    puts "try to reproduce failures and errors from live environments."
+    puts "You'll have to upload bags to a receiving bucket in the local"
+    puts "Minio server. Registry will be running on localhost:8080."
+    puts "\n"
   end
 
 end
