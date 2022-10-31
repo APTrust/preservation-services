@@ -54,6 +54,17 @@ func (c *Checker) Run() (count int, errors []*service.ProcessingError) {
 		errors = append(errors, c.Error(err, true))
 		return 0, errors
 	}
+	// When fixity checker has a backlog, some files may be queued twice.
+	// We don't want to run the same fixity checks twice in one day, so
+	// be sure this file actuall needs it. For more info, see
+	// https://trello.com/c/vdyB325m
+	// We skip this check on end-to-end tests because those tests ingest
+	// files and then immediately schedule them for fixity check.
+	expectedLastFixity := time.Now().UTC().AddDate(0, 0, (-1 * c.Context.Config.MaxDaysSinceFixityCheck))
+	if gf.LastFixityCheck.After(expectedLastFixity) && !c.Context.Config.IsE2ETest() {
+		c.Context.Logger.Infof("Skipping file %s (%d) because it had a fixity check on %s", gf.Identifier, gf.ID, gf.LastFixityCheck.Format(time.RFC3339))
+		return 0, errors
+	}
 	checksum, err := c.GetLatestSha256()
 	if err != nil {
 		errors = append(errors, c.Error(err, true))
