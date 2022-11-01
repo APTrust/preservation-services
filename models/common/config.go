@@ -250,16 +250,25 @@ func (config *Config) GetWorkerSettings(workerName string, bufSizeArg, numWorker
 		bufSize = bufSizeArg
 	} else {
 		bufSize = config.WorkerSettings[workerName+"BufferSize"]
+		if bufSize <= 0 {
+			bufSize = 4 // Sane default
+		}
 	}
 	if numWorkersArg > 0 {
 		numWorkers = numWorkersArg
 	} else {
 		numWorkers = config.WorkerSettings[workerName+"Workers"]
+		if numWorkers <= 0 {
+			numWorkers = 2 // Sane default
+		}
 	}
 	if maxAttemptsArg > 0 {
 		maxAttempts = maxAttemptsArg
 	} else {
 		maxAttempts = config.WorkerSettings[workerName+"MaxAttempts"]
+		if maxAttempts <= 0 {
+			maxAttempts = 3 // Sane default
+		}
 	}
 	return bufSize, numWorkers, maxAttempts
 }
