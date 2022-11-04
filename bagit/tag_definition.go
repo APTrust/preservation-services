@@ -1,7 +1,7 @@
 package bagit
 
 import (
-	"github.com/APTrust/preservation-services/util"
+	"strings"
 )
 
 // TagDefinition describes a tag in a BagItProfile, whether it's
@@ -23,5 +23,13 @@ func (t *TagDefinition) IsLegalValue(val string) bool {
 	if t.Values == nil || len(t.Values) == 0 {
 		return true
 	}
-	return util.StringListContains(t.Values, val)
+	// Do case-insensitive comparison here. This particularly
+	// affects the APTrust Access tag, which some depositors
+	// capitalize and others do not.
+	for _, allowed := range t.Values {
+		if strings.EqualFold(val, allowed) {
+			return true
+		}
+	}
+	return false
 }
