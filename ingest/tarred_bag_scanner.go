@@ -161,6 +161,12 @@ func (scanner *TarredBagScanner) processFile(ingestFile *service.IngestFile) err
 	}
 	tempFilePath := scanner.getTempFilePath(ingestFile)
 	if tempFilePath != "" {
+		err := os.MkdirAll(path.Dir(tempFilePath), 0755)
+		if err != nil {
+			return fmt.Errorf(
+				"Cannot create temp dir for ingestFile.Identifier: %s",
+				err.Error())
+		}
 		tempFile, err := os.Create(tempFilePath)
 		if err != nil {
 			return fmt.Errorf(
@@ -223,7 +229,7 @@ func (scanner *TarredBagScanner) getTempFilePath(ingestFile *service.IngestFile)
 	if fileType == constants.FileTypeManifest ||
 		fileType == constants.FileTypeTagManifest ||
 		ingestFile.IsParsableTagFile() {
-		tempFilePath = path.Join(scanner.TempDir, ingestFile.PathInBag)
+		tempFilePath = path.Join(scanner.TempDir, ingestFile.ObjectIdentifier, ingestFile.PathInBag)
 	}
 	return tempFilePath
 }
