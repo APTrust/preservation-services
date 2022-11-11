@@ -1,6 +1,7 @@
-package audit
+package audit_core
 
 import (
+	"strconv"
 	"strings"
 	"time"
 )
@@ -33,7 +34,6 @@ type AuditRecord struct {
 	S3MetaInstitution         string
 	S3Size                    int64
 	PreservationUrl           string
-	StreamMd5                 string
 	StreamSha256              string
 	MismatchedMetaInstitution bool
 	MismatchedMetaBagName     bool
@@ -70,4 +70,70 @@ func (ar *AuditRecord) NeedsFixityCheck() bool {
 		return true
 	}
 	return ar.CanCompareEtag() && !ar.EtagMatches()
+}
+
+var CsvHeaders = []string{
+	"GenericFileID",
+	"CheckPassed",
+	"Method",
+	"ReasonForCheck",
+	"RegistrySize",
+	"S3Size",
+	"IsGlacierOnlyFile",
+	"NeedsGlacierFixityCheck",
+	"S3Etag",
+	"RegistryMd5",
+	"S3MetaMd5",
+	"RegistrySha256",
+	"S3MetaSha256",
+	"StreamSha256",
+	"MismatchedMetaInstitution",
+	"MismatchedMetaBagName",
+	"MismatchedMetaPath",
+	"MismatchedMetaMd5",
+	"MismatchedMetaSha256",
+	"GenericFileCreatedAt",
+	"GenericFileUpdatedAt",
+	"S3MetaPathInBag",
+	"S3MetaBagName",
+	"S3MetaInstitution",
+	"PreservationUrl",
+	"CheckStartedAt",
+	"CheckCompletedAt",
+	"GenericFileIdentifier",
+	"Error",
+}
+
+func (ar *AuditRecord) CsvValues() []string {
+	return []string{
+		strconv.FormatInt(ar.GenericFileID, 10),
+		strconv.FormatBool(ar.CheckPassed),
+		ar.Method,
+		ar.ReasonForCheck,
+		strconv.FormatInt(ar.RegistrySize, 10),
+		strconv.FormatInt(ar.S3Size, 10),
+		strconv.FormatBool(ar.IsGlacierOnlyFile),
+		strconv.FormatBool(ar.NeedsGlacierFixityCheck),
+		ar.S3Etag,
+		ar.RegistryMd5,
+		ar.S3MetaMd5,
+		ar.RegistrySha256,
+		ar.S3MetaSha256,
+		ar.StreamSha256,
+		strconv.FormatBool(ar.MismatchedMetaInstitution),
+		strconv.FormatBool(ar.MismatchedMetaBagName),
+		strconv.FormatBool(ar.MismatchedMetaPath),
+		strconv.FormatBool(ar.MismatchedMetaMd5),
+		strconv.FormatBool(ar.MismatchedMetaSha256),
+		ar.GenericFileCreatedAt.Format(time.RFC3339),
+		ar.GenericFileUpdatedAt.Format(time.RFC3339),
+		ar.S3MetaPathInBag,
+		ar.S3MetaBagName,
+		ar.S3MetaInstitution,
+		ar.PreservationUrl,
+		ar.CheckStartedAt.Format(time.RFC3339),
+		ar.CheckCompletedAt.Format(time.RFC3339),
+		ar.GenericFileIdentifier,
+		ar.Error,
+	}
 }

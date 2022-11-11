@@ -1,4 +1,4 @@
-package audit
+package audit_core
 
 import (
 	ctx "context"
