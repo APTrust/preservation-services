@@ -125,6 +125,16 @@ APT_ENV=audit ./audit/audit -i audit/file_ids.csv -f=false
 
 ```
 
+## Exit Codes
+
+* 0 - The auditor completed its work without serious errors, though you should
+      check the detailed output to see if it could not check some individual
+      files.
+* 1 - The auditor didn't run because something was wrong with the command-line
+      options.
+* 2 - The auditor tried to run but had to exit without completing its work 
+      due to a fatal error. 
+
 ## Things to Note
 
 1. The auditor will not check fixity on Glacier files, because it takes  
