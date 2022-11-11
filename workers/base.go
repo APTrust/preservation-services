@@ -134,6 +134,9 @@ type Base struct {
 // call this, your worker will start handling messages if any are
 // available.
 func (b *Base) RegisterAsNsqConsumer() error {
+	if b.Context.Config.ConfigName == "audit" {
+		panic("Do not run workers with 'audit' config")
+	}
 	config := nsq.NewConfig()
 	//config.Set("msg_timeout", "600m")
 	config.Set("heartbeat_interval", "10s")
