@@ -131,6 +131,8 @@ APT_ENV=audit ./audit/audit -i audit/file_ids.csv -f=false
    hours to retrieve them.
 2. The `.env.audit` file omits sensitive credentials. These must be available
    as environment variables.
+3. The auditor may complain that the log directory, `~/aptrust/audit/logs`,
+   does not exist. You may have to create that manually.
 
 You must set the following environment variables for the auditor to have
 the credentials required to query the Registry and S3, Glacier, and Wasabi:
