@@ -21,6 +21,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Error writing CSV headers:", err)
 		os.Exit(2)
 	}
+	defer w.Flush()
 	for _, id := range ids {
 		auditor := audit_core.NewAuditor(aptCtx, id, doFullFixityCheck)
 		record := auditor.Run()
@@ -60,8 +61,11 @@ func getFileIds(inputFile string) []int64 {
 	ids := make([]int64, 0) // Because some numbers may not parse
 	for i, line := range lines {
 		numStr := strings.TrimSpace(line)
+		if numStr == "" {
+			continue
+		}
 		id, err := strconv.ParseInt(numStr, 10, 64)
-		if err != nil {
+		if err == nil {
 			ids = append(ids, id)
 		} else {
 			fmt.Fprintln(os.Stderr, "Ignoring input file line", i+1, ":", numStr, "is not a number")

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"net/url"
 	"strings"
 	"time"
 
@@ -80,24 +81,25 @@ func (a *Auditor) Run() *AuditRecord {
 
 	record.S3Etag = s3Stats.ETag
 	record.S3Size = s3Stats.Size
-	record.S3MetaMd5 = s3Stats.Metadata["md5"][0]
-	record.S3MetaSha256 = s3Stats.Metadata["sha256"][0]
-	record.S3MetaInstitution = s3Stats.Metadata["institution"][0]
-	record.S3MetaBagName = s3Stats.Metadata["bag"][0]
-	record.S3MetaPathInBag = s3Stats.Metadata["bagpath"][0]
+
+	record.S3MetaMd5 = s3Stats.Metadata.Get("x-amz-meta-md5")
+	record.S3MetaSha256 = s3Stats.Metadata.Get("x-amz-meta-sha256")
+	record.S3MetaInstitution = s3Stats.Metadata.Get("x-amz-meta-institution")
+	record.S3MetaBagName = s3Stats.Metadata.Get("x-amz-meta-bag")
+	record.S3MetaPathInBag = s3Stats.Metadata.Get("x-amz-meta-bagpath")
+	if record.S3MetaPathInBag == "" {
+		// bag path is encoded for Wasabi
+		record.S3MetaPathInBag = s3Stats.Metadata.Get("x-amz-meta-bagpath-encoded")
+	}
 
 	if a.HasMetadataMismatch(record, gf) {
 		record.ReasonForCheck = "Metadata mismatch"
-	}
-
-	if !record.HasMetadataMismatch() && !record.NeedsFixityCheck() {
+	} else if !record.NeedsFixityCheck() {
 		record.CheckPassed = true
 		record.Method = QuickMatch
 		record.CheckCompletedAt = time.Now()
 		return record
 	}
-
-	record.ReasonForCheck = "Size or etag mismatch"
 
 	// We have a mismatch, but stop here if user doesn't want to do
 	// a full fixity check.
@@ -128,20 +130,12 @@ func (a *Auditor) Run() *AuditRecord {
 }
 
 func (a *Auditor) HasMetadataMismatch(record *AuditRecord, gf *registry.GenericFile) bool {
-	objIdentifier, err := gf.IntellectualObjectIdentifier()
-	if err == nil {
-		nameParts := strings.Split(objIdentifier, "/")
-		if len(nameParts) > 1 {
-			bagName := nameParts[1] + ".tar"
-			if record.S3MetaBagName != bagName {
-				record.MismatchedMetaBagName = true
-			}
-		}
-	}
 	gfPath, err := gf.PathInBag()
 	if err != nil {
-		record.MismatchedMetaPath = record.S3MetaPathInBag != gfPath
+		record.MismatchedMetaPath = (record.S3MetaPathInBag != gfPath && record.S3MetaPathInBag != url.PathEscape(gfPath))
 	}
+	objIdentifier, _ := gf.IntellectualObjectIdentifier()
+	record.MismatchedMetaBagName = record.S3MetaBagName != objIdentifier
 	record.MismatchedMetaInstitution = record.S3MetaInstitution != gf.InstitutionIdentifier()
 	record.MismatchedMetaMd5 = record.S3MetaMd5 != record.RegistryMd5
 	record.MismatchedMetaSha256 = record.S3MetaSha256 != record.RegistrySha256
