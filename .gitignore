@@ -24,3 +24,7 @@ apps/restorer_manual_test/.env.test
 
 # When we pip integration test output to a file...
 testoutput.txt
+
+# Binary audit app and related files
+audit/audit
+audit/*.csv

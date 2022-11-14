@@ -1,9 +1,10 @@
 package bagit_test
 
 import (
+	"testing"
+
 	"github.com/APTrust/preservation-services/bagit"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestTagDefinitionIsLegalValue(t *testing.T) {
@@ -13,6 +14,10 @@ func TestTagDefinitionIsLegalValue(t *testing.T) {
 	assert.True(t, tagDef.IsLegalValue("one"))
 	assert.True(t, tagDef.IsLegalValue("two"))
 	assert.False(t, tagDef.IsLegalValue("six"))
+
+	// values are case-insensitive
+	assert.True(t, tagDef.IsLegalValue("ONE"))
+	assert.True(t, tagDef.IsLegalValue("Two"))
 
 	// If Values is nil or empty, any value is legal
 	tagDef.Values = make([]string, 0)

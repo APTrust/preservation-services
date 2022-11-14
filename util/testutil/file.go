@@ -8,8 +8,6 @@ import (
 	"github.com/APTrust/preservation-services/util"
 )
 
-var TempDir, _ = ioutil.TempDir("", "prod-serv-test")
-
 func PathToTestData() string {
 	return path.Join(util.ProjectRoot(), "testdata")
 }

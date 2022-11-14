@@ -1,6 +1,7 @@
 package ingest_test
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
+	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/APTrust/preservation-services/util/testutil"
@@ -27,7 +29,7 @@ func getTarFileReader(t *testing.T, filename string) io.ReadCloser {
 func getScanner(t *testing.T, bagname string) *ingest.TarredBagScanner {
 	obj := service.NewIngestObject("bucket", "example.edu.tagsample_good.tar", "1234", "example.edu", 9855, int64(300))
 	reader := getTarFileReader(t, bagname)
-	return ingest.NewTarredBagScanner(reader, obj, testutil.TempDir)
+	return ingest.NewTarredBagScanner(reader, obj, common.NewConfig().IngestTempDir)
 }
 
 func TestNewTarredBagScanner(t *testing.T) {
@@ -35,7 +37,7 @@ func TestNewTarredBagScanner(t *testing.T) {
 	assert.NotNil(t, scanner)
 	assert.NotNil(t, scanner.IngestObject)
 	assert.NotNil(t, scanner.TarReader)
-	assert.Equal(t, testutil.TempDir, scanner.TempDir)
+	assert.Equal(t, common.NewConfig().IngestTempDir, scanner.TempDir)
 	assert.NotNil(t, scanner.TempFiles)
 	defer scanner.CloseReader()
 }
@@ -63,7 +65,7 @@ func TestProcessNextEntry(t *testing.T) {
 	assert.Equal(t, 16, len(ingestFiles))
 	assertAllFilesFound(t, ingestFiles)
 	assert.Equal(t, 7, len(scanner.TempFiles))
-	assertAllTempFilesExist(t, scanner.TempFiles)
+	assertAllTempFilesExist(t, scanner)
 }
 
 func TestScannerFinish(t *testing.T) {
@@ -143,13 +145,14 @@ func assertAllFilesFound(t *testing.T, files []*service.IngestFile) {
 	}
 }
 
-func assertAllTempFilesExist(t *testing.T, tempFiles []string) {
+func assertAllTempFilesExist(t *testing.T, scanner *ingest.TarredBagScanner) {
 	for _, expected := range ExpectedTempFiles {
-		fullPath := path.Join(testutil.TempDir, expected)
+		fullPath := path.Join(scanner.TempDir, scanner.IngestObject.Identifier(), expected)
+		fmt.Println(fullPath)
 		inList := false
 		onDisk := false
 		hasData := false
-		for _, f := range tempFiles {
+		for _, f := range scanner.TempFiles {
 			if f == fullPath {
 				inList = true
 				if util.FileExists(fullPath) {
