@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -65,11 +64,14 @@ func (c *Checker) Run() (count int, errors []*service.ProcessingError) {
 		c.Context.Logger.Infof("Skipping file %s (%d) because it had a fixity check on %s", gf.Identifier, gf.ID, gf.LastFixityCheck.Format(time.RFC3339))
 		return 0, errors
 	}
-	checksum, err := c.GetLatestSha256()
-	if err != nil {
-		errors = append(errors, c.Error(err, true))
+
+	checksum := gf.GetLatestChecksum(constants.AlgSha256)
+	if checksum == nil {
+		_err := fmt.Errorf("cannot find latest sha256 checksum for file %s (%d)", gf.Identifier, gf.ID)
+		errors = append(errors, c.Error(_err, true))
 		return 0, errors
 	}
+
 	actualFixity, url, err := c.CalculateFixity(gf)
 	if err != nil {
 		c.Context.Logger.Error(err)
@@ -104,29 +106,6 @@ func (c *Checker) GetGenericFile() (*registry.GenericFile, error) {
 
 func (c *Checker) IsGlacierOnlyFile(gf *registry.GenericFile) bool {
 	return strings.HasPrefix(gf.StorageOption, "Glacier")
-}
-
-func (c *Checker) GetLatestSha256() (checksum *registry.Checksum, err error) {
-	params := url.Values{}
-	params.Set("generic_file_id", fmt.Sprintf("%d", c.GenericFileID))
-	params.Set("algorithm", constants.AlgSha256)
-	resp := c.Context.RegistryClient.ChecksumList(params)
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-	// I don't trust Pharos to sort correctly.
-	// TODO: Can we now trust Registry to do it? Prolly.
-	for _, cs := range resp.Checksums() {
-		if checksum == nil || cs.DateTime.After(checksum.DateTime) {
-			checksum = cs
-		}
-	}
-	if checksum == nil {
-		err = fmt.Errorf("Registry returned no sha256 checksum for file %s", c.GenericFileIdentifier)
-	} else {
-		c.Context.Logger.Infof("Got checksum %s for file %s", checksum.Digest, c.GenericFileIdentifier)
-	}
-	return checksum, err
 }
 
 func (c *Checker) CalculateFixity(gf *registry.GenericFile) (fixity, url string, err error) {
