@@ -61,7 +61,7 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 	}
 
 	// All items in staging bucket have the key <WorkItemID>/<File Identifier>
-	prefix := fmt.Sprintf("%d/", c.WorkItemID)
+	prefix := fmt.Sprintf("%d", c.WorkItemID)
 
 	s3Client := c.Context.S3Clients[constants.StorageProviderAWS]
 
@@ -76,9 +76,9 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 			Prefix:    prefix,
 			Recursive: true,
 		}) {
-		//c.Context.Logger.Infof("Prefix = %s, Bucket = %s, Object Key = %s, KeyHasPrefix = %t", prefix, stagingBucket, obj.Key, strings.HasPrefix(obj.Key, prefix))
 		// Be safe.
 		fullPrefix := fmt.Sprintf("%s/%s", stagingBucket, prefix)
+		c.Context.Logger.Infof("Bucket = %s, Prefix = %s, Full Prefix = %s, Key = %s", stagingBucket, prefix, fullPrefix, obj.Key)
 		if !strings.HasPrefix(obj.Key, prefix) && !strings.HasPrefix(obj.Key, fullPrefix) {
 			c.Context.Logger.Infof("Skipping deletion of key: %s/%s - wrong prefix, should be %s", stagingBucket, obj.Key, prefix)
 			continue
