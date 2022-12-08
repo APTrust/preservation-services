@@ -358,7 +358,7 @@ func (b *IngestBase) IngestObjectGet(workItem *registry.WorkItem) (*service.Inge
 	if err != nil && b.Settings.NSQTopic != constants.IngestPreFetch {
 		errMsg := fmt.Sprintf("Ingest object not found in Redis: %v. ", err)
 		_, s3Err := b.Context.S3StatObject(constants.StorageProviderAWS, workItem.Bucket, workItem.Name)
-		if strings.Contains(s3Err.Error(), "key does not exist") {
+		if s3Err != nil && strings.Contains(s3Err.Error(), "key does not exist") {
 			errMsg += "Also, the bag is no longer in the receiving bucket. It may have been deleted due to validation failure or completed ingest, or the depositor may have deleted it."
 		}
 		return nil, fmt.Errorf(errMsg)
