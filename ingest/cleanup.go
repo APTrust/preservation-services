@@ -77,9 +77,9 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 			Recursive: true,
 		}) {
 		//c.Context.Logger.Infof("Prefix = %s, Bucket = %s, Object Key = %s, KeyHasPrefix = %t", prefix, stagingBucket, obj.Key, strings.HasPrefix(obj.Key, prefix))
-		// Filter out empty keys and ones like "staging.edu/btr-bag".
-		// How do these even get into the list?
-		if !strings.HasPrefix(obj.Key, prefix) {
+		// Be safe.
+		fullPrefix := fmt.Sprintf("%s/%s", stagingBucket, prefix)
+		if !strings.HasPrefix(obj.Key, prefix) && !strings.HasPrefix(obj.Key, fullPrefix) {
 			c.Context.Logger.Infof("Skipping deletion of key: %s/%s - wrong prefix, should be %s", stagingBucket, obj.Key, prefix)
 			continue
 		}
