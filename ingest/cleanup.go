@@ -76,15 +76,18 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 			Prefix:    prefix,
 			Recursive: true,
 		}) {
+		//c.Context.Logger.Infof("Prefix = %s, Bucket = %s, Object Key = %s, KeyHasPrefix = %t", prefix, stagingBucket, obj.Key, strings.HasPrefix(obj.Key, prefix))
 		// Filter out empty keys and ones like "staging.edu/btr-bag".
 		// How do these even get into the list?
 		if !strings.HasPrefix(obj.Key, prefix) {
+			c.Context.Logger.Infof("Skipping deletion of key: %s/%s - wrong prefix, should be %s", stagingBucket, obj.Key, prefix)
 			continue
 		}
 		if obj.Err != nil {
 			errors = append(errors, c.Error(obj.Key, obj.Err, false))
 			c.Context.Logger.Infof("Error listing item: %s/%s - %s", stagingBucket, obj.Key, obj.Err.Error())
 			if len(errors) > maxErrors {
+				c.Context.Logger.Errorf("deleteFilesFromStaging is quitting before completion because it hit max errors.")
 				return fileCount, errors
 			}
 		}
@@ -93,10 +96,12 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 			errors = append(errors, c.Error(obj.Key, obj.Err, false))
 			c.Context.Logger.Infof("Error deleting %s/%s - %s", stagingBucket, obj.Key, obj.Err.Error())
 			if len(errors) > maxErrors {
+				c.Context.Logger.Errorf("deleteFilesFromStaging is quitting before completion because it hit max errors.")
 				return fileCount, errors
 			}
+		} else {
+			c.Context.Logger.Infof("Deleted from staging: %s", obj.Key)
 		}
-		c.Context.Logger.Infof("Deleted from staging: %s", obj.Key)
 		fileCount++
 	}
 	return fileCount, errors
