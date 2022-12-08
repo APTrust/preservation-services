@@ -472,15 +472,15 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 			workItem.Name)
 		if err != nil {
 			if strings.Contains(err.Error(), "key does not exist") {
-				message := fmt.Sprintf("Stopping work on WorkItem %d because bag %s was deleted from %s", workItem.ID, workItem.Name, workItem.Bucket)
+				message := fmt.Sprintf("Stopping work on WorkItem %d because bag %s was deleted from %s. If this item was successfully ingested, push to cleanup.", workItem.ID, workItem.Name, workItem.Bucket)
 				b.Context.Logger.Info(message)
 				workItem.MarkNoLongerInProgress(
-					constants.StageCleanup,
-					constants.StatusPending,
+					workItem.Stage,
+					constants.StatusSuspended,
 					message,
 				)
-				workItem.Retry = true
-				workItem.NeedsAdminReview = false
+				workItem.Retry = false
+				workItem.NeedsAdminReview = true
 				return true
 			}
 			// This should never happen, due to checks at startup that
@@ -490,9 +490,11 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 				b.Context.Logger.Error(message)
 				workItem.MarkNoLongerInProgress(
 					workItem.Stage,
-					workItem.Status,
+					constants.StatusSuspended,
 					message,
 				)
+				workItem.Retry = false
+				workItem.NeedsAdminReview = true
 				return true
 			}
 		} else {
