@@ -304,9 +304,9 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	// There's a newer ingest request in Registry' WorkItems list,
 	// and we're not too far along to abandon this.
 	if b.SupersededByNewerRequest(workItem) {
-		resp := b.Context.RegistryClient.WorkItemSave(workItem)
-		if resp.Error != nil {
-			b.Context.Logger.Warningf("Error trying to tell Registry that WorkItem %d should be cancelled because newer bag was uploaded. %v", workItem.ID, resp.Error)
+		err := b.SaveWorkItem(workItem)
+		if err != nil {
+			b.Context.Logger.Warningf("Error trying to tell Registry that WorkItem %d should be cancelled because newer bag was uploaded. %v", workItem.ID, err.Error())
 		}
 		b.PushToQueue(workItem, constants.IngestCleanup)
 		return true
@@ -320,6 +320,7 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	// unless ingest is complete or the bag is in valid, so the
 	// cleanup worker should not delete the newer item from receiving.
 	if b.ShouldAbandonForNewerVersion(workItem) {
+		b.SaveWorkItem(workItem)
 		b.PushToQueue(workItem, constants.IngestCleanup)
 		return true
 	}
@@ -474,11 +475,12 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 				message := fmt.Sprintf("Stopping work on WorkItem %d because bag %s was deleted from %s", workItem.ID, workItem.Name, workItem.Bucket)
 				b.Context.Logger.Info(message)
 				workItem.MarkNoLongerInProgress(
-					workItem.Stage,
-					constants.StatusCancelled,
+					constants.StageCleanup,
+					constants.StatusPending,
 					message,
 				)
-				workItem.Retry = false
+				workItem.Retry = true
+				workItem.NeedsAdminReview = false
 				return true
 			}
 			// This should never happen, due to checks at startup that
