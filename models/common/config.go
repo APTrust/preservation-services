@@ -472,6 +472,9 @@ func (config *Config) checkBasicSettings() {
 	if config.StagingBucket == "" {
 		util.PrintAndExit("Config is missing StagingBucket")
 	}
+	if !strings.Contains(config.StagingBucket, "staging") {
+		util.PrintAndExit("Config setting for StagingBucket looks incorrect. Name should contain 'staging'.")
+	}
 	if config.StagingUploadRetryMs < time.Duration(1*time.Millisecond) {
 		util.PrintAndExit("Config is missing StagingUploadRetryMs (be sure format is like 200ms)")
 	}
