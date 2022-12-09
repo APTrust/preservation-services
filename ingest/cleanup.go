@@ -76,31 +76,26 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 			Prefix:    prefix,
 			Recursive: true,
 		}) {
-		// Be safe.
-		fullPrefix := fmt.Sprintf("%s/%s", stagingBucket, prefix)
-		c.Context.Logger.Infof("Bucket = %s, Prefix = %s, Full Prefix = %s, Key = %s", stagingBucket, prefix, fullPrefix, obj.Key)
-		if !strings.HasPrefix(obj.Key, prefix) && !strings.HasPrefix(obj.Key, fullPrefix) {
-			c.Context.Logger.Infof("Skipping deletion of key: %s/%s - wrong prefix, should be %s", stagingBucket, obj.Key, prefix)
-			continue
-		}
+
 		if obj.Err != nil {
 			errors = append(errors, c.Error(obj.Key, obj.Err, false))
-			c.Context.Logger.Infof("Error listing item: %s/%s - %s", stagingBucket, obj.Key, obj.Err.Error())
+			c.Context.Logger.Warningf("Error listing item: %s/%s - %s", stagingBucket, obj.Key, obj.Err.Error())
 			if len(errors) > maxErrors {
 				c.Context.Logger.Errorf("deleteFilesFromStaging is quitting before completion because it hit max errors.")
 				return fileCount, errors
 			}
 		}
+		c.Context.Logger.Infof("Deleting %s", obj.Key)
 		err := s3Client.RemoveObject(ctx.Background(), stagingBucket, obj.Key, minio.RemoveObjectOptions{})
 		if err != nil {
 			errors = append(errors, c.Error(obj.Key, obj.Err, false))
-			c.Context.Logger.Infof("Error deleting %s/%s - %s", stagingBucket, obj.Key, obj.Err.Error())
+			c.Context.Logger.Warningf("Error deleting %s - %s", obj.Key, obj.Err.Error())
 			if len(errors) > maxErrors {
 				c.Context.Logger.Errorf("deleteFilesFromStaging is quitting before completion because it hit max errors.")
 				return fileCount, errors
 			}
 		} else {
-			c.Context.Logger.Infof("Deleted from staging: %s", obj.Key)
+			c.Context.Logger.Infof("Deleted from %s: %s", stagingBucket, obj.Key)
 		}
 		fileCount++
 	}
