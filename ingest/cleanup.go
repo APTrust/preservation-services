@@ -86,7 +86,6 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 			}
 			continue
 		}
-		c.Context.Logger.Infof("Deleting %s", obj.Key)
 		err := s3Client.RemoveObject(ctx.Background(), stagingBucket, obj.Key, minio.RemoveObjectOptions{})
 		if err != nil {
 			errors = append(errors, c.Error(obj.Key, obj.Err, false))
