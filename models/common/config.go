@@ -299,6 +299,18 @@ func (config *Config) PreservationBucketsFor(storageOption string) []*Preservati
 	return preservationBuckets
 }
 
+// PreservationBucketForUrl returns the bucket for the specified
+// URL, or nil.
+func (config *Config) PreservationBucketForUrl(bucketUrl string) *PreservationBucket {
+	for _, preservationBucket := range config.PreservationBuckets {
+		bucketPath := fmt.Sprintf("/%s/", preservationBucket.Bucket)
+		if strings.Contains(bucketUrl, bucketPath) {
+			return preservationBucket
+		}
+	}
+	return nil
+}
+
 // IsE2ETest returns true if the environment variable APT_E2E is set to "true".
 // This is set only during end-to-end (E2E) tests so we can queue up some
 // items for testing.

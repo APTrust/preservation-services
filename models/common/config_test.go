@@ -1,6 +1,7 @@
 package common_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -88,6 +89,20 @@ func TestPreservationBucketsFor(t *testing.T) {
 	preservationBuckets = config.PreservationBucketsFor(constants.StorageWasabiVA)
 	require.Equal(t, 1, len(preservationBuckets))
 	assert.Equal(t, constants.StorageWasabiVA, preservationBuckets[0].OptionName)
+}
+
+func TestPreservationBucketForUrl(t *testing.T) {
+	config := common.NewConfig()
+	for _, bucket := range config.PreservationBuckets {
+		_url := fmt.Sprintf("https://%s/%s/somefile.txt", bucket.Host, bucket.Bucket)
+		b := config.PreservationBucketForUrl(_url)
+		require.NotNil(t, b)
+		assert.Equal(t, bucket.Host, b.Host)
+		assert.Equal(t, bucket.Region, b.Region)
+		assert.Equal(t, bucket.Bucket, b.Bucket)
+	}
+	b := config.PreservationBucketForUrl("https://no.such.host/no-such-bucket/file.txt")
+	assert.Nil(t, b)
 }
 
 func TestGetWorkerSettings(t *testing.T) {

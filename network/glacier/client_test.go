@@ -15,16 +15,16 @@ import (
 
 var expectedResponseCode = 202
 var glacierURL = ""
-var glacierPath = "/bucket/item-uuid"
+var glacierPath = "/glacier-deep-oh/bucket/item-uuid"
 var expectedBody = "<RestoreRequest><Days>10</Days><GlacierJobParameters><Tier>Standard</Tier></GlacierJobParameters></RestoreRequest>"
 
 func TestGlacierRestore_200(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(getRestoreHandler(t)))
 	defer testServer.Close()
 
-	glacierURL = fmt.Sprintf("%s%s", testServer.URL, glacierPath)
-
 	context := common.NewContext()
+
+	glacierURL = fmt.Sprintf("%s%s", testServer.URL, glacierPath)
 
 	statusCode, body, err := glacier.Restore(context, glacierURL)
 	assert.Nil(t, err)
