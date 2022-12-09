@@ -84,6 +84,7 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 				c.Context.Logger.Errorf("deleteFilesFromStaging is quitting before completion because it hit max errors.")
 				return fileCount, errors
 			}
+			continue
 		}
 		c.Context.Logger.Infof("Deleting %s", obj.Key)
 		err := s3Client.RemoveObject(ctx.Background(), stagingBucket, obj.Key, minio.RemoveObjectOptions{})
