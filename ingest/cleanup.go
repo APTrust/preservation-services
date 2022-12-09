@@ -79,7 +79,7 @@ func (c *Cleanup) deleteFilesFromStaging() (fileCount int, errors []*service.Pro
 
 		if obj.Err != nil {
 			errors = append(errors, c.Error(obj.Key, obj.Err, false))
-			c.Context.Logger.Warningf("Error listing item: %s/%s - %s", stagingBucket, obj.Key, obj.Err.Error())
+			c.Context.Logger.Warningf("Error listing item: %s/%s - %s", stagingBucket, prefix, obj.Err.Error())
 			if len(errors) > maxErrors {
 				c.Context.Logger.Errorf("deleteFilesFromStaging is quitting before completion because it hit max errors.")
 				return fileCount, errors
