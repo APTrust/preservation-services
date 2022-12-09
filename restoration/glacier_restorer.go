@@ -129,7 +129,7 @@ func (r *GlacierRestorer) requestRestoration(gf *registry.GenericFile) (restoreS
 	}
 	r.Context.Logger.Infof("Requesting Glacier restore of file '%s' (uuid %s) from %s", gf.Identifier, gf.UUID, storageRecord.URL)
 	statusCode, body, err := glacier.Restore(r.Context, storageRecord.URL)
-	r.Context.Logger.Infof("Response from Glacier (%s): %s", statusCode, body)
+	r.Context.Logger.Infof("Response from Glacier (%d): %s", statusCode, body)
 	if err != nil {
 		errors = append(errors, r.Error(gf.Identifier, err, false))
 		return RestoreError, errors
