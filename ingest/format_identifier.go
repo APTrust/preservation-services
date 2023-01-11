@@ -18,6 +18,9 @@ import (
 // Siegfried's MS-CFB reader to panic, bringing down the format identifier
 // worker with it. We'd rather skip these than crash the worker, because
 // requeueing will just crash the worker again.
+//
+// 2022-12-07: Certain tif/tiff files repeatedly crash Siegfried. It can't
+// even log an error before crashing, so we're not sure what the problem is.
 var CrashableFormats = map[string]string{
 	".accda":  "Microsoft Access",
 	".accdb":  "Microsoft Access",
@@ -65,6 +68,8 @@ var CrashableFormats = map[string]string{
 	".pst":    "Microsoft Outlook",
 	".sldm":   "Microsoft Powerpoint",
 	".sldx":   "Microsoft Powerpoint",
+	".tif":    "TIFF Image File",
+	".tiff":   "TIFF Image File",
 	".wbk":    "Microsoft Word",
 	".wll":    "Microsoft Word",
 	".wwl":    "Microsoft Word",
