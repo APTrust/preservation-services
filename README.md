@@ -1,6 +1,6 @@
 # APTrust Preservation Services
 
-This is the beginning of a rewrite of APTrust's Exchange services. The goals
+This is the completed rewrite of APTrust's Exchange services and related infrasrtucture. The goals
 are:
 
 * Simpler, more modular code
@@ -180,16 +180,20 @@ Regardless of where the container build is initiated, deploy with ansible:
 
 # Deployment Notes
 
-On staging (and later, on demo and production) all logs, NSQ files, temp files
-and Redis aof files are in `/data/preserv`.
+The infrastructure for the new preservation-services has been updated to operate on the AWS PaaS offering Elasatic Container Service (ECS).
+The containers were updated to operate in a loosely coupled manner, providing greater flexibility for environments.                                                                                               
 
-However, you can direct worker logs to STDOUT by setting the following in the .env file:
+All environments, staging, demo, and production, are running on ECS, with each of the environments built using AWS' CloudFormation, with Ansible for configuration management. Unlike the legacy environment, this new infrastructure is completely built from Infrastructure As Code. 
+
+Logging is now set to be passed to Cloudwatch, the AWS aggregated logging service, with performance monitoring.   `/data/preserv`.
+
+Worker logs are now directed to STDOUT by setting the following in the .env file:
 
 ```
 LOG_DIR="STDOUT"
 ```
 
-This can help when running workers in containers that don't have disk access. NSQ and Redis still require disk access for persistence.
+Persistent storage for NSQ is provided using AWS' Elastic File Service (EFS). Redis services is provided using the AWS PaaS offering elasticache, removing the need to maintain Redis containers, or scale them. 
 
 The source tree is in `/srv/docker/preserv`
 
