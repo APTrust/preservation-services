@@ -10,6 +10,7 @@ are:
 * Replace EBS and BoltDB to enable horizontal scalability
 * Replace the AWS SDK with the simpler Minio library
 * Support Beyond the Repository BagIt format
+* More simple, agile, and resilient infrastructure, using Infrasrtucture as Code.
 
 All of these are easier to implement in a rewrite than to work into the old
 Exchange codebase, which has accumulated quite a bit of cruft over the years.
@@ -178,59 +179,25 @@ Regardless of where the container build is initiated, deploy with ansible:
 
 `ansible-playbook preserv.staging.docker.yml --diff`
 
-# Deployment Notes
+# Deployment Notes and Infrastructure
 
 The infrastructure for the new preservation-services has been updated to operate on the AWS PaaS offering Elasatic Container Service (ECS).
 The containers were updated to operate in a loosely coupled manner, providing greater flexibility for environments.                                                                                               
 
-All environments, staging, demo, and production, are running on ECS, with each of the environments built using AWS' CloudFormation, with Ansible for configuration management. Unlike the legacy environment, this new infrastructure is completely built from Infrastructure As Code. 
+All environments, staging, demo, and production, are running on ECS Fargate, with each of the environments built using AWS' CloudFormation, with Ansible for configuration management. Unlike the legacy environment, this new infrastructure is completely built from Infrastructure As Code. 
 
-Logging is now set to be passed to Cloudwatch, the AWS aggregated logging service, with performance monitoring.   `/data/preserv`.
+Logging is now set to be passed to Cloudwatch, the AWS aggregated logging service, with performance monitoring. 
 
-Worker logs are now directed to STDOUT by setting the following in the .env file:
+Worker logs are now directed to STDOUT by setting the following in the .env file OR in the AWS Parameter Store:
 
 ```
 LOG_DIR="STDOUT"
 ```
 
-Persistent storage for NSQ is provided using AWS' Elastic File Service (EFS). Redis services is provided using the AWS PaaS offering elasticache, removing the need to maintain Redis containers, or scale them. 
+Persistent storage for NSQ is provided using AWS' Elastic File Service (EFS). Redis is provided using the AWS PaaS offering elasticache, removing the need to maintain Redis containers, or scale them.
 
-The source tree is in `/srv/docker/preserv`
+Logging that occurs in the test scripts is handled differently according the scripts, and has no impact on the above. 
 
-To see stdout and stderr of workers:
+Access to the containers directly using the docker exec functionlality is possible in this environment, if you have been given the permissions to actually do so. Please review this blog post.
 
-```
-cd /srv/docker/preserv
-sudo docker-compose logs -f ingest_staging_uploader
-```
-
-...or `sudo docker-compose logs -f` to tail all services
-
-...or `sudo docker logs <container_id>`
-
-For a simple shell inside a container:
-
-`sudo docker exec -it <container id> /bin/sh`
-
-# Staging Notes
-
-To run the Redis CLI on staging:
-
-`docker run -it --rm redis redis-cli --version`
-
-## Running One-Off Fixity Checks on Staging
-
-To run one-off fixity checks on specific files on staging:
-
-Get the container id of the fixity queue worker with
-`sudo docker ps | grep apt_queue_fixity`
-
-Then, using that container id, run `sudo docker exec -it <container id> /bin/sh`
-to get a brain-dead shell.
-
-Since the executable is in the container's root directory, the following command
-will queue your file: `./apt_queue_fixity <generic file identifier>`
-
-Or you can do all this in one line with:
-
-`sudo docker exec -it <container id> /bin/sh -c "./apt_queue_fixity '<generic file identifier>'"`
+https://aws.amazon.com/blogs/containers/new-using-amazon-ecs-exec-access-your-containers-fargate-ec2/
