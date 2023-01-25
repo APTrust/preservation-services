@@ -21,6 +21,8 @@ import (
 //
 // 2022-12-07: Certain tif/tiff files repeatedly crash Siegfried. It can't
 // even log an error before crashing, so we're not sure what the problem is.
+//
+// 2023-01-25: Certain epub files consistently crash Siegfried. Not sure why.
 var CrashableFormats = map[string]string{
 	".accda":  "Microsoft Access",
 	".accdb":  "Microsoft Access",
@@ -38,6 +40,7 @@ var CrashableFormats = map[string]string{
 	".dot":    "Microsoft Word",
 	".dotx":   "Microsoft Word",
 	".ecf":    "Outlook Add-In",
+	".epub":   "ePub Ebook Format",
 	".laccdb": "Microsoft Access",
 	".ldb":    "Microsoft Access",
 	".maf":    "Microsoft Access",
