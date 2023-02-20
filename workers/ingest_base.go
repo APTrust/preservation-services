@@ -558,7 +558,7 @@ func (b *IngestBase) ObjectAlreadyIngested(workItem *registry.WorkItem) bool {
 		return false
 	}
 	obj := resp.IntellectualObject()
-	if obj == nil {
+	if obj == nil || obj.ID == 0 {
 		return false
 	}
 	// Now we have a recently updated object with matching inst id and etag.
@@ -582,10 +582,6 @@ func (b *IngestBase) ObjectAlreadyIngested(workItem *registry.WorkItem) bool {
 			return false
 		}
 		// OK, this item was ingested.
-		// We could assign the intellectual object id here, but
-		// for the near term, admins should review these cases
-		// to ensure they are correct. We also need to track down
-		// the specific set of conditions that causes this.
 		ingestEvent := resp.PremisEvent()
 		if (ingestEvent != nil && ingestEvent.ID > 0) && ingestObject == nil {
 			b.Context.Logger.Infof("WorkItem %d looks like it has already completed ingest. See IntelObj %d and PremisEvent %s", workItem.ID, obj.ID, ingestEvent.Identifier)
@@ -595,6 +591,7 @@ func (b *IngestBase) ObjectAlreadyIngested(workItem *registry.WorkItem) bool {
 				constants.StatusSuccess,
 				"Cleanup succeeded. Ingest complete. (ObjectAlreadyIngested: Matched object and event.)",
 			)
+			workItem.IntellectualObjectID = obj.ID
 			workItem.NeedsAdminReview = true
 			workItem.Retry = false
 			return true
