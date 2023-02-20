@@ -75,7 +75,7 @@ func (q *QueueFixity) run() {
 }
 
 func (q *QueueFixity) queueList() {
-	perPage := util.Min(100, q.Context.Config.MaxFixityItemsPerRun)
+	perPage := util.Min(500, q.Context.Config.MaxFixityItemsPerRun)
 	params := url.Values{}
 	itemsAdded := 0
 	params.Set("per_page", strconv.Itoa(perPage))
