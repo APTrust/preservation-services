@@ -5,9 +5,12 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
@@ -241,6 +244,11 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 	if !b.IsCorrectStage(workItem.Stage) {
 		b.Context.Logger.Warningf("Rejecting WorkItem %d because its stage is %s.", workItem.ID, workItem.Stage)
+		return true
+	}
+
+	if b.ObjectAlreadyIngested(workItem) {
+		b.Context.Logger.Warningf("Rejecting WorkItem %d because it looks like it has already completed ingest.", workItem.ID)
 		return true
 	}
 
@@ -513,6 +521,70 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 			}
 		}
 	}
+	return false
+}
+
+// ObjectAlreadyIngested returns true if the object with this WorkItem's name,
+// institution id and etag has already been ingested. This check should catch
+// some highly specific race conditions in the queues that occur only during
+// times of heavy ingest.
+//
+// We're still tracking down the cause of this one.
+func (b *IngestBase) ObjectAlreadyIngested(workItem *registry.WorkItem) bool {
+
+	if workItem.IntellectualObjectID > 0 {
+		return true
+	}
+
+	nameMinusTar := bagit.CleanBagName(workItem.Name)
+	values := url.Values{}
+	values.Add("institution_id", strconv.FormatInt(workItem.InstitutionID, 10))
+	values.Add("etag", workItem.ETag)
+	values.Add("updated_at__gteq", workItem.CreatedAt.Format(time.RFC3339))
+	values.Add("per_page", "1")
+	values.Add("page", "1")
+	resp := b.Context.RegistryClient.IntellectualObjectList(values)
+	if resp.Error != nil {
+		b.Context.Logger.Warningf("ObjectAlreadyIngested() query returned error while trying to get object with etag %s: %v", workItem.ETag, resp.Error)
+		return false
+	}
+	obj := resp.IntellectualObject()
+	if obj == nil {
+		return false
+	}
+	// Now we have a recently updated object with matching inst id and etag.
+	// Let's be extra paranoid and make sure it has a matching ingest event
+	// before saying this item has been ingested.
+	if strings.HasSuffix(obj.Identifier, nameMinusTar) {
+
+		ingestObject, _ := b.IngestObjectGet(workItem)
+
+		eventFilters := url.Values{}
+		eventFilters.Add("event_type", constants.EventIngestion)
+		eventFilters.Add("intellectual_object_id", strconv.FormatInt(obj.ID, 10))
+		eventFilters.Add("generic_file_id__is_null", "true")
+		eventFilters.Add("date_time__gteq", workItem.CreatedAt.Format(time.RFC3339))
+		eventFilters.Add("outcome", constants.OutcomeSuccess)
+		values.Add("per_page", "1")
+		values.Add("page", "1")
+		resp = b.Context.RegistryClient.PremisEventList(eventFilters)
+		if resp.Error != nil {
+			b.Context.Logger.Warningf("ObjectAlreadyIngested() query returned error while trying to get object with etag %s: %v", workItem.ETag, resp.Error)
+			return false
+		}
+		// OK, this item was ingested.
+		// We could assign the intellectual object id here, but
+		// for the near term, admins should review these cases
+		// to ensure they are correct. We also need to track down
+		// the specific set of conditions that causes this.
+		ingestEvent := resp.PremisEvent()
+		if (ingestEvent != nil && ingestEvent.ID > 0) && ingestObject == nil {
+			b.Context.Logger.Infof("WorkItem %d looks like it has already completed ingest. See IntelObj %d and PremisEvent %s", workItem.ID, obj.ID, ingestEvent.Identifier)
+			workItem.NeedsAdminReview = true
+			return true
+		}
+	}
+	// Else, not ingested yet.
 	return false
 }
 
