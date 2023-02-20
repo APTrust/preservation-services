@@ -249,6 +249,7 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 
 	if b.ObjectAlreadyIngested(workItem) {
 		b.Context.Logger.Warningf("Rejecting WorkItem %d because it looks like it has already completed ingest.", workItem.ID)
+		b.SaveWorkItem(workItem)
 		return true
 	}
 
@@ -316,7 +317,9 @@ func (b *IngestBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 		if err != nil {
 			b.Context.Logger.Warningf("Error trying to tell Registry that WorkItem %d should be cancelled because newer bag was uploaded. %v", workItem.ID, err.Error())
 		}
-		b.PushToQueue(workItem, constants.IngestCleanup)
+		if workItem.Stage != constants.IngestCleanup {
+			b.PushToQueue(workItem, constants.IngestCleanup)
+		}
 		return true
 	}
 
