@@ -531,8 +531,14 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 //
 // We're still tracking down the cause of this one.
 func (b *IngestBase) ObjectAlreadyIngested(workItem *registry.WorkItem) bool {
-
 	if workItem.IntellectualObjectID > 0 {
+		workItem.MarkNoLongerInProgress(
+			constants.StageCleanup,
+			constants.StatusSuccess,
+			"Cleanup succeeded. Ingest complete. (ObjectAlreadyIngested: Has object id.)",
+		)
+		workItem.NeedsAdminReview = true
+		workItem.Retry = false
 		return true
 	}
 
@@ -580,7 +586,14 @@ func (b *IngestBase) ObjectAlreadyIngested(workItem *registry.WorkItem) bool {
 		ingestEvent := resp.PremisEvent()
 		if (ingestEvent != nil && ingestEvent.ID > 0) && ingestObject == nil {
 			b.Context.Logger.Infof("WorkItem %d looks like it has already completed ingest. See IntelObj %d and PremisEvent %s", workItem.ID, obj.ID, ingestEvent.Identifier)
+
+			workItem.MarkNoLongerInProgress(
+				constants.StageCleanup,
+				constants.StatusSuccess,
+				"Cleanup succeeded. Ingest complete. (ObjectAlreadyIngested: Matched object and event.)",
+			)
 			workItem.NeedsAdminReview = true
+			workItem.Retry = false
 			return true
 		}
 	}
