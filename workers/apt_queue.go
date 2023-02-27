@@ -45,7 +45,28 @@ func (q *APTQueue) logStartup() {
 
 // Run retrieves all unqueued work items from Registry and pushes
 // them into the appropriate NSQ topic.
+//
+// NOTE: apt_queue is a legacy worker from the Pharos days. Pharos
+// did not automatically add new restoration and deletion requests
+// to NSQ, so this worker scanned the WorkItems list for new
+// restorations and deletions, then queued them itself.
+//
+// Registry now queues restorations as soon as they're created, and
+// it queues deletions as soon as they're approved, so there is no
+// need for this worker. In fact, in our live environments, it's been
+// double-queuing items and causing problems.
+//
+// The only place we still need this is in the end-to-end tests, where
+// we create some restoration and deletion requests that do need to be
+// queued.
+//
+// In short, this worker should run ONLY in end-to-end tests.
 func (q *APTQueue) run() {
+	if !q.Context.Config.IsE2ETest() {
+		q.Context.Logger.Info("apt_queue invoked but is doing nothing because this service is probably no longer necessary, except in end-to-end tests.")
+		q.Context.Logger.Info("We are evaluating whether or not to remove this service entirely from our production environment.")
+		return
+	}
 	params := url.Values{}
 	params.Set("queued_at__is_null", "true")
 	params.Set("status", constants.StatusPending)
