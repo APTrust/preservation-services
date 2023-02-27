@@ -532,7 +532,9 @@ func (b *IngestBase) ShouldAbandonForNewerVersion(workItem *registry.WorkItem) b
 // some highly specific race conditions in the queues that occur only during
 // times of heavy ingest.
 //
-// We're still tracking down the cause of this one.
+// One cause of this problem was apt_queue, an external process that requeuing
+// ingest items when it shouldn't have been. Since fixing that, this problem
+// has become even more rare, but it still happens. Thus, this method.
 func (b *IngestBase) ObjectAlreadyIngested(workItem *registry.WorkItem) bool {
 	if workItem.IntellectualObjectID > 0 {
 		workItem.MarkNoLongerInProgress(
@@ -540,7 +542,7 @@ func (b *IngestBase) ObjectAlreadyIngested(workItem *registry.WorkItem) bool {
 			constants.StatusSuccess,
 			"Cleanup succeeded. Ingest complete. (ObjectAlreadyIngested: Has object id.)",
 		)
-		workItem.NeedsAdminReview = true
+		workItem.NeedsAdminReview = false
 		workItem.Retry = false
 		return true
 	}
@@ -592,7 +594,7 @@ func (b *IngestBase) ObjectAlreadyIngested(workItem *registry.WorkItem) bool {
 				"Cleanup succeeded. Ingest complete. (ObjectAlreadyIngested: Matched object and event.)",
 			)
 			workItem.IntellectualObjectID = obj.ID
-			workItem.NeedsAdminReview = true
+			workItem.NeedsAdminReview = false
 			workItem.Retry = false
 			return true
 		}
