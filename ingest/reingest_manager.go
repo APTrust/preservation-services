@@ -152,7 +152,7 @@ func (r *ReingestManager) FlagChanges(ingestFile *service.IngestFile, registryFi
 	r.SetStorageOption(ingestFile, registryFile)
 
 	newestChecksumsFromRegistry := r.GetNewest(registryFile.Checksums)
-	if r.ChecksumChanged(ingestFile, newestChecksumsFromRegistry) {
+	if r.ChecksumChanged(ingestFile, newestChecksumsFromRegistry) || registryFile.State == constants.StateDeleted {
 		fileChanged = true
 		r.FlagForUpdate(ingestFile, registryFile)
 	} else {
