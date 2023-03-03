@@ -47,11 +47,11 @@ Parameters:
         - STAGING
         - DEMO
         - PROD
-  
+
   LogDays:
     Description: 'Sets the number of days for retaining logs. Can be set according to Cluster'
     Type: Number
-    AllowedValues: [1, 7, 14, 30, 90] 
+    AllowedValues: [1, 7, 14, 30, 90]
     Default: 30
 
 Resources:
@@ -61,10 +61,10 @@ Resources:
     Properties:
       ClusterName: !Ref ClusterName
       CapacityProviders:
-        - FARGATE  
+        - FARGATE
         - FARGATE_SPOT
       DefaultCapacityProviderStrategy:
-        - CapacityProvider: FARGATE 
+        - CapacityProvider: FARGATE
           Weight: 1
           Base: 1
         - CapacityProvider: FARGATE_SPOT
@@ -92,10 +92,10 @@ Resources:
       LogGroupName: !Sub '/ecs/${DNS}/preserv'
       RetentionInDays: !Ref 'LogDays'
       Tags:
-        - Key: Environment 
+        - Key: Environment
           Value: !Ref DNS
-        - Key: Service 
-          Value: preserv 
+        - Key: Service
+          Value: preserv
 
   AptdeleteService:
     Type: AWS::ECS::Service
@@ -286,7 +286,7 @@ Resources:
         - Name: MAX_FIXITY_ITEMS_PER_RUN
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL               
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/apt_delete:multi
@@ -917,7 +917,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -1128,7 +1128,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -1340,7 +1340,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -1552,7 +1552,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -1762,7 +1762,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -1976,7 +1976,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -2190,7 +2190,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -2404,7 +2404,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -2620,7 +2620,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -2834,7 +2834,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -3047,13 +3047,13 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: docker.io/aptrust/ingest_recorder:multi
@@ -3262,7 +3262,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -3475,7 +3475,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -3689,7 +3689,7 @@ Resources:
         - Name: S3_WASABI_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
         - Name: STAGING_BUCKET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET 
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/QUEUE_FIXITY_INTERVAL
         - Name: MAX_FIXITY_ITEMS_PER_RUN
@@ -4000,7 +4000,7 @@ Resources:
       Period: 60
       Threshold: 350
       TreatMissingData: ignore
-   AutoScalingFixityTarget:
+  AutoScalingFixityTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
       MinCapacity: 1
@@ -4014,7 +4014,7 @@ Resources:
       ServiceNamespace: ecs
       RoleARN:
         Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
-  
+
   ScaleUpFixityPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -4042,7 +4042,7 @@ Resources:
         StepAdjustments:
           - MetricIntervalUpperBound: 0
             ScalingAdjustment: -1
-  
+
   AlarmHighCPUFixity:
     Type: AWS::CloudWatch::Alarm
     Properties:
