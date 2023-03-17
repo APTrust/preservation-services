@@ -520,47 +520,6 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-
-
-  AptqueueService:
-    Type: AWS::ECS::Service
-    Properties:
-      Cluster:
-        Fn::GetAtt:
-        - Cluster
-        - Arn
-      DeploymentConfiguration:
-        MaximumPercent: 200
-        MinimumHealthyPercent: 100
-      DeploymentController:
-        Type: ECS
-      DesiredCount: 1
-      EnableExecuteCommand: true
-    #  LaunchType: FARGATE
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          SecurityGroups:
-          - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
-          - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
-          Subnets:
-          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
-      PlatformVersion: 1.4.0
-      PropagateTags: SERVICE
-      SchedulingStrategy: REPLICA
-      ServiceName: ecs-queue
-      ServiceRegistries:
-      - RegistryArn:
-          Fn::GetAtt:
-          - AptqueueServiceDiscoveryEntry
-          - Arn
-      Tags:
-      - Key: Service
-        Value: preserv
-      - Key: Environment
-        Value: !Ref "DNS"
-      TaskDefinition: !Ref AptqueueTaskDefinition
       
   AptqueuefixityService:
     Type: AWS::ECS::Service
