@@ -23,6 +23,10 @@ import (
 // even log an error before crashing, so we're not sure what the problem is.
 //
 // 2023-01-25: Certain epub files consistently crash Siegfried. Not sure why.
+//
+// 2023-03-17: Certain zip archives will crash Siegfried because it tries to
+// open them and parse the innards. If it gets unexpected or uninterpretable
+// streams, Siegfried crashes.
 var CrashableFormats = map[string]string{
 	".accda":  "Microsoft Access",
 	".accdb":  "Microsoft Access",
@@ -93,6 +97,7 @@ var CrashableFormats = map[string]string{
 	".xltx":   "Microsoft Excel",
 	".xlw":    "Microsoft Excel",
 	".xps":    "Windows XML document for printing",
+	".zip":    "ZIP Archive",
 }
 
 // FormatIdentifier streams an S3 file, through Siegfried, which uses
