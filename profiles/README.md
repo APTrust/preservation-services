@@ -18,17 +18,14 @@ We can regenerate this file at any time by doing the following:
 
 1. Follow instructions in the link above to install roy.
 
-2. Run `roy harvest -help` to see your siegfried home directory. You should see output like this:
+2. Download the latest Siegfried data zip files from https://github.com/richardlehane/siegfried/releases (because `roy harvest` does not work).
 
-```
-  -home string
-    	override the default home directory (default "/Users/diamond/siegfried")
-```
+3. cd into the directory where you unzipped the Siegfried data files. For example, if this is /home/joe/Downloads/siegfried, then cd into that directory.
 
-3. Download the latest Siegfried data zip files from https://github.com/richardlehane/siegfried/releases (because `roy harvest` does not work).
+3. Run `roy build -home . -bof 32768 -eof 8096` to generate a new signature file that will read only the first 32k of data from each file it tries to identify. This generates a new default.sig file in the siegfried data directory.
 
-4. Run `roy build -bof 32768 -eof 8096` to generate a new signature file that will read only the first 32k of data from each file it tries to identify. This generates a new default.sig file in your Siegfried home directory.
+Note the flag `-home .`. That tells roy to look in the current directory for the data and container files it will use to build the new default.sig file.
 
-5. Copy the new default.sig file into this directoy. E.g. `cp ~/siegfried/default.sig .`
+5. Copy the new default.sig file into this directory. E.g. `cp ~/Downloads/siegfried/default.sig .`
 
 6. Run integration and e2e tests.
