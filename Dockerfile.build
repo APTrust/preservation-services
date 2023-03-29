@@ -1,8 +1,8 @@
-ARG ALPINE_VERSION=3.14
+ARG ALPINE_VERSION=3.17
 ARG OUTPUT_DIR=go-bin/
 ARG PSERVICE
 
-FROM golang:1.17.8-alpine${ALPINE_VERSION} AS builder
+FROM golang:1.20.2-alpine${ALPINE_VERSION} AS builder
 
 RUN apk update && \
     apk add --no-cache upx make build-base bash git
@@ -32,7 +32,7 @@ ARG PSERVICE
 
 ENV PSERVICE=${PSERVICE}
 
-# default non global env variables 
+# default non global env variables
 ENV S3_AWS_HOST=localhost:9899
 ENV S3_AWS_KEY=minioadmin
 ENV S3_AWS_SECRET=minioadmin
@@ -51,7 +51,7 @@ ENV PRESERV_REGISTRY_API_VERSION=v3
 ENV PRESERV_REGISTRY_URL=http://localhost:8080
 ENV MAX_DAYS_SINCE_LAST_FIXITY=7
 
-# default buffer env vars 
+# default buffer env vars
 ENV APT_DELETE_BUFFER_SIZE=4
 ENV BAG_RESTORER_BUFFER_SIZE=4
 ENV FILE_RESTORER_BUFFER_SIZE=4
