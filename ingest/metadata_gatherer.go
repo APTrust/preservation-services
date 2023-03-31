@@ -89,9 +89,13 @@ func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingErr
 
 	err = m.scan(scanner)
 	if err != nil {
-		isFatal := strings.Contains(err.Error(), "unexpected EOF")
-		if isFatal {
+		isFatal := false
+		if strings.Contains(err.Error(), "unexpected EOF") {
 			err = fmt.Errorf("Got unexpected EOF while trying to parse bag. Tar file in receiving bucket is corrupt or format is invalid.")
+			isFatal = true
+		} else if strings.Contains(err.Error(), "invalid tar header") {
+			err = fmt.Errorf("Error parsing bag. Tar file in receiving bucket contains an invalid header.")
+			isFatal = true
 		}
 		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, isFatal))
 	}
@@ -333,9 +337,9 @@ func (m *MetadataGatherer) parseTagFile(filename string) error {
 // running older versions, so we expect to see these. The bad identifier causes
 // two problems:
 //
-// 1. It points to a DART-specific profile format, which other bagging tools
-//    won't be able to use for validation.
-// 2. It breaks the filter-by-profile feature in Registry.
+//  1. It points to a DART-specific profile format, which other bagging tools
+//     won't be able to use for validation.
+//  2. It breaks the filter-by-profile feature in Registry.
 //
 // This method changes the BagIt-Profile-Identifier tag only in bags that
 // contain DART's incorrect URL.
