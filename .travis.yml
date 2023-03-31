@@ -1,8 +1,7 @@
 os: linux
 language: go
 go:
-- 1.18.5
-- 1.19
+- 1.20.2
 services:
 - docker
 addons:
