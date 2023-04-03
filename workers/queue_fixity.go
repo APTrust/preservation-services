@@ -104,7 +104,7 @@ func (q *QueueFixity) queueList() {
 	params.Set("last_fixity_check__gteq", earliestDate.Format(time.RFC3339))
 
 	q.Context.Logger.Infof("Queuing up to %d files not checked since %s to topic %s", q.Context.Config.MaxFixityItemsPerRun, sinceWhen.Format(time.RFC3339), constants.TopicFixity)
-	q.Context.Logger.Info("Set dates for fixity query %s - %s", earliestDate.Format(time.RFC3339), sinceWhen.Format(time.RFC3339))
+	q.Context.Logger.Infof("Set dates for fixity query %s - %s", earliestDate.Format(time.RFC3339), sinceWhen.Format(time.RFC3339))
 
 	for {
 		resp := q.Context.RegistryClient.GenericFileList(params)
