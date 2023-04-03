@@ -101,15 +101,10 @@ func (q *QueueFixity) queueList() {
 	// See the comment from Goyal at
 	// https://stackoverflow.com/questions/5203755/why-does-postgresql-perform-sequential-scan-on-indexed-column
 	earliestDate := sinceWhen.Add(-30 * 24 * time.Hour)
-	if q.Context.Config.IsE2ETest() {
-		earliestDate, _ = time.Parse("2006-01-02", "2005-01-01")
-		q.Context.Logger.Info("Set earliest date for fixity query to 2015-01-01 for e2e tests.")
-	} else {
-		q.Context.Logger.Info("Set dates for fixity query %s - %s", earliestDate.Format(time.RFC3339), sinceWhen.Format(time.RFC3339))
-	}
-	params.Set("last_fixity_check__gt", earliestDate.Format(time.RFC3339))
+	params.Set("last_fixity_check__gteq", earliestDate.Format(time.RFC3339))
 
 	q.Context.Logger.Infof("Queuing up to %d files not checked since %s to topic %s", q.Context.Config.MaxFixityItemsPerRun, sinceWhen.Format(time.RFC3339), constants.TopicFixity)
+	q.Context.Logger.Info("Set dates for fixity query %s - %s", earliestDate.Format(time.RFC3339), sinceWhen.Format(time.RFC3339))
 
 	for {
 		resp := q.Context.RegistryClient.GenericFileList(params)
@@ -121,7 +116,7 @@ func (q *QueueFixity) queueList() {
 			q.Context.Logger.Infof("GET %s", resp.Request.URL)
 		}
 		if resp.Error != nil {
-			q.Context.Logger.Errorf("Error getting GenericFile list from Pharos: %s", resp.Error)
+			q.Context.Logger.Errorf("Error getting GenericFile list from Registry: %s", resp.Error)
 		}
 		for _, gf := range resp.GenericFiles() {
 			if q.addToNSQ(gf) {
