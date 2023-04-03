@@ -90,6 +90,25 @@ func (q *QueueFixity) queueList() {
 	sinceWhen := time.Now().Add(time.Duration(hours) * time.Hour).UTC()
 	params.Set("last_fixity_check__lteq", sinceWhen.Format(time.RFC3339))
 
+	// This seemingly unnecessary filter address the long-standing
+	// slow query problem described in ticket https://trello.com/c/KlrtsAXo
+	//
+	// Unless we put a lower bound in the last fixity check date range,
+	// we miss the index scan and do a full table scan. Without earliestDate,
+	// this query takes around 14 seconds in production. With it, it takes
+	// 82 milliseconds.
+	//
+	// See the comment from Goyal at
+	// https://stackoverflow.com/questions/5203755/why-does-postgresql-perform-sequential-scan-on-indexed-column
+	earliestDate := sinceWhen.Add(-30 * 24 * time.Hour)
+	if q.Context.Config.IsE2ETest() {
+		earliestDate, _ = time.Parse("2006-01-02", "2005-01-01")
+		q.Context.Logger.Info("Set earliest date for fixity query to 2015-01-01 for e2e tests.")
+	} else {
+		q.Context.Logger.Info("Set dates for fixity query %s - %s", earliestDate.Format(time.RFC3339), sinceWhen.Format(time.RFC3339))
+	}
+	params.Set("last_fixity_check__gt", earliestDate.Format(time.RFC3339))
+
 	q.Context.Logger.Infof("Queuing up to %d files not checked since %s to topic %s", q.Context.Config.MaxFixityItemsPerRun, sinceWhen.Format(time.RFC3339), constants.TopicFixity)
 
 	for {
