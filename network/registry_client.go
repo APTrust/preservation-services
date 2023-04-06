@@ -23,6 +23,7 @@ type RegistryClient struct {
 	APIVersion string
 	APIUser    string
 	APIKey     string
+	apiPrefix  string
 	httpClient *http.Client
 	logger     *logging.Logger
 	transport  *http.Transport
@@ -68,20 +69,31 @@ func NewRegistryClient(HostURL, APIVersion, APIUser, APIKey string, logger *logg
 		APIVersion: APIVersion,
 		APIUser:    APIUser,
 		APIKey:     APIKey,
+		apiPrefix:  "admin-api",
 		logger:     logger,
 		httpClient: httpClient,
 		transport:  transport}, nil
 }
 
+// UseMemberAPI points the client at the APTrust member API instead of
+// the default admin API. This is a late addition to support partner tools.
+// Note that some calls allowed to the admin API are not allowed to members,
+// including virtually all PUT and POST requests. Those calls will return
+// 403/Unauthorized. Partner tools use a limited subset of available calls,
+// including only GET requests to objects, files, and work items.
+func (client *RegistryClient) UseMemberAPI() {
+	client.apiPrefix = "member-api"
+}
+
 // InstitutionByIdentifier returns the institution with the specified identifier.
 func (client *RegistryClient) InstitutionByIdentifier(identifier string) *RegistryResponse {
-	relativeURL := fmt.Sprintf("/admin-api/%s/institutions/show/%s", client.APIVersion, url.QueryEscape(identifier))
+	relativeURL := fmt.Sprintf("/%s/%s/institutions/show/%s", client.apiPrefix, client.APIVersion, url.QueryEscape(identifier))
 	return client.institutionGet(relativeURL)
 }
 
 // InstitutionByID returns the institution with the specified id.
 func (client *RegistryClient) InstitutionByID(id int64) *RegistryResponse {
-	relativeURL := fmt.Sprintf("/admin-api/%s/institutions/show/%d", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/%s/%s/institutions/show/%d", client.apiPrefix, client.APIVersion, id)
 	return client.institutionGet(relativeURL)
 }
 
@@ -114,7 +126,7 @@ func (client *RegistryClient) InstitutionList(params url.Values) *RegistryRespon
 	resp.institutions = make([]*registry.Institution, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/institutions?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/%s/%s/institutions?%s", client.apiPrefix, client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -133,14 +145,14 @@ func (client *RegistryClient) InstitutionList(params url.Values) *RegistryRespon
 // if it exists. Param identifier is an IntellectualObject identifier
 // in the format "institution.edu/object_name".
 func (client *RegistryClient) IntellectualObjectByIdentifier(identifier string) *RegistryResponse {
-	relativeURL := fmt.Sprintf("/admin-api/%s/objects/show/%s", client.APIVersion, EscapeFileIdentifier(identifier))
+	relativeURL := fmt.Sprintf("/%s/%s/objects/show/%s", client.apiPrefix, client.APIVersion, EscapeFileIdentifier(identifier))
 	return client.intellectualObjectGet(relativeURL)
 }
 
 // IntellectualObjectByID returns the object with the specified id,
 // if it exists.
 func (client *RegistryClient) IntellectualObjectByID(id int64) *RegistryResponse {
-	relativeURL := fmt.Sprintf("/admin-api/%s/objects/show/%d", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/%s/%s/objects/show/%d", client.apiPrefix, client.APIVersion, id)
 	return client.intellectualObjectGet(relativeURL)
 }
 
@@ -192,7 +204,6 @@ func (client *RegistryClient) intellectualObjectGet(relativeURL string) *Registr
 // storage_option
 // updated_at__gteq
 // updated_at__lteq
-//
 func (client *RegistryClient) IntellectualObjectList(params url.Values) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryIntellectualObject)
@@ -202,7 +213,7 @@ func (client *RegistryClient) IntellectualObjectList(params url.Values) *Registr
 	params.Del("institution")
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/objects/%s?%s", client.APIVersion, institution, encodeParams(params))
+	relativeURL := fmt.Sprintf("/%s/%s/objects/%s?%s", client.apiPrefix, client.APIVersion, institution, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -230,11 +241,11 @@ func (client *RegistryClient) IntellectualObjectSave(obj *registry.IntellectualO
 	// URL and method
 	// Note that POST URL takes an institution identifier, while
 	// the PUT URL takes an object identifier.
-	relativeURL := fmt.Sprintf("/admin-api/%s/objects/create/%d", client.APIVersion, obj.InstitutionID)
+	relativeURL := fmt.Sprintf("/%s/%s/objects/create/%d", client.apiPrefix, client.APIVersion, obj.InstitutionID)
 	httpMethod := "POST"
 	if obj.ID > 0 {
 		// PUT URL
-		relativeURL = fmt.Sprintf("/admin-api/%s/objects/update/%d", client.APIVersion, obj.ID)
+		relativeURL = fmt.Sprintf("/%s/%s/objects/update/%d", client.apiPrefix, client.APIVersion, obj.ID)
 		httpMethod = "PUT"
 	}
 	absoluteURL := client.BuildURL(relativeURL)
@@ -264,13 +275,13 @@ func (client *RegistryClient) IntellectualObjectSave(obj *registry.IntellectualO
 // IntellectualObjectDelete tells Registry to mark an IntellectualObject
 // as deleted. There are a number of preconditions for this to succeed:
 //
-// 1. The registry must contain a valid deletion request for this object.
-// 2. The deletion request must be approved by an admin at the institution
-//    that owns the object.
-// 3. There must be a valid ingest work item for this object.
-// 4. There must be a valid deletion work item for this object.
-// 5. All files belonging to this object must be deleted (that is, state =
-//    "D").
+//  1. The registry must contain a valid deletion request for this object.
+//  2. The deletion request must be approved by an admin at the institution
+//     that owns the object.
+//  3. There must be a valid ingest work item for this object.
+//  4. There must be a valid deletion work item for this object.
+//  5. All files belonging to this object must be deleted (that is, state =
+//     "D").
 //
 // Call this method only after you've deleted all the files that make up
 // the object.
@@ -280,7 +291,7 @@ func (client *RegistryClient) IntellectualObjectDelete(objId int64) *RegistryRes
 	resp.objects = make([]*registry.IntellectualObject, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/objects/delete/%d", client.APIVersion, objId)
+	relativeURL := fmt.Sprintf("/%s/%s/objects/delete/%d", client.apiPrefix, client.APIVersion, objId)
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -310,7 +321,7 @@ func (client *RegistryClient) IntellectualObjectPrepareForDelete(id int64) *Regi
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/prepare_object_delete/%d", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/%s/%s/prepare_object_delete/%d", client.apiPrefix, client.APIVersion, id)
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -332,13 +343,13 @@ func (client *RegistryClient) IntellectualObjectPrepareForDelete(id int64) *Regi
 // identifier. The identifier should be in the format
 // "institution.edu/object_name/path/to/file.ext"
 func (client *RegistryClient) GenericFileByIdentifier(identifier string) *RegistryResponse {
-	relativeURL := fmt.Sprintf("/admin-api/%s/files/show/%s", client.APIVersion, EscapeFileIdentifier(identifier))
+	relativeURL := fmt.Sprintf("/%s/%s/files/show/%s", client.apiPrefix, client.APIVersion, EscapeFileIdentifier(identifier))
 	return client.genericFileGet(relativeURL)
 }
 
 // GenericFileByID returns the GenericFile having the specified id.
 func (client *RegistryClient) GenericFileByID(id int64) *RegistryResponse {
-	relativeURL := fmt.Sprintf("/admin-api/%s/files/show/%d", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/%s/%s/files/show/%d", client.apiPrefix, client.APIVersion, id)
 	return client.genericFileGet(relativeURL)
 }
 
@@ -390,9 +401,9 @@ func (client *RegistryClient) GenericFileList(params url.Values) *RegistryRespon
 	resp.files = make([]*registry.GenericFile, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/files?%s",
+	relativeURL := fmt.Sprintf("/%s/%s/files?%s",
+		client.apiPrefix,
 		client.APIVersion,
-		//institutionIdentifier,
 		encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
@@ -419,10 +430,10 @@ func (client *RegistryClient) GenericFileSave(gf *registry.GenericFile) *Registr
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/files/create/%d", client.APIVersion, gf.InstitutionID)
+	relativeURL := fmt.Sprintf("/%s/%s/files/create/%d", client.apiPrefix, client.APIVersion, gf.InstitutionID)
 	httpMethod := "POST"
 	if gf.ID > 0 {
-		relativeURL = fmt.Sprintf("/admin-api/%s/files/update/%d", client.APIVersion, gf.ID)
+		relativeURL = fmt.Sprintf("/%s/%s/files/update/%d", client.apiPrefix, client.APIVersion, gf.ID)
 		httpMethod = "PUT"
 	}
 	absoluteURL := client.BuildURL(relativeURL)
@@ -476,7 +487,7 @@ func (client *RegistryClient) GenericFileCreateBatch(gfList []*registry.GenericF
 	}
 
 	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/files/create_batch/%d", client.APIVersion, gfList[0].InstitutionID)
+	relativeURL := fmt.Sprintf("/%s/%s/files/create_batch/%d", client.apiPrefix, client.APIVersion, gfList[0].InstitutionID)
 	httpMethod := "POST"
 	absoluteURL := client.BuildURL(relativeURL)
 
@@ -502,21 +513,20 @@ func (client *RegistryClient) GenericFileCreateBatch(gfList []*registry.GenericF
 //
 // The following preconditions must exist for this to succeed:
 //
-// 1. The registry must contain a valid deletion request for this file,
-//    or for its parent object, if this is part of an object deletion.
-// 2. The deletion request must be approved by an admin at the institution
-//    that owns the object/file.
-// 3. There must be a vaild ingest work item for this file's parent object.
-// 4. There must be a valid deletion work item for this file or its
-//    parent object.
-//
+//  1. The registry must contain a valid deletion request for this file,
+//     or for its parent object, if this is part of an object deletion.
+//  2. The deletion request must be approved by an admin at the institution
+//     that owns the object/file.
+//  3. There must be a vaild ingest work item for this file's parent object.
+//  4. There must be a valid deletion work item for this file or its
+//     parent object.
 func (client *RegistryClient) GenericFileDelete(id int64) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryGenericFile)
 	resp.files = make([]*registry.GenericFile, 1)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/files/delete/%d", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/%s/%s/files/delete/%d", client.apiPrefix, client.APIVersion, id)
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -545,7 +555,7 @@ func (client *RegistryClient) GenericFilePrepareForDelete(id int64) *RegistryRes
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/prepare_file_delete/%d", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/%s/%s/prepare_file_delete/%d", client.apiPrefix, client.APIVersion, id)
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -570,7 +580,7 @@ func (client *RegistryClient) ChecksumByID(id int64) *RegistryResponse {
 	resp.checksums = make([]*registry.Checksum, 1)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/checksums/show/%d", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/%s/%s/checksums/show/%d", client.apiPrefix, client.APIVersion, id)
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -599,14 +609,13 @@ func (client *RegistryClient) ChecksumByID(id int64) *RegistryResponse {
 // institution_id
 // intellectual_object_id
 // state
-//
 func (client *RegistryClient) ChecksumList(params url.Values) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryChecksum)
 	resp.checksums = make([]*registry.Checksum, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/checksums?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/%s/%s/checksums?%s", client.apiPrefix, client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -632,7 +641,7 @@ func (client *RegistryClient) ChecksumCreate(obj *registry.Checksum) *RegistryRe
 	resp.checksums = make([]*registry.Checksum, 1)
 
 	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/checksums/create/%d", client.APIVersion, obj.InstitutionID)
+	relativeURL := fmt.Sprintf("/%s/%s/checksums/create/%d", client.apiPrefix, client.APIVersion, obj.InstitutionID)
 	httpMethod := "POST"
 	absoluteURL := client.BuildURL(relativeURL)
 
@@ -661,14 +670,14 @@ func (client *RegistryClient) ChecksumCreate(obj *registry.Checksum) *RegistryRe
 // The identifier should be a UUID in string format, with dashes. E.g.
 // "49a7d6b5-cdc1-4912-812e-885c08e90c68"
 func (client *RegistryClient) PremisEventByIdentifier(identifier string) *RegistryResponse {
-	relativeURL := fmt.Sprintf("/admin-api/%s/events/show/%s", client.APIVersion, url.QueryEscape(identifier))
+	relativeURL := fmt.Sprintf("/%s/%s/events/show/%s", client.apiPrefix, client.APIVersion, url.QueryEscape(identifier))
 	return client.premisEventGet(relativeURL)
 }
 
 // PremisEventByID returns the PREMIS event with the specified id.
 func (client *RegistryClient) PremisEventByID(id int64) *RegistryResponse {
 	// Set up the response object
-	relativeURL := fmt.Sprintf("/admin-api/%s/events/show/%d", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/%s/%s/events/show/%d", client.apiPrefix, client.APIVersion, id)
 	return client.premisEventGet(relativeURL)
 }
 
@@ -701,14 +710,13 @@ func (client *RegistryClient) premisEventGet(relativeURL string) *RegistryRespon
 // intellectual_object_id
 // intellectual_object_identifier
 // outcome
-//
 func (client *RegistryClient) PremisEventList(params url.Values) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryPremisEvent)
 	resp.events = make([]*registry.PremisEvent, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/events?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/%s/%s/events?%s", client.apiPrefix, client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -733,7 +741,7 @@ func (client *RegistryClient) PremisEventSave(obj *registry.PremisEvent) *Regist
 	resp.events = make([]*registry.PremisEvent, 1)
 
 	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/events/create", client.APIVersion)
+	relativeURL := fmt.Sprintf("/%s/%s/events/create", client.apiPrefix, client.APIVersion)
 	httpMethod := "POST"
 	if obj.ID > 0 {
 		// PUT/update for PremisEvent is not even implemented in Registry,
@@ -775,7 +783,7 @@ func (client *RegistryClient) StorageRecordCreate(obj *registry.StorageRecord, i
 	resp.storageRecords = make([]*registry.StorageRecord, 1)
 
 	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/storage_records/create/%d", client.APIVersion, institutionID)
+	relativeURL := fmt.Sprintf("/%s/%s/storage_records/create/%d", client.apiPrefix, client.APIVersion, institutionID)
 	httpMethod := "POST"
 	absoluteURL := client.BuildURL(relativeURL)
 
@@ -810,7 +818,7 @@ func (client *RegistryClient) StorageRecordList(params url.Values) *RegistryResp
 	resp.storageRecords = make([]*registry.StorageRecord, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/storage_records?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/%s/%s/storage_records?%s", client.apiPrefix, client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -832,7 +840,7 @@ func (client *RegistryClient) WorkItemByID(id int64) *RegistryResponse {
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/items/show/%d", client.APIVersion, id)
+	relativeURL := fmt.Sprintf("/%s/%s/items/show/%d", client.apiPrefix, client.APIVersion, id)
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -875,14 +883,13 @@ func (client *RegistryClient) WorkItemByID(id int64) *RegistryResponse {
 // status
 // storage_option
 // user - user's email address
-//
 func (client *RegistryClient) WorkItemList(params url.Values) *RegistryResponse {
 	// Set up the response object
 	resp := NewRegistryResponse(RegistryWorkItem)
 	resp.workItems = make([]*registry.WorkItem, 0)
 
 	// Build the url and the request object
-	relativeURL := fmt.Sprintf("/admin-api/%s/items?%s", client.APIVersion, encodeParams(params))
+	relativeURL := fmt.Sprintf("/%s/%s/items?%s", client.apiPrefix, client.APIVersion, encodeParams(params))
 	absoluteURL := client.BuildURL(relativeURL)
 
 	// Run the request
@@ -907,10 +914,10 @@ func (client *RegistryClient) WorkItemSave(obj *registry.WorkItem) *RegistryResp
 	resp.workItems = make([]*registry.WorkItem, 1)
 
 	// URL and method
-	relativeURL := fmt.Sprintf("/admin-api/%s/items/create/%d", client.APIVersion, obj.InstitutionID)
+	relativeURL := fmt.Sprintf("/%s/%s/items/create/%d", client.apiPrefix, client.APIVersion, obj.InstitutionID)
 	httpMethod := "POST"
 	if obj.ID > 0 {
-		relativeURL = fmt.Sprintf("/admin-api/%s/items/update/%d", client.APIVersion, obj.ID)
+		relativeURL = fmt.Sprintf("/%s/%s/items/update/%d", client.apiPrefix, client.APIVersion, obj.ID)
 		httpMethod = "PUT"
 	}
 	absoluteURL := client.BuildURL(relativeURL)
