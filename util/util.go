@@ -70,10 +70,16 @@ func AlgorithmFromManifestName(filename string) (string, error) {
 // ContainsControlCharacter returns true if string str contains a
 // Unicode control character. We use this to test file names, which
 // should not contain control characters.
+//
+// This also catches the unicode non-breaking space, \xc2\xa0,
+// which Go does not consider a control character, but does cause
+// problems because S3 will not accept files or metadata containing
+// this character. We hit this case in production in April, 2023.
+// See https://trello.com/c/J7Yd4uhg.
 func ContainsControlCharacter(str string) bool {
-	runes := []rune(str)
-	for _, _rune := range runes {
-		if unicode.IsControl(_rune) {
+	nbSpace := []rune(" ")[0] // unicode non-breaking space \xc2\xa0
+	for _, _rune := range str {
+		if unicode.IsControl(_rune) || _rune == nbSpace {
 			return true
 		}
 	}

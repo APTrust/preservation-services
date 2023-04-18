@@ -147,6 +147,7 @@ func TestContainsControlCharacter(t *testing.T) {
 	assert.True(t, util.ContainsControlCharacter("\u009E -- PRIVACY MESSAGE"))
 	assert.True(t, util.ContainsControlCharacter("\u009F -- APPLICATION PROGRAM COMMAND"))
 	assert.True(t, util.ContainsControlCharacter("data/datastream\u007f.txt"))
+	assert.True(t, util.ContainsControlCharacter("  -- Invisible, non-breaking space (\xc2\xa0)"))
 
 	assert.False(t, util.ContainsControlCharacter("./this/is/a/valid/file/name.txt"))
 }
