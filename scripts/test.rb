@@ -248,6 +248,9 @@ class TestRunner
     log_file = log_file_path(svc[:name])
     pid = Process.spawn(env_hash, svc[:cmd], out: log_file, err: log_file)
     Process.detach pid
+    if svc[:name] == "redis-server"
+      sleep(1)
+    end
     log_started(svc, pid, log_file)
 	@pids[svc[:name]] = pid
   end
@@ -379,7 +382,15 @@ class TestRunner
 
   def bin_dir
     os = (/darwin/ =~ RUBY_PLATFORM) ? "osx" : "linux"
-    File.join(project_root, "bin", os)
+    bin = File.join(project_root, "bin", os)
+    if os == "osx"
+      if (/arm64/ =~ RUBY_PLATFORM)
+        bin = File.join(bin, "arm64")
+      else
+        bin = File.join(bin, "amd64")
+      end
+    end
+    bin
   end
 
   # Note: This assumes you have the registry repo source tree
