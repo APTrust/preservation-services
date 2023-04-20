@@ -159,6 +159,16 @@ func (b *Base) RegisterAsNsqConsumer() error {
 // and assign the right IngestItem.Processor type and push the item into
 // the ProcessChannel.
 func (b *Base) HandleMessage(message *nsq.Message) error {
+
+	// Try to capture and log panics. These happen only in
+	// the format identifier, and they're coming from an
+	// underlying library.
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintln(os.Stderr, "Panic error:", r)
+		}
+	}()
+
 	// Get the WorkItem from Registry. If we can't, it's fatal.
 	workItem, procErr := b.GetWorkItem(message)
 	if procErr != nil && procErr.IsFatal {
@@ -507,6 +517,7 @@ func (b *Base) doSigTermCleanup(signal os.Signal) {
 	if signal != syscall.SIGINT && signal != syscall.SIGTERM {
 		return
 	}
+
 	b.sigTermState.Received = true
 	b.Context.Logger.Warning("Worker received SIGTERM. Starting graceful shutdown.")
 
