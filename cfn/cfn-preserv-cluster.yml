@@ -56,7 +56,7 @@ Parameters:
 
 Conditions:
   IsStaging: !Equals [!Ref DNS, 'staging']
-  IsPrimary: !Or [!Equals [!Ref DNS, 'prod'] , !Equals [!Ref DNS, 'demo']]
+  IsPrimary: !Equals [!Ref DNS, 'prod'] ,
 
 Resources:
 
@@ -65,8 +65,13 @@ Resources:
     Properties:
       ClusterName: !Ref ClusterName
       CapacityProviders:
-        - FARGATE
-        - FARGATE_SPOT
+        Fn::If:
+          - IsPrimary 
+          - 
+            - FARGATE_SPOT
+            - FARGATE
+          -  
+            - FARGATE_SPOT 
       DefaultCapacityProviderStrategy:
         Fn::If:
           - IsPrimary
@@ -78,7 +83,6 @@ Resources:
               Weight: 2 
           - 
             - CapacityProvider: FARGATE_SPOT
-              Base: 1
               Weight: 1
       ClusterSettings:
         - Name: containerInsights
