@@ -56,7 +56,7 @@ Parameters:
 
 Conditions:
   IsStaging: !Equals [!Ref DNS, 'staging']
-  IsPrimary: !Equals [!Ref DNS, 'prod'] ,
+  IsPrimary: !Equals [!Ref DNS, 'prod']
 
 Resources:
 
