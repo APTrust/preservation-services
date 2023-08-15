@@ -3082,13 +3082,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: staginguploader
         Name: staginguploader
-      Cpu: "256"
+      Cpu: "1024"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'staginguploader-${FamTag}'
-      Memory: "512"
+      Memory: "2048"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -3592,6 +3592,63 @@ Resources:
       Threshold: 350
       TreatMissingData: ignore
 
+  ScaleStagingUpCPUPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${IngeststaginguploaderService}CPUScaleUpPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            ScalingAdjustment: 1
+  
+  ScaleDownStagingCPUPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${IngeststaginguploaderService}CPUScaleDownPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalUpperBound: 0
+            ScalingAdjustment: -1
+  
+  AlarmHighCPUStagingUploader:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: TRUE
+      AlarmActions:
+        - !Ref ScaleStagingUpCPUPolicy
+      AlarmDescription: 'Scaling alarm based on cpu usage for ecs-prefetch'
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 2
+      # the dimensions can be found in the console after selecting a namespace to filter by
+      Dimensions:
+        - Name: ClusterName
+          Value: !Sub "ecs-preserv-${DNS}"
+        - Name: ServiceName
+          Value: ecs-staginguploader
+      EvaluationPeriods: 3
+      # the metric name can be found in the console on the screen before a metric is graphed
+      MetricName: CpuUtilized
+      # the namespace can be found in the console on the first screen before filtering metrics
+      Namespace: ECS/ContainerInsights
+      OKActions:
+        - !Ref ScaleDownStagingCPUPolicy
+      Statistic: Sum
+      Period: 60
+      Threshold: 70
+      TreatMissingData: ignore
+  
+  
+  
   AutoScalingPrefetchTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
