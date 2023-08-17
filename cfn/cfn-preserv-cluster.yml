@@ -304,7 +304,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_delete:19dde49-master
+        Image: docker.io/aptrust/apt_delete:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -516,7 +516,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_fixity:19dde49-master
+        Image: docker.io/aptrust/apt_fixity:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -728,7 +728,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_queue_fixity:19dde49-master
+        Image: docker.io/aptrust/apt_queue_fixity:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -939,7 +939,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/bag_restorer:19dde49-master
+        Image: docker.io/aptrust/bag_restorer:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1151,7 +1151,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/file_restorer:19dde49-master
+        Image: docker.io/aptrust/file_restorer:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1363,7 +1363,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/glacier_restorer:19dde49-master
+        Image: docker.io/aptrust/glacier_restorer:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1573,7 +1573,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_bucket_reader:19dde49-master
+        Image: docker.io/aptrust/ingest_bucket_reader:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1787,7 +1787,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_cleanup:19dde49-master
+        Image: docker.io/aptrust/ingest_cleanup:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2001,7 +2001,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_format_identifier:19dde49-master
+        Image: docker.io/aptrust/ingest_format_identifier:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2215,7 +2215,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_pre_fetch:19dde49-master
+        Image: docker.io/aptrust/ingest_pre_fetch:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2224,13 +2224,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: prefetch
         Name: prefetch
-      Cpu: "256"
+      Cpu: "512"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'prefetch-${FamTag}'
-      Memory: "512"
+      Memory: "1024"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -2431,7 +2431,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_uploader:19dde49-master
+        Image: docker.io/aptrust/ingest_preservation_uploader:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2440,13 +2440,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: ingestuploader
         Name: uploader
-      Cpu: "256"
+      Cpu: "512"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'uploader-${FamTag}'
-      Memory: "512"
+      Memory: "1024"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -2645,7 +2645,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_verifier:19dde49-master
+        Image: docker.io/aptrust/ingest_preservation_verifier:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2858,7 +2858,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_recorder:19dde49-master
+        Image: docker.io/aptrust/ingest_recorder:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3073,7 +3073,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_staging_uploader:19dde49-master
+        Image: docker.io/aptrust/ingest_staging_uploader:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3082,13 +3082,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: staginguploader
         Name: staginguploader
-      Cpu: "1024"
+      Cpu: "512"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'staginguploader-${FamTag}'
-      Memory: "2048"
+      Memory: "1024"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -3286,7 +3286,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_validator:19dde49-master
+        Image: docker.io/aptrust/ingest_validator:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3500,7 +3500,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/reingest_manager:19dde49-master
+        Image: docker.io/aptrust/reingest_manager:889631e-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3928,3 +3928,4 @@ Resources:
       Period: 60
       Threshold: 70
       TreatMissingData: ignore
+
