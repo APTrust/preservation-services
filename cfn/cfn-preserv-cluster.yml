@@ -3604,7 +3604,11 @@ Resources:
         MetricAggregationType: Average
         StepAdjustments:
           - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 500
             ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 800
+            ScalingAdjustment: 2
+            
   
   ScaleDownStagingCPUPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3614,11 +3618,15 @@ Resources:
       ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
       StepScalingPolicyConfiguration:
         AdjustmentType: ChangeInCapacity
-        Cooldown: 120
+        Cooldown: 200
         MetricAggregationType: Average
         StepAdjustments:
-          - MetricIntervalUpperBound: 0
+          - MetricIntervalUpperBound: 799
+            MetricIntervalLowerBound: 499
             ScalingAdjustment: -1
+          - MetricIntervalUpperBound: 499
+            MetricIntervalLowerBound: 0
+            ScalingAdjustment: -2
   
   AlarmHighCPUStagingUploader:
     Type: AWS::CloudWatch::Alarm
