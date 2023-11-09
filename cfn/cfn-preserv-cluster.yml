@@ -3595,7 +3595,7 @@ Resources:
   ScaleStagingUpCPUPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
-      PolicyName: !Sub '${IngeststaginguploaderService}CPUScaleUpPolicy'
+      PolicyName: !Sub '##${IngeststaginguploaderService}CPUScaleUpPolicy'
       PolicyType: StepScaling
       ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
       StepScalingPolicyConfiguration:
@@ -3604,9 +3604,10 @@ Resources:
         MetricAggregationType: Average
         StepAdjustments:
           - MetricIntervalLowerBound: 0
-            MetricIntervalUpperBound: 500
+            MetricIntervalUpperBound: 650
             ScalingAdjustment: 1
-          - MetricIntervalLowerBound: 800
+          - MetricIntervalLowerBound: 650
+            #MetricIntervalUpperBound: 1200
             ScalingAdjustment: 2
             
   
@@ -3621,12 +3622,8 @@ Resources:
         Cooldown: 200
         MetricAggregationType: Average
         StepAdjustments:
-          - MetricIntervalUpperBound: 799
-            MetricIntervalLowerBound: 499
+          - MetricIntervalLowerBound: 0
             ScalingAdjustment: -1
-          - MetricIntervalUpperBound: 499
-            MetricIntervalLowerBound: 0
-            ScalingAdjustment: -2
   
   AlarmHighCPUStagingUploader:
     Type: AWS::CloudWatch::Alarm
@@ -3684,7 +3681,12 @@ Resources:
         MetricAggregationType: Average
         StepAdjustments:
           - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 650
             ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 650
+            #MetricIntervalUpperBound: 1200
+            ScalingAdjustment: 2
+            
 
   ScaleDownPrefetchPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3694,7 +3696,7 @@ Resources:
       ScalingTargetId: !Ref AutoScalingPrefetchTarget
       StepScalingPolicyConfiguration:
         AdjustmentType: ChangeInCapacity
-        Cooldown: 120
+        Cooldown: 200
         MetricAggregationType: Average
         StepAdjustments:
           - MetricIntervalUpperBound: 0
@@ -3755,7 +3757,11 @@ Resources:
         MetricAggregationType: Average
         StepAdjustments:
           - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 350
             ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 350
+            #MetricIntervalUpperBound: 1200
+            ScalingAdjustment: 2  
 
   ScaleDownFormatIdPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3825,7 +3831,12 @@ Resources:
         MetricAggregationType: Average
         StepAdjustments:
           - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 650
             ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 650
+            #MetricIntervalUpperBound: 1200
+            ScalingAdjustment: 2
+            
 
   ScaleDownPreservUploadPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3867,6 +3878,7 @@ Resources:
       Period: 60
       Threshold: 350
       TreatMissingData: ignore
+  
   AutoScalingFixityTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -3880,7 +3892,7 @@ Resources:
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
       RoleARN:
-        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+       Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
 
   ScaleUpFixityPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3894,7 +3906,11 @@ Resources:
         MetricAggregationType: Average
         StepAdjustments:
           - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 400
             ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 400
+            #MetricIntervalUpperBound: 1200
+            ScalingAdjustment: 2  
 
   ScaleDownFixityPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
