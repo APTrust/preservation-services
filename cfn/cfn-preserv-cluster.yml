@@ -3521,3 +3521,433 @@ Resources:
       - FARGATE
 
   #Scaling and Alarms for Preserv-Services
+  AutoScalingStagingUpLoadTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: !Ref MaxContainers
+      ResourceId: !Join
+        - '/'
+        - - service
+          - !Ref Cluster
+          - !GetAtt IngeststaginguploaderService.Name
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN:
+        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+
+  ScaleStagingUpPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${IngeststaginguploaderService}MemoryScaleUpPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            ScalingAdjustment: 1
+
+  ScaleDownStagingUpPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${IngeststaginguploaderService}MemoryScaleDownPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalUpperBound: 0
+            ScalingAdjustment: -1
+
+  AlarmHighMemoryStagingUploader:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: TRUE
+      AlarmActions:
+        - !Ref ScaleStagingUpPolicy
+      AlarmDescription: 'Scale Up Alarm based on memory usage for ecs-staginguploader'
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 2
+      # the dimensions can be found in the console after selecting a namespace to filter by
+      Dimensions:
+        - Name: ClusterName
+          Value: !Sub "ecs-preserv-${DNS}"
+        - Name: ServiceName
+          Value: ecs-staginguploader
+      EvaluationPeriods: 3
+      # the metric name can be found in the console on the screen before a metric is graphed
+      MetricName: MemoryUtilized
+      # the namespace can be found in the console on the first screen before filtering metrics
+      Namespace: ECS/ContainerInsights
+      OKActions:
+        - !Ref ScaleDownStagingUpPolicy
+      Statistic: Sum
+      Period: 60
+      Threshold: 350
+      TreatMissingData: ignore
+
+  ScaleStagingUpCPUPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '##${IngeststaginguploaderService}CPUScaleUpPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 650
+            ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 650
+            #MetricIntervalUpperBound: 1200
+            ScalingAdjustment: 2
+            
+  
+  ScaleDownStagingCPUPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${IngeststaginguploaderService}CPUScaleDownPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 200
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            ScalingAdjustment: -1
+  
+  AlarmHighCPUStagingUploader:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: TRUE
+      AlarmActions:
+        - !Ref ScaleStagingUpCPUPolicy
+      AlarmDescription: 'Scaling alarm based on cpu usage for ecs-prefetch'
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 2
+      # the dimensions can be found in the console after selecting a namespace to filter by
+      Dimensions:
+        - Name: ClusterName
+          Value: !Sub "ecs-preserv-${DNS}"
+        - Name: ServiceName
+          Value: ecs-staginguploader
+      EvaluationPeriods: 3
+      # the metric name can be found in the console on the screen before a metric is graphed
+      MetricName: CpuUtilized
+      # the namespace can be found in the console on the first screen before filtering metrics
+      Namespace: ECS/ContainerInsights
+      OKActions:
+        - !Ref ScaleDownStagingCPUPolicy
+      Statistic: Sum
+      Period: 60
+      Threshold: 70
+      TreatMissingData: ignore
+  
+  
+  
+  AutoScalingPrefetchTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: !Ref MaxContainers
+      ResourceId: !Join
+        - '/'
+        - - service
+          - !Ref Cluster
+          - !GetAtt IngestprefetchService.Name
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN:
+        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+
+  ScaleUpPrefetchPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${IngestprefetchService}CPUScaleUpPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingPrefetchTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 650
+            ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 650
+            #MetricIntervalUpperBound: 1200
+            ScalingAdjustment: 2
+            
+
+  ScaleDownPrefetchPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${IngestprefetchService}CPUScaleDownPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingPrefetchTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 200
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalUpperBound: 0
+            ScalingAdjustment: -1
+
+  AlarmHighCPUPrefetch:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: TRUE
+      AlarmActions:
+        - !Ref ScaleUpPrefetchPolicy
+      AlarmDescription: 'Scaling alarm based on cpu usage for ecs-prefetch'
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 2
+      # the dimensions can be found in the console after selecting a namespace to filter by
+      Dimensions:
+        - Name: ClusterName
+          Value: !Sub "ecs-preserv-${DNS}"
+        - Name: ServiceName
+          Value: ecs-prefetch
+      EvaluationPeriods: 3
+      # the metric name can be found in the console on the screen before a metric is graphed
+      MetricName: CpuUtilized
+      # the namespace can be found in the console on the first screen before filtering metrics
+      Namespace: ECS/ContainerInsights
+      OKActions:
+        - !Ref ScaleDownPrefetchPolicy
+      Statistic: Sum
+      Period: 60
+      Threshold: 70
+      TreatMissingData: ignore
+
+
+  AutoScalingFormatIdTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: !Ref MaxContainers
+      ResourceId: !Join
+        - '/'
+        - - service
+          - !Ref Cluster
+          - !GetAtt erService.Name
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN:
+        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+
+  ScaleUpFormatIdPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${erService}MemoryScaleUpPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingFormatIdTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 350
+            ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 350
+            #MetricIntervalUpperBound: 1200
+            ScalingAdjustment: 2  
+
+  ScaleDownFormatIdPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${erService}MemoryScaleDownPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingFormatIdTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalUpperBound: 0
+            ScalingAdjustment: -1
+
+  AlarmHighMemoryFormatId:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: TRUE
+      AlarmActions:
+        - !Ref ScaleUpFormatIdPolicy
+      AlarmDescription: 'Scaling alarm based on memory usage for ecs-formatidentifier'
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 1
+      # the dimensions can be found in the console after selecting a namespace to filter by
+      Dimensions:
+        - Name: ClusterName
+          Value: !Sub "ecs-preserv-${DNS}"
+        - Name: ServiceName
+          Value: ecs-formatidentifier
+      EvaluationPeriods: 3
+      # the metric name can be found in the console on the screen before a metric is graphed
+      MetricName: MemoryUtilized
+      # the namespace can be found in the console on the first screen before filtering metrics
+      Namespace: ECS/ContainerInsights
+      OKActions:
+        - !Ref ScaleDownFormatIdPolicy
+      Statistic: Sum
+      Period: 60
+      Threshold: 300
+      TreatMissingData: ignore
+
+  AutoScalingPreservUploadTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: !Ref MaxContainers
+      ResourceId: !Join
+        - '/'
+        - - service
+          - !Ref Cluster
+          - !GetAtt IngestpreservationuploaderService.Name
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN:
+        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+
+  ScaleUpPreservUploadPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${IngestpreservationuploaderService}MemoryScaleUpPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 650
+            ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 650
+            #MetricIntervalUpperBound: 1200
+            ScalingAdjustment: 2
+            
+
+  ScaleDownPreservUploadPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${IngestpreservationuploaderService}MemoryScaleDownPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalUpperBound: 0
+            ScalingAdjustment: -1
+
+  AlarmHighMemoryPreservUpload:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: TRUE
+      AlarmActions:
+        - !Ref ScaleUpPreservUploadPolicy
+      AlarmDescription: 'Scaling alarm based on memory usage for ecs-upload'
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 2
+      # the dimensions can be found in the console after selecting a namespace to filter by
+      Dimensions:
+        - Name: ClusterName
+          Value: !Sub "ecs-preserv-${DNS}"
+        - Name: ServiceName
+          Value: ecs-uploader
+      EvaluationPeriods: 3
+      # the metric name can be found in the console on the screen before a metric is graphed
+      MetricName: MemoryUtilized
+      # the namespace can be found in the console on the first screen before filtering metrics
+      Namespace: ECS/ContainerInsights
+      OKActions:
+        - !Ref ScaleDownPreservUploadPolicy
+      Statistic: Sum
+      Period: 60
+      Threshold: 350
+      TreatMissingData: ignore
+  
+  AutoScalingFixityTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: !Ref MaxContainers
+      ResourceId: !Join
+        - '/'
+        - - service
+          - !Ref Cluster
+          - !GetAtt AptfixityService.Name
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN:
+       Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+
+  ScaleUpFixityPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${AptfixityService}ScaleUpPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingFixityTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 400
+            ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 400
+            #MetricIntervalUpperBound: 1200
+            ScalingAdjustment: 2  
+
+  ScaleDownFixityPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${AptfixityService}ScaleDownPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingFixityTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalUpperBound: 0
+            ScalingAdjustment: -1
+
+  AlarmHighCPUFixity:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: TRUE
+      AlarmActions:
+        - !Ref ScaleUpFixityPolicy
+      AlarmDescription: 'Scaling alarm based on cpu usage for ecs-fixity'
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 2
+      # the dimensions can be found in the console after selecting a namespace to filter by
+      Dimensions:
+        - Name: ClusterName
+          Value: !Sub "ecs-preserv-${DNS}"
+        - Name: ServiceName
+          Value: ecs-fixity
+      EvaluationPeriods: 3
+      # the metric name can be found in the console on the screen before a metric is graphed
+      MetricName: CpuUtilized
+      # the namespace can be found in the console on the first screen before filtering metrics
+      Namespace: ECS/ContainerInsights
+      OKActions:
+        - !Ref ScaleDownFixityPolicy
+      Statistic: Sum
+      Period: 60
+      Threshold: 70
+      TreatMissingData: ignore
