@@ -25,7 +25,7 @@ RUN make build-bin
 # Compress binaries
 RUN upx go-bin/* -1 -q
 
-FROM alpine${ALPINE_VERSION}
+FROM golang:alpine${ALPINE_VERSION}
 
 ARG OUTPUT_DIR=go-bin
 ARG PSERVICE
