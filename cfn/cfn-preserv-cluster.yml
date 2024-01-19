@@ -176,7 +176,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref DNS
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -304,7 +304,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_delete:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -388,7 +388,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -516,7 +516,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_fixity:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -600,7 +600,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -728,7 +728,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_queue_fixity:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -811,7 +811,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -939,7 +939,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/bag_restorer:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1023,7 +1023,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -1151,7 +1151,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/file_restorer:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1235,7 +1235,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -1363,7 +1363,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/glacier_restorer:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1445,7 +1445,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -1573,7 +1573,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_bucket_reader:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1659,7 +1659,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -1787,7 +1787,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_cleanup:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1873,7 +1873,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -2001,7 +2001,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_format_identifier:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2087,7 +2087,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -2215,7 +2215,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_pre_fetch:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2303,7 +2303,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -2431,7 +2431,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_uploader:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2517,7 +2517,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -2645,7 +2645,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_verifier:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2730,7 +2730,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -2858,7 +2858,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_recorder:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2945,7 +2945,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -3073,7 +3073,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_staging_uploader:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3158,7 +3158,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -3286,7 +3286,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_validator:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3372,7 +3372,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: docker/ecs-searchdomain-sidecar:latest
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -3500,7 +3500,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/reingest_manager:19dde49-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:7430ea0-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
