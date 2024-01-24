@@ -304,7 +304,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -516,7 +516,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -728,7 +728,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -939,7 +939,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1151,7 +1151,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1363,7 +1363,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1573,7 +1573,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1787,7 +1787,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2001,7 +2001,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2215,7 +2215,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2431,7 +2431,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2645,7 +2645,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2858,7 +2858,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3073,7 +3073,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3286,7 +3286,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3500,7 +3500,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:7430ea0-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:ef18d8b-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
