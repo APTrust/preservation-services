@@ -52,11 +52,11 @@ Parameters:
     Description: 'Sets the number of days for retaining logs. Can be set according to Cluster'
     Type: Number
     AllowedValues: [1, 7, 14, 30, 90]
-    Default: 30
+    Default: 30 
 
 Conditions:
   IsStaging: !Equals [!Ref DNS, 'staging']
-  IsPrimary: !Or [!Equals [!Ref DNS, 'prod'] , !Equals [!Ref DNS, 'demo']]
+  IsPrimary: !Equals [!Ref DNS, 'prod']
 
 Resources:
 
@@ -65,21 +65,25 @@ Resources:
     Properties:
       ClusterName: !Ref ClusterName
       CapacityProviders:
-        - FARGATE
-        - FARGATE_SPOT
+        Fn::If:
+          - IsPrimary 
+          - 
+            - FARGATE_SPOT
+            - FARGATE
+          -  
+            - FARGATE_SPOT 
       DefaultCapacityProviderStrategy:
         Fn::If:
-        - IsPrimary
-        - 
-          - CapacityProvider: FARGATE
-            Weight: 1
-            Base: 1
-          - CapacityProvider: FARGATE_SPOT
-            Weight: 2 
-        - 
-          - CapacityProvider: FARGATE_SPOT
-            Base: 1
-            Weight: 1
+          - IsPrimary
+          - 
+            - CapacityProvider: FARGATE
+              Weight: 1
+              Base: 1
+            - CapacityProvider: FARGATE_SPOT
+              Weight: 2 
+          - 
+            - CapacityProvider: FARGATE_SPOT
+              Weight: 1
       ClusterSettings:
         - Name: containerInsights
           Value: enabled
@@ -172,7 +176,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref DNS
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -300,7 +304,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:c985595-master
+        Image: docker.io/aptrust/apt_delete:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -384,7 +388,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -512,7 +516,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:c985595-master
+        Image: docker.io/aptrust/apt_fixity:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -596,7 +600,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -724,7 +728,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:c985595-master
+        Image: docker.io/aptrust/apt_queue_fixity:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -807,7 +811,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -935,7 +939,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:c985595-master
+        Image: docker.io/aptrust/bag_restorer:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1019,7 +1023,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -1147,7 +1151,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:c985595-master
+        Image: docker.io/aptrust/file_restorer:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1231,7 +1235,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -1359,7 +1363,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:c985595-master
+        Image: docker.io/aptrust/glacier_restorer:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1441,7 +1445,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -1569,7 +1573,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:c985595-master
+        Image: docker.io/aptrust/ingest_bucket_reader:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1655,7 +1659,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -1783,7 +1787,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:c985595-master
+        Image: docker.io/aptrust/ingest_cleanup:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1869,7 +1873,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -1997,7 +2001,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:c985595-master
+        Image: docker.io/aptrust/ingest_format_identifier:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2083,7 +2087,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -2211,7 +2215,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:c985595-master
+        Image: docker.io/aptrust/ingest_pre_fetch:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2220,13 +2224,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: prefetch
         Name: prefetch
-      Cpu: "256"
+      Cpu: "512"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'prefetch-${FamTag}'
-      Memory: "512"
+      Memory: "1024"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -2299,7 +2303,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -2427,7 +2431,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:c985595-master
+        Image: docker.io/aptrust/ingest_preservation_uploader:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2436,13 +2440,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: ingestuploader
         Name: uploader
-      Cpu: "256"
+      Cpu: "512"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'uploader-${FamTag}'
-      Memory: "512"
+      Memory: "1024"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -2513,7 +2517,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -2641,7 +2645,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:c985595-master
+        Image: docker.io/aptrust/ingest_preservation_verifier:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2726,7 +2730,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -2854,7 +2858,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:c985595-master
+        Image: docker.io/aptrust/ingest_recorder:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2941,7 +2945,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -3069,7 +3073,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:c985595-master
+        Image: docker.io/aptrust/ingest_staging_uploader:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3078,13 +3082,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: staginguploader
         Name: staginguploader
-      Cpu: "256"
+      Cpu: "512"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'staginguploader-${FamTag}'
-      Memory: "512"
+      Memory: "1024"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -3154,7 +3158,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -3282,7 +3286,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:c985595-master
+        Image: docker.io/aptrust/ingest_validator:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3368,7 +3372,7 @@ Resources:
         - us-east-1.compute.internal
         - !Ref "DNS"
         Essential: false
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/ecs-searchdomain-sidecar:latest
+        Image: docker/ecs-searchdomain-sidecar:latest
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -3496,7 +3500,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:c985595-master
+        Image: docker.io/aptrust/reingest_manager:19dde49-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3517,7 +3521,6 @@ Resources:
       - FARGATE
 
   #Scaling and Alarms for Preserv-Services
-
   AutoScalingStagingUpLoadTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -3545,11 +3548,7 @@ Resources:
         MetricAggregationType: Average
         StepAdjustments:
           - MetricIntervalLowerBound: 0
-            MetricIntervalUpperBound: 650
             ScalingAdjustment: 1
-          - MetricIntervalLowerBound: 650
-            #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2
 
   ScaleDownStagingUpPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3559,7 +3558,7 @@ Resources:
       ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
       StepScalingPolicyConfiguration:
         AdjustmentType: ChangeInCapacity
-        Cooldown: 200
+        Cooldown: 120
         MetricAggregationType: Average
         StepAdjustments:
           - MetricIntervalUpperBound: 0
@@ -3592,6 +3591,68 @@ Resources:
       Threshold: 350
       TreatMissingData: ignore
 
+  ScaleStagingUpCPUPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '##${IngeststaginguploaderService}CPUScaleUpPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 120
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 650
+            ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 650
+            #MetricIntervalUpperBound: 1200
+            ScalingAdjustment: 2
+            
+  
+  ScaleDownStagingCPUPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${IngeststaginguploaderService}CPUScaleDownPolicy'
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 200
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            ScalingAdjustment: -1
+  
+  AlarmHighCPUStagingUploader:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: TRUE
+      AlarmActions:
+        - !Ref ScaleStagingUpCPUPolicy
+      AlarmDescription: 'Scaling alarm based on cpu usage for ecs-prefetch'
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 2
+      # the dimensions can be found in the console after selecting a namespace to filter by
+      Dimensions:
+        - Name: ClusterName
+          Value: !Sub "ecs-preserv-${DNS}"
+        - Name: ServiceName
+          Value: ecs-staginguploader
+      EvaluationPeriods: 3
+      # the metric name can be found in the console on the screen before a metric is graphed
+      MetricName: CpuUtilized
+      # the namespace can be found in the console on the first screen before filtering metrics
+      Namespace: ECS/ContainerInsights
+      OKActions:
+        - !Ref ScaleDownStagingCPUPolicy
+      Statistic: Sum
+      Period: 60
+      Threshold: 70
+      TreatMissingData: ignore
+  
+  
+  
   AutoScalingPrefetchTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -3624,6 +3685,7 @@ Resources:
           - MetricIntervalLowerBound: 650
             #MetricIntervalUpperBound: 1200
             ScalingAdjustment: 2
+            
 
   ScaleDownPrefetchPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3698,7 +3760,7 @@ Resources:
             ScalingAdjustment: 1
           - MetricIntervalLowerBound: 350
             #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2 
+            ScalingAdjustment: 2  
 
   ScaleDownFormatIdPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3773,6 +3835,7 @@ Resources:
           - MetricIntervalLowerBound: 650
             #MetricIntervalUpperBound: 1200
             ScalingAdjustment: 2
+            
 
   ScaleDownPreservUploadPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3814,6 +3877,7 @@ Resources:
       Period: 60
       Threshold: 350
       TreatMissingData: ignore
+  
   AutoScalingFixityTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -3827,7 +3891,7 @@ Resources:
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
       RoleARN:
-        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+       Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
 
   ScaleUpFixityPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3845,7 +3909,7 @@ Resources:
             ScalingAdjustment: 1
           - MetricIntervalLowerBound: 400
             #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2
+            ScalingAdjustment: 2  
 
   ScaleDownFixityPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3887,3 +3951,4 @@ Resources:
       Period: 60
       Threshold: 70
       TreatMissingData: ignore
+
