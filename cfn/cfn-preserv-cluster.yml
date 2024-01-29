@@ -134,7 +134,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -346,7 +346,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -553,7 +553,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -770,7 +770,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -982,7 +982,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -1193,7 +1193,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -1400,7 +1400,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -1611,7 +1611,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -1825,7 +1825,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -2039,7 +2039,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -2259,7 +2259,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -2473,7 +2473,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -2682,7 +2682,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -2897,7 +2897,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -3112,7 +3112,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -3324,7 +3324,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
