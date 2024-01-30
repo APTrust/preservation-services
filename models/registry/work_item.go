@@ -12,30 +12,31 @@ import (
 // WorkItem is a Registry WorkItem that describes a task to be completed
 // and its current stage and status.
 type WorkItem struct {
-	APTrustApprover  string    `json:"aptrust_approver"`
-	Action           string    `json:"action"`
-	BagDate          time.Time `json:"bag_date"`
-	Bucket           string    `json:"bucket"`
-	CreatedAt        time.Time `json:"created_at,omitempty"`
-	DateProcessed    time.Time `json:"date_processed"`
-	ETag             string    `json:"etag"`
-	ID               int64     `json:"id,omitempty"`
-	InstApprover     string    `json:"inst_approver"`
-	InstitutionID    int64     `json:"institution_id"`
-	Name             string    `json:"name"`
-	NeedsAdminReview bool      `json:"needs_admin_review"`
-	Node             string    `json:"node"`
-	Note             string    `json:"note"`
-	Outcome          string    `json:"outcome"`
-	Pid              int       `json:"pid"`
-	QueuedAt         time.Time `json:"queued_at,omitempty"`
-	Retry            bool      `json:"retry"`
-	Size             int64     `json:"size"`
-	Stage            string    `json:"stage"`
-	StageStartedAt   time.Time `json:"stage_started_at"`
-	Status           string    `json:"status"`
-	UpdatedAt        time.Time `json:"updated_at,omitempty"`
-	User             string    `json:"user"`
+	APTrustApprover   string    `json:"aptrust_approver"`
+	Action            string    `json:"action"`
+	BagDate           time.Time `json:"bag_date"`
+	Bucket            string    `json:"bucket"`
+	CreatedAt         time.Time `json:"created_at,omitempty"`
+	DateProcessed     time.Time `json:"date_processed"`
+	DeletionRequestID int64     `json:"deletion_request_id"`
+	ETag              string    `json:"etag"`
+	ID                int64     `json:"id,omitempty"`
+	InstApprover      string    `json:"inst_approver"`
+	InstitutionID     int64     `json:"institution_id"`
+	Name              string    `json:"name"`
+	NeedsAdminReview  bool      `json:"needs_admin_review"`
+	Node              string    `json:"node"`
+	Note              string    `json:"note"`
+	Outcome           string    `json:"outcome"`
+	Pid               int       `json:"pid"`
+	QueuedAt          time.Time `json:"queued_at,omitempty"`
+	Retry             bool      `json:"retry"`
+	Size              int64     `json:"size"`
+	Stage             string    `json:"stage"`
+	StageStartedAt    time.Time `json:"stage_started_at"`
+	Status            string    `json:"status"`
+	UpdatedAt         time.Time `json:"updated_at,omitempty"`
+	User              string    `json:"user"`
 
 	// GenericFileIdentifier is read-only, from view.
 	GenericFileIdentifier string `json:"generic_file_identifier"`

@@ -328,10 +328,11 @@ func createDeletionWorkItems() {
 
 		deletionWorkItem := resp.WorkItem()
 		assert.NotNil(ctx.T, deletionWorkItem, gfIdentifier)
+		assert.NotEmpty(ctx.T, deletionWorkItem.DeletionRequestID, gfIdentifier)
 		if deletionWorkItem != nil {
 			err := ctx.Context.NSQClient.Enqueue(constants.TopicDelete, deletionWorkItem.ID)
 			if err == nil {
-				ctx.Context.Logger.Errorf("Queued WorkItem %d in %s for file %s", deletionWorkItem.ID, constants.TopicDelete, gfIdentifier)
+				ctx.Context.Logger.Infof("Queued WorkItem %d in %s for file %s with deletion request id %d", deletionWorkItem.ID, constants.TopicDelete, gfIdentifier, deletionWorkItem.DeletionRequestID)
 			} else {
 				ctx.Context.Logger.Errorf("Error queueing WorkItem %d in %s for file %s: %v", deletionWorkItem.ID, constants.TopicDelete, gfIdentifier, err)
 			}
@@ -349,10 +350,11 @@ func createDeletionWorkItems() {
 
 		deletionWorkItem := resp.WorkItem()
 		assert.NotNil(ctx.T, deletionWorkItem, objIdentifier)
+		assert.NotEmpty(ctx.T, deletionWorkItem.DeletionRequestID, objIdentifier)
 		if deletionWorkItem != nil {
 			err := ctx.Context.NSQClient.Enqueue(constants.TopicDelete, deletionWorkItem.ID)
 			if err == nil {
-				ctx.Context.Logger.Errorf("Queued WorkItem %d in %s for object %s", deletionWorkItem.ID, constants.TopicDelete, objIdentifier)
+				ctx.Context.Logger.Infof("Queued WorkItem %d in %s for object %s with deletion request id %d", deletionWorkItem.ID, constants.TopicDelete, objIdentifier, deletionWorkItem.DeletionRequestID)
 			} else {
 				ctx.Context.Logger.Errorf("Error queueing WorkItem %d in %s for object %s: %v", deletionWorkItem.ID, constants.TopicDelete, objIdentifier, err)
 			}
