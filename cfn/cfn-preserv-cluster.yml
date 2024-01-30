@@ -134,7 +134,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -304,7 +304,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -346,7 +346,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -516,7 +516,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -553,7 +553,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
+          AssignPublicIp: ENABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -728,7 +728,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -770,7 +770,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -939,7 +939,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -982,7 +982,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -1151,7 +1151,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1193,7 +1193,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -1363,7 +1363,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1400,7 +1400,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
+          AssignPublicIp: ENABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -1573,7 +1573,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1611,7 +1611,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
+          AssignPublicIp: ENABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -1787,7 +1787,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1825,7 +1825,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
+          AssignPublicIp: ENABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -2001,7 +2001,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2039,7 +2039,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
+          AssignPublicIp: ENABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -2215,7 +2215,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2259,7 +2259,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -2431,7 +2431,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2473,7 +2473,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -2645,7 +2645,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2682,7 +2682,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
+          AssignPublicIp: ENABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -2858,7 +2858,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2897,7 +2897,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
+          AssignPublicIp: ENABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -3073,7 +3073,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3112,7 +3112,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
+          AssignPublicIp: ENABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -3286,7 +3286,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3324,7 +3324,7 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
+          AssignPublicIp: ENABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
@@ -3500,7 +3500,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:33a7bef-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:6042812-nat-removal
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3951,7 +3951,3 @@ Resources:
       Period: 60
       Threshold: 70
       TreatMissingData: ignore
-<<<<<<< HEAD
-=======
-
->>>>>>> e604ac197791a59afb5ea43e721fcf9736c586de
