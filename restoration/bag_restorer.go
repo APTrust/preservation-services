@@ -103,7 +103,9 @@ func (r *BagRestorer) Run() (fileCount int, errors []*service.ProcessingError) {
 	}
 	fileCount += tagManifestsAdded
 
-	fileCount++ // For bagit.txt
+	// Add one for bagit.txt, which was not in preservation storage,
+	// but added above in the call to r.AddBagItFile().
+	fileCount++
 
 	// Close the PipeWriter, or the PipeReader will hang forever.
 	r.tarPipeWriter.Finish()
@@ -181,6 +183,19 @@ func (r *BagRestorer) restoreAllPreservedFiles() (fileCount int, errors []*servi
 			filename, _ := gf.PathInBag()
 			if isObjectRestoration && filename == "bag-info.txt" {
 				digests, err = r.RewriteBagInfo(gf)
+				//
+				// Add bag-info.txt to tag manifests without comparing its checksums
+				// to Registry checksums. They won't match, because we just rewrote bag-info.txt.
+				// https://github.com/APTrust/preservation-services/issues/134
+				//
+				for _, alg := range constants.SupportedManifestAlgorithms {
+					digest := digests[alg]
+					// If bagger didn't calculate this alg, it wasn't part of the BagIt profile.
+					if digest == "" {
+						continue
+					}
+					err = r.AppendDigestToManifest(gf, digest, alg)
+				}
 			} else {
 				digests, err = r.AddToTarFile(gf)
 			}
