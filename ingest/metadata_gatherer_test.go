@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/APTrust/preservation-services/bagit"
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/common"
@@ -254,5 +255,35 @@ func TestBadBTRIdentifier(t *testing.T) {
 			break
 		}
 	}
+}
 
+func TestNormalizeProfileIdentifier(t *testing.T) {
+	tags := []*bagit.Tag{
+		{TagFile: "bag-info.txt", TagName: "Source-Organization", Value: "Acme Corp"},
+		{TagFile: "bag-info.txt", TagName: "BagIt-Profile-Identifier", Value: ""},
+	}
+	g := ingest.MetadataGatherer{}
+
+	// Empty profile identifier should become default profile identifier
+	g.NormalizeProfileIdentifier(tags)
+	assert.Equal(t, constants.DefaultProfileIdentifier, tags[1].Value)
+
+	// Bad BTR value should be fixed
+	tags[1].Value = "https://raw.githubusercontent.com/APTrust/dart/master/profiles/btr-v0.1.json"
+	g.NormalizeProfileIdentifier(tags)
+	assert.Equal(t, constants.BTRProfileIdentifier, tags[1].Value)
+
+	tags[1].Value = "https://raw.githubusercontent.com/dpscollaborative/btr_bagit_profile/master/btr-bagit-profile.json"
+	g.NormalizeProfileIdentifier(tags)
+	assert.Equal(t, constants.BTRProfileIdentifier, tags[1].Value)
+
+	// Default profile identifier should remain unchanged
+	tags[1].Value = constants.DefaultProfileIdentifier
+	g.NormalizeProfileIdentifier(tags)
+	assert.Equal(t, constants.DefaultProfileIdentifier, tags[1].Value)
+
+	// Custom profile identifier should remain unchanged
+	tags[1].Value = "https://example.com/profile.json"
+	g.NormalizeProfileIdentifier(tags)
+	assert.Equal(t, "https://example.com/profile.json", tags[1].Value)
 }

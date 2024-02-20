@@ -276,7 +276,8 @@ func (obj *IngestObject) GetTagValue(tagFile, tagName, defaultValue string) stri
 }
 
 // BagItProfileFormat returns a string indicating whether the bag
-// being ingested is in APTrust or BTR format.
+// being ingested is in APTrust or BTR format. This will only ever
+// return constants.DefaultProfileFormat or constants.BagItProfileBTR.
 func (obj *IngestObject) BagItProfileFormat() string {
 	profile := constants.BagItProfileDefault
 	profileIdentifier := ""
@@ -284,7 +285,7 @@ func (obj *IngestObject) BagItProfileFormat() string {
 	if len(tags) > 0 {
 		profileIdentifier = tags[0].Value
 	}
-	if strings.Contains(profileIdentifier, "/btr") {
+	if strings.Contains(profileIdentifier, "/btr_bagit_profile") || strings.Contains(profileIdentifier, "/btr-bagit-profile") {
 		profile = constants.BagItProfileBTR
 	}
 	return profile
