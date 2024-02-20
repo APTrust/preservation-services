@@ -300,7 +300,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_delete:e5f3918-bulk-delete
+        Image: docker.io/aptrust/apt_delete:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -512,7 +512,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_fixity:e5f3918-bulk-delete
+        Image: docker.io/aptrust/apt_fixity:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -724,7 +724,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/apt_queue_fixity:e5f3918-bulk-delete
+        Image: docker.io/aptrust/apt_queue_fixity:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -935,7 +935,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/bag_restorer:e5f3918-bulk-delete
+        Image: docker.io/aptrust/bag_restorer:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1147,7 +1147,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/file_restorer:e5f3918-bulk-delete
+        Image: docker.io/aptrust/file_restorer:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1359,7 +1359,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/glacier_restorer:e5f3918-bulk-delete
+        Image: docker.io/aptrust/glacier_restorer:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1569,7 +1569,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_bucket_reader:e5f3918-bulk-delete
+        Image: docker.io/aptrust/ingest_bucket_reader:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1783,7 +1783,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_cleanup:e5f3918-bulk-delete
+        Image: docker.io/aptrust/ingest_cleanup:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1997,7 +1997,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_format_identifier:e5f3918-bulk-delete
+        Image: docker.io/aptrust/ingest_format_identifier:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2211,7 +2211,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_pre_fetch:e5f3918-bulk-delete
+        Image: docker.io/aptrust/ingest_pre_fetch:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2427,7 +2427,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_uploader:e5f3918-bulk-delete
+        Image: docker.io/aptrust/ingest_preservation_uploader:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2641,7 +2641,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_preservation_verifier:e5f3918-bulk-delete
+        Image: docker.io/aptrust/ingest_preservation_verifier:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2854,7 +2854,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_recorder:e5f3918-bulk-delete
+        Image: docker.io/aptrust/ingest_recorder:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3069,7 +3069,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_staging_uploader:e5f3918-bulk-delete
+        Image: docker.io/aptrust/ingest_staging_uploader:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3282,7 +3282,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/ingest_validator:e5f3918-bulk-delete
+        Image: docker.io/aptrust/ingest_validator:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3496,7 +3496,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: docker.io/aptrust/reingest_manager:e5f3918-bulk-delete
+        Image: docker.io/aptrust/reingest_manager:4788981-bulk-delete
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
