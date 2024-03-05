@@ -2888,7 +2888,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 2
       EnableExecuteCommand: true
     #  LaunchType: FARGATE
       NetworkConfiguration:
@@ -3518,79 +3518,79 @@ Resources:
 
   #Scaling and Alarms for Preserv-Services
 
-  AutoScalingStagingUpLoadTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Properties:
-      MinCapacity: 1
-      MaxCapacity: !Ref MaxContainers
-      ResourceId: !Join
-        - '/'
-        - - service
-          - !Ref Cluster
-          - !GetAtt IngeststaginguploaderService.Name
-      ScalableDimension: ecs:service:DesiredCount
-      ServiceNamespace: ecs
-      RoleARN:
-        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+  #AutoScalingStagingUpLoadTarget:
+  #  Type: AWS::ApplicationAutoScaling::ScalableTarget
+  #  Properties:
+  #    MinCapacity: 1
+  #    MaxCapacity: !Ref MaxContainers
+  #    ResourceId: !Join
+  #      - '/'
+  #      - - service
+  #        - !Ref Cluster
+  #        - !GetAtt IngeststaginguploaderService.Name
+  #    ScalableDimension: ecs:service:DesiredCount
+  #    ServiceNamespace: ecs
+  #    RoleARN:
+  #      Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
 
-  ScaleStagingUpPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '${IngeststaginguploaderService}MemoryScaleUpPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 120
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalLowerBound: 0
-            MetricIntervalUpperBound: 650
-            ScalingAdjustment: 1
-          - MetricIntervalLowerBound: 650
+  #ScaleStagingUpPolicy:
+  #  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #  Properties:
+  #    PolicyName: !Sub '${IngeststaginguploaderService}MemoryScaleUpPolicy'
+  #    PolicyType: StepScaling
+  #    ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+  #    StepScalingPolicyConfiguration:
+  #      AdjustmentType: ChangeInCapacity
+  #      Cooldown: 120
+  #      MetricAggregationType: Average
+  #      StepAdjustments:
+  #        - MetricIntervalLowerBound: 0
+  #          MetricIntervalUpperBound: 650
+  #          ScalingAdjustment: 1
+  #        - MetricIntervalLowerBound: 650
             #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2
+  #          ScalingAdjustment: 2
 
-  ScaleDownStagingUpPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '${IngeststaginguploaderService}MemoryScaleDownPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 200
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalUpperBound: 0
-            ScalingAdjustment: -1
+  #ScaleDownStagingUpPolicy:
+  #  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #  Properties:
+  #    PolicyName: !Sub '${IngeststaginguploaderService}MemoryScaleDownPolicy'
+  #    PolicyType: StepScaling
+  #    ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+  #    StepScalingPolicyConfiguration:
+  #      AdjustmentType: ChangeInCapacity
+  #      Cooldown: 200
+  #      MetricAggregationType: Average
+  #      StepAdjustments:
+  #        - MetricIntervalUpperBound: 0
+  #          ScalingAdjustment: -1
 
-  AlarmHighMemoryStagingUploader:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled: TRUE
-      AlarmActions:
-        - !Ref ScaleStagingUpPolicy
-      AlarmDescription: 'Scale Up Alarm based on memory usage for ecs-staginguploader'
-      ComparisonOperator: GreaterThanThreshold
-      DatapointsToAlarm: 2
+  #AlarmHighMemoryStagingUploader:
+  #  Type: AWS::CloudWatch::Alarm
+  #  Properties:
+  #    ActionsEnabled: TRUE
+  #    AlarmActions:
+  #      - !Ref ScaleStagingUpPolicy
+  #    AlarmDescription: 'Scale Up Alarm based on memory usage for ecs-staginguploader'
+  #    ComparisonOperator: GreaterThanThreshold
+  #    DatapointsToAlarm: 2
       # the dimensions can be found in the console after selecting a namespace to filter by
-      Dimensions:
-        - Name: ClusterName
-          Value: !Sub "ecs-preserv-${DNS}"
-        - Name: ServiceName
-          Value: ecs-staginguploader
-      EvaluationPeriods: 3
+  #    Dimensions:
+  #      - Name: ClusterName
+  #        Value: !Sub "ecs-preserv-${DNS}"
+  #      - Name: ServiceName
+  #        Value: ecs-staginguploader
+  #    EvaluationPeriods: 3
       # the metric name can be found in the console on the screen before a metric is graphed
-      MetricName: MemoryUtilized
+  #    MetricName: MemoryUtilized
       # the namespace can be found in the console on the first screen before filtering metrics
-      Namespace: ECS/ContainerInsights
-      OKActions:
-        - !Ref ScaleDownStagingUpPolicy
-      Statistic: Sum
-      Period: 60
-      Threshold: 350
-      TreatMissingData: ignore
+  #    Namespace: ECS/ContainerInsights
+  #    OKActions:
+  #      - !Ref ScaleDownStagingUpPolicy
+  #    Statistic: Sum
+  #    Period: 60
+  #    Threshold: 350
+  #    TreatMissingData: ignore
 
   AutoScalingPrefetchTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
