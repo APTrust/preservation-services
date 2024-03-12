@@ -128,6 +128,9 @@ func (r *IngestBucketReader) WorkItemAlreadyExists(instID int64, name, etag stri
 		if !resp.WorkItem().ProcessingHasCompleted() {
 			r.Context.Logger.Infof("Pending/running ingest work item exists for bag %s with etag %s. No need to re-ingest this one.", name, etag)
 			workItemExists = true
+		} else if resp.WorkItem().Status == constants.StatusFailed {
+			r.Context.Logger.Infof("Existing ingest work item exists for bag %s with etag %s failed. No need to retry because this bag's etag is identical to the failed one and it will fail again.", name, etag)
+			workItemExists = true
 		} else {
 			// We have a completed ingest work item that exactly
 			// matches the item in the receiving bucket. Same name,
