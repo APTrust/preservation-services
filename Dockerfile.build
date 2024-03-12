@@ -19,6 +19,8 @@ RUN go mod download
 
 COPY . .
 
+RUN go mod tidy
+
 # Build binaries
 RUN make build-bin
 

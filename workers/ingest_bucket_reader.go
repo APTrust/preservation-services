@@ -110,14 +110,56 @@ func (r *IngestBucketReader) WorkItemAlreadyExists(instID int64, name, etag stri
 	v.Set("name", name)
 	v.Set("etag", etag)
 	v.Set("institution_id", strconv.FormatInt(instID, 10))
+	v.Set("action", constants.ActionIngest)
+	v.Set("sort", "date_processed__desc")
 	v.Set("page", "1")
 	v.Set("per_page", "10")
 	resp := r.Context.RegistryClient.WorkItemList(v)
 	if resp.Error != nil {
 		return false, resp.Error
 	}
-	exists := len(resp.WorkItems()) > 0
-	return exists, nil
+	workItemExists := false
+	if len(resp.WorkItems()) > 0 {
+		// resp.WorkItem() is the same as resp.WorkItems()[0].
+		// This is the most recent ingest work item.
+		// If the work item is still in process, then we can
+		// say the ingest work item exists and we don't need
+		// to create another one.
+		if !resp.WorkItem().ProcessingHasCompleted() {
+			r.Context.Logger.Infof("Pending/running ingest work item exists for bag %s with etag %s. No need to re-ingest this one.", name, etag)
+			workItemExists = true
+		} else if resp.WorkItem().Status == constants.StatusFailed {
+			r.Context.Logger.Infof("Existing ingest work item for bag %s with etag %s failed. No need to retry because this bag's etag is identical to the failed one and it will fail again.", name, etag)
+			workItemExists = true
+		} else {
+			// We have a completed ingest work item that exactly
+			// matches the item in the receiving bucket. Same name,
+			// institution and e-tag. And we know the ingest work
+			// item has completed. If the object itself is still
+			// active, we don't need to reingest it. If it has been
+			// deleted, we do need to reingest it. This happens when
+			// a depositor wants to change the storage option of an
+			// object. The delete it, then re-upload the same bag
+			// with a new storage option. https://trello.com/c/TE8PVrzq
+			objId := resp.WorkItem().IntellectualObjectID
+			workItemExists = r.ActiveObjectExists(objId)
+			if workItemExists {
+				r.Context.Logger.Infof("Completed ingest work item exists for bag %s with etag %s and the intellectual object (id=%d) is still active in the system. No need to re-ingest this one.", name, etag, objId)
+			} else {
+				r.Context.Logger.Infof("Completed ingest work item exists for bag %s with etag %s but the intellectual object (id=%d) was subsequently deleted, so we do need to re-ingest this one.", name, etag, objId)
+			}
+		}
+	}
+	return workItemExists, nil
+}
+
+func (r *IngestBucketReader) ActiveObjectExists(objId int64) bool {
+	activeObjectExists := false
+	resp := r.Context.RegistryClient.IntellectualObjectByID(objId)
+	if resp.Error == nil && resp.IntellectualObject() != nil && resp.IntellectualObject().State == constants.StateActive {
+		activeObjectExists = true
+	}
+	return activeObjectExists
 }
 
 func (r *IngestBucketReader) CreateAndQueueItem(institution *registry.Institution, obj minio.ObjectInfo) {

@@ -304,7 +304,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/apt_delete:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -516,7 +516,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/apt_fixity:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -728,7 +728,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/apt_queue_fixity:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -939,7 +939,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/bag_restorer:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1151,7 +1151,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/file_restorer:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1363,7 +1363,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/glacier_restorer:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1573,7 +1573,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_bucket_reader:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1787,7 +1787,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_cleanup:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2001,7 +2001,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_format_identifier:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2215,7 +2215,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_pre_fetch:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2431,7 +2431,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_preservation_uploader:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2645,7 +2645,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_preservation_verifier:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2858,7 +2858,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_recorder:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3073,7 +3073,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_staging_uploader:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3286,7 +3286,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_validator:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3500,7 +3500,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:multi
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/reingest_manager:multi
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3521,75 +3521,80 @@ Resources:
       - FARGATE
 
   #Scaling and Alarms for Preserv-Services
-  AutoScalingStagingUpLoadTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Properties:
-      MinCapacity: 1
-      MaxCapacity: !Ref MaxContainers
-      ResourceId: !Join
-        - '/'
-        - - service
-          - !Ref Cluster
-          - !GetAtt IngeststaginguploaderService.Name
-      ScalableDimension: ecs:service:DesiredCount
-      ServiceNamespace: ecs
-      RoleARN:
-        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
 
-  ScaleStagingUpPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '${IngeststaginguploaderService}MemoryScaleUpPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 120
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalLowerBound: 0
-            ScalingAdjustment: 1
+  #AutoScalingStagingUpLoadTarget:
+  #  Type: AWS::ApplicationAutoScaling::ScalableTarget
+  #  Properties:
+  #    MinCapacity: 1
+  #    MaxCapacity: !Ref MaxContainers
+  #    ResourceId: !Join
+  #      - '/'
+  #      - - service
+  #        - !Ref Cluster
+  #        - !GetAtt IngeststaginguploaderService.Name
+  #    ScalableDimension: ecs:service:DesiredCount
+  #    ServiceNamespace: ecs
+  #    RoleARN:
+  #      Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
 
-  ScaleDownStagingUpPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '${IngeststaginguploaderService}MemoryScaleDownPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 120
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalUpperBound: 0
-            ScalingAdjustment: -1
+  #ScaleStagingUpPolicy:
+  #  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #  Properties:
+  #    PolicyName: !Sub '${IngeststaginguploaderService}MemoryScaleUpPolicy'
+  #    PolicyType: StepScaling
+  #    ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+  #    StepScalingPolicyConfiguration:
+  #      AdjustmentType: ChangeInCapacity
+  #      Cooldown: 120
+  #      MetricAggregationType: Average
+  #      StepAdjustments:
+  #        - MetricIntervalLowerBound: 0
+  #          MetricIntervalUpperBound: 650
+  #          ScalingAdjustment: 1
+  #        - MetricIntervalLowerBound: 650
+  #          #MetricIntervalUpperBound: 1200
+  #          ScalingAdjustment: 2
 
-  AlarmHighMemoryStagingUploader:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled: TRUE
-      AlarmActions:
-        - !Ref ScaleStagingUpPolicy
-      AlarmDescription: 'Scale Up Alarm based on memory usage for ecs-staginguploader'
-      ComparisonOperator: GreaterThanThreshold
-      DatapointsToAlarm: 2
-      # the dimensions can be found in the console after selecting a namespace to filter by
-      Dimensions:
-        - Name: ClusterName
-          Value: !Sub "ecs-preserv-${DNS}"
-        - Name: ServiceName
-          Value: ecs-staginguploader
-      EvaluationPeriods: 3
-      # the metric name can be found in the console on the screen before a metric is graphed
-      MetricName: MemoryUtilized
-      # the namespace can be found in the console on the first screen before filtering metrics
-      Namespace: ECS/ContainerInsights
-      OKActions:
-        - !Ref ScaleDownStagingUpPolicy
-      Statistic: Sum
-      Period: 60
-      Threshold: 350
-      TreatMissingData: ignore
+  #ScaleDownStagingUpPolicy:
+  #  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #  Properties:
+  #    PolicyName: !Sub '${IngeststaginguploaderService}MemoryScaleDownPolicy'
+  #    PolicyType: StepScaling
+  #    ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+  #    StepScalingPolicyConfiguration:
+  #      AdjustmentType: ChangeInCapacity
+  #      Cooldown: 200
+  #      MetricAggregationType: Average
+  #      StepAdjustments:
+  #        - MetricIntervalUpperBound: 0
+  #          ScalingAdjustment: -1
+
+  #AlarmHighMemoryStagingUploader:
+  #  Type: AWS::CloudWatch::Alarm
+  #  Properties:
+  #    ActionsEnabled: TRUE
+  #    AlarmActions:
+  #      - !Ref ScaleStagingUpPolicy
+  #    AlarmDescription: 'Scale Up Alarm based on memory usage for ecs-staginguploader'
+  #    ComparisonOperator: GreaterThanThreshold
+  #    DatapointsToAlarm: 2
+  #    # the dimensions can be found in the console after selecting a namespace to filter by
+  #    Dimensions:
+  #      - Name: ClusterName
+  #        Value: !Sub "ecs-preserv-${DNS}"
+  #      - Name: ServiceName
+  #        Value: ecs-staginguploader
+  #    EvaluationPeriods: 3
+  #    # the metric name can be found in the console on the screen before a metric is graphed
+  #    MetricName: MemoryUtilized
+  #    # the namespace can be found in the console on the first screen before filtering metrics
+  #    Namespace: ECS/ContainerInsights
+  #    OKActions:
+  #      - !Ref ScaleDownStagingUpPolicy
+  #    Statistic: Sum
+  #    Period: 60
+  #    Threshold: 350
+  #    TreatMissingData: ignore
 
   ScaleStagingUpCPUPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
