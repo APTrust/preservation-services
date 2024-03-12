@@ -30,17 +30,12 @@ func (r *IngestBucketReader) RunOnce() {
 
 func (r *IngestBucketReader) RunAsService() {
 	r.logStartup()
-	r.Context.Logger.Warningf("Ingest bucket reader will do nothing for now.")
 	for {
-		r.Context.Logger.Warningf("Ingest bucket reader is sleeping until you redeploy it.")
-		time.Sleep(10 * time.Minute)
+		r.scanReceivingBuckets()
+		r.Context.Logger.Infof("Finished. Will scan again in %s",
+			r.Context.Config.IngestBucketReaderInterval.String())
+		time.Sleep(r.Context.Config.IngestBucketReaderInterval)
 	}
-	// for {
-	// 	r.scanReceivingBuckets()
-	// 	r.Context.Logger.Infof("Finished. Will scan again in %s",
-	// 		r.Context.Config.IngestBucketReaderInterval.String())
-	// 	time.Sleep(r.Context.Config.IngestBucketReaderInterval)
-	// }
 }
 
 func (r *IngestBucketReader) logStartup() {
@@ -134,7 +129,7 @@ func (r *IngestBucketReader) WorkItemAlreadyExists(instID int64, name, etag stri
 			r.Context.Logger.Infof("Pending/running ingest work item exists for bag %s with etag %s. No need to re-ingest this one.", name, etag)
 			workItemExists = true
 		} else if resp.WorkItem().Status == constants.StatusFailed {
-			r.Context.Logger.Infof("Existing ingest work item exists for bag %s with etag %s failed. No need to retry because this bag's etag is identical to the failed one and it will fail again.", name, etag)
+			r.Context.Logger.Infof("Existing ingest work item for bag %s with etag %s failed. No need to retry because this bag's etag is identical to the failed one and it will fail again.", name, etag)
 			workItemExists = true
 		} else {
 			// We have a completed ingest work item that exactly
