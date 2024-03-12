@@ -30,12 +30,17 @@ func (r *IngestBucketReader) RunOnce() {
 
 func (r *IngestBucketReader) RunAsService() {
 	r.logStartup()
+	r.Context.Logger.Warningf("Ingest bucket reader will do nothing for now.")
 	for {
-		r.scanReceivingBuckets()
-		r.Context.Logger.Infof("Finished. Will scan again in %s",
-			r.Context.Config.IngestBucketReaderInterval.String())
-		time.Sleep(r.Context.Config.IngestBucketReaderInterval)
+		r.Context.Logger.Warningf("Ingest bucket reader is sleeping until you redeploy it.")
+		time.Sleep(10 * time.Minute)
 	}
+	// for {
+	// 	r.scanReceivingBuckets()
+	// 	r.Context.Logger.Infof("Finished. Will scan again in %s",
+	// 		r.Context.Config.IngestBucketReaderInterval.String())
+	// 	time.Sleep(r.Context.Config.IngestBucketReaderInterval)
+	// }
 }
 
 func (r *IngestBucketReader) logStartup() {
