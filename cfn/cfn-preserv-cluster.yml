@@ -130,8 +130,10 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -342,8 +344,10 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -555,7 +559,9 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy:  REPLICA
@@ -766,8 +772,10 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -978,8 +986,10 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -1189,8 +1199,10 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -1402,7 +1414,9 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -1613,7 +1627,9 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -1827,7 +1843,9 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -2041,7 +2059,9 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -2255,8 +2275,10 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -2469,8 +2491,10 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -2678,13 +2702,15 @@ Resources:
     #  LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -2888,7 +2914,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 2
       EnableExecuteCommand: true
     #  LaunchType: FARGATE
       NetworkConfiguration:
@@ -2899,7 +2925,9 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -3114,7 +3142,9 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -3326,7 +3356,9 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
