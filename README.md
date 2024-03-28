@@ -33,6 +33,15 @@ export APT_ENV=test
 
 # Testing
 
+TLDR: Whenever you make changes to preservation services code, and whenever you make changes to Registry code that might affect Registry's behavoir, you should run:
+
+`./scripts/test.rb integration && ./scripts/test.rb e2e`
+
+That runs Preserve's integration tests and end-to-end (e2e) tests to ensure that Preserve and Registry still work together as expected. The end-to-end test suite contains the tests most likely to catch subtle regressions. This suite runs a series of ingests, restorations and deletions and then carefully checks for all expected post-conditions, such as alerts and premis events created, presence of specific files in specific S3 buckets, etc.
+
+The integration tests usually take 1-2 minutes to complete. The end-to-end (e2e) tests can take 5-10 minutes, depending on your machine.
+
+
 ## Unit Tests
 
 To run unit tests: `ruby scripts/test.rb units`
