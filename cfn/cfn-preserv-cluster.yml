@@ -146,6 +146,8 @@ Resources:
       Tags:
       - Key: Service
         Value: preserv
+      - Key: MicroServ
+        Value: aptdelete
       - Key: Environment
         Value: !Ref DNS
       TaskDefinition: !Ref AptdeleteTaskDefinition
@@ -360,6 +362,8 @@ Resources:
       Tags:
       - Key: Service
         Value: preserv
+      - Key: MicroServ
+        Value: aptfixity
       - Key: Environment
         Value: !Ref "DNS"
       TaskDefinition: !Ref AptfixityTaskDefinition
@@ -574,6 +578,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: aptqueuefixity
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref AptqueuefixityTaskDefinition
@@ -788,6 +794,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: bagrestorer
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref BagrestorerTaskDefinition
@@ -1002,6 +1010,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: filerestorer
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref FilerestorerTaskDefinition
@@ -1215,6 +1225,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: glacierrestorer
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref GlacierrestorerTaskDefinition
@@ -1429,6 +1441,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: bucketreader
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestbucketreaderTaskDefinition
@@ -1642,6 +1656,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: cleanup
       - Key: Service
         Value: preserv
       TaskDefinition:
@@ -1858,6 +1874,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: formatidentifier
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref erTaskDefinition
@@ -2074,6 +2092,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: prefetch
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestprefetchTaskDefinition
@@ -2291,6 +2311,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ'
+        Value: uploader
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestpreservationuploaderTaskDefinition
@@ -2507,6 +2529,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: verifier
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestpreservationverifierTaskDefinition
@@ -2723,6 +2747,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: recorder
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestrecorderTaskDefinition
@@ -2940,6 +2966,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: staginguploader
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngeststaginguploaderTaskDefinition
@@ -3157,6 +3185,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: validator
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestvalidatorTaskDefinition
@@ -3371,6 +3401,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: reingestmanager
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref ReingestmanagerTaskDefinition
