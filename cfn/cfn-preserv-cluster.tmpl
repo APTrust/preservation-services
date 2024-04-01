@@ -56,7 +56,7 @@ Parameters:
 
 Conditions:
   IsStaging: !Equals [!Ref DNS, 'staging']
-  IsPrimary: !Equals [!Ref DNS, 'prod']
+  IsPrimary: !Or [!Equals [!Ref DNS, 'prod'] , !Equals [!Ref DNS, 'demo']]
 
 Resources:
 
@@ -65,13 +65,8 @@ Resources:
     Properties:
       ClusterName: !Ref ClusterName
       CapacityProviders:
-        Fn::If:
-          - IsPrimary 
-          - 
-            - FARGATE_SPOT
-            - FARGATE
-          -  
-            - FARGATE_SPOT 
+        - FARGATE
+        - FARGATE_SPOT
       DefaultCapacityProviderStrategy:
         Fn::If:
           - IsPrimary
@@ -134,10 +129,10 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -3628,67 +3623,65 @@ Resources:
   #    Threshold: 350
   #    TreatMissingData: ignore
 
-  ScaleStagingUpCPUPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '##${IngeststaginguploaderService}CPUScaleUpPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 120
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalLowerBound: 0
-            MetricIntervalUpperBound: 650
-            ScalingAdjustment: 1
-          - MetricIntervalLowerBound: 650
-            #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2
+  #ScaleStagingUpCPUPolicy:
+  #  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #  Properties:
+  #    PolicyName: !Sub '##${IngeststaginguploaderService}CPUScaleUpPolicy'
+  #    PolicyType: StepScaling
+  #    ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+  #    StepScalingPolicyConfiguration:
+  #      AdjustmentType: ChangeInCapacity
+  #      Cooldown: 120
+  #      MetricAggregationType: Average
+  #      StepAdjustments:
+  #        - MetricIntervalLowerBound: 0
+  #          MetricIntervalUpperBound: 650
+  #          ScalingAdjustment: 1
+  #        - MetricIntervalLowerBound: 650
+  #          #MetricIntervalUpperBound: 1200
+  #          ScalingAdjustment: 2
             
   
-  ScaleDownStagingCPUPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '${IngeststaginguploaderService}CPUScaleDownPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 200
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalLowerBound: 0
-            ScalingAdjustment: -1
+  #ScaleDownStagingCPUPolicy:
+  #  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #  Properties:
+  #    PolicyName: !Sub '${IngeststaginguploaderService}CPUScaleDownPolicy'
+  #    PolicyType: StepScaling
+  #    ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+  #    StepScalingPolicyConfiguration:
+  #      AdjustmentType: ChangeInCapacity
+  #      Cooldown: 200
+  #      MetricAggregationType: Average
+  #      StepAdjustments:
+  #        - MetricIntervalLowerBound: 0
+  #          ScalingAdjustment: -1
   
-  AlarmHighCPUStagingUploader:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled: TRUE
-      AlarmActions:
-        - !Ref ScaleStagingUpCPUPolicy
-      AlarmDescription: 'Scaling alarm based on cpu usage for ecs-prefetch'
-      ComparisonOperator: GreaterThanThreshold
-      DatapointsToAlarm: 2
-      # the dimensions can be found in the console after selecting a namespace to filter by
-      Dimensions:
-        - Name: ClusterName
-          Value: !Sub "ecs-preserv-${DNS}"
-        - Name: ServiceName
-          Value: ecs-staginguploader
-      EvaluationPeriods: 3
-      # the metric name can be found in the console on the screen before a metric is graphed
-      MetricName: CpuUtilized
-      # the namespace can be found in the console on the first screen before filtering metrics
-      Namespace: ECS/ContainerInsights
-      OKActions:
-        - !Ref ScaleDownStagingCPUPolicy
-      Statistic: Sum
-      Period: 60
-      Threshold: 70
-      TreatMissingData: ignore
-  
-  
+  #AlarmHighCPUStagingUploader:
+  #  Type: AWS::CloudWatch::Alarm
+  #  Properties:
+  #    ActionsEnabled: TRUE
+  #    AlarmActions:
+  #      - !Ref ScaleStagingUpCPUPolicy
+  #    AlarmDescription: 'Scaling alarm based on cpu usage for ecs-prefetch'
+  #    ComparisonOperator: GreaterThanThreshold
+  #    DatapointsToAlarm: 2
+  #    # the dimensions can be found in the console after selecting a namespace to filter by
+  #    Dimensions:
+  #      - Name: ClusterName
+  #        Value: !Sub "ecs-preserv-${DNS}"
+  #      - Name: ServiceName
+  #        Value: ecs-staginguploader
+  #    EvaluationPeriods: 3
+  #    # the metric name can be found in the console on the screen before a metric is graphed
+  #    MetricName: CpuUtilized
+  #    # the namespace can be found in the console on the first screen before filtering metrics
+  #    Namespace: ECS/ContainerInsights
+  #    OKActions:
+  #      - !Ref ScaleDownStagingCPUPolicy
+  #    Statistic: Sum
+  #    Period: 60
+  #    Threshold: 70
+  #    TreatMissingData: ignore
   
   AutoScalingPrefetchTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget

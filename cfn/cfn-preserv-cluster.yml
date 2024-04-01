@@ -3623,7 +3623,7 @@ Resources:
   #    Period: 60
   #    Threshold: 350
   #    TreatMissingData: ignore
-
+  
   AutoScalingPrefetchTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
