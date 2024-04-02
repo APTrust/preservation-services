@@ -1440,7 +1440,7 @@ Resources:
           - Arn
       Tags:
       - Key: Environment
-        Value: !Ref "DNS"
+        Value: !Ref DNS
       - Key: MicroServ
         Value: bucketreader
       - Key: Service
@@ -2311,7 +2311,7 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ'
+      - Key: MicroServ
         Value: uploader
       - Key: Service
         Value: preserv
