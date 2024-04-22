@@ -119,6 +119,52 @@ func UCFirst(str string) string {
 // a tarred bag should deserialize to a single top-level directory.
 // This function does not assume that the directory will match the
 // bag name.
+//
+// For APTrust's first several years of operation, we and depositors
+// were using BagIt spec v. 0.97, which explicitly required that all
+// tarred bag contents be inside a single folder within the tarball.
+// That requirement was dropped in BagIt v 1.0, released in October
+// 2018. By then, APTrust had been in operation for nearly four years,
+// and we had openly documented this requirement.
+//
+// It wasn't till Spring of 2024 that we received a handful of bags
+// from one depositor in which tarballs did not extract to a single
+// directory. We've been rejecting these bags. See https://trello.com/c/548wCyeT.
+//
+// Our BagIt profile at https://github.com/APTrust/preservation-services/blob/master/profiles/aptrust-v2.2.json
+// has for years, and still does say that tarDirMustMatchName = true
+// (see the last line of the file). While we have quietly dropped the
+// requirement that the top-level directory of the tar file must
+// match the name of the tar file, we do still require that there be
+// a top-level directory. So, this list of tar file contents would be
+// OK:
+//
+// my_bag.tar
+//   - my_bag
+//   - my_bag/bag-info.txt
+//   - my_bag/aptrust-info.txt
+//   - my_bag/data
+//   - my_bag/data/file_1.jpg
+//   - my_bag/data/file_2.jpg
+//
+// While this list, with no top-level directory, is NOT OK:
+//
+// my_bag.tar
+//   - bag-info.txt
+//   - aptrust-info.txt
+//   - data
+//   - data/file_1.jpg
+//   - data/file_2.jpg
+//
+// We also document this explicitly at
+// https://aptrust.github.io/userguide/bagging/#aptrust-bagit-specification
+// which says:
+//
+// "Tarred bags must untar to a single directory whose name matches the name of
+// the tar file. For example, my_bag.tar must untar to a directory called my_bag."
+//
+// Once again, our code has relaxed the requirement saying the directory
+// must match the bag name, but there still must BE a directory.
 func TarPathToBagPath(name string) (string, error) {
 	prefix := strings.Split(name, "/")[0] + "/"
 	pathInBag := strings.Replace(name, prefix, "", 1)
