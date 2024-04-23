@@ -226,6 +226,14 @@ func (r *Recorder) saveBatch(ingestFiles []*service.IngestFile) (fileCount int, 
 // of requests to Registry. One request per file.
 func (r *Recorder) updateBatch(ingestFiles []*service.IngestFile) (fileCount int, errors []*service.ProcessingError) {
 	for _, ingestFile := range ingestFiles {
+		if ingestFile.StorageOption != r.IngestObject.StorageOption {
+			r.Context.Logger.Warningf("In Recorder.updateBatch, file storage option does not match object storage option. This shouldn't happen. See https://trello.com/c/C4XlgSNU. File = '%s' has option '%s', Object = '%s' has option '%s'. Recorder is forcing the file storage option to '%s'.", ingestFile.Identifier(), ingestFile.StorageOption, r.IngestObject.Identifier(), r.IngestObject.StorageOption, r.IngestObject.StorageOption)
+		}
+		// We don't yet know the consequences of deleting this line,
+		// so for now, we're going to leave it. If we see the above
+		// messages in the log, we can evaluate from there what to
+		// do. The above message may not ever appear. We'll see.
+		// We're logging this for https://trello.com/c/C4XlgSNU
 		ingestFile.StorageOption = r.IngestObject.StorageOption
 		gf, err := ingestFile.ToGenericFile()
 		if err != nil {
