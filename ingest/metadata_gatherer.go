@@ -96,6 +96,11 @@ func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingErr
 		} else if strings.Contains(err.Error(), "invalid tar header") {
 			err = fmt.Errorf("Error parsing bag. Tar file in receiving bucket contains an invalid header.")
 			isFatal = true
+		} else if strings.HasPrefix(err.Error(), "Illegal path") {
+			// See https://trello.com/c/548wCyeT for details on this.
+			// This error comes from util.TarPathToBagPath()
+			err = fmt.Errorf("%s - Bag may be missing top-level directory. See https://aptrust.github.io/userguide/bagging/#aptrust-bagit-specification.", err.Error())
+			isFatal = true
 		}
 		return 0, append(errors, m.Error(m.IngestObject.Identifier(), err, isFatal))
 	}
