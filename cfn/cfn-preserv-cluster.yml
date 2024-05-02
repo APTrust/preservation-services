@@ -56,8 +56,8 @@ Parameters:
 
 Conditions:
   IsStaging: !Equals [!Ref DNS, 'staging']
-  IsPrimary: !Or [!Equals [!Ref DNS, 'prod'] , !Equals [!Ref DNS, 'demo']]
-
+  #IsPrimary: !Or [!Equals [!Ref DNS, 'prod'] , !Equals [!Ref DNS, 'demo']]
+  IsPrimary: !Equals [!Ref DNS, 'prod']
 Resources:
 
   Cluster:
@@ -2042,13 +2042,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: ingestformatidentifier
         Name: formatidentifier
-      Cpu: "256"
+      Cpu: "512"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'formatidentifier-${FamTag}'
-      Memory: "512"
+      Memory: "1024"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -2285,7 +2285,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 2
       EnableExecuteCommand: true
     #  LaunchType: FARGATE
       NetworkConfiguration:
@@ -2480,13 +2480,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: ingestuploader
         Name: uploader
-      Cpu: "256"
+      Cpu: "512"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'uploader-${FamTag}'
-      Memory: "512"
+      Memory: "1024"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -3134,13 +3134,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: staginguploader
         Name: staginguploader
-      Cpu: "256"
+      Cpu: "512"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'staginguploader-${FamTag}'
-      Memory: "512"
+      Memory: "1024"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
