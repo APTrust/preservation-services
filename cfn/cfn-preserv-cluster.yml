@@ -52,12 +52,12 @@ Parameters:
     Description: 'Sets the number of days for retaining logs. Can be set according to Cluster'
     Type: Number
     AllowedValues: [1, 7, 14, 30, 90]
-    Default: 30
+    Default: 30 
 
 Conditions:
   IsStaging: !Equals [!Ref DNS, 'staging']
-  #IsPrimary: !Or [!Equals [!Ref DNS, 'prod'] , !Equals [!Ref DNS, 'demo']]
-  IsPrimary: !Equals [!Ref DNS, 'prod']
+  IsPrimary: !Or [!Equals [!Ref DNS, 'prod'] , !Equals [!Ref DNS, 'demo']]
+
 Resources:
 
   Cluster:
@@ -69,17 +69,16 @@ Resources:
         - FARGATE_SPOT
       DefaultCapacityProviderStrategy:
         Fn::If:
-        - IsPrimary
-        - 
-          - CapacityProvider: FARGATE
-            Weight: 1
-            Base: 1
-          - CapacityProvider: FARGATE_SPOT
-            Weight: 2 
-        - 
-          - CapacityProvider: FARGATE_SPOT
-            Base: 1
-            Weight: 1
+          - IsPrimary
+          - 
+            - CapacityProvider: FARGATE
+              Weight: 1
+              Base: 1
+            - CapacityProvider: FARGATE_SPOT
+              Weight: 2 
+          - 
+            - CapacityProvider: FARGATE_SPOT
+              Weight: 1
       ClusterSettings:
         - Name: containerInsights
           Value: enabled
@@ -146,8 +145,6 @@ Resources:
       Tags:
       - Key: Service
         Value: preserv
-      - Key: MicroServ
-        Value: aptdelete
       - Key: Environment
         Value: !Ref DNS
       TaskDefinition: !Ref AptdeleteTaskDefinition
@@ -302,9 +299,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/apt_delete:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -347,7 +346,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -362,8 +361,6 @@ Resources:
       Tags:
       - Key: Service
         Value: preserv
-      - Key: MicroServ
-        Value: aptfixity
       - Key: Environment
         Value: !Ref "DNS"
       TaskDefinition: !Ref AptfixityTaskDefinition
@@ -518,9 +515,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/apt_fixity:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -563,7 +562,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -578,8 +577,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: aptqueuefixity
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref AptqueuefixityTaskDefinition
@@ -734,9 +731,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/apt_queue_fixity:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -779,7 +778,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -794,8 +793,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: bagrestorer
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref BagrestorerTaskDefinition
@@ -949,9 +946,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/bag_restorer:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -995,7 +994,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -1010,8 +1009,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: filerestorer
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref FilerestorerTaskDefinition
@@ -1165,9 +1162,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/file_restorer:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1210,7 +1209,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -1225,8 +1224,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: glacierrestorer
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref GlacierrestorerTaskDefinition
@@ -1381,9 +1378,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/glacier_restorer:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1426,7 +1425,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -1440,9 +1439,7 @@ Resources:
           - Arn
       Tags:
       - Key: Environment
-        Value: !Ref DNS
-      - Key: MicroServ
-        Value: bucketreader
+        Value: !Ref "DNS"
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestbucketreaderTaskDefinition
@@ -1595,9 +1592,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_bucket_reader:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1641,7 +1640,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -1656,8 +1655,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: cleanup
       - Key: Service
         Value: preserv
       TaskDefinition:
@@ -1813,9 +1810,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_cleanup:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1859,7 +1858,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -1874,8 +1873,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: formatidentifier
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref erTaskDefinition
@@ -2031,9 +2028,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_format_identifier:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2042,13 +2041,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: ingestformatidentifier
         Name: formatidentifier
-      Cpu: "512"
+      Cpu: "256"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'formatidentifier-${FamTag}'
-      Memory: "1024"
+      Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -2077,7 +2076,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -2092,8 +2091,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: prefetch
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestprefetchTaskDefinition
@@ -2249,9 +2246,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_pre_fetch:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2260,13 +2259,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: prefetch
         Name: prefetch
-      Cpu: "256"
+      Cpu: "512"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'prefetch-${FamTag}'
-      Memory: "512"
+      Memory: "1024"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -2285,7 +2284,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 2
+      DesiredCount: 1
       EnableExecuteCommand: true
     #  LaunchType: FARGATE
       NetworkConfiguration:
@@ -2296,7 +2295,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -2311,8 +2310,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: uploader
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestpreservationuploaderTaskDefinition
@@ -2469,9 +2466,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_preservation_uploader:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2514,7 +2513,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -2529,8 +2528,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: verifier
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestpreservationverifierTaskDefinition
@@ -2687,9 +2684,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_preservation_verifier:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2732,7 +2731,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -2747,8 +2746,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: recorder
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestrecorderTaskDefinition
@@ -2904,9 +2901,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_recorder:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2951,7 +2950,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -2966,8 +2965,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: staginguploader
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngeststaginguploaderTaskDefinition
@@ -3123,9 +3120,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_staging_uploader:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3170,7 +3169,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -3185,8 +3184,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: validator
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestvalidatorTaskDefinition
@@ -3340,9 +3337,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_validator:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3386,7 +3385,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -3401,8 +3400,6 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
-      - Key: MicroServ
-        Value: reingestmanager
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref ReingestmanagerTaskDefinition
@@ -3558,9 +3555,11 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:6042812-nat-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/reingest_manager:2d1f673-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3655,6 +3654,66 @@ Resources:
   #    Period: 60
   #    Threshold: 350
   #    TreatMissingData: ignore
+
+  #ScaleStagingUpCPUPolicy:
+  #  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #  Properties:
+  #    PolicyName: !Sub '##${IngeststaginguploaderService}CPUScaleUpPolicy'
+  #    PolicyType: StepScaling
+  #    ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+  #    StepScalingPolicyConfiguration:
+  #      AdjustmentType: ChangeInCapacity
+  #      Cooldown: 120
+  #      MetricAggregationType: Average
+  #      StepAdjustments:
+  #        - MetricIntervalLowerBound: 0
+  #          MetricIntervalUpperBound: 650
+  #          ScalingAdjustment: 1
+  #        - MetricIntervalLowerBound: 650
+  #          #MetricIntervalUpperBound: 1200
+  #          ScalingAdjustment: 2
+            
+  
+  #ScaleDownStagingCPUPolicy:
+  #  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #  Properties:
+  #    PolicyName: !Sub '${IngeststaginguploaderService}CPUScaleDownPolicy'
+  #    PolicyType: StepScaling
+  #    ScalingTargetId: !Ref AutoScalingStagingUpLoadTarget
+  #    StepScalingPolicyConfiguration:
+  #      AdjustmentType: ChangeInCapacity
+  #      Cooldown: 200
+  #      MetricAggregationType: Average
+  #      StepAdjustments:
+  #        - MetricIntervalLowerBound: 0
+  #          ScalingAdjustment: -1
+  
+  #AlarmHighCPUStagingUploader:
+  #  Type: AWS::CloudWatch::Alarm
+  #  Properties:
+  #    ActionsEnabled: TRUE
+  #    AlarmActions:
+  #      - !Ref ScaleStagingUpCPUPolicy
+  #    AlarmDescription: 'Scaling alarm based on cpu usage for ecs-prefetch'
+  #    ComparisonOperator: GreaterThanThreshold
+  #    DatapointsToAlarm: 2
+  #    # the dimensions can be found in the console after selecting a namespace to filter by
+  #    Dimensions:
+  #      - Name: ClusterName
+  #        Value: !Sub "ecs-preserv-${DNS}"
+  #      - Name: ServiceName
+  #        Value: ecs-staginguploader
+  #    EvaluationPeriods: 3
+  #    # the metric name can be found in the console on the screen before a metric is graphed
+  #    MetricName: CpuUtilized
+  #    # the namespace can be found in the console on the first screen before filtering metrics
+  #    Namespace: ECS/ContainerInsights
+  #    OKActions:
+  #      - !Ref ScaleDownStagingCPUPolicy
+  #    Statistic: Sum
+  #    Period: 60
+  #    Threshold: 70
+  #    TreatMissingData: ignore
   
   AutoScalingPrefetchTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
@@ -3688,6 +3747,7 @@ Resources:
           - MetricIntervalLowerBound: 650
             #MetricIntervalUpperBound: 1200
             ScalingAdjustment: 2
+            
 
   ScaleDownPrefetchPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3762,7 +3822,7 @@ Resources:
             ScalingAdjustment: 1
           - MetricIntervalLowerBound: 350
             #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2 
+            ScalingAdjustment: 2  
 
   ScaleDownFormatIdPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3837,6 +3897,7 @@ Resources:
           - MetricIntervalLowerBound: 650
             #MetricIntervalUpperBound: 1200
             ScalingAdjustment: 2
+            
 
   ScaleDownPreservUploadPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3878,6 +3939,7 @@ Resources:
       Period: 60
       Threshold: 350
       TreatMissingData: ignore
+  
   AutoScalingFixityTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -3891,7 +3953,7 @@ Resources:
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
       RoleARN:
-        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+       Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
 
   ScaleUpFixityPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3909,7 +3971,7 @@ Resources:
             ScalingAdjustment: 1
           - MetricIntervalLowerBound: 400
             #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2
+            ScalingAdjustment: 2  
 
   ScaleDownFixityPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
