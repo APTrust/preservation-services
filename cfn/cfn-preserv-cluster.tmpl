@@ -299,6 +299,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/apt_delete:multi
@@ -513,6 +515,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/apt_fixity:multi
@@ -727,6 +731,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/apt_queue_fixity:multi
@@ -940,6 +946,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/bag_restorer:multi
@@ -1154,6 +1162,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/file_restorer:multi
@@ -1368,6 +1378,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/glacier_restorer:multi
@@ -1580,6 +1592,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_bucket_reader:multi
@@ -1796,6 +1810,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_cleanup:multi
@@ -2012,6 +2028,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_format_identifier:multi
@@ -2228,6 +2246,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_pre_fetch:multi
@@ -2446,6 +2466,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_preservation_uploader:multi
@@ -2662,6 +2684,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_preservation_verifier:multi
@@ -2877,6 +2901,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_recorder:multi
@@ -3094,6 +3120,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_staging_uploader:multi
@@ -3309,6 +3337,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/ingest_validator:multi
@@ -3525,6 +3555,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/MAX_FIXITY_ITEMS_PER_RUN
         - Name: APT_QUEUE_INTERVAL
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/APT_QUEUE_INTERVAL
+        - Name: INGEST_BUCKET_READER_INTERVAL
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/docker/aptrust/reingest_manager:multi
