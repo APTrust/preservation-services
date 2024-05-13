@@ -131,8 +131,6 @@ Resources:
           Subnets:
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -145,6 +143,8 @@ Resources:
       Tags:
       - Key: Service
         Value: preserv
+      - Key: MicroServ
+        Value: aptdelete
       - Key: Environment
         Value: !Ref DNS
       TaskDefinition: !Ref AptdeleteTaskDefinition
@@ -345,8 +345,6 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -361,6 +359,8 @@ Resources:
       Tags:
       - Key: Service
         Value: preserv
+      - Key: MicroServ
+        Value: aptfixity
       - Key: Environment
         Value: !Ref "DNS"
       TaskDefinition: !Ref AptfixityTaskDefinition
@@ -563,8 +563,6 @@ Resources:
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
-          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
-          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy:  REPLICA
@@ -577,6 +575,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: aptqueuefixity
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref AptqueuefixityTaskDefinition
@@ -777,8 +777,6 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -793,6 +791,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: bagrestorer
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref BagrestorerTaskDefinition
@@ -993,8 +993,6 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -1009,6 +1007,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: filerestorer
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref FilerestorerTaskDefinition
@@ -1208,8 +1208,6 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -1224,6 +1222,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: glacierrestorer
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref GlacierrestorerTaskDefinition
@@ -1426,8 +1426,6 @@ Resources:
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
-          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
-          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -1440,6 +1438,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: bucketreader
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestbucketreaderTaskDefinition
@@ -1641,8 +1641,6 @@ Resources:
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
-          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
-          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -1655,6 +1653,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: cleanup
       - Key: Service
         Value: preserv
       TaskDefinition:
@@ -1859,8 +1859,6 @@ Resources:
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
-          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
-          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -1873,6 +1871,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: formatidentifier
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref erTaskDefinition
@@ -2076,9 +2076,7 @@ Resources:
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
-          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
-          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
+          - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}" 
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -2091,6 +2089,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: prefetch
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestprefetchTaskDefinition
@@ -2294,8 +2294,6 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -2310,6 +2308,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: uploader
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestpreservationuploaderTaskDefinition
@@ -2512,8 +2512,6 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          #- Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
-          #- Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
@@ -2528,6 +2526,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: verifier
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestpreservationverifierTaskDefinition
@@ -2732,8 +2732,6 @@ Resources:
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
-          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
-          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -2746,6 +2744,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        value: recorder
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestrecorderTaskDefinition
@@ -2951,8 +2951,6 @@ Resources:
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
-          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
-          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -2965,6 +2963,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: staginguploader
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngeststaginguploaderTaskDefinition
@@ -3170,8 +3170,6 @@ Resources:
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
-          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
-          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -3184,6 +3182,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: validator
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestvalidatorTaskDefinition
@@ -3386,8 +3386,6 @@ Resources:
           Subnets:
           - Fn::ImportValue: !Sub "PrivateSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PrivateSubnet1-${DNS}"
-          #- Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
-          #- Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
       SchedulingStrategy: REPLICA
@@ -3400,6 +3398,8 @@ Resources:
       Tags:
       - Key: Environment
         Value: !Ref "DNS"
+      - Key: MicroServ
+        Value: reingestmanager
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref ReingestmanagerTaskDefinition
