@@ -3865,141 +3865,141 @@ Resources:
       Threshold: 300
       TreatMissingData: ignore
 
-  AutoScalingPreservUploadTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Properties:
-      MinCapacity: 1
-      MaxCapacity: !Ref MaxContainers
-      ResourceId: !Join
-        - '/'
-        - - service
-          - !Ref Cluster
-          - !GetAtt IngestpreservationuploaderService.Name
-      ScalableDimension: ecs:service:DesiredCount
-      ServiceNamespace: ecs
-      RoleARN:
-        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+  #AutoScalingPreservUploadTarget:
+  #  Type: AWS::ApplicationAutoScaling::ScalableTarget
+  #  Properties:
+  #    MinCapacity: 1
+  #    MaxCapacity: !Ref MaxContainers
+   #   ResourceId: !Join
+   #     - '/'
+   #     - - service
+   #       - !Ref Cluster
+   #       - !GetAtt IngestpreservationuploaderService.Name
+   #   ScalableDimension: ecs:service:DesiredCount
+   #   ServiceNamespace: ecs
+   #   RoleARN:
+   #     Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
 
-  ScaleUpPreservUploadPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '${IngestpreservationuploaderService}MemoryScaleUpPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 120
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalLowerBound: 0
-            MetricIntervalUpperBound: 650
-            ScalingAdjustment: 1
-          - MetricIntervalLowerBound: 650
+#  ScaleUpPreservUploadPolicy:
+#    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+#    Properties:
+#      PolicyName: !Sub '${IngestpreservationuploaderService}MemoryScaleUpPolicy'
+#      PolicyType: StepScaling
+#      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
+#      StepScalingPolicyConfiguration:
+#        AdjustmentType: ChangeInCapacity
+#        Cooldown: 120
+#        MetricAggregationType: Average
+#        StepAdjustments:
+#          - MetricIntervalLowerBound: 0
+#            MetricIntervalUpperBound: 650
+#            ScalingAdjustment: 1
+#          - MetricIntervalLowerBound: 650
             #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2
+#            ScalingAdjustment: 2
             
 
-  ScaleDownPreservUploadPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '${IngestpreservationuploaderService}MemoryScaleDownPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 120
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalUpperBound: 0
-            ScalingAdjustment: -1 
+#  ScaleDownPreservUploadPolicy:
+#    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+#    Properties:
+#      PolicyName: !Sub '${IngestpreservationuploaderService}MemoryScaleDownPolicy'
+#      PolicyType: StepScaling
+#      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
+#      StepScalingPolicyConfiguration:
+#        AdjustmentType: ChangeInCapacity
+#        Cooldown: 120
+#        MetricAggregationType: Average
+#        StepAdjustments:
+#          - MetricIntervalUpperBound: 0
+#            ScalingAdjustment: -1 
 
-  ScaleUpPreservUploadCPUPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '{IngestpreservationuploaderService}CPUScaleUpPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 120
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalLowerBound: 0
-            MetricIntervalUpperBound: 650
-            ScalingAdjustment: 1
-          - MetricIntervalLowerBound: 650
+#  ScaleUpPreservUploadCPUPolicy:
+#    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+#    Properties:
+#      PolicyName: !Sub '{IngestpreservationuploaderService}CPUScaleUpPolicy'
+#      PolicyType: StepScaling
+#      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
+#      StepScalingPolicyConfiguration:
+#        AdjustmentType: ChangeInCapacity
+#        Cooldown: 120
+#        MetricAggregationType: Average
+#        StepAdjustments:
+#          - MetricIntervalLowerBound: 0
+#            MetricIntervalUpperBound: 650
+#            ScalingAdjustment: 1
+#          - MetricIntervalLowerBound: 650
             #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2
+#            ScalingAdjustment: 2
   
-  ScaleDownPreservUploadCPUPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '${IngestpreservationuploaderService}CPUScaleDownPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 200
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalLowerBound: 0
-            ScalingAdjustment: -1
+#  ScaleDownPreservUploadCPUPolicy:
+#    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+#    Properties:
+#      PolicyName: !Sub '${IngestpreservationuploaderService}CPUScaleDownPolicy'
+#      PolicyType: StepScaling
+#      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
+#      StepScalingPolicyConfiguration:
+#        AdjustmentType: ChangeInCapacity
+#        Cooldown: 200
+#        MetricAggregationType: Average
+#        StepAdjustments:
+#          - MetricIntervalLowerBound: 0
+#            ScalingAdjustment: -1
 
 
-  AlarmHighMemoryPreservUpload:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled: TRUE
-      AlarmActions:
-        - !Ref ScaleUpPreservUploadPolicy
-      AlarmDescription: 'Scaling alarm based on memory usage for ecs-upload'
-      ComparisonOperator: GreaterThanThreshold
-      DatapointsToAlarm: 2
-      # the dimensions can be found in the console after selecting a namespace to filter by
-      Dimensions:
-        - Name: ClusterName
-          Value: !Sub "ecs-preserv-${DNS}"
-        - Name: ServiceName
-          Value: ecs-uploader
-      EvaluationPeriods: 3
+#  AlarmHighMemoryPreservUpload:
+#    Type: AWS::CloudWatch::Alarm
+#    Properties:
+#      ActionsEnabled: TRUE
+#      AlarmActions:
+#        - !Ref ScaleUpPreservUploadPolicy
+#      AlarmDescription: 'Scaling alarm based on memory usage for ecs-upload'
+#      ComparisonOperator: GreaterThanThreshold
+#      DatapointsToAlarm: 2
+#      # the dimensions can be found in the console after selecting a namespace to filter by
+#      Dimensions:
+#        - Name: ClusterName
+#          Value: !Sub "ecs-preserv-${DNS}"
+#        - Name: ServiceName
+#          Value: ecs-uploader
+#      EvaluationPeriods: 3
       # the metric name can be found in the console on the screen before a metric is graphed
-      MetricName: MemoryUtilized
+#      MetricName: MemoryUtilized
       # the namespace can be found in the console on the first screen before filtering metrics
-      Namespace: ECS/ContainerInsights
-      OKActions:
-        - !Ref ScaleDownPreservUploadPolicy
-      Statistic: Sum
-      Period: 60
-      Threshold: 350
-      TreatMissingData: ignore
+#      Namespace: ECS/ContainerInsights
+#      OKActions:
+#        - !Ref ScaleDownPreservUploadPolicy
+#      Statistic: Sum
+#      Period: 60
+#      Threshold: 350
+#      TreatMissingData: ignore
   
 
-  AlarmHighCPUPreservUploader:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled: TRUE
-      AlarmActions:
-        - !Ref ScaleUpPreservUploadCPUPolicy
-      AlarmDescription: 'Scaling alarm based on cpu usage for ecs-uploader'
-      ComparisonOperator: GreaterThanThreshold
-      DatapointsToAlarm: 2
+#  AlarmHighCPUPreservUploader:
+#    Type: AWS::CloudWatch::Alarm
+#    Properties:
+#      ActionsEnabled: TRUE
+#      AlarmActions:
+#        - !Ref ScaleUpPreservUploadCPUPolicy
+#      AlarmDescription: 'Scaling alarm based on cpu usage for ecs-uploader'
+#      ComparisonOperator: GreaterThanThreshold
+#      DatapointsToAlarm: 2
       # the dimensions can be found in the console after selecting a namespace to filter by
-      Dimensions:
-        - Name: ClusterName
-          Value: !Sub "ecs-preserv-${DNS}"
-        - Name: ServiceName
-          Value: ecs-uploader
-      EvaluationPeriods: 3
+#      Dimensions:
+#        - Name: ClusterName
+#          Value: !Sub "ecs-preserv-${DNS}"
+#        - Name: ServiceName
+#          Value: ecs-uploader
+#      EvaluationPeriods: 3
       # the metric name can be found in the console on the screen before a metric is graphed
-      MetricName: CpuUtilized
+#      MetricName: CpuUtilized
       # the namespace can be found in the console on the first screen before filtering metrics
-      Namespace: ECS/ContainerInsights
-      OKActions:
-        - !Ref ScaleDownPreservUploadCPUPolicy
-      Statistic: Sum
-      Period: 60
-      Threshold: 70
-      TreatMissingData: ignore
+#      Namespace: ECS/ContainerInsights
+#      OKActions:
+#        - !Ref ScaleDownPreservUploadCPUPolicy
+#      Statistic: Sum
+#      Period: 60
+#      Threshold: 70
+#      TreatMissingData: ignore
 
 
   AutoScalingFixityTarget:
