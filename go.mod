@@ -10,7 +10,7 @@ require (
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/nsqio/nsq v1.2.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/richardlehane/siegfried v1.10.0
+	github.com/richardlehane/siegfried v1.11.1
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
 )
@@ -55,10 +55,10 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/image v0.10.0 // indirect
+	golang.org/x/image v0.17.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
