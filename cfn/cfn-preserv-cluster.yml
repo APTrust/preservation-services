@@ -2041,13 +2041,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: ingestformatidentifier
         Name: formatidentifier
-      Cpu: "256"
+      Cpu: !If [IsStaging,"256","512"]
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'formatidentifier-${FamTag}'
-      Memory: "512"
+      Memory: !If [IsStaging,"512","1024"]
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -2479,13 +2479,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: ingestuploader
         Name: uploader
-      Cpu: "1024"
+      Cpu: !If [IsStaging,"256","1024"]
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'uploader-${FamTag}'
-      Memory: "2048"
+      Memory: !If [IsStaging,"512","2048"]
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -3133,13 +3133,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: staginguploader
         Name: staginguploader
-      Cpu: "1024"
+      Cpu: !If [IsStaging,"256","1024"]
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'staginguploader-${FamTag}'
-      Memory: "2048"
+      Memory: !If [IsStaging,"512","2048"]
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
