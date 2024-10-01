@@ -3680,7 +3680,7 @@ Resources:
   ScaleUpFormatIdPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
-      PolicyName: !Sub '${erService}CPUScaleUpPolicy'
+      PolicyName: !Sub '${erService}MemoryScaleUpPolicy'
       PolicyType: StepScaling
       ScalingTargetId: !Ref AutoScalingFormatIdTarget
       StepScalingPolicyConfiguration:
