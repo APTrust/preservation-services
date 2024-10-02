@@ -3966,7 +3966,7 @@ Resources:
             ScalingAdjustment: 1
           - MetricIntervalLowerBound: 400
             #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2  
+            ScalingAdjustment: 2 
 
   ScaleDownFixityPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
