@@ -56,7 +56,7 @@ class TestRunner
     puts "Deleting test cache from last run"
     `go clean -testcache`
     puts "Deleting old Redis data"
-    File.delete('dump.rdb') if File.exists?('dump.rdb')
+    File.delete('dump.rdb') if File.exist?('dump.rdb')
   end
 
   # Starts all the services we need to run ingest.
