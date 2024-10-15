@@ -103,7 +103,18 @@ func (r *GlacierRestorer) ProcessSuccessChannel() {
 		// Once Glacier Restoration is complete, we create a normal
 		// restoration WorkItem. Since all files are now in S3, we
 		// can follow the normal restoration workflow.
-		r.CreateRestorationWorkItem(task)
+		//
+		// We don't handle error here. The function logs it internally.
+		workItem, _ := r.CreateRestorationWorkItem(task)
+
+		// Add the WorkItem to NSQ.
+		if workItem != nil {
+			if task.RestorationObject.RestorationType == constants.RestorationTypeFile {
+				r.Context.NSQClient.Enqueue(constants.TopicFileRestore, workItem.ID)
+			} else {
+				r.Context.NSQClient.Enqueue(constants.TopicObjectRestore, workItem.ID)
+			}
+		}
 
 		// Tell NSQ this worker is done with this message.
 		task.NSQFinish()
@@ -227,7 +238,7 @@ func (r *GlacierRestorer) ShouldSkipThis(workItem *registry.WorkItem) bool {
 // copy files from Glacier to S3. When our step is done, we create a WorkItem
 // saying the file or object is ready to go into the normal restoration process,
 // moving from S3 through packaging to the depositor's restoration bucket.
-func (r *GlacierRestorer) CreateRestorationWorkItem(task *Task) {
+func (r *GlacierRestorer) CreateRestorationWorkItem(task *Task) (*registry.WorkItem, error) {
 	action := constants.ActionRestoreObject
 	if task.WorkItem.GenericFileID > 0 {
 		action = constants.ActionRestoreFile
@@ -260,7 +271,9 @@ func (r *GlacierRestorer) CreateRestorationWorkItem(task *Task) {
 		if resp.Error != nil {
 			r.Context.Logger.Errorf("Error flagging WorkItem in Registry for %s: %v", task.RestorationObject.Identifier, resp.Error)
 		}
+		return nil, resp.Error
 	} else {
 		r.Context.Logger.Infof("Created new WorkItem in Registry with ID %s to restore %s from S3 to depositor bucket.", resp.WorkItem().ID, task.RestorationObject.Identifier)
 	}
+	return resp.WorkItem(), resp.Error
 }
