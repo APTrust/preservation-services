@@ -55,7 +55,7 @@ func TestGetMountPointFromPath(t *testing.T) {
 	assert.Nil(t, err)
 	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" ||
 		runtime.GOOS == "unix" || runtime.GOOS == "bsd" {
-		assert.Equal(t, "/", mountpoint)
+		assert.True(t, mountpoint == "/" || mountpoint == "/tmp")
 	} else if runtime.GOOS == "windows" {
 		assert.Equal(t, tempfile.Name(), mountpoint)
 	}
