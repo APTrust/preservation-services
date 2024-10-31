@@ -2041,13 +2041,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: ingestformatidentifier
         Name: formatidentifier
-      Cpu: "256"
+      Cpu: !If [IsStaging,"256","512"]
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'formatidentifier-${FamTag}'
-      Memory: "512"
+      Memory: !If [IsStaging,"512","1024"]
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -2259,13 +2259,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: prefetch
         Name: prefetch
-      Cpu: "512"
+      Cpu: !If [IsStaging,"256","512"]
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'prefetch-${FamTag}'
-      Memory: "1024"
+      Memory: !If [IsStaging,"512","1024"]
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -2479,13 +2479,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: ingestuploader
         Name: uploader
-      Cpu: "512"
+      Cpu: !If [IsStaging,"256","1024"]
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'uploader-${FamTag}'
-      Memory: "1024"
+      Memory: !If [IsStaging,"512","2048"]
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -3133,13 +3133,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: staginguploader
         Name: staginguploader
-      Cpu: "512"
+      Cpu: !If [IsStaging,"256","1024"]
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'staginguploader-${FamTag}'
-      Memory: "1024"
+      Memory: !If [IsStaging,"512","2048"]
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -3588,7 +3588,7 @@ Resources:
   AutoScalingPrefetchTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
-      MinCapacity: 1
+      MinCapacity: 2
       MaxCapacity: !Ref MaxContainers
       ResourceId: !Join
         - '/'
@@ -3800,7 +3800,7 @@ Resources:
   AutoScalingPreservUploadTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
-      MinCapacity: 1
+      MinCapacity: 2
       MaxCapacity: !Ref MaxContainers
       ResourceId: !Join
         - '/'
