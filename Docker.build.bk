@@ -1,0 +1,115 @@
+ARG ALPINE_VERSION=3.14
+ARG OUTPUT_DIR=go-bin/
+ARG PSERVICE
+
+FROM golang:1.17.8-alpine${ALPINE_VERSION} AS builder
+
+RUN apk update && \
+    apk add --no-cache upx make build-base bash git
+
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+
+WORKDIR /app
+
+# Copy and download dependency using go mod
+ADD go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+# Build binaries
+RUN make build-bin
+
+# Compress binaries
+RUN upx go-bin/* -1 -q
+
+FROM alpine:${ALPINE_VERSION}
+
+ARG OUTPUT_DIR=go-bin
+ARG PSERVICE
+
+ENV PSERVICE=${PSERVICE}
+
+# default non global env variables 
+ENV S3_AWS_HOST=localhost:9899
+ENV S3_AWS_KEY=minioadmin
+ENV S3_AWS_SECRET=minioadmin
+ENV S3_WASABI_HOST_OR=localhost:9899
+ENV S3_WASABI_HOST_VA=localhost:9899
+ENV S3_WASABI_KEY=minioadmin
+ENV S3_WASABI_SECRET=minioadmin
+ENV REDIS_URL=localhost:6379
+ENV RESTORE_DIR=~/tmp/pres-serv/restore
+ENV STAGING_BUCKET=staging
+ENV NSQ_LOOKUPD=localhost:4161
+ENV NSQ_URL=http://localhost:4151
+ENV PRESERV_REGISTRY_API_KEY="password"
+ENV PRESERV_REGISTRY_API_USER=system@aptrust.org
+ENV PRESERV_REGISTRY_API_VERSION=v3
+ENV PRESERV_REGISTRY_URL=http://localhost:8080
+
+# default buffer env vars 
+ENV APT_DELETE_BUFFER_SIZE=4
+ENV BAG_RESTORER_BUFFER_SIZE=4
+ENV FILE_RESTORER_BUFFER_SIZE=4
+ENV GLACIER_RESTORER_BUFFER_SIZE=4
+ENV INGEST_CLEANUP_BUFFER_SIZE=4
+ENV INGEST_FORMAT_IDENTIFIER_BUFFER_SIZE=4
+ENV INGEST_PRE_FETCH_BUFFER_SIZE=4
+ENV INGEST_PRESERVATION_UPLOADER_BUFFER_SIZE=4
+ENV INGEST_PRESERVATION_VERIFIER_BUFFER_SIZE=4
+ENV INGEST_RECORDER_BUFFER_SIZE=4
+ENV INGEST_STAGING_UPLOADER_BUFFER_SIZE=4
+ENV INGEST_VALIDATOR_BUFFER_SIZE=4
+ENV REINGEST_MANAGER_BUFFER_SIZE=4
+
+# default worker count env vars
+
+ENV APT_DELETE_WORKERS=2
+ENV APT_FIXITY_WORKERS=2
+ENV BAG_RESTORER_WORKERS=2
+ENV FILE_RESTORER_WORKERS=2
+ENV GLACIER_RESTORER_WORKERS=2
+ENV INGEST_CLEANUP_WORKERS=2
+ENV INGEST_FORMAT_IDENTIFIER_WORKERS=2
+ENV INGEST_PRE_FETCH_WORKERS=2
+ENV INGEST_PRESERVATION_UPLOADER_WORKERS=2
+ENV INGEST_PRESERVATION_VERIFIER_WORKERS=2
+ENV INGEST_RECORDER_WORKERS=2
+ENV INGEST_STAGING_UPLOADER_WORKERS=2
+ENV INGEST_VALIDATOR_WORKERS=2
+ENV REINGEST_MANAGER_WORKERS=2
+
+
+# Default buckets - test build
+ENV BUCKET_STANDARD_OR=preservation-or
+ENV BUCKET_STANDARD_VA=preservation-va
+ENV BUCKET_GLACIER_OH=glacier-oh
+ENV BUCKET_GLACIER_OR=glacier-or
+ENV BUCKET_GLACIER_VA=glacier-va
+ENV BUCKET_GLACIER_DEEP_OH=glacier-deep-oh
+ENV BUCKET_GLACIER_DEEP_OR=glacier-deep-or
+ENV BUCKET_GLACIER_DEEP_VA=glacier-deep-va
+ENV BUCKET_WASABI_OR=wasabi-or
+ENV BUCKET_WASABI_VA=wasabi-va
+
+WORKDIR /app
+
+#VOLUME ["/app/tmp"]
+
+# Note: Using main as app name because CMD doesn't support env expansion and
+# Docker images are tagged with app names already.
+COPY --from=builder /app/${OUTPUT_DIR}/${PSERVICE} /app/main
+COPY --from=builder /app/${OUTPUT_DIR}/${PSERVICE} /app/${PSERVICE}
+COPY --from=builder /app/.env.test /app/.env
+COPY --from=builder /app/profiles/ /app/profiles
+
+
+# Commenting out the user below to run as root in container
+#RUN addgroup -S somegroup -g 1000 && adduser -S -G somegroup somebody -u 1000
+#RUN chown -R somebody:somegroup /app
+#USER somebody
+
+CMD ["sh", "-c", "./${PSERVICE}"]
