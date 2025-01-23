@@ -303,7 +303,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -519,7 +519,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -735,7 +735,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -950,7 +950,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1166,7 +1166,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1382,7 +1382,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1596,7 +1596,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1814,7 +1814,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2032,7 +2032,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2250,7 +2250,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2470,7 +2470,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2688,7 +2688,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2745,7 +2745,7 @@ Resources:
       - Key: Environment
         Value: !Ref "DNS"
       - Key: MicroServ
-        Value: recorder
+        value: recorder
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestrecorderTaskDefinition
@@ -2905,7 +2905,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3124,7 +3124,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3341,7 +3341,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3559,7 +3559,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:d4cc31d-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:e111cbb-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
