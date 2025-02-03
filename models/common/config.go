@@ -29,6 +29,7 @@ type Config struct {
 	BucketStandardOR           string
 	BucketStandardVA           string
 	BucketWasabiOR             string
+	BucketWasabiTX             string
 	BucketWasabiVA             string
 	ConfigFilePath             string
 	ConfigName                 string
@@ -60,6 +61,7 @@ type Config struct {
 	S3Credentials              map[string]*S3Credentials `json:"-"`
 	S3LocalHost                string
 	S3WasabiHostOR             string
+	S3WasabiHostTX             string
 	S3WasabiHostVA             string
 	StagingBucket              string
 	StagingUploadRetryMs       time.Duration
@@ -128,6 +130,7 @@ func loadConfig() *Config {
 		BucketStandardOR:           v.GetString("BUCKET_STANDARD_OR"),
 		BucketStandardVA:           v.GetString("BUCKET_STANDARD_VA"),
 		BucketWasabiOR:             v.GetString("BUCKET_WASABI_OR"),
+		BucketWasabiTX:             v.GetString("BUCKET_WASABI_TX"),
 		BucketWasabiVA:             v.GetString("BUCKET_WASABI_VA"),
 		ConfigFilePath:             path.Join(configDir, configFile),
 		ConfigName:                 strings.Replace(configFile, ".env.", "", 1),
@@ -171,6 +174,11 @@ func loadConfig() *Config {
 				KeyID:     v.GetString("S3_WASABI_KEY"),
 				SecretKey: v.GetString("S3_WASABI_SECRET"),
 			},
+			constants.StorageProviderWasabiTX: {
+				Host:      v.GetString("S3_WASABI_HOST_TX"),
+				KeyID:     v.GetString("S3_WASABI_KEY"),
+				SecretKey: v.GetString("S3_WASABI_SECRET"),
+			},
 			constants.StorageProviderWasabiVA: {
 				Host:      v.GetString("S3_WASABI_HOST_VA"),
 				KeyID:     v.GetString("S3_WASABI_KEY"),
@@ -179,6 +187,7 @@ func loadConfig() *Config {
 		},
 		S3LocalHost:          v.GetString("S3_LOCAL_HOST"),
 		S3WasabiHostOR:       v.GetString("S3_WASABI_HOST_OR"),
+		S3WasabiHostTX:       v.GetString("S3_WASABI_HOST_TX"),
 		S3WasabiHostVA:       v.GetString("S3_WASABI_HOST_VA"),
 		StagingBucket:        v.GetString("STAGING_BUCKET"),
 		StagingUploadRetryMs: v.GetDuration("STAGING_UPLOAD_RETRY_MS"),
@@ -407,6 +416,9 @@ func (config *Config) checkBasicSettings() {
 	if config.BucketWasabiOR == "" {
 		util.PrintAndExit("Config is missing BucketWasabiOR")
 	}
+	if config.BucketWasabiTX == "" {
+		util.PrintAndExit("Config is missing BucketWasabiTX")
+	}
 	if config.BucketWasabiVA == "" {
 		util.PrintAndExit("Config is missing BucketWasabiVA")
 	}
@@ -575,7 +587,7 @@ func (config *Config) initPreservationBuckets() {
 			OptionName:      constants.StorageStandard,
 			Provider:        constants.StorageProviderAWS,
 			Region:          constants.RegionAWSUSWest2,
-			RestorePriority: 4,
+			RestorePriority: 5,
 			StorageClass:    constants.StorageClassGlacier,
 		},
 		{
@@ -585,7 +597,7 @@ func (config *Config) initPreservationBuckets() {
 			OptionName:      constants.StorageGlacierOH,
 			Provider:        constants.StorageProviderAWS,
 			Region:          constants.RegionAWSUSEast2,
-			RestorePriority: 6,
+			RestorePriority: 7,
 			StorageClass:    constants.StorageClassGlacier,
 		},
 		{
@@ -595,7 +607,7 @@ func (config *Config) initPreservationBuckets() {
 			OptionName:      constants.StorageGlacierOR,
 			Provider:        constants.StorageProviderAWS,
 			Region:          constants.RegionAWSUSWest2,
-			RestorePriority: 7,
+			RestorePriority: 8,
 			StorageClass:    constants.StorageClassGlacier,
 		},
 		{
@@ -605,7 +617,7 @@ func (config *Config) initPreservationBuckets() {
 			OptionName:      constants.StorageGlacierVA,
 			Provider:        constants.StorageProviderAWS,
 			Region:          constants.RegionAWSUSEast1,
-			RestorePriority: 5,
+			RestorePriority: 6,
 			StorageClass:    constants.StorageClassGlacier,
 		},
 		{
@@ -615,7 +627,7 @@ func (config *Config) initPreservationBuckets() {
 			OptionName:      constants.StorageGlacierDeepOH,
 			Provider:        constants.StorageProviderAWS,
 			Region:          constants.RegionAWSUSEast2,
-			RestorePriority: 9,
+			RestorePriority: 10,
 			StorageClass:    constants.StorageClassGlacierDeep,
 		},
 		{
@@ -625,7 +637,7 @@ func (config *Config) initPreservationBuckets() {
 			OptionName:      constants.StorageGlacierDeepOR,
 			Provider:        constants.StorageProviderAWS,
 			Region:          constants.RegionAWSUSWest2,
-			RestorePriority: 10,
+			RestorePriority: 11,
 			StorageClass:    constants.StorageClassGlacierDeep,
 		},
 		{
@@ -635,7 +647,7 @@ func (config *Config) initPreservationBuckets() {
 			OptionName:      constants.StorageGlacierDeepVA,
 			Provider:        constants.StorageProviderAWS,
 			Region:          constants.RegionAWSUSEast1,
-			RestorePriority: 8,
+			RestorePriority: 9,
 			StorageClass:    constants.StorageClassGlacierDeep,
 		},
 		{
@@ -646,6 +658,16 @@ func (config *Config) initPreservationBuckets() {
 			Provider:        constants.StorageProviderWasabiOR,
 			Region:          constants.RegionWasabiUSWest1,
 			RestorePriority: 3,
+			StorageClass:    constants.StorageClassWasabi,
+		},
+		{
+			Bucket:          config.BucketWasabiTX,
+			Description:     "Wasabi Texas storage",
+			Host:            config.S3WasabiHostTX,
+			OptionName:      constants.StorageWasabiTX,
+			Provider:        constants.StorageProviderWasabiTX,
+			Region:          constants.RegionWasabiUSCentral1,
+			RestorePriority: 4,
 			StorageClass:    constants.StorageClassWasabi,
 		},
 		{
