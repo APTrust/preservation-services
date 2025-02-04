@@ -86,6 +86,14 @@ func TestBag_GlacierVA(t *testing.T) {
 	assert.Equal(t, 0, len(validator.Errors))
 }
 
+func TestBag_WasabiTX(t *testing.T) {
+	pathToBag := testutil.PathToUnitTestBag("Wasabi-TX-Test.tar")
+	validator := setupValidatorAndObject(t,
+		constants.BagItProfileDefault, pathToBag, "", validationID, true)
+	assert.True(t, validator.IsValid())
+	assert.Equal(t, 0, len(validator.Errors))
+}
+
 func TestBag_SampleGood(t *testing.T) {
 	pathToBag := testutil.PathToUnitTestBag("example.edu.sample_good.tar")
 	validator := setupValidatorAndObject(t,

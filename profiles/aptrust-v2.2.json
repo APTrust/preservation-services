@@ -26,26 +26,27 @@
 		"version": "2.2"
 	},
 	"manifestsRequired": [
-        "md5"
-    ],
+		"md5"
+	],
 	"manifestsAllowed": [
-        "md5",
-        "sha1",
-        "sha256",
-        "sha512"
+		"md5",
+		"sha1",
+		"sha256",
+		"sha512"
 	],
 	"tagManifestsRequired": [],
 	"tagManifestsAllowed": [
-        "md5",
-        "sha1",
-        "sha256",
-        "sha512"
+		"md5",
+		"sha1",
+		"sha256",
+		"sha512"
 	],
 	"tagFilesAllowed": [
 		"*",
 		""
 	],
-	"tags": [{
+	"tags": [
+		{
 			"id": "39b8ac8a-8e3d-47c3-9cda-5edd0d4ad1fb",
 			"tagFile": "bagit.txt",
 			"tagName": "BagIt-Version",
@@ -276,6 +277,7 @@
 				"Glacier-Deep-OR",
 				"Glacier-Deep-VA",
 				"Wasabi-OR",
+				"Wasabi-TX",
 				"Wasabi-VA"
 			],
 			"defaultValue": "Standard",

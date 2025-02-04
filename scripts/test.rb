@@ -353,6 +353,7 @@ class TestRunner
       "glacier-deep-or",
       "glacier-deep-va",
       "wasabi-or",
+      "wasabi-tx",
       "wasabi-va",
       "receiving",
       "staging",

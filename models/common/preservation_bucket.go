@@ -6,6 +6,9 @@ import (
 	"strings"
 )
 
+// HostWithRegionPrefix matches an S3 hostname that includes a
+// regional prefix. E.g. "s3.us-central-1.wasabisys.com",
+// "s3.us-east-2.amazonaws.com", etc.
 var HostWithRegionPrefix = regexp.MustCompile("^[Ss]3\\.\\w{2}-\\w+-\\d\\.")
 
 type PreservationBucket struct {

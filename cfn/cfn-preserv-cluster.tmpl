@@ -52,7 +52,7 @@ Parameters:
     Description: 'Sets the number of days for retaining logs. Can be set according to Cluster'
     Type: Number
     AllowedValues: [1, 7, 14, 30, 90]
-    Default: 30 
+    Default: 30
 
 Conditions:
   IsStaging: !Or [!Equals [!Ref DNS, 'staging'], !Equals [!Ref DNS, 'demo']]
@@ -70,13 +70,13 @@ Resources:
       DefaultCapacityProviderStrategy:
         Fn::If:
           - IsPrimary
-          - 
+          -
             - CapacityProvider: FARGATE
               Weight: 1
               Base: 1
             - CapacityProvider: FARGATE_SPOT
-              Weight: 2 
-          - 
+              Weight: 2
+          -
             - CapacityProvider: FARGATE_SPOT
               Weight: 1
       ClusterSettings:
@@ -129,7 +129,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -263,6 +263,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -285,6 +287,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -345,7 +349,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -479,6 +483,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -501,6 +507,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -538,7 +546,7 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
-      
+
   AptqueuefixityService:
     Type: AWS::ECS::Service
     Properties:
@@ -695,6 +703,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -717,6 +727,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -777,7 +789,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -910,6 +922,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -932,6 +946,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -993,7 +1009,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -1126,6 +1142,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -1148,6 +1166,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -1208,7 +1228,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -1342,6 +1362,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -1364,6 +1386,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -1556,6 +1580,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -1578,6 +1604,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -1774,6 +1802,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -1796,6 +1826,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -1992,6 +2024,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -2014,6 +2048,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -2210,6 +2246,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -2232,6 +2270,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -2294,7 +2334,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -2430,6 +2470,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -2452,6 +2494,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -2512,7 +2556,7 @@ Resources:
           - Fn::ImportValue: !Sub "PreservSecurityGroup-${DNS}"
           - Fn::ImportValue: !Sub "UnifiedSecurityGroup-${DNS}"
           Subnets:
-          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}" 
+          - Fn::ImportValue: !Sub "PublicSubnet0-${DNS}"
           - Fn::ImportValue: !Sub "PublicSubnet1-${DNS}"
       PlatformVersion: 1.4.0
       PropagateTags: SERVICE
@@ -2648,6 +2692,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -2670,6 +2716,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -2865,6 +2913,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -2887,6 +2937,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -3084,6 +3136,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -3106,6 +3160,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -3301,6 +3357,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -3323,6 +3381,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -3519,6 +3579,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
         - Name: BUCKET_WASABI_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
+        - Name: BUCKET_WASABI_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
         - Name: BUCKET_WASABI_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
         - Name: NSQ_LOOKUPD
@@ -3541,6 +3603,8 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
         - Name: S3_WASABI_HOST_OR
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
+        - Name: S3_WASABI_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
         - Name: S3_WASABI_HOST_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
         - Name: S3_WASABI_KEY
@@ -3584,7 +3648,7 @@ Resources:
   #Staging Uploader Alarms removed temporarily and a static solution chosen for stability for now. They can be added back.
 
   #Prefetch Alarms and scaling
-  
+
   AutoScalingPrefetchTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -3617,7 +3681,7 @@ Resources:
           - MetricIntervalLowerBound: 650
             #MetricIntervalUpperBound: 1200
             ScalingAdjustment: 2
-            
+
 
   ScaleDownPrefetchPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3693,7 +3757,7 @@ Resources:
             ScalingAdjustment: 1
           - MetricIntervalLowerBound: 350
             #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2  
+            ScalingAdjustment: 2
 
   ScaleDownFormatIdPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3708,7 +3772,7 @@ Resources:
         StepAdjustments:
           - MetricIntervalUpperBound: 0
             ScalingAdjustment: -1
-  
+
   ScaleUpCPUFormatIdPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -3725,8 +3789,8 @@ Resources:
             ScalingAdjustment: 1
           - MetricIntervalLowerBound: 650
             #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2      
-  
+            ScalingAdjustment: 2
+
   ScaleDownCPUFormatIdPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -3767,7 +3831,7 @@ Resources:
       Period: 60
       Threshold: 300
       TreatMissingData: ignore
-  
+
   AlarmHighCPUFormatId:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -3829,7 +3893,7 @@ Resources:
           - MetricIntervalLowerBound: 650
             #MetricIntervalUpperBound: 1200
             ScalingAdjustment: 2
-            
+
 
   ScaleDownPreservUploadPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -3844,7 +3908,7 @@ Resources:
         StepAdjustments:
           - MetricIntervalUpperBound: 0
             ScalingAdjustment: -1
-  
+
   ScaleUpPreservUploadCPUPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -3876,7 +3940,7 @@ Resources:
         StepAdjustments:
           - MetricIntervalLowerBound: 0
             ScalingAdjustment: -1
-  
+
 
   AlarmHighMemoryPreservUpload:
     Type: AWS::CloudWatch::Alarm
@@ -3904,7 +3968,7 @@ Resources:
       Period: 60
       Threshold: 350
       TreatMissingData: ignore
-  
+
   AlarmHighCPUPreservUploader:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -3931,9 +3995,9 @@ Resources:
       Period: 60
       Threshold: 70
       TreatMissingData: ignore
-  
+
   #Fixity Alarm and Scaling Policies
-  
+
   AutoScalingFixityTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -3965,7 +4029,7 @@ Resources:
             ScalingAdjustment: 1
           - MetricIntervalLowerBound: 400
             #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2  
+            ScalingAdjustment: 2
 
   ScaleDownFixityPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy

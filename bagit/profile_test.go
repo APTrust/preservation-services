@@ -23,7 +23,7 @@ func TestBagItProfileLoad(t *testing.T) {
 	assert.Equal(t, 14, len(profile.Tags))
 	assert.Equal(t, "BagIt-Version", profile.Tags[0].TagName)
 	assert.Equal(t, "Storage-Option", profile.Tags[13].TagName)
-	assert.Equal(t, 9, len(profile.Tags[13].Values))
+	assert.Equal(t, 10, len(profile.Tags[13].Values))
 
 	// Test with bad filename
 	_, err = bagit.ProfileLoad("__file_does_not_exist__")
