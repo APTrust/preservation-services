@@ -75,7 +75,7 @@ build: ## Build the Preservation-Services containers
 	@for app in $$(find ./apps -name *.go); do \
 		APP_NAME=$$(basename $$app .go); \
 		echo "Building $$APP_NAME" Docker container ${DOCKER_TAG_NAME}; \
-		docker build --build-arg PSERVICE=$$APP_NAME --build-arg OUTPUT_DIR=${OUTPUT_DIR} -t aptrust/$$APP_NAME:${DOCKER_TAG_NAME} -t aptrust/$$APP_NAME -f Dockerfile.build . ; \
+		docker buildx build --platform=linux/amd64,linux/arm64 --build-arg PSERVICE=$$APP_NAME --build-arg OUTPUT_DIR=${OUTPUT_DIR} -t aptrust/$$APP_NAME:${DOCKER_TAG_NAME} -t aptrust/$$APP_NAME -f Dockerfile.build . ; \
 	done
 
 up: ## Start Preservation service containers
