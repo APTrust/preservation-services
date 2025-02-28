@@ -80,9 +80,9 @@ func (q *QueueFixity) queueList() {
 	itemsAdded := 0
 	params.Set("per_page", strconv.Itoa(perPage))
 	params.Set("page", "1")
-	params.Add("storage_option__in", constants.StorageStandard)
-	params.Add("storage_option__in", constants.StorageWasabiVA)
-	params.Add("storage_option__in", constants.StorageWasabiOR)
+	// params.Add("storage_option__in", constants.StorageStandard)
+	// params.Add("storage_option__in", constants.StorageWasabiVA)
+	// params.Add("storage_option__in", constants.StorageWasabiOR)
 	params.Add("storage_option__in", constants.StorageWasabiTX)
 	params.Add("state", constants.StateActive)
 	params.Set("sort", "last_fixity_check")
