@@ -4,6 +4,9 @@ go 1.22
 
 toolchain go1.23.1
 
+// Force use of nsq v1.2.0 because v1.3.0 has breaking changes.
+replace github.com/nsqio/nsq => github.com/nsqio/nsq v1.2.0
+
 require (
 	github.com/go-redis/redis/v7 v7.4.1
 	github.com/google/uuid v1.6.0
