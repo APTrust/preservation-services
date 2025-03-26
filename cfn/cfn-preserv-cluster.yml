@@ -529,6 +529,19 @@ Resources:
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:3d42ce2-feature_wasabi-tx
         LinuxParameters: {}
+        SystemControls:
+          - Namespace: "net.ipv4.tcp_keepalive_time"
+            Value: "60"
+          - Namespace: "net.ipv4.tcp_keepalive_intvl"
+            Value: "15"
+          - Namespace: "net.ipv4.tcp_keepalive_probes"
+            Value: "6"
+          - Namespace: "net.ipv4.tcp_fin_timeout"
+            Value: "30"
+          - Namespace: "net.ipv4.tcp_rmem"
+            Value: "4096 87380 16777216"
+          - Namespace: "net.ipv4.tcp_wmem"
+            Value: "4096 87380 16777216"
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -968,10 +981,19 @@ Resources:
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:3d42ce2-feature_wasabi-tx
         LinuxParameters: {}
-        #Sysctl:
-        #  "net.ipv4.tcp_keepalive_time": "300"
-        #  "net.ipv4.tcp_keepalive_intvl": "75"
-        #  "net.ipv4.tcp_keepalive_probes": "9"
+        SystemControls:
+          - Namespace: "net.ipv4.tcp_keepalive_time"
+            Value: "60"
+          - Namespace: "net.ipv4.tcp_keepalive_intvl"
+            Value: "15"
+          - Namespace: "net.ipv4.tcp_keepalive_probes"
+            Value: "6"
+          - Namespace: "net.ipv4.tcp_fin_timeout"
+            Value: "30"
+          - Namespace: "net.ipv4.tcp_rmem"
+            Value: "4096 87380 16777216"
+          - Namespace: "net.ipv4.tcp_wmem"
+            Value: "4096 87380 16777216"
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -1192,6 +1214,19 @@ Resources:
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:3d42ce2-feature_wasabi-tx
         LinuxParameters: {}
+        SystemControls:
+          - Namespace: "net.ipv4.tcp_keepalive_time"
+            Value: "60"
+          - Namespace: "net.ipv4.tcp_keepalive_intvl"
+            Value: "15"
+          - Namespace: "net.ipv4.tcp_keepalive_probes"
+            Value: "6"
+          - Namespace: "net.ipv4.tcp_fin_timeout"
+            Value: "30"
+          - Namespace: "net.ipv4.tcp_rmem"
+            Value: "4096 87380 16777216"
+          - Namespace: "net.ipv4.tcp_wmem"
+            Value: "4096 87380 16777216"
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -2296,6 +2331,19 @@ Resources:
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:3d42ce2-feature_wasabi-tx
         LinuxParameters: {}
+        SystemControls:
+          - Namespace: "net.ipv4.tcp_keepalive_time"
+            Value: "60"
+          - Namespace: "net.ipv4.tcp_keepalive_intvl"
+            Value: "15"
+          - Namespace: "net.ipv4.tcp_keepalive_probes"
+            Value: "6"
+          - Namespace: "net.ipv4.tcp_fin_timeout"
+            Value: "30"
+          - Namespace: "net.ipv4.tcp_rmem"
+            Value: "4096 87380 16777216"
+          - Namespace: "net.ipv4.tcp_wmem"
+            Value: "4096 87380 16777216"
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -2520,6 +2568,19 @@ Resources:
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:3d42ce2-feature_wasabi-tx
         LinuxParameters: {}
+        SystemControls:
+          - Namespace: "net.ipv4.tcp_keepalive_time"
+            Value: "60"
+          - Namespace: "net.ipv4.tcp_keepalive_intvl"
+            Value: "15"
+          - Namespace: "net.ipv4.tcp_keepalive_probes"
+            Value: "6"
+          - Namespace: "net.ipv4.tcp_fin_timeout"
+            Value: "30"
+          - Namespace: "net.ipv4.tcp_rmem"
+            Value: "4096 87380 16777216"
+          - Namespace: "net.ipv4.tcp_wmem"
+            Value: "4096 87380 16777216"
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -3186,6 +3247,19 @@ Resources:
         StopTimeout: 120
         Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:3d42ce2-feature_wasabi-tx
         LinuxParameters: {}
+        SystemControls:
+          - Namespace: "net.ipv4.tcp_keepalive_time"
+            Value: "60"
+          - Namespace: "net.ipv4.tcp_keepalive_intvl"
+            Value: "15"
+          - Namespace: "net.ipv4.tcp_keepalive_probes"
+            Value: "6"
+          - Namespace: "net.ipv4.tcp_fin_timeout"
+            Value: "30"
+          - Namespace: "net.ipv4.tcp_rmem"
+            Value: "4096 87380 16777216"
+          - Namespace: "net.ipv4.tcp_wmem"
+            Value: "4096 87380 16777216"
         LogConfiguration:
           LogDriver: awslogs
           Options:
