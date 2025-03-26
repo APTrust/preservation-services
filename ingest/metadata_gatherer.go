@@ -192,7 +192,7 @@ func (m *MetadataGatherer) CopyTempFilesToS3(tempFiles []string) error {
 			bucket,
 			key,
 			filePath,
-			minio.PutObjectOptions{})
+			m.Context.Config.MinioDefaultPutOptions)
 		if err != nil {
 			m.logFileNotSaved(basename, err)
 			return err

@@ -13,6 +13,7 @@ import (
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/util"
+	"github.com/minio/minio-go/v7"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 )
@@ -41,6 +42,7 @@ type Config struct {
 	MaxFileSize                int64
 	MaxFixityItemsPerRun       int
 	MaxWorkerAttempts          int
+	MinioDefaultPutOptions     minio.PutObjectOptions
 	NsqLookupd                 string
 	NsqURL                     string
 	PreservationBuckets        []*PreservationBucket
@@ -85,6 +87,7 @@ func NewConfig() *Config {
 	config.initPreservationBuckets()
 	config.sanityCheck()
 	config.makeDirs()
+	config.initMinioPutObjectSettings()
 	return config
 }
 
@@ -680,6 +683,23 @@ func (config *Config) initPreservationBuckets() {
 			RestorePriority: 2,
 			StorageClass:    constants.StorageClassWasabi,
 		},
+	}
+}
+
+// initMinioPutObjectSettings should increase upload
+// speeds on S3 put operations, but it may also
+// increase memory usage.
+//
+// This is experimental, so we will need to watch it
+// to ensure it doesn't cause memory issues.
+// Part of issue https://trello.com/c/W8JXAdUO
+func (config *Config) initMinioPutObjectSettings() {
+	// Using threads allows concurrent uploading.
+	// Minio docs say we should let Minio calculate
+	// chunk size internally, so we don't set that here.
+	config.MinioDefaultPutOptions = minio.PutObjectOptions{
+		NumThreads:            8,
+		ConcurrentStreamParts: true,
 	}
 }
 
