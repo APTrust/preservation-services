@@ -60,7 +60,7 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, time.Duration(250*time.Millisecond), config.StagingUploadRetryMs)
 	assert.Equal(t, "http://localhost:8898", config.VolumeServiceURL)
 
-	require.Equal(t, 4, len(config.S3Credentials))
+	require.Equal(t, 5, len(config.S3Credentials))
 
 	// In test env, these are all set to the local minio instance,
 	// so we don't save/delete/overwrite in any external services.

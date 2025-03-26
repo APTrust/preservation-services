@@ -353,6 +353,7 @@ class TestRunner
       "glacier-deep-or",
       "glacier-deep-va",
       "wasabi-or",
+      "wasabi-tx",
       "wasabi-va",
       "receiving",
       "staging",
@@ -384,11 +385,19 @@ class TestRunner
     os = (/darwin/ =~ RUBY_PLATFORM) ? "osx" : "linux"
     bin = File.join(project_root, "bin", os)
     if os == "osx"
-      if (/arm64/ =~ RUBY_PLATFORM)
-        bin = File.join(bin, "arm64")
-      else
-        bin = File.join(bin, "amd64")
-      end
+      # For MacOS, run the amd64 binary regardless of
+      # platform. Minio's old arm64 binary sometimes
+      # crashes on M3 chips.
+      bin = File.join(bin, "amd64")
+
+      # We can restore the logic below if we move to a
+      # newer version of Minio that works on M3+ chips.
+      #
+      # if (/arm64/ =~ RUBY_PLATFORM)
+      #  bin = File.join(bin, "arm64")
+      # else
+      # bin = File.join(bin, "amd64")
+      # end
     end
     bin
   end

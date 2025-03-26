@@ -148,6 +148,11 @@ func (r *BagRestorer) initUploader() {
 			}
 		}()
 
+		// Note: Minio docs discourage passing object size of -1,
+		// as we do in the call to PutObject below, but it's
+		// impossible for us to predict the exact size of the
+		// restored bag because sizes of tag files and manifests
+		// vary.
 		var uploadInfo minio.UploadInfo
 		uploadInfo, r.uploadError = s3Client.PutObject(
 			ctx.Background(),
@@ -155,9 +160,7 @@ func (r *BagRestorer) initUploader() {
 			r.RestorationObject.Identifier+".tar",
 			r.tarPipeWriter.GetReader(),
 			-1,
-			minio.PutObjectOptions{
-				PartSize: chunkSize,
-			},
+			r.Context.Config.MinioDefaultPutOptions,
 		)
 		r.bytesWritten = uploadInfo.Size
 		r.Context.Logger.Infof("Finished uploading tar file %s", r.RestorationObject.Identifier)

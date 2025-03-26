@@ -90,6 +90,9 @@ func getS3Clients(config *Config, logger *logging.Logger) map[string]*minio.Clie
 			&minio.Options{
 				Creds:  credentials.NewStaticV4(creds.KeyID, creds.SecretKey, ""),
 				Secure: useSSL,
+				// Increase max retries from default 10 to 20.
+				// Part of issue https://trello.com/c/W8JXAdUO
+				MaxRetries: 20,
 			})
 		if err != nil {
 			panic(err)
