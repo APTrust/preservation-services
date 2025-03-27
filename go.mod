@@ -10,7 +10,7 @@ replace github.com/nsqio/nsq => github.com/nsqio/nsq v1.2.0
 require (
 	github.com/go-redis/redis/v7 v7.4.1
 	github.com/google/uuid v1.6.0
-	github.com/minio/minio-go/v7 v7.0.84
+	github.com/minio/minio-go/v7 v7.0.89
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/nsqio/nsq v1.2.0
@@ -32,8 +32,9 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/julienschmidt/httprouter v1.2.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/minio/crc64nvme v1.0.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nsqio/go-diskqueue v0.0.0-20180306152900-74cfbc9de839 // indirect
@@ -56,12 +57,12 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/crypto v0.35.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/image v0.18.0 // indirect
-	golang.org/x/net v0.36.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
