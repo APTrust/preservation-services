@@ -131,7 +131,7 @@ func UCFirst(str string) string {
 // from one depositor in which tarballs did not extract to a single
 // directory. We've been rejecting these bags. See https://trello.com/c/548wCyeT.
 //
-// Our BagIt profile at https://github.com/APTrust/preservation-services/blob/master/profiles/aptrust-v2.2.json
+// Our BagIt profile at https://github.com/APTrust/preservation-services/blob/master/profiles/aptrust-v2.3.json
 // has for years, and still does say that tarDirMustMatchName = true
 // (see the last line of the file). While we have quietly dropped the
 // requirement that the top-level directory of the tar file must

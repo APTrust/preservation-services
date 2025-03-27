@@ -13,7 +13,7 @@ import (
 
 // This also implicitly tests BagItProfileFromJson
 func TestBagItProfileLoad(t *testing.T) {
-	filename := path.Join(util.ProjectRoot(), "profiles", "aptrust-v2.2.json")
+	filename := path.Join(util.ProjectRoot(), "profiles", "aptrust-v2.3.json")
 	profile, err := bagit.ProfileLoad(filename)
 	assert.Nil(t, err)
 	require.NotNil(t, profile)
@@ -36,7 +36,7 @@ func TestBagItProfileLoad(t *testing.T) {
 }
 
 func TestGetTagDef(t *testing.T) {
-	filename := path.Join(util.ProjectRoot(), "profiles", "aptrust-v2.2.json")
+	filename := path.Join(util.ProjectRoot(), "profiles", "aptrust-v2.3.json")
 	profile, err := bagit.ProfileLoad(filename)
 	assert.Nil(t, err)
 	require.NotNil(t, profile)

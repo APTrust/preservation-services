@@ -20,11 +20,11 @@ const (
 	AlgSha512                  = "sha512"
 	AWSBucketPrefix            = "https://s3.amazonaws.com/"
 	BagItProfileBTR            = "btr-v1.0.json"
-	BagItProfileDefault        = "aptrust-v2.2.json"
+	BagItProfileDefault        = "aptrust-v2.3.json"
 	BagRestorer                = "bag_restorer"
 	BTRProfileIdentifier       = "https://github.com/dpscollaborative/btr_bagit_profile/releases/download/1.0/btr-bagit-profile.json"
 	DefaultAccess              = AccessInstitution
-	DefaultProfileIdentifier   = "https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json"
+	DefaultProfileIdentifier   = "https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.3.json"
 	Deleter                    = "deleter"
 	EmptyUUID                  = "00000000-0000-0000-0000-000000000000"
 	EventAccessAssignment      = "access assignment"

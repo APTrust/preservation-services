@@ -132,10 +132,13 @@ func TestBag_SampleNoBagInfo(t *testing.T) {
 	validator := setupValidatorAndObject(t,
 		constants.BagItProfileDefault, pathToBag, "", validationID, true)
 	assert.False(t, validator.IsValid())
-	assert.Equal(t, 1, len(validator.Errors))
+	require.Equal(t, 2, len(validator.Errors))
+	assert.Equal(t,
+		"Required tag Source-Organization in file bag-info.txt is missing",
+		validator.Errors[0])
 	assert.Equal(t,
 		"Required tag Access in file aptrust-info.txt is missing",
-		validator.Errors[0])
+		validator.Errors[1])
 }
 
 func TestBag_SampleNoBagIt(t *testing.T) {

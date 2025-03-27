@@ -234,7 +234,7 @@ func prepareForCopyToStaging(t *testing.T, pathToBag string, workItemId int64, c
 	require.Empty(t, errors)
 
 	// Validate the bag.
-	filename := path.Join(util.ProjectRoot(), "profiles", "aptrust-v2.2.json")
+	filename := path.Join(util.ProjectRoot(), "profiles", "aptrust-v2.3.json")
 	profile, err := bagit.ProfileLoad(filename)
 	require.Nil(t, err)
 	validator := ingest.NewMetadataValidator(context, workItemId, obj)
