@@ -686,25 +686,26 @@ func (config *Config) initPreservationBuckets() {
 	}
 }
 
-// initMinioPutObjectSettings defines a default set of
-// of PutObjectOptions for the Minio client when performing
-// S3 uploads. These options are used uniformly throughout
-// preservation services.
+// initMinioPutObjectSettings should increase upload
+// speeds on S3 put operations, but it may also
+// increase memory usage.
 //
-// We had set this to use NumThreads=8 and ConcurrentStreamParts=true,
-// but that seemed to cause invalid CRC checksums in larger
-// multipart uploads. So, now we're reverting to an empty set
-// of options, allowing Minio to decided what's best.
+// This is experimental, so we will need to watch it
+// to ensure it doesn't cause memory issues.
+// Part of issue https://trello.com/c/W8JXAdUO
 //
-// The NumThreads=8 and ConcurrentStreamParts=true settings were
-// part of issue https://trello.com/c/W8JXAdUO. The reversion to
-// empty/default minio.PutObjectOptions{} settings comes from
-// https://trello.com/c/jsj4UMEH
+// Note that SendContentMd5 is superfluous for us, but
+// it works around a bug in Wasabi's CRC32 implementation.
+// See https://github.com/mattermost/mattermost/issues/27293.
 func (config *Config) initMinioPutObjectSettings() {
 	// Using threads allows concurrent uploading.
 	// Minio docs say we should let Minio calculate
 	// chunk size internally, so we don't set that here.
-	config.MinioDefaultPutOptions = minio.PutObjectOptions{}
+	config.MinioDefaultPutOptions = minio.PutObjectOptions{
+		NumThreads:            8,
+		ConcurrentStreamParts: true,
+		SendContentMd5:        true,
+	}
 }
 
 // ToJSON serializes the config to JSON for logging purposes.
