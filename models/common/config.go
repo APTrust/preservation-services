@@ -697,6 +697,7 @@ func (config *Config) initPreservationBuckets() {
 // Note that SendContentMd5 is superfluous for us, but
 // it works around a bug in Wasabi's CRC32 implementation.
 // See https://github.com/mattermost/mattermost/issues/27293.
+// Also https://github.com/stonith404/pingvin-share/issues/788.
 func (config *Config) initMinioPutObjectSettings() {
 	// Using threads allows concurrent uploading.
 	// Minio docs say we should let Minio calculate
@@ -704,6 +705,7 @@ func (config *Config) initMinioPutObjectSettings() {
 	config.MinioDefaultPutOptions = minio.PutObjectOptions{
 		NumThreads:            8,
 		ConcurrentStreamParts: true,
+		AutoChecksum:          minio.ChecksumCRC32, // or minio.ChecksumCRC64NVME
 	}
 }
 
