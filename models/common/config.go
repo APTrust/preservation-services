@@ -704,7 +704,6 @@ func (config *Config) initMinioPutObjectSettings() {
 	config.MinioDefaultPutOptions = minio.PutObjectOptions{
 		NumThreads:            8,
 		ConcurrentStreamParts: true,
-		SendContentMd5:        true,
 	}
 }
 
