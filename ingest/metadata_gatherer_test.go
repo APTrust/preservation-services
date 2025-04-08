@@ -164,12 +164,21 @@ func testChecksum(t *testing.T, checksum *service.IngestChecksum, alg string, in
 func testS3Files(t *testing.T, context *common.Context) {
 	// Make sure all expected files were copied to local S3 server.
 	for i, file := range goodbagS3Files {
+		// Newer Minio servers store file data in xl.meta
 		fullpath := path.Join(context.Config.BaseWorkingDir,
-			"minio", "staging", "9999", file)
+			"minio", "staging", "9999", file, "xl.meta")
 		require.True(t, util.FileExists(fullpath))
 		stats, err := os.Stat(fullpath)
 		require.Nil(t, err)
-		assert.Equal(t, goodbags3FileSizes[i], stats.Size())
+
+		// xl.meta files are usually 200-600 bytes larger
+		// than the raw file we uploaded because they include
+		// metadata headers.
+		min_size := goodbags3FileSizes[i] + 200
+		max_size := goodbags3FileSizes[i] + 600
+		assert.GreaterOrEqual(t, stats.Size(), min_size)
+		assert.LessOrEqual(t, stats.Size(), max_size)
+		// assert.Equal(t, goodbags3FileSizes[i], stats.Size())
 	}
 }
 

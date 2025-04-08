@@ -1,0 +1,67 @@
+services:
+  nsqlookupd:
+    image: nsqio/nsq:v1.2.0
+    restart: always
+    hostname: nsqlookupd
+    command: /nsqlookupd
+    # platform: linux/arm64
+    volumes:
+      - ~/tmp/nsq/nsqlookupd:/data
+    ports:
+      - "4160:4160"
+      - "4161:4161"
+    env_file:
+      - .env.docker
+
+  nsqd:
+    image: nsqio/nsq:v1.2.0
+    restart: always
+    # hostname: nsqd
+    command: /nsqd --data-path=/data --lookupd-tcp-address=nsqlookupd:4160
+    # platform: linux/arm64
+    volumes:
+      - ~/tmp/nsq/nsqd:/data
+    depends_on:
+      - nsqlookupd
+    ports:
+      - "4150:4150"
+      - "4151:4151"
+
+  nsqadmin:
+    image: nsqio/nsq:v1.2.0
+    restart: always
+    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+    # platform: linux/arm64
+    depends_on:
+      - nsqlookupd
+    ports:
+      - "4171:4171"
+
+  redis:
+    image: redis:6.0-alpine
+    restart: always
+    command: redis-server --appendonly yes
+    # platform: linux/arm64
+    volumes:
+      - ~/tmp/redis:/data
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: quay.io/minio/minio
+    command: server /data --console-address ":9001"
+    # platform: linux/arm64
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - ~/tmp/minio:/data
+    ports:
+      - 9899:9000
+      - 9001:9001
+
+volumes:
+  minio_data:
+  nsqd_data:
+  nsqlookupd_data:
+  redis_data:
