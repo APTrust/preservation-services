@@ -41,6 +41,7 @@ That runs Preserve's integration tests and end-to-end (e2e) tests to ensure that
 
 The integration tests usually take 1-2 minutes to complete. The end-to-end (e2e) tests can take 5-10 minutes, depending on your machine.
 
+**Tests require Docker to be installed and running.**
 
 ## Unit Tests
 
@@ -191,11 +192,11 @@ Regardless of where the container build is initiated, deploy with ansible:
 # Deployment Notes and Infrastructure
 
 The infrastructure for the new preservation-services has been updated to operate on the AWS PaaS offering Elasatic Container Service (ECS).
-The containers were updated to operate in a loosely coupled manner, providing greater flexibility for environments.                                                                                               
+The containers were updated to operate in a loosely coupled manner, providing greater flexibility for environments.
 
-All environments, staging, demo, and production, are running on ECS Fargate, with each of the environments built using AWS' CloudFormation, with Ansible for configuration management. Unlike the legacy environment, this new infrastructure is completely built from Infrastructure As Code. 
+All environments, staging, demo, and production, are running on ECS Fargate, with each of the environments built using AWS' CloudFormation, with Ansible for configuration management. Unlike the legacy environment, this new infrastructure is completely built from Infrastructure As Code.
 
-Logging is now set to be passed to Cloudwatch, the AWS aggregated logging service, with performance monitoring. 
+Logging is now set to be passed to Cloudwatch, the AWS aggregated logging service, with performance monitoring.
 
 Worker logs are now directed to STDOUT by setting the following in the .env file OR in the AWS Parameter Store:
 
@@ -205,7 +206,7 @@ LOG_DIR="STDOUT"
 
 Persistent storage for NSQ is provided using AWS' Elastic File Service (EFS). Redis is provided using the AWS PaaS offering elasticache, removing the need to maintain Redis containers, or scale them.
 
-Logging that occurs in the test scripts is handled differently according the scripts, and has no impact on the above. 
+Logging that occurs in the test scripts is handled differently according the scripts, and has no impact on the above.
 
 Access to the containers directly using the docker exec functionlality is possible in this environment, if you have been given the permissions to actually do so. Please review this blog post.
 

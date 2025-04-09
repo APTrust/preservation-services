@@ -71,7 +71,6 @@ class TestRunner
   end
 
   def run_go_unit_tests(arg)
-    `#{self.bin_dir}/redis-cli flushall`
     # Note: -p 1 flag helps prevent Redis overwrites on Linux/Travis
     puts "Starting unit tests..."
     arg = "./..." if arg.nil?
@@ -89,7 +88,6 @@ class TestRunner
 
   def run_integration_tests(arg)
     init_for_integration
-    `#{self.bin_dir}/redis-cli flushall`
     puts "Starting integration tests..."
     arg = "./..." if arg.nil?
     cmd = "go test -p 1 -tags=integration #{arg}"
@@ -103,7 +101,6 @@ class TestRunner
   def run_interactive(arg)
     build_ingest_services
     init_for_integration
-    `#{self.bin_dir}/redis-cli flushall`
     start_ingest_services(["ingest_bucket_reader", "apt_queue", "apt_queue_fixity"])
     puts ">> NSQ: 'http://localhost:4171'"
     puts ">> Minio: 'http://localhost:9899' login/pwd -> minioadmin/minioadmin"
