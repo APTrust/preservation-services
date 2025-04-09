@@ -8,13 +8,13 @@ import (
 	"io"
 	"net/url"
 	"os"
-	"path"
 	"strconv"
 	"strings"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/e2e"
 	"github.com/APTrust/preservation-services/ingest"
+	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/stretchr/testify/assert"
@@ -77,10 +77,23 @@ func validateBag(objIdentifier string) {
 	intelObj := getObject(objIdentifier)
 	registryFiles := getregistryFiles(intelObj)
 	tarFileName := strings.Split(objIdentifier, "/")[1] + ".tar"
-	pathToBag := path.Join(ctx.Context.Config.BaseWorkingDir, "minio", "aptrust.restore.test.test.edu", "test.edu", tarFileName)
+	context := common.NewContext()
+	minioObj, err := context.S3GetObject(
+		constants.StorageProviderAWS,
+		"aptrust.restore.test.test.edu",
+		fmt.Sprintf("test.edu/%s", tarFileName),
+	)
+	defer minioObj.Close()
+
+	// Copy restored bag to local file
+	tempFile, err := os.CreateTemp("", "restored*")
+	require.Nil(ctx.T, err)
+	_, err = io.Copy(tempFile, minioObj)
+	require.Nil(ctx.T, err)
+	tempFile.Close()
 
 	// Parse the restored bag and find out which ingest files are in it.
-	ingestFiles, err := scanBag(intelObj, pathToBag)
+	ingestFiles, err := scanBag(intelObj, tempFile.Name())
 	require.Nil(ctx.T, err, objIdentifier)
 	assert.True(ctx.T, len(ingestFiles) > 0, objIdentifier)
 
@@ -97,7 +110,7 @@ func validateBag(objIdentifier string) {
 
 		// Make sure the restored version was the LATEST version
 		// But we can't know the fixity values of restored bag-info.txt
-		// files because we rewrite those during restoration. 
+		// files because we rewrite those during restoration.
 		filename, _ := gf.PathInBag()
 		if filename != "bag-info.txt" {
 			assert.Equal(ctx.T, RegistryLatestSha256.Digest, restoredFileSha256.Digest, gf.Identifier)
