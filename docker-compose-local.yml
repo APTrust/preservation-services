@@ -16,7 +16,7 @@ services:
   nsqd:
     image: nsqio/nsq:v1.2.0
     restart: always
-    # hostname: nsqd
+    hostname: nsqd
     command: /nsqd --data-path=/data --lookupd-tcp-address=nsqlookupd:4160
     # platform: linux/arm64
     volumes:
