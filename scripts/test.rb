@@ -18,38 +18,6 @@ class TestRunner
     @test_name = '';
     @start_time = Time.now
     bin = self.bin_dir
-    # @unit_services = [
-    #   {
-    #     name: "redis-server",
-    #     cmd: "#{bin}/redis-server --dir ~/tmp/redis/",
-    #     msg: "Redis is running on 127.0.0.1:6379"
-    #   },
-    #   {
-    #     # For localhost testing, use 'localhost' instead of '127.0.0.1'
-    #     # because Minio signed URLs use hostname, not IP.
-    #     name: "minio",
-    #     cmd: "#{bin}/minio server --quiet --address=localhost:9899 ~/tmp/minio",
-    #     msg: "Minio is running on localhost:9899. User/Pwd: minioadmin/minioadmin"
-    #   }
-    # ]
-    # @integration_services = [
-    #   {
-    #     name: "nsqlookupd",
-    #     cmd: "#{bin}/nsqlookupd",
-    #     msg: "Started nsqlookupd at 127.0.0.1:4160"
-    #   },
-    #   {
-    #     name: "nsqd",
-    #     cmd: "#{bin}/nsqd --lookupd-tcp-address=127.0.0.1:4160 --data-path ~/tmp/nsq/ --broadcast-address=127.0.0.1",
-    #     msg: "Started nsqd at 127.0.0.1:4151"
-    #   },
-    #   {
-    #     name: "nsqadmin",
-    #     cmd: "#{bin}/nsqadmin --lookupd-http-address=127.0.0.1:4161",
-    #     msg: "Started nsqadmin at 127.0.0.1:4171"
-    #   }
-    # ]
-    # @all_services = @unit_services + @integration_services
   end
 
   def clean_test_cache
@@ -97,9 +65,7 @@ class TestRunner
   def run_unit_tests(arg)
     clean_test_cache
     make_test_dirs
-    @unit_services.each do |svc|
-      start_service(svc)
-    end
+    `docker-compose -f docker-compose-local.yml up -d`
     run_go_unit_tests(arg)
     # at_exit handler will stop all services
   end
@@ -184,13 +150,7 @@ class TestRunner
     self.registry_start
     sleep(8)
     # Start NSQ, Minio, Redis, and Registry
-
-    # @all_services.each do |svc|
-    #   start_service(svc)
-    # end
-
     `docker-compose -f docker-compose-local.yml up -d`
-
     sleep(5)
     create_nsq_topics
   end
