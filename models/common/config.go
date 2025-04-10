@@ -705,7 +705,7 @@ func (config *Config) initMinioPutObjectSettings() {
 	config.MinioDefaultPutOptions = minio.PutObjectOptions{
 		NumThreads:            8,
 		ConcurrentStreamParts: true,
-		AutoChecksum:          minio.ChecksumCRC32, // or minio.ChecksumCRC64NVME
+		AutoChecksum:          minio.ChecksumCRC64NVME, // or minio.ChecksumCRC32
 	}
 }
 
