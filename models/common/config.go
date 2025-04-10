@@ -694,8 +694,14 @@ func (config *Config) initPreservationBuckets() {
 // to ensure it doesn't cause memory issues.
 // Part of issue https://trello.com/c/W8JXAdUO
 //
-// Note that SendContentMd5 is superfluous for us, but
-// it works around a bug in Wasabi's CRC32 implementation.
+// Using algorithm ChecksumCRC64NVME, which is Amazon's
+// new default and works in Wasabi-TX and Wasabi-OR.
+//
+// As of April 10, 2025, all large file uploads to Wasabi-VA
+// fail, regardless of the checksum algorithm.
+//
+// See https://docs.google.com/document/d/12CslMv7Un9IUzrJcygo9tJ-fhxeySUoJNLBmz0UcKro/edit?tab=t.0
+//
 // See https://github.com/mattermost/mattermost/issues/27293.
 // Also https://github.com/stonith404/pingvin-share/issues/788.
 func (config *Config) initMinioPutObjectSettings() {
@@ -705,7 +711,7 @@ func (config *Config) initMinioPutObjectSettings() {
 	config.MinioDefaultPutOptions = minio.PutObjectOptions{
 		NumThreads:            8,
 		ConcurrentStreamParts: true,
-		AutoChecksum:          minio.ChecksumCRC32C, // or ChecksumCRC32, ChecksumCRC64NVME
+		AutoChecksum:          minio.ChecksumCRC64NVME, // ChecksumCRC32, ChecksumCRC32C, ChecksumCRC64NVME
 	}
 }
 
