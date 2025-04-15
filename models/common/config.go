@@ -709,9 +709,9 @@ func (config *Config) initMinioPutObjectSettings() {
 	// Minio docs say we should let Minio calculate
 	// chunk size internally, so we don't set that here.
 	config.MinioDefaultPutOptions = minio.PutObjectOptions{
-		NumThreads:            8,
-		ConcurrentStreamParts: true,
-		AutoChecksum:          minio.ChecksumCRC64NVME, // ChecksumCRC32, ChecksumCRC32C, ChecksumCRC64NVME
+		// NumThreads:            8,
+		// ConcurrentStreamParts: true,
+		AutoChecksum: minio.ChecksumCRC64NVME, // ChecksumCRC32, ChecksumCRC32C, ChecksumCRC64NVME
 	}
 }
 
