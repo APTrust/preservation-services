@@ -704,6 +704,26 @@ func (config *Config) initPreservationBuckets() {
 //
 // See https://github.com/mattermost/mattermost/issues/27293.
 // Also https://github.com/stonith404/pingvin-share/issues/788.
+//
+// And finally, using multiple threads instantly crashes our tiny
+// containers, such as the bag restorer (1/2 CPU, 512 MB RAM).
+// So for now, and probably for good, concurrent multi-threaded
+// uploads are turned off. It looks like minio allocates byte
+// slices immediately, before the upload even starts. So, 8 threads
+// times minimum 50MB chunk size = 400 MB of RAM before the upload
+// starts. (The logs show the out-of-memory crash before any bytes
+// go across the wire to the remote s3 service.) This always
+// crashes tiny containers and will likely crash larger ones
+// if we have 2+ large uploads going at the same time.
+// So, for now, NumThreads and ConcurrentStreamParts are off.
+//
+// For all practical purposes, we always max out our network
+// bandwidth even without concurrent upload/download streams,
+// so I'm not sure what these changes buy us.
+//
+// Flavia's changes to os-level TCP settings should give us
+// more reliable connections, which will buy us fewer failures
+// due to dropped connections.
 func (config *Config) initMinioPutObjectSettings() {
 	// Using threads allows concurrent uploading.
 	// Minio docs say we should let Minio calculate
