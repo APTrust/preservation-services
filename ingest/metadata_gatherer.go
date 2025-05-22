@@ -409,6 +409,41 @@ func (m *MetadataGatherer) setStorageOption() {
 			}
 		}
 	}
+	// A.D. - May 22, 2025
+	// IngestFiles are created with the default Standard
+	// storage option. If the tag file told us to use a different
+	// option, set that on all of the IngestFile records in Redis
+	// now, so the object and files are in sync. This addition is
+	// part of the fix for the bug that caused some re-ingested bags
+	// to have files split between Standard and Glacier storage.
+	// https://trello.com/c/iypSuBvB and https://trello.com/c/C4XlgSNU
+	if m.IngestObject.StorageOption != constants.StorageStandard {
+		m.Context.Logger.Infof(
+			"Setting storage option to %s on all files for bag %s, WorkItem %d",
+			m.IngestObject.StorageOption, m.IngestObject.BagName(), m.WorkItemID,
+		)
+		m.setStorageOptionOnAllFiles()
+	}
+}
+
+func (m *MetadataGatherer) setStorageOptionOnAllFiles() (int, []*service.ProcessingError) {
+	processFile := func(ingestFile *service.IngestFile) (errors []*service.ProcessingError) {
+		ingestFile.StorageOption = m.IngestObject.StorageOption
+
+		// Uncomment if you really want to log this.
+		m.Context.Logger.Infof("Set %s to %s", ingestFile.PathInBag, m.IngestObject.StorageOption)
+
+		// Note that this will always return an empty collection of errors.
+		return errors
+	}
+	options := service.IngestFileApplyOptions{
+		MaxErrors:   10,
+		MaxRetries:  1,
+		RetryMs:     0,
+		SaveChanges: true,
+		WorkItemID:  m.WorkItemID,
+	}
+	return m.Context.RedisClient.IngestFilesApply(processFile, options)
 }
 
 // Delete stale manifests from the staging bucket. This problem affects

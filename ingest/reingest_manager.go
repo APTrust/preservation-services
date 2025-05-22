@@ -1,6 +1,8 @@
 package ingest
 
 import (
+	"fmt"
+
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/registry"
@@ -149,7 +151,11 @@ func (r *ReingestManager) ProcessFiles() (int, []*service.ProcessingError) {
 func (r *ReingestManager) FlagChanges(ingestFile *service.IngestFile, registryFile *registry.GenericFile) (bool, error) {
 	fileChanged := false
 
-	r.SetStorageOption(ingestFile, registryFile)
+	err := r.SetStorageOption(ingestFile, registryFile)
+	if err != nil {
+		detailedErr := fmt.Errorf("Error saving IngestObject to Redis after storage option change: %v", err)
+		return false, detailedErr
+	}
 
 	newestChecksumsFromRegistry := r.GetNewest(registryFile.Checksums)
 	if r.ChecksumChanged(ingestFile, newestChecksumsFromRegistry) || registryFile.State == constants.StateDeleted {
@@ -208,12 +214,26 @@ func (r *ReingestManager) ChecksumChanged(ingestFile *service.IngestFile, regist
 // ingest, even if subsequent ingests say it should go somewhere else. The only
 // way to change the storage option of an existing object is to completely
 // delete it, then reingest it.
-func (r *ReingestManager) SetStorageOption(ingestFile *service.IngestFile, registryFile *registry.GenericFile) {
+func (r *ReingestManager) SetStorageOption(ingestFile *service.IngestFile, registryFile *registry.GenericFile) error {
 	if registryFile.State == "A" && ingestFile.StorageOption != registryFile.StorageOption {
 		r.Context.Logger.Infof("Changing StorageOption of %s from %s to %s to match previously ingested version.", ingestFile.Identifier(), ingestFile.StorageOption, registryFile.StorageOption)
 		ingestFile.StorageOption = registryFile.StorageOption
+
+		// A.D. May 22, 2025
+		// Make the storage option on the IngestObject
+		// match that on the IngestFile.
+		// If we changed the storage option on the object,
+		// be sure to save that to Redis, so later workers
+		// have an accurate record. Failing to save this change
+		// to Redis caused Trello bugs https://trello.com/c/ccxvAQkv
+		// and https://trello.com/c/C4XlgSNU
+		origOption := r.IngestObject.StorageOption
 		r.IngestObject.StorageOption = registryFile.StorageOption
+		if origOption != r.IngestObject.StorageOption {
+			return r.IngestObjectSave()
+		}
 	}
+	return nil
 }
 
 // FlagForUpdate marks an IngestFile as needing to be saved, and sets the

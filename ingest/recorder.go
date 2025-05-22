@@ -226,15 +226,49 @@ func (r *Recorder) saveBatch(ingestFiles []*service.IngestFile) (fileCount int, 
 // of requests to Registry. One request per file.
 func (r *Recorder) updateBatch(ingestFiles []*service.IngestFile) (fileCount int, errors []*service.ProcessingError) {
 	for _, ingestFile := range ingestFiles {
+
+		// A.D. May 22, 2025
+		//
+		// The if statement below pertains to https://trello.com/c/C4XlgSNU
+		// and https://trello.com/c/ccxvAQkv, which was a re-ingest bug that
+		// caused some files to be stored with two different storage options,
+		// leading to us having two different, out-of-sync versions of a file
+		// in preservation storage.
+		//
+		// To trigger this bug, a depositor had to ingest a bag with storage
+		// option X and then re-ingest it with storage option Y. In that case,
+		// our system should have forced all of the files into option X.
+		//
+		// In practice, however, it left the old files in X and saved new
+		// versions to Y.
+		//
+		// This is a rare bug, affecting only 5 of the 40 million files
+		// we ingested between 2014 and 2025.
+		//
+		// Changes to metadata_gatherer.go and reingest_manager.go
+		// should prevent this from ever happening again. Still, we
+		// include one last check here to see if it does somehow happen.
+		//
+		// If it does, we want an admin to know. The admin will be able
+		// to fix the problem manually, since we will have all of the
+		// object's files. The admin's job will be to make sure they are
+		// all in the right place.
+		//
+		// Again, this should be impossible after the changes of May 22, 2025.
+		//
 		if ingestFile.StorageOption != r.IngestObject.StorageOption {
-			r.Context.Logger.Warningf("In Recorder.updateBatch, file storage option does not match object storage option. This shouldn't happen. See https://trello.com/c/C4XlgSNU. File = '%s' has option '%s', Object = '%s' has option '%s'. Recorder is forcing the file storage option to '%s'.", ingestFile.Identifier(), ingestFile.StorageOption, r.IngestObject.Identifier(), r.IngestObject.StorageOption, r.IngestObject.StorageOption)
+			errMismatch := fmt.Sprintf(
+				"Storage option %s for file %s does not match object storage option %s. This shouldn't happen and will lead to mismatched file versions in different storage locations. See https://trello.com/c/C4XlgSNU and https://trello.com/c/ccxvAQkv.",
+				ingestFile.StorageOption,
+				ingestFile.Identifier(),
+				r.IngestObject.StorageOption,
+			)
+			r.Context.Logger.Error(errMismatch)
+			// Don't mark the error as fatal, because we want the
+			// recorder to finish recording all of the info for
+			// this ingest.
+			errors = append(errors, service.NewProcessingError(r.WorkItemID, ingestFile.Identifier(), errMismatch, false))
 		}
-		// We don't yet know the consequences of deleting this line,
-		// so for now, we're going to leave it. If we see the above
-		// messages in the log, we can evaluate from there what to
-		// do. The above message may not ever appear. We'll see.
-		// We're logging this for https://trello.com/c/C4XlgSNU
-		ingestFile.StorageOption = r.IngestObject.StorageOption
 		gf, err := ingestFile.ToGenericFile()
 		if err != nil {
 			errors = append(errors, r.Error(ingestFile.Identifier(), err, true))

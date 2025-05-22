@@ -180,7 +180,7 @@ func (c *RedisClient) GetBatchOfFileKeys(workItemID int64, offset uint64, limit 
 // the the specified workItemID. Note that this saves changes applied
 // by fn back to Redis.
 //
-// This stops processing on the first error and return the number of
+// This stops processing on the first error and returns the number of
 // items on which the function was run successfully.
 //
 // TODO: Change to use IngestFileForeachOptions
