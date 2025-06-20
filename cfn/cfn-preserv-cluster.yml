@@ -2858,7 +2858,7 @@ Resources:
       - Key: Environment
         Value: !Ref "DNS"
       - Key: MicroServ
-        value: recorder
+        Value: recorder
       - Key: Service
         Value: preserv
       TaskDefinition: !Ref IngestrecorderTaskDefinition
