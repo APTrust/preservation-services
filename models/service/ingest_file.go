@@ -30,6 +30,7 @@ type IngestFile struct {
 	NeedsSave            bool                    `json:"needs_save"`
 	ObjectIdentifier     string                  `json:"object_identifier"`
 	PathInBag            string                  `json:"path_in_bag"`
+	PosixMetadata        *PosixMetadata          `json:"posix_metadata"`
 	PremisEvents         []*registry.PremisEvent `json:"premis_events,omitempty"`
 	RegistryURLs         []string                `json:"registry_urls"`
 	SavedToRegistryAt    time.Time               `json:"saved_to_registry_at,omitempty"`
@@ -58,6 +59,7 @@ func NewIngestFile(objIdentifier, pathInBag string) *IngestFile {
 		NeedsSave:        true,
 		ObjectIdentifier: objIdentifier,
 		PathInBag:        pathInBag,
+		PosixMetadata:    &PosixMetadata{},
 		RegistryURLs:     make([]string, 0),
 		StorageOption:    "Standard",
 		StorageRecords:   make([]*StorageRecord, 0),
@@ -260,19 +262,18 @@ func (f *IngestFile) ChecksumsMatch(manifestName string) (bool, error) {
 
 // GetPutOptions returns the metadata we'll need to store with a file
 // in the staging bucket, and later in preservation storage. The metadata
-// inclues the following:
+// includes the following:
 //
 // * institution - The identifier of the institution that owns the file.
 //
 // * bag - The name of the intellectual object to which the file belongs.
 //
 // * bagpath - The path of this file within the original bag. You can derive
-//   the file's identifier by combining institution/bag/bagpath
+// the file's identifier by combining institution/bag/bagpath
 //
 // * md5 - The md5 digest of this file.
 //
 // * sha256 - The sha256 digest of this file.
-//
 func (f *IngestFile) GetPutOptions() (minio.PutObjectOptions, error) {
 	emptyOpts := minio.PutObjectOptions{}
 	md5 := f.GetChecksum(constants.SourceIngest, constants.AlgMd5)
@@ -428,7 +429,6 @@ func (f *IngestFile) initIngestEvents() error {
 	return nil
 }
 
-//
 // TODO: Review this. Fix or remove.
 //
 // URI returns the URL of this file's first storage record.
