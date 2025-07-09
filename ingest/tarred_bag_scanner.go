@@ -110,6 +110,19 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 	ingestFile.Size = header.Size
 	ingestFile.UUID = uuid.New().String()
 
+	// Collect the POSIX metadata for this file.
+	// Note that this data may be missing or incomplete,
+	// depending on what tar library the depositor used
+	// when creating the tarred bag.
+	ingestFile.AccessTime = header.AccessTime
+	ingestFile.ChangeTime = header.ChangeTime
+	ingestFile.Gid = header.Gid
+	ingestFile.Gname = header.Gname
+	ingestFile.ModTime = header.ModTime
+	ingestFile.Mode = header.Mode
+	ingestFile.Uid = header.Uid
+	ingestFile.Uname = header.Uname
+
 	// Note: Setting ingestFile.StorageOption here is pointless because
 	// the scanner doesn't know the correct value for
 	// scanner.IngestObject.StorageOption until after it's parsed the
