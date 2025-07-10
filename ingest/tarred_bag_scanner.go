@@ -116,11 +116,11 @@ func (scanner *TarredBagScanner) initIngestFile(header *tar.Header) (*service.In
 	// when creating the tarred bag.
 	ingestFile.AccessTime = header.AccessTime
 	ingestFile.ChangeTime = header.ChangeTime
-	ingestFile.Gid = header.Gid
+	ingestFile.Gid = int64(header.Gid)
 	ingestFile.Gname = header.Gname
 	ingestFile.ModTime = header.ModTime
 	ingestFile.Mode = header.Mode
-	ingestFile.Uid = header.Uid
+	ingestFile.Uid = int64(header.Uid)
 	ingestFile.Uname = header.Uname
 
 	// Note: Setting ingestFile.StorageOption here is pointless because

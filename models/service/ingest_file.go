@@ -25,7 +25,7 @@ type IngestFile struct {
 	FormatIdentifiedAt   time.Time               `json:"format_identified_at,omitempty"`
 	FormatIdentifiedBy   string                  `json:"format_identified_by,omitempty"`
 	FormatMatchType      string                  `json:"format_match_type,omitempty"`
-	Gid                  int                     `json:"gid"`
+	Gid                  int64                   `json:"gid"`
 	Gname                string                  `json:"gname"`
 	ID                   int64                   `json:"id,omitempty"`
 	InstitutionID        int64                   `json:"institution_id,omitempty"`
@@ -40,7 +40,7 @@ type IngestFile struct {
 	RegistryURLs         []string                `json:"registry_urls"`
 	SavedToRegistryAt    time.Time               `json:"saved_to_registry_at,omitempty"`
 	Size                 int64                   `json:"size"`
-	Uid                  int                     `json:"uid"`
+	Uid                  int64                   `json:"uid"`
 	Uname                string                  `json:"uname"`
 
 	// StorageOption comes from the parent object, which gets from the
@@ -512,6 +512,14 @@ func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 		StorageOption:        f.StorageOption,
 		StorageRecords:       storageRecords,
 		UUID:                 f.UUID,
+		AccessTime:           f.AccessTime,
+		ChangeTime:           f.ChangeTime,
+		Gid:                  f.Gid,
+		Gname:                f.Gname,
+		Mode:                 f.Mode,
+		ModTime:              f.ModTime,
+		Uid:                  f.Uid,
+		Uname:                f.Uname,
 	}, nil
 }
 
