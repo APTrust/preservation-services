@@ -15,8 +15,6 @@ import (
 )
 
 type IngestFile struct {
-	AccessTime           time.Time               `json:"atime"`
-	ChangeTime           time.Time               `json:"ctime"`
 	Checksums            []*IngestChecksum       `json:"checksums"`
 	CopiedToStagingAt    time.Time               `json:"copied_to_staging_at,omitempty"`
 	ErrorMessage         string                  `json:"error_message,omitempty"`
@@ -25,13 +23,10 @@ type IngestFile struct {
 	FormatIdentifiedAt   time.Time               `json:"format_identified_at,omitempty"`
 	FormatIdentifiedBy   string                  `json:"format_identified_by,omitempty"`
 	FormatMatchType      string                  `json:"format_match_type,omitempty"`
-	Gid                  int64                   `json:"gid"`
-	Gname                string                  `json:"gname"`
 	ID                   int64                   `json:"id,omitempty"`
 	InstitutionID        int64                   `json:"institution_id,omitempty"`
 	IntellectualObjectID int64                   `json:"intellectual_object_id,omitempty"`
 	IsReingest           bool                    `json:"is_reingest"`
-	Mode                 int64                   `json:"mode"`
 	ModTime              time.Time               `json:"mtime"`
 	NeedsSave            bool                    `json:"needs_save"`
 	ObjectIdentifier     string                  `json:"object_identifier"`
@@ -40,8 +35,6 @@ type IngestFile struct {
 	RegistryURLs         []string                `json:"registry_urls"`
 	SavedToRegistryAt    time.Time               `json:"saved_to_registry_at,omitempty"`
 	Size                 int64                   `json:"size"`
-	Uid                  int64                   `json:"uid"`
-	Uname                string                  `json:"uname"`
 
 	// StorageOption comes from the parent object, which gets from the
 	// Storage-Option tag or APTrust-Storage-Option tag in the bag. This
@@ -512,14 +505,7 @@ func (f *IngestFile) ToGenericFile() (*registry.GenericFile, error) {
 		StorageOption:        f.StorageOption,
 		StorageRecords:       storageRecords,
 		UUID:                 f.UUID,
-		AccessTime:           f.AccessTime,
-		ChangeTime:           f.ChangeTime,
-		Gid:                  f.Gid,
-		Gname:                f.Gname,
-		Mode:                 f.Mode,
 		ModTime:              f.ModTime,
-		Uid:                  f.Uid,
-		Uname:                f.Uname,
 	}, nil
 }
 

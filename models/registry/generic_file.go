@@ -28,14 +28,7 @@ type GenericFile struct {
 	StorageRecords       []*StorageRecord `json:"storage_records"`
 	UUID                 string           `json:"uuid"`
 	UpdatedAt            time.Time        `json:"updated_at"`
-	AccessTime           time.Time        `json:"atime"`
-	ChangeTime           time.Time        `json:"ctime"`
-	Gid                  int64            `json:"gid"`
-	Gname                string           `json:"gname"`
-	Mode                 int64            `json:"mode"`
 	ModTime              time.Time        `json:"mtime"`
-	Uid                  int64            `json:"uid"`
-	Uname                string           `json:"uname"`
 }
 
 // GenericFileFromJSON converts a JSON representation of a GenericFile
