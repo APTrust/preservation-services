@@ -339,6 +339,24 @@ func (client *RegistryClient) IntellectualObjectPrepareForDelete(id int64) *Regi
 	return resp
 }
 
+// GenerateFailedFixityAlerts calls the admin API endpoint to
+// generate failed fixity check alerts for depositors and APTrust admins.
+//
+// Note that this method takes no params. Registry internally checks
+// the last time it generated failed fixity alerts and then searches
+// for all failed fixity checks between then and now.
+//
+// Typically, we will call this every 24 hours. If we call this
+// more than once on a single calendar day, Registry won't generate
+// any alerts after the first call because we don't want to spam depositors.
+func (client *RegistryClient) GenerateFailedFixityAlerts() *RegistryResponse {
+	relativeURL := fmt.Sprintf("/%s/%s/alerts/generate_failed_fixity_alerts", client.apiPrefix, client.APIVersion)
+	absoluteURL := client.BuildURL(relativeURL)
+	resp := NewRegistryResponse(RegistryFixityAlertSummary)
+	client.DoRequest(resp, "POST", absoluteURL, nil)
+	return resp
+}
+
 // GenericFileByIdentifier returns the GenericFile having the specified
 // identifier. The identifier should be in the format
 // "institution.edu/object_name/path/to/file.ext"

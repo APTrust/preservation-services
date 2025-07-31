@@ -14,6 +14,7 @@ class Build
       "apt_queue_fixity/apt_queue_fixity.go",
       "bag_restorer/bag_restorer.go",
       "file_restorer/file_restorer.go",
+      "fixity_alerter/fixity_alerter.go",
       "glacier_restorer/glacier_restorer.go",
       "ingest_pre_fetch/ingest_pre_fetch.go",
       "ingest_validator/ingest_validator.go",

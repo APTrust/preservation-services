@@ -2,6 +2,7 @@ package network
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -64,6 +65,10 @@ type RegistryResponse struct {
 	// objectType is not PremisEvent.
 	events []*registry.PremisEvent
 
+	// A slice of FailedFixitySummary pointers. Will be nil if
+	// objectType is not RegistryFixityAlert.
+	failedFixitySummaries []*registry.FailedFixitySummary
+
 	// A slice of Institution pointers. Will be nil if
 	// objectType is not Institution.
 	institutions []*registry.Institution
@@ -97,6 +102,7 @@ const (
 	RegistryPremisEvent                           = "PremisEvent"
 	RegistryStorageRecord                         = "StorageRecord"
 	RegistryWorkItem                              = "WorkItem"
+	RegistryFixityAlertSummary                    = "FixityAlertSummary"
 )
 
 // Creates a new RegistryResponse and returns a pointer to it.
@@ -243,6 +249,15 @@ func (resp *RegistryResponse) Checksums() []*registry.Checksum {
 	return resp.checksums
 }
 
+// Returns a list of FixityAlertSummary objects parsed from the
+// HTTP response body.
+func (resp *RegistryResponse) FailedFixitySummaries() []*registry.FailedFixitySummary {
+	if resp.failedFixitySummaries == nil {
+		return make([]*registry.FailedFixitySummary, 0)
+	}
+	return resp.failedFixitySummaries
+}
+
 // Returns the PremisEvent parsed from the HTTP response body, or nil.
 func (resp *RegistryResponse) PremisEvent() *registry.PremisEvent {
 	if resp.events != nil && len(resp.events) > 0 {
@@ -295,12 +310,12 @@ func (resp *RegistryResponse) WorkItems() []*registry.WorkItem {
 // into a list of usable objects. The Registry list response has this
 // structure:
 //
-// {
-//   "count": 500
-//   "next": "https://example.com/objects/per_page=20&page=11"
-//   "previous": "https://example.com/objects/per_page=20&page=9"
-//   "results": [... array of arbitrary objects ...]
-// }
+//	{
+//	  "count": 500
+//	  "next": "https://example.com/objects/per_page=20&page=11"
+//	  "previous": "https://example.com/objects/per_page=20&page=9"
+//	  "results": [... array of arbitrary objects ...]
+//	}
 func (resp *RegistryResponse) UnmarshalJSONList() error {
 	switch resp.objectType {
 	case RegistryIntellectualObject:
@@ -317,9 +332,33 @@ func (resp *RegistryResponse) UnmarshalJSONList() error {
 		return resp.decodeAsStorageRecordList()
 	case RegistryWorkItem:
 		return resp.decodeAsWorkItemList()
+	case RegistryFixityAlertSummary:
+		return resp.decodeAsFixityAlertSummaryList()
 	default:
 		return fmt.Errorf("RegistryObjectType %v not supported", resp.objectType)
 	}
+}
+
+func (resp *RegistryResponse) decodeAsFixityAlertSummaryList() error {
+	if resp.listHasBeenParsed {
+		return nil
+	}
+	data, err := resp.RawResponseData()
+	if err != nil {
+		resp.Error = err
+		return err
+	}
+	fixityAlertResponse := registry.FixityAlertResponse{}
+	resp.Error = json.Unmarshal(data, &fixityAlertResponse)
+	if resp.Error == nil {
+		resp.Error = errors.New(fixityAlertResponse.Error)
+	}
+	resp.Count = len(fixityAlertResponse.Summaries)
+	resp.Next = nil
+	resp.Previous = nil
+	resp.failedFixitySummaries = fixityAlertResponse.Summaries
+	resp.listHasBeenParsed = true
+	return resp.Error
 }
 
 func (resp *RegistryResponse) decodeAsObjectList() error {

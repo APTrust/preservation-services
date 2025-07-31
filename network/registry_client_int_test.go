@@ -669,3 +669,11 @@ func TestWorkItemSave(t *testing.T) {
 	assert.Equal(t, savedWorkItem.Outcome, updatedWorkItem.Outcome)
 	assert.Equal(t, savedWorkItem.Note, updatedWorkItem.Note)
 }
+
+func TestRegistryGenerateFailedFixityAlerts(t *testing.T) {
+	client := GetRegistryClient(t)
+	resp := client.GenerateFailedFixityAlerts()
+	require.Nil(t, resp.Error)
+	summaries := resp.FailedFixitySummaries()
+	assert.NotNil(t, summaries)
+}
