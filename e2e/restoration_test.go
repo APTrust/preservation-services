@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/e2e"
@@ -97,11 +98,20 @@ func validateBag(objIdentifier string) {
 	require.Nil(ctx.T, err, objIdentifier)
 	assert.True(ctx.T, len(ingestFiles) > 0, objIdentifier)
 
+	// Use these dates for ModTime sanity check.
+	january2015 := time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)
+	now := time.Now().UTC()
+
 	for _, gf := range registryFiles {
 
 		// Make sure file was restored with bag
 		restoredFile := ingestFiles[gf.Identifier]
 		require.NotNil(ctx.T, restoredFile, gf.Identifier)
+
+		// Make sure the file has a non-empty mod time.
+		require.False(ctx.T, restoredFile.ModTime.IsZero(), fmt.Sprintf("Empty mod time on file %s", gf.Identifier))
+		require.True(ctx.T, restoredFile.ModTime.After(january2015), fmt.Sprintf("Mod time too early on file %s", gf.Identifier))
+		require.True(ctx.T, restoredFile.ModTime.Before(now), fmt.Sprintf("Mod time too late on file %s", gf.Identifier))
 
 		RegistryLatestSha256 := gf.GetLatestChecksum(constants.AlgSha256)
 		require.NotNil(ctx.T, RegistryLatestSha256, gf.Identifier)
