@@ -316,6 +316,7 @@ func (m *MetadataGatherer) addManifestChecksum(checksum *bagit.Checksum, sourceT
 
 func (m *MetadataGatherer) newIngestFile(relFilePath string) *service.IngestFile {
 	ingestFile := service.NewIngestFile(m.IngestObject.Identifier(), relFilePath)
+	// Replace non printing characters with URL encoded version
 	ingestFile.UUID = uuid.New().String()
 	return ingestFile
 }
