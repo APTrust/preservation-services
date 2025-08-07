@@ -402,6 +402,7 @@ func (r *BagRestorer) _addManifest(manifestFile, manifestType string) error {
 		Typeflag: tar.TypeReg,
 		Mode:     int64(0755),
 		ModTime:  fileInfo.ModTime(),
+		Format:   tar.FormatPAX,
 	}
 
 	// Calculate digests on manifests, but not on tag manifests.
