@@ -320,7 +320,7 @@ func (r *BagRestorer) DeleteStaleManifests() error {
 // GetTarHeader returns a tar header for the specified GenericFile.
 func (r *BagRestorer) GetTarHeader(gf *registry.GenericFile) *tar.Header {
 	pathMinusInstitution, _ := gf.PathMinusInstitution()
-	modTime := gf.FileModified
+	modTime := gf.ModTime
 	if modTime.IsZero() {
 		modTime = time.Now().UTC()
 	}
@@ -330,6 +330,7 @@ func (r *BagRestorer) GetTarHeader(gf *registry.GenericFile) *tar.Header {
 		Typeflag: tar.TypeReg,
 		Mode:     int64(0755),
 		ModTime:  modTime,
+		Format:   tar.FormatPAX,
 	}
 }
 
@@ -346,6 +347,7 @@ func (r *BagRestorer) AddBagItFile() error {
 		Typeflag: tar.TypeReg,
 		Mode:     int64(0755),
 		ModTime:  time.Now().UTC(),
+		Format:   tar.FormatPAX,
 	}
 
 	digests, err := r.tarPipeWriter.AddFile(tarHeader, strings.NewReader(bagitTxt), r.RestorationObject.ManifestAlgorithms())
