@@ -67,6 +67,10 @@ func (r *FileRestorer) getGenericFile() (*registry.GenericFile, error) {
 		return nil, resp.Error
 	}
 	gf := resp.GenericFile()
+
+	// Replace URL encoded characters with the original characters.
+	// gf.Path = strings.Replace(gf.Path, "%E2%80%AF", " ", -1)
+
 	if gf == nil {
 		return nil, fmt.Errorf("Registry returned nil for file %s", r.RestorationObject.Identifier)
 	}
