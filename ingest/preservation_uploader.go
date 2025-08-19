@@ -193,7 +193,7 @@ func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.Ing
 	if util.StringListContains(constants.WasabiStorageProviders, preservationBucket.Provider) {
 		delete(putOptions.UserMetadata, "bagpath") // or else Wasabi rejects this
 		uploader.Context.Logger.Infof("For Wasabi, using header 'bagpath-encoded' with value %s", putOptions.UserMetadata["bagpath-encoded"])
-	} else if strings.Contains(ingestFile.PathInBag, " ") {
+	} else if strings.Contains(ingestFile.PathInBag, constants.NarrowNonBreakingSpace) {
 		delete(putOptions.UserMetadata, "bagpath")
 		uploader.Context.Logger.Infof("A narrow non-breaking space character was detected, using header 'bagpath-encoded' with value %s", putOptions.UserMetadata["bagpath-encoded"])
 	} else {
