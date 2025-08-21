@@ -199,7 +199,7 @@ func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.Ing
 	} else {
 		delete(putOptions.UserMetadata, "bagpath-encoded") // not necessary for other cases
 	}
-
+	
 	uploader.Context.Logger.Infof("Copying %s (%s) from %s to %s using PutObject()", ingestFile.Identifier(), ingestFile.UUID, uploader.Context.Config.StagingBucket, preservationBucket.Bucket)
 
 	uploadInfo, err := destClient.PutObject(
