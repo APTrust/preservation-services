@@ -120,7 +120,7 @@ func (s *StagingUploader) CopyFileToStaging(tarReader *tar.Reader, ingestFile *s
 	bucket := s.Context.Config.StagingBucket
 	key := s.S3KeyFor(ingestFile)
 
-	// Work-around for narrow non-breaking space bug. https://trello.com/c/
+	// Work-around for narrow non-breaking space bug. https://trello.com/c/euql70E3
 	// For a case where a narrow non-breaking space is included in the file path, use bagpath-encoded header. For all others, use bagpath.
 	// Note that UserMetadata initially contains both.
 	if strings.Contains(ingestFile.PathInBag, constants.NarrowNonBreakingSpace) {
