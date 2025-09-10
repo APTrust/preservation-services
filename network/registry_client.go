@@ -354,6 +354,7 @@ func (client *RegistryClient) GenerateFailedFixityAlerts() *RegistryResponse {
 	absoluteURL := client.BuildURL(relativeURL)
 	resp := NewRegistryResponse(RegistryFixityAlertSummary)
 	client.DoRequest(resp, "POST", absoluteURL, nil)
+	resp.UnmarshalJSONList()
 	return resp
 }
 

@@ -673,7 +673,7 @@ func TestWorkItemSave(t *testing.T) {
 func TestRegistryGenerateFailedFixityAlerts(t *testing.T) {
 	client := GetRegistryClient(t)
 	resp := client.GenerateFailedFixityAlerts()
-	require.Nil(t, resp.Error)
+	require.Empty(t, resp.Error)
 	summaries := resp.FailedFixitySummaries()
 	assert.NotNil(t, summaries)
 }
