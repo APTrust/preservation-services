@@ -2,7 +2,6 @@ package network
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -343,20 +342,24 @@ func (resp *RegistryResponse) decodeAsFixityAlertSummaryList() error {
 	if resp.listHasBeenParsed {
 		return nil
 	}
+
+	temp := struct {
+		Count    int                             `json:"count"`
+		Next     *string                         `json:"next"`
+		Previous *string                         `json:"previous"`
+		Results  []*registry.FailedFixitySummary `json:"results"`
+	}{0, nil, nil, nil}
+
 	data, err := resp.RawResponseData()
 	if err != nil {
 		resp.Error = err
 		return err
 	}
-	fixityAlertResponse := registry.FixityAlertResponse{}
-	resp.Error = json.Unmarshal(data, &fixityAlertResponse)
-	if resp.Error == nil {
-		resp.Error = errors.New(fixityAlertResponse.Error)
-	}
-	resp.Count = len(fixityAlertResponse.Summaries)
-	resp.Next = nil
-	resp.Previous = nil
-	resp.failedFixitySummaries = fixityAlertResponse.Summaries
+	resp.Error = json.Unmarshal(data, &temp)
+	resp.Count = temp.Count
+	resp.Next = temp.Next
+	resp.Previous = temp.Previous
+	resp.failedFixitySummaries = temp.Results
 	resp.listHasBeenParsed = true
 	return resp.Error
 }
