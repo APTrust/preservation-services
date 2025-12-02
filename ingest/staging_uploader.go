@@ -38,8 +38,8 @@ func NewStagingUploader(context *common.Context, workItemID int64, ingestObject 
 //
 // 1. Retrieving the tarred bag from the depositor's receiving bucket.
 //
-// 2. Copying the bag's individual files to a staging bucket with correct
-//    metadata.
+//  2. Copying the bag's individual files to a staging bucket with correct
+//     metadata.
 //
 // 3. Telling Redis that each file has been copied.
 //
@@ -120,12 +120,12 @@ func (s *StagingUploader) CopyFileToStaging(tarReader *tar.Reader, ingestFile *s
 	bucket := s.Context.Config.StagingBucket
 	key := s.S3KeyFor(ingestFile)
 
-	// Work-around for narrow non-breaking space bug. https://trello.com/c/euql70E3
-	// For a case where a narrow non-breaking space is included in the file path, use bagpath-encoded header. For all others, use bagpath.
+	// Work-around for whitespace bug. https://trello.com/c/euql70E3
+	// For a case where a whitespace is included in the file path, use bagpath-encoded header. For all others, use bagpath.
 	// Note that UserMetadata initially contains both.
-	if strings.Contains(ingestFile.PathInBag, constants.NarrowNonBreakingSpace) {
+	if strings.Contains(ingestFile.PathInBag, constants.NarrowNonBreakingSpace) || strings.ContainsRune(ingestFile.PathInBag, constants.LineSeparator) {
 		delete(putOptions.UserMetadata, "bagpath")
-		s.Context.Logger.Infof("A narrow non-breaking space character was detected, using header 'bagpath-encoded' with value %s", putOptions.UserMetadata["bagpath-encoded"])
+		s.Context.Logger.Infof("A whitespace character was detected, using header 'bagpath-encoded' with value %s", putOptions.UserMetadata["bagpath-encoded"])
 	} else {
 		delete(putOptions.UserMetadata, "bagpath-encoded") // not necessary for other cases
 	}
