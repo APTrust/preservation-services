@@ -63,6 +63,7 @@ const (
 	IngestStorageValidation    = "ingest07_storage_validation"
 	IngestRecord               = "ingest08_record"
 	IngestCleanup              = "ingest09_cleanup"
+	LineSeparator              = " "
 	MatchTypeContainer         = "container"
 	MatchTypeExtension         = "extension"
 	MatchTypeSignature         = "signature"
