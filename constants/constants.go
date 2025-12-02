@@ -63,7 +63,7 @@ const (
 	IngestStorageValidation    = "ingest07_storage_validation"
 	IngestRecord               = "ingest08_record"
 	IngestCleanup              = "ingest09_cleanup"
-	LineSeparator              = " "
+	LineSeparator              = rune(0x7ec)
 	MatchTypeContainer         = "container"
 	MatchTypeExtension         = "extension"
 	MatchTypeSignature         = "signature"

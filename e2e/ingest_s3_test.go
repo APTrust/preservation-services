@@ -46,7 +46,7 @@ func testS3File(storageRecord *registry.StorageRecord, gf *registry.GenericFile)
 	assert.Equal(ctx.T, objIdentifier, objInfo.UserMetadata["Bag"])
 	pathInBag, err := gf.PathInBag()
 	require.Nil(ctx.T, err)
-	if strings.Contains(gf.StorageOption, "Wasabi") || strings.Contains(pathInBag, constants.NarrowNonBreakingSpace) || strings.Contains(pathInBag, constants.LineSeparator) {
+	if strings.Contains(gf.StorageOption, "Wasabi") || strings.Contains(pathInBag, constants.NarrowNonBreakingSpace) || strings.ContainsRune(pathInBag, constants.LineSeparator) {
 		assert.Equal(ctx.T, url.QueryEscape(pathInBag), objInfo.UserMetadata["Bagpath-Encoded"])
 	} else {
 		assert.Equal(ctx.T, pathInBag, objInfo.UserMetadata["Bagpath"])

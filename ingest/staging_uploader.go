@@ -123,7 +123,7 @@ func (s *StagingUploader) CopyFileToStaging(tarReader *tar.Reader, ingestFile *s
 	// Work-around for whitespace bug. https://trello.com/c/euql70E3
 	// For a case where a whitespace is included in the file path, use bagpath-encoded header. For all others, use bagpath.
 	// Note that UserMetadata initially contains both.
-	if strings.Contains(ingestFile.PathInBag, constants.NarrowNonBreakingSpace) || strings.Contains(ingestFile.PathInBag, constants.LineSeparator) {
+	if strings.Contains(ingestFile.PathInBag, constants.NarrowNonBreakingSpace) || strings.ContainsRune(ingestFile.PathInBag, constants.LineSeparator) {
 		delete(putOptions.UserMetadata, "bagpath")
 		s.Context.Logger.Infof("A whitespace character was detected, using header 'bagpath-encoded' with value %s", putOptions.UserMetadata["bagpath-encoded"])
 	} else {
