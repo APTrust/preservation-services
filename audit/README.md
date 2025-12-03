@@ -4,7 +4,7 @@ The auditor in this directory checks files in preservation storage to ensure
 they look correct. Use this as a sanity check when necessary.
 
 When run with the `-f=false` option, it will issue only HEAD reqeusts to get
-object metadata from S3, Glacier, and Wasabi.
+object metadata from S3 and Glacier.
 
 The auditor does the following checks for each file:
 
@@ -145,15 +145,13 @@ APT_ENV=audit ./audit/audit -i audit/file_ids.csv -f=false
    does not exist. You may have to create that manually.
 
 You must set the following environment variables for the auditor to have
-the credentials required to query the Registry and S3, Glacier, and Wasabi:
+the credentials required to query the Registry and S3 and Glacier:
 
 * PRESERV_REGISTRY_API_KEY - The API key used to access the Registry.
 * PRESERV_REGISTRY_API_USER - The API user (email address) for accessing
   registry.
 * S3_AWS_KEY - The AWS Access Key ID used to access Amazon S3 and Glacier.
 * S3_AWS_SECRET - The AWS Secret Key used to access Amazon S3 and Glacier.
-* S3_WASABI_KEY - The Access Key ID used to access Wasabi.
-* S3_WASABI_SECRET - The Secret Key used to access Wasabi.
 
 ## Output
 
@@ -205,7 +203,7 @@ CheckPassed | True or false, indicating whether the check passed.
 Method | The method used to check the file. Quick Check uses a size and possibly e-tag comparison. Full Check runs a sha256 checksum.
 ReasonForCheck | Indicates why the auditor thought this file needed a full checksum. This will be blank if the Quick Check matches.
 RegistrySize | The size of this file, according to the Registry.
-S3Size | The size of this file, according to S3, Glacier or Wasabi.
+S3Size | The size of this file, according to S3 or Glacier.
 IsGlacierOnlyFile | True or false to indicate wither this file lives in Glacier only.
 NeedsGlacierFixityCheck | True or false indicating whether this Glacier-only file needs a fixity check. If it needs one, you'll have to do that on your own.
 S3Etag | This file's etag in preseration storage.

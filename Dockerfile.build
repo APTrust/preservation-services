@@ -38,11 +38,6 @@ ENV PSERVICE=${PSERVICE}
 ENV S3_AWS_HOST=localhost:9899
 ENV S3_AWS_KEY=minioadmin
 ENV S3_AWS_SECRET=minioadmin
-ENV S3_WASABI_HOST_OR=localhost:9899
-ENV S3_WASABI_HOST_TX=localhost:9899
-ENV S3_WASABI_HOST_VA=localhost:9899
-ENV S3_WASABI_KEY=minioadmin
-ENV S3_WASABI_SECRET=minioadmin
 ENV REDIS_URL=localhost:6379
 ENV RESTORE_DIR=~/tmp/pres-serv/restore
 ENV STAGING_BUCKET=staging
@@ -97,9 +92,6 @@ ENV BUCKET_GLACIER_VA=glacier-va
 ENV BUCKET_GLACIER_DEEP_OH=glacier-deep-oh
 ENV BUCKET_GLACIER_DEEP_OR=glacier-deep-or
 ENV BUCKET_GLACIER_DEEP_VA=glacier-deep-va
-ENV BUCKET_WASABI_OR=wasabi-or
-ENV BUCKET_WASABI_TX=wasabi-tx
-ENV BUCKET_WASABI_VA=wasabi-va
 
 #Fixity Special Vars
 
