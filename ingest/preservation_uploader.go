@@ -188,14 +188,14 @@ func (uploader *PreservationUploader) CopyToPreservation(ingestFile *service.Ing
 	}
 
 	// Work-around for Wasabi multispace header bug. https://trello.com/c/SDasvwk8
-	// For Wasabi, or a case where a narrow non-breaking space is included in the file path, use bagpath-encoded header. For all others, use bagpath.
+	// For Wasabi, or a case where a whitespace is included in the file path, use bagpath-encoded header. For all others, use bagpath.
 	// Note that UserMetadata initially contains both.
 	if util.StringListContains(constants.WasabiStorageProviders, preservationBucket.Provider) {
 		delete(putOptions.UserMetadata, "bagpath") // or else Wasabi rejects this
 		uploader.Context.Logger.Infof("For Wasabi, using header 'bagpath-encoded' with value %s", putOptions.UserMetadata["bagpath-encoded"])
-	} else if strings.Contains(ingestFile.PathInBag, constants.NarrowNonBreakingSpace) {
+	} else if strings.Contains(ingestFile.PathInBag, constants.NarrowNonBreakingSpace) || strings.ContainsRune(ingestFile.PathInBag, constants.LineSeparator) {
 		delete(putOptions.UserMetadata, "bagpath")
-		uploader.Context.Logger.Infof("A narrow non-breaking space character was detected, using header 'bagpath-encoded' with value %s", putOptions.UserMetadata["bagpath-encoded"])
+		uploader.Context.Logger.Infof("A whitespace character was detected, using header 'bagpath-encoded' with value %s", putOptions.UserMetadata["bagpath-encoded"])
 	} else {
 		delete(putOptions.UserMetadata, "bagpath-encoded") // not necessary for other cases
 	}
