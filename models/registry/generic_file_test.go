@@ -40,7 +40,7 @@ var genericFile = &registry.GenericFile{
 			CreatedAt:                    testutil.Bloomsday,
 			DateTime:                     testutil.Bloomsday,
 			Detail:                       "detail?",
-			EventType:                    "accession",
+			EventType:                    3,
 			GenericFileID:                5432,
 			GenericFileIdentifier:        "test.edu/bag/data/index.html",
 			Identifier:                   "you you eye dee",

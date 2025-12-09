@@ -571,7 +571,7 @@ func (b *IngestBase) ObjectAlreadyIngested(workItem *registry.WorkItem) bool {
 		ingestObject, _ := b.IngestObjectGet(workItem)
 
 		eventFilters := url.Values{}
-		eventFilters.Add("event_type", constants.EventIngestion)
+		eventFilters.Add("event_type", constants.EventStringIngestion)
 		eventFilters.Add("intellectual_object_id", strconv.FormatInt(obj.ID, 10))
 		eventFilters.Add("generic_file_id__is_null", "true")
 		eventFilters.Add("date_time__gteq", workItem.CreatedAt.Format(time.RFC3339))
