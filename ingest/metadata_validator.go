@@ -1,6 +1,7 @@
 package ingest
 
 import (
+	errorslib "errors"
 	"fmt"
 	"path"
 	"strings"
@@ -49,7 +50,7 @@ func (v *MetadataValidator) Run() (fileCount int, errors []*service.ProcessingEr
 	// Validation errors are fatal. We can't ingest an invalid bag.
 	if !v.IsValid() {
 		for _, err := range v.Errors {
-			errors = append(errors, v.Error(v.IngestObject.Identifier(), fmt.Errorf(err), true))
+			errors = append(errors, v.Error(v.IngestObject.Identifier(), errorslib.New(err), true))
 		}
 		v.IngestObject.ShouldDeleteFromReceiving = true
 		err := v.IngestObjectSave()
@@ -282,7 +283,7 @@ func (v *MetadataValidator) IngestFileOk(f *service.IngestFile) bool {
 	ok := true
 	_, err := f.IdentifierIsLegal()
 	if err != nil {
-		v.AddError(err.Error())
+		v.AddConstantError(err.Error())
 		ok = false
 	}
 	if !v.ValidateChecksums(f, constants.FileTypeManifest, v.IngestObject.Manifests) {
@@ -317,7 +318,7 @@ func (v *MetadataValidator) ValidateChecksums(f *service.IngestFile, manifestTyp
 		if manifestIsPresent {
 			_, err := f.ChecksumsMatch(manifestName)
 			if err != nil {
-				v.AddError(err.Error())
+				v.AddConstantError(err.Error())
 				ok = false
 			}
 		}
@@ -328,6 +329,14 @@ func (v *MetadataValidator) ValidateChecksums(f *service.IngestFile, manifestTyp
 func (v *MetadataValidator) AddError(format string, a ...interface{}) {
 	if len(v.Errors) < constants.MaxValidationErrors {
 		v.Errors = append(v.Errors, fmt.Sprintf(format, a...))
+	} else if len(v.Errors) == constants.MaxValidationErrors {
+		v.Errors = append(v.Errors, "Too many errors")
+	}
+}
+
+func (v *MetadataValidator) AddConstantError(errstring string) {
+	if len(v.Errors) < constants.MaxValidationErrors {
+		v.Errors = append(v.Errors, fmt.Sprint(errstring))
 	} else if len(v.Errors) == constants.MaxValidationErrors {
 		v.Errors = append(v.Errors, "Too many errors")
 	}

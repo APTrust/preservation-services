@@ -1,6 +1,7 @@
 package workers
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -173,7 +174,7 @@ func (b *Base) HandleMessage(message *nsq.Message) error {
 	workItem, procErr := b.GetWorkItem(message)
 	if procErr != nil && procErr.IsFatal {
 		b.Context.Logger.Error(procErr.Error())
-		return fmt.Errorf(procErr.Error())
+		return errors.New(procErr.Error())
 	}
 
 	// If there's any reason to skip this, return nil to tell
