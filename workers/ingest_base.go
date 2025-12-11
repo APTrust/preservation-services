@@ -1,6 +1,7 @@
 package workers
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -372,7 +373,7 @@ func (b *IngestBase) IngestObjectGet(workItem *registry.WorkItem) (*service.Inge
 		if s3Err != nil && strings.Contains(s3Err.Error(), "key does not exist") {
 			errMsg += "Also, the bag is no longer in the receiving bucket. It may have been deleted due to validation failure or completed ingest, or the depositor may have deleted it."
 		}
-		return nil, fmt.Errorf(errMsg)
+		return nil, errors.New(errMsg)
 	}
 	return service.NewIngestObject(
 		workItem.Bucket,
