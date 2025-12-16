@@ -46,9 +46,9 @@ init: ## Start dependent services for integration tests and development
 	done
 #	- @docker network create --attachable ps_test_network
 	- @docker run --name redis -d -p 6379 redis:6.0.1-alpine redis-server --appendonly yes
-	- @docker run --name nsqlookup -d -p 4160 nsqio/nsq:v1.2.0 nsqlookupd
-	- @docker run --name nsqd -d -p 4151 nsqio/nsq:v1.2.0 nsqd --lookupd-tcp-address=127.0.0.1:4160 --data-path /tmp/nsq
-	- @docker run --name nsqadmin -d -p 4171:4171 nsqio/nsq:v1.2.0 nsqadmin --lookupd-http-address=nslookupd:4161
+	- @docker run --name nsqlookup -d -p 4160 nsqio/nsq:v1.3.0 nsqlookupd
+	- @docker run --name nsqd -d -p 4151 nsqio/nsq:v1.3.0 nsqd --lookupd-tcp-address=127.0.0.1:4160 --data-path /tmp/nsq
+	- @docker run --name nsqadmin -d -p 4171:4171 nsqio/nsq:v1.3.0 nsqadmin --lookupd-http-address=nslookupd:4161
 	- @docker run --name minio -d -p 9899 minio/minio minio server --quiet --address=127.0.0.1:9899 ~/tmp/minio
 	- @docker run --name pharos -d -e PHAROS_ROOT
 

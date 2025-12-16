@@ -52,10 +52,13 @@ func (data *NSQStatsData) GetChannelSummary(topicName, channelName string) (*Cha
 		if c.ChannelName == channelName {
 			found = true
 			for _, client := range c.Clients {
-				summary.FinishCount += client.FinishCount
-				summary.InFlightCount += client.InFlightCount
-				summary.MessageCount += client.MessageCount
-				summary.RequeueCount += client.RequeueCount
+				clientV2, ok := client.(nsqd.ClientV2Stats)
+				if ok {
+					summary.FinishCount += clientV2.FinishCount
+					summary.InFlightCount += clientV2.InFlightCount
+					summary.MessageCount += clientV2.MessageCount
+					summary.RequeueCount += clientV2.RequeueCount
+				}
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 services:
   nsqlookupd:
-    image: nsqio/nsq:v1.2.0
+    image: nsqio/nsq:v1.3.0
     restart: always
     hostname: nsqlookupd
     command: /nsqlookupd
@@ -14,7 +14,7 @@ services:
       - .env.docker
 
   nsqd:
-    image: nsqio/nsq:v1.2.0
+    image: nsqio/nsq:v1.3.0
     restart: always
     hostname: nsqd
     command: /nsqd --data-path=/data --lookupd-tcp-address=nsqlookupd:4160 --broadcast-address=localhost
@@ -28,7 +28,7 @@ services:
       - "4151:4151"
 
   nsqadmin:
-    image: nsqio/nsq:v1.2.0
+    image: nsqio/nsq:v1.3.0
     restart: always
     command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
     # platform: linux/arm64
