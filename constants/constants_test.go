@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/APTrust/preservation-services/constants"
-	"github.com/APTrust/preservation-services/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -109,12 +108,6 @@ func TestTopicFor(t *testing.T) {
 		require.Nil(t, err)
 		assert.Equal(t, item.Expected, topic, "For %s/%s", item.Action, item.Stage)
 	}
-}
-
-func TestWasabiStorageProviders(t *testing.T) {
-	assert.True(t, util.StringListContains(constants.WasabiStorageProviders, constants.StorageWasabiOR))
-	assert.True(t, util.StringListContains(constants.WasabiStorageProviders, constants.StorageWasabiVA))
-	assert.False(t, util.StringListContains(constants.WasabiStorageProviders, constants.StorageStandard))
 }
 
 func TestIngestStageFor(t *testing.T) {

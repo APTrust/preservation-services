@@ -88,7 +88,7 @@ func (a *Auditor) Run() *AuditRecord {
 	record.S3MetaBagName = s3Stats.Metadata.Get("x-amz-meta-bag")
 	record.S3MetaPathInBag = s3Stats.Metadata.Get("x-amz-meta-bagpath")
 	if record.S3MetaPathInBag == "" {
-		// bag path is encoded for Wasabi
+		// bag path is encoded in case of the presence of invisible control characters
 		record.S3MetaPathInBag = s3Stats.Metadata.Get("x-amz-meta-bagpath-encoded")
 	}
 

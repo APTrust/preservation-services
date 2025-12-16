@@ -104,7 +104,7 @@ fixity checks.
 After each major step (ingest + reingest, restoration, and fixity checking), the
 tests ensure that all expected records (objects, files, checksums, storage
 records, premis events, and work items) exist in Pharos and that all files are
-in the right places in S3/Glacier/Wasabi. They also test that temporary records
+in the right places in S3/Glacier. They also test that temporary records
 are cleaned out of Redis, and that temp files are removed from the staging
 bucket.
 

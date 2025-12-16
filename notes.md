@@ -265,8 +265,7 @@ case.
 
 ** It may make sense to run StorageWorkers that read from separate NSQ topics.
 For example, one StorageWorker can handle all objects to be preserved in the AWS
-environment, while another can handle storage in non-AWS environments like
-Wasabi. The system will know from an object's StorageOption property where
+environment, while another can handle storage in non-AWS environments. The system will know from an object's StorageOption property where
 it should be preserved.
 
 # Redis Persistence
