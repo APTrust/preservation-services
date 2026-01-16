@@ -1001,7 +1001,7 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: bagrestorer
         Name: bagrestorer
-      Cpu: "256"
+      Cpu: "2048"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
