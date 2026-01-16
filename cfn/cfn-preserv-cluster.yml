@@ -1001,13 +1001,13 @@ Resources:
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: bagrestorer
         Name: bagrestorer
-      Cpu: "2048"
+      Cpu: "256"
       TaskRoleArn:
         Fn::ImportValue: !Sub "FargateIAMRole-${DNS}"
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'bagrestorer-${FamTag}'
-      Memory: "512"
+      Memory: "2048"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
