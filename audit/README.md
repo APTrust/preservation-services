@@ -152,8 +152,8 @@ the credentials required to query the Registry and S3, Glacier, and Wasabi:
   registry.
 * S3_AWS_KEY - The AWS Access Key ID used to access Amazon S3 and Glacier.
 * S3_AWS_SECRET - The AWS Secret Key used to access Amazon S3 and Glacier.
-* S3_WASABI_KEY - The Access Key ID used to access Wasabi.
-* S3_WASABI_SECRET - The Secret Key used to access Wasabi.
+* S3_NEWSTORAGEOPTION_KEY - The Access Key ID used to access Wasabi.
+* S3_NEWSTORAGEOPTION_SECRET - The Secret Key used to access Wasabi.
 
 ## Output
 

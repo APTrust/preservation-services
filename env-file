@@ -1,11 +1,11 @@
 S3_AWS_HOST=s3.amazonaws.com
 S3_AWS_KEY=arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_KEY
 S3_AWS_SECRET=arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_AWS_SECRET
-S3_WASABI_HOST_OR=s3.us-west-1.wasabisys.com
-S3_WASABI_HOST_TX=s3.us-central-1.wasabisys.com
-S3_WASABI_HOST_VA=s3.us-east-1.wasabisys.com
-S3_WASABI_KEY=arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_KEY
-S3_WASABI_SECRET=arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_WASABI_SECRET
+S3_NEWSTORAGEOPTION_HOST_OR=s3.us-west-1.wasabisys.com
+S3_NEWSTORAGEOPTION_HOST_TX=s3.us-central-1.wasabisys.com
+S3_NEWSTORAGEOPTION_HOST_VA=s3.us-east-1.wasabisys.com
+S3_NEWSTORAGEOPTION_KEY=arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_NEWSTORAGEOPTION_KEY
+S3_NEWSTORAGEOPTION_SECRET=arn:aws:ssm:us-east-1:997427182289:parameter/STAGING/PRESERV/S3_NEWSTORAGEOPTION_SECRET
 BUCKET_STANDARD_OR=aptrust.staging.preservation.oregon
 BUCKET_STANDARD_VA=aptrust.staging.preservation
 BUCKET_GLACIER_OH=aptrust.staging.preservation.glacier.oh
