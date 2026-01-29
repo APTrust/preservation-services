@@ -261,12 +261,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -307,7 +307,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:dcd19c6-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -481,12 +481,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -527,7 +527,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:dcd19c6-master
         LinuxParameters: {}
         SystemControls:
           - Namespace: "net.ipv4.tcp_keepalive_time"
@@ -714,12 +714,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -760,7 +760,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:dcd19c6-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -933,12 +933,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -979,7 +979,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:dcd19c6-master
         LinuxParameters: {}
         SystemControls:
           - Namespace: "net.ipv4.tcp_keepalive_time"
@@ -1007,7 +1007,7 @@ Resources:
       ExecutionRoleArn:
         Fn::ImportValue: !Sub "ECSServiceRole-${DNS}"
       Family: !Sub 'bagrestorer-${FamTag}'
-      Memory: "512"
+      Memory: "2048"
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -1166,12 +1166,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -1212,7 +1212,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:dcd19c6-master
         LinuxParameters: {}
         SystemControls:
           - Namespace: "net.ipv4.tcp_keepalive_time"
@@ -1399,12 +1399,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -1445,7 +1445,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:dcd19c6-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1617,12 +1617,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -1663,7 +1663,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:dcd19c6-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1839,12 +1839,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -1885,7 +1885,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:dcd19c6-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2061,12 +2061,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -2107,7 +2107,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:dcd19c6-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2283,12 +2283,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -2329,7 +2329,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:dcd19c6-master
         LinuxParameters: {}
         SystemControls:
           - Namespace: "net.ipv4.tcp_keepalive_time"
@@ -2520,12 +2520,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -2566,7 +2566,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:dcd19c6-master
         LinuxParameters: {}
         SystemControls:
           - Namespace: "net.ipv4.tcp_keepalive_time"
@@ -2755,12 +2755,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -2801,7 +2801,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:dcd19c6-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2976,12 +2976,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -3022,7 +3022,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:dcd19c6-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3199,12 +3199,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -3245,7 +3245,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:dcd19c6-master
         LinuxParameters: {}
         SystemControls:
           - Namespace: "net.ipv4.tcp_keepalive_time"
@@ -3433,12 +3433,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -3479,7 +3479,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:dcd19c6-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3655,12 +3655,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -3701,7 +3701,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:ff3d0dc-wasabi-infra-removal
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:dcd19c6-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
