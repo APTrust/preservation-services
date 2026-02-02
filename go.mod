@@ -1,8 +1,6 @@
 module github.com/APTrust/preservation-services
 
-go 1.23.0
-
-toolchain go1.23.3
+go 1.24.11
 
 // Force use of nsq v1.2.0 because v1.3.0 has breaking changes.
 replace github.com/nsqio/nsq => github.com/nsqio/nsq v1.2.0
