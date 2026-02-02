@@ -121,7 +121,26 @@ actions manually using interactive testing.
 
 # Interactive Testing
 
-You can launch interactive tests with `./scripts/test.rb interactive`
+Before you run the interactive tests, you need to set up your environment.
+You will need a directory on your system containing the code from the Registry repository.
+You will then need to set an environment variable, REGISTRY_ROOT, to be equal to the absolute
+system path for that directory.
+
+```
+git clone ssh://git@github.com/aptrust/registry.git
+REGISTRY_ROOT="the absolute system path to the registry clone directory"
+```
+
+You can then launch interactive tests with `./scripts/test.rb interactive`
+
+If the prior steps have not been correctly configured, you will see the following message.
+Please check that you have the registry code pulled down and that REGISTRY_ROOT is properly configured
+and pointing to the registry directory on your system.
+
+```
+Set env var REGISTRY_ROOT
+Stopping all services
+```
 
 With interactive tests, you can bag items with DART and push them through the
 ingest, re-ingest, restoration and deletion processes. This can be useful for
