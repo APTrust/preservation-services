@@ -7,8 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-
-	"github.com/nsqio/nsq/nsqd"
 )
 
 type NSQClient struct {
@@ -19,10 +17,77 @@ type NSQClient struct {
 // to NSQ's /stats endpoint, including the number of items in each
 // topic and queue.
 type NSQStatsData struct {
-	Version   string             `json:"version"`
-	Health    string             `json:"status_code"`
-	StartTime uint64             `json:"start_time"`
-	Topics    []*nsqd.TopicStats `json:"topics"`
+	Version   string          `json:"version"`
+	Health    string          `json:"status_code"`
+	StartTime uint64          `json:"start_time"`
+	Topics    []NSQTopicStats `json:"topics"`
+}
+
+type NSQTopicStats struct {
+	TopicName    string            `json:"topic_name"`
+	Channels     []NSQChannelStats `json:"channels"`
+	Depth        int64             `json:"depth"`
+	BackendDepth int64             `json:"backend_depth"`
+	MessageCount uint64            `json:"message_count"`
+	MessageBytes uint64            `json:"message_bytes"`
+	Paused       bool              `json:"paused"`
+
+	E2eProcessingLatency QuantileResult `json:"e2e_processing_latency"`
+}
+
+type NSQChannelStats struct {
+	ChannelName   string             `json:"channel_name"`
+	Depth         int64              `json:"depth"`
+	BackendDepth  int64              `json:"backend_depth"`
+	InFlightCount int                `json:"in_flight_count"`
+	DeferredCount int                `json:"deferred_count"`
+	MessageCount  uint64             `json:"message_count"`
+	RequeueCount  uint64             `json:"requeue_count"`
+	TimeoutCount  uint64             `json:"timeout_count"`
+	ClientCount   int                `json:"client_count"`
+	Clients       []NSQClientV2Stats `json:"clients"`
+	Paused        bool               `json:"paused"`
+
+	E2eProcessingLatency QuantileResult `json:"e2e_processing_latency"`
+}
+
+type QuantileResult struct {
+	Count       int                  `json:"count"`
+	Percentiles []map[string]float64 `json:"percentiles"`
+}
+
+type NSQClientV2Stats struct {
+	ClientID        string `json:"client_id"`
+	Hostname        string `json:"hostname"`
+	Version         string `json:"version"`
+	RemoteAddress   string `json:"remote_address"`
+	State           int32  `json:"state"`
+	ReadyCount      int64  `json:"ready_count"`
+	InFlightCount   int64  `json:"in_flight_count"`
+	MessageCount    uint64 `json:"message_count"`
+	FinishCount     uint64 `json:"finish_count"`
+	RequeueCount    uint64 `json:"requeue_count"`
+	ConnectTime     int64  `json:"connect_ts"`
+	SampleRate      int32  `json:"sample_rate"`
+	Deflate         bool   `json:"deflate"`
+	Snappy          bool   `json:"snappy"`
+	UserAgent       string `json:"user_agent"`
+	Authed          bool   `json:"authed,omitempty"`
+	AuthIdentity    string `json:"auth_identity,omitempty"`
+	AuthIdentityURL string `json:"auth_identity_url,omitempty"`
+
+	PubCounts []PubCount `json:"pub_counts,omitempty"`
+
+	TLS                           bool   `json:"tls"`
+	CipherSuite                   string `json:"tls_cipher_suite"`
+	TLSVersion                    string `json:"tls_version"`
+	TLSNegotiatedProtocol         string `json:"tls_negotiated_protocol"`
+	TLSNegotiatedProtocolIsMutual bool   `json:"tls_negotiated_protocol_is_mutual"`
+}
+
+type PubCount struct {
+	Topic string `json:"topic"`
+	Count uint64 `json:"count"`
 }
 
 type ChannelSummary struct {
@@ -32,10 +97,10 @@ type ChannelSummary struct {
 	RequeueCount  uint64
 }
 
-func (data *NSQStatsData) GetTopic(name string) *nsqd.TopicStats {
+func (data *NSQStatsData) GetTopic(name string) *NSQTopicStats {
 	for _, topic := range data.Topics {
 		if topic.TopicName == name {
-			return topic
+			return &topic
 		}
 	}
 	return nil
@@ -52,13 +117,10 @@ func (data *NSQStatsData) GetChannelSummary(topicName, channelName string) (*Cha
 		if c.ChannelName == channelName {
 			found = true
 			for _, client := range c.Clients {
-				clientV2, ok := client.(nsqd.ClientV2Stats)
-				if ok {
-					summary.FinishCount += clientV2.FinishCount
-					summary.InFlightCount += clientV2.InFlightCount
-					summary.MessageCount += clientV2.MessageCount
-					summary.RequeueCount += clientV2.RequeueCount
-				}
+				summary.FinishCount += client.FinishCount
+				summary.InFlightCount += client.InFlightCount
+				summary.MessageCount += client.MessageCount
+				summary.RequeueCount += client.RequeueCount
 			}
 		}
 	}
