@@ -162,7 +162,7 @@ func testReingestStorageOptions(t *testing.T) {
 		gf := resp.GenericFile()
 		require.Equal(t, 2, len(gf.StorageRecords))
 		for _, sr := range gf.StorageRecords {
-			fmt.Println(sr.URL)
+			fmt.Printf("%s", sr.URL)
 			isStandardStorage := strings.Contains(sr.URL, ctx.Context.Config.BucketStandardOR) || strings.Contains(sr.URL, ctx.Context.Config.BucketStandardVA)
 			assert.True(t, isStandardStorage, sr.URL)
 		}

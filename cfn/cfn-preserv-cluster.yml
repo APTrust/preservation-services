@@ -261,12 +261,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -285,16 +285,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -307,7 +307,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_delete:141ee0f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -481,12 +481,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -505,16 +505,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -527,7 +527,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_fixity:141ee0f-master
         LinuxParameters: {}
         SystemControls:
           - Namespace: "net.ipv4.tcp_keepalive_time"
@@ -714,12 +714,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -738,16 +738,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -760,7 +760,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/apt_queue_fixity:141ee0f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -933,12 +933,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -957,16 +957,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -979,7 +979,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/bag_restorer:141ee0f-master
         LinuxParameters: {}
         SystemControls:
           - Namespace: "net.ipv4.tcp_keepalive_time"
@@ -1166,12 +1166,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -1190,16 +1190,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -1212,7 +1212,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/file_restorer:141ee0f-master
         LinuxParameters: {}
         SystemControls:
           - Namespace: "net.ipv4.tcp_keepalive_time"
@@ -1399,12 +1399,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -1423,16 +1423,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -1445,7 +1445,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/glacier_restorer:141ee0f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1617,12 +1617,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -1641,16 +1641,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -1663,7 +1663,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_bucket_reader:141ee0f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -1839,12 +1839,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -1863,16 +1863,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -1885,7 +1885,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_cleanup:141ee0f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2061,12 +2061,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -2085,16 +2085,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -2107,7 +2107,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_format_identifier:141ee0f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2283,12 +2283,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -2307,16 +2307,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -2329,7 +2329,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_pre_fetch:141ee0f-master
         LinuxParameters: {}
         SystemControls:
           - Namespace: "net.ipv4.tcp_keepalive_time"
@@ -2376,7 +2376,7 @@ Resources:
         MinimumHealthyPercent: 100
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
+      DesiredCount: 2
       EnableExecuteCommand: true
     #  LaunchType: FARGATE
       NetworkConfiguration:
@@ -2520,12 +2520,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -2544,16 +2544,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -2566,7 +2566,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_uploader:141ee0f-master
         LinuxParameters: {}
         SystemControls:
           - Namespace: "net.ipv4.tcp_keepalive_time"
@@ -2755,12 +2755,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -2779,16 +2779,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -2801,7 +2801,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_preservation_verifier:141ee0f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -2976,12 +2976,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -3000,16 +3000,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -3022,7 +3022,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_recorder:141ee0f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3199,12 +3199,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -3223,16 +3223,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -3245,7 +3245,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_staging_uploader:141ee0f-master
         LinuxParameters: {}
         SystemControls:
           - Namespace: "net.ipv4.tcp_keepalive_time"
@@ -3433,12 +3433,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -3457,16 +3457,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -3479,7 +3479,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/ingest_validator:141ee0f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3655,12 +3655,12 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_OR
         - Name: BUCKET_STANDARD_VA
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_STANDARD_VA
-        - Name: BUCKET_WASABI_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_OR
-        - Name: BUCKET_WASABI_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_TX
-        - Name: BUCKET_WASABI_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_WASABI_VA
+        - Name: BUCKET_NEWSTORAGEOPTION_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_OR
+        - Name: BUCKET_NEWSTORAGEOPTION_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_TX
+        - Name: BUCKET_NEWSTORAGEOPTION_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/BUCKET_NEWSTORAGEOPTION_VA
         - Name: NSQ_LOOKUPD
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/NSQ_LOOKUP
         - Name: NSQ_URL
@@ -3679,16 +3679,16 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_KEY
         - Name: S3_AWS_SECRET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_AWS_SECRET
-        - Name: S3_WASABI_HOST_OR
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_OR
-        - Name: S3_WASABI_HOST_TX
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_TX
-        - Name: S3_WASABI_HOST_VA
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_HOST_VA
-        - Name: S3_WASABI_KEY
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_KEY
-        - Name: S3_WASABI_SECRET
-          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_WASABI_SECRET
+        - Name: S3_NEWSTORAGEOPTION_HOST_OR
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_OR
+        - Name: S3_NEWSTORAGEOPTION_HOST_TX
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_TX
+        - Name: S3_NEWSTORAGEOPTION_HOST_VA
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_HOST_VA
+        - Name: S3_NEWSTORAGEOPTION_KEY
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_KEY
+        - Name: S3_NEWSTORAGEOPTION_SECRET
+          ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/S3_NEWSTORAGEOPTION_SECRET
         - Name: STAGING_BUCKET
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/STAGING_BUCKET
         - Name: QUEUE_FIXITY_INTERVAL
@@ -3701,7 +3701,7 @@ Resources:
           ValueFrom: !Sub arn:aws:ssm:us-east-1:997427182289:parameter/${Envn}/PRESERV/INGEST_BUCKET_READER_INTERVAL
         Essential: true
         StopTimeout: 120
-        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:dcd19c6-master
+        Image: 997427182289.dkr.ecr.us-east-1.amazonaws.com/docker-hub/aptrust/reingest_manager:141ee0f-master
         LinuxParameters: {}
         LogConfiguration:
           LogDriver: awslogs
@@ -3939,140 +3939,140 @@ Resources:
 
   #Uploader Alarms and Scaling Policies
 
-  AutoScalingPreservUploadTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Properties:
-      MinCapacity: 2
-      MaxCapacity: !Ref MaxContainers
-      ResourceId: !Join
-        - '/'
-        - - service
-          - !Ref Cluster
-          - !GetAtt IngestpreservationuploaderService.Name
-      ScalableDimension: ecs:service:DesiredCount
-      ServiceNamespace: ecs
-      RoleARN:
-        Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
+  #AutoScalingPreservUploadTarget:
+  #  Type: AWS::ApplicationAutoScaling::ScalableTarget
+  #  Properties:
+  #    MinCapacity: 2
+  #    MaxCapacity: !Ref MaxContainers
+  #    ResourceId: !Join
+  #      - '/'
+  #      - - service
+  #        - !Ref Cluster
+  #        - !GetAtt IngestpreservationuploaderService.Name
+  #    ScalableDimension: ecs:service:DesiredCount
+  #    ServiceNamespace: ecs
+  #    RoleARN:
+  #      Fn::ImportValue: !Sub "AutoScalingRole-${DNS}"
 
-  ScaleUpPreservUploadPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '${IngestpreservationuploaderService}MemoryScaleUpPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 120
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalLowerBound: 0
-            MetricIntervalUpperBound: 650
-            ScalingAdjustment: 1
-          - MetricIntervalLowerBound: 650
-            #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2
-
-
-  ScaleDownPreservUploadPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '${IngestpreservationuploaderService}MemoryScaleDownPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 120
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalUpperBound: 0
-            ScalingAdjustment: -1
-
-  ScaleUpPreservUploadCPUPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '{IngestpreservationuploaderService}CPUScaleUpPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 120
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalLowerBound: 0
-            MetricIntervalUpperBound: 650
-            ScalingAdjustment: 1
-          - MetricIntervalLowerBound: 650
-            #MetricIntervalUpperBound: 1200
-            ScalingAdjustment: 2
-
-  ScaleDownPreservUploadCPUPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: !Sub '${IngestpreservationuploaderService}CPUScaleDownPolicy'
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref AutoScalingPreservUploadTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 200
-        MetricAggregationType: Average
-        StepAdjustments:
-          - MetricIntervalLowerBound: 0
-            ScalingAdjustment: -1
+  #ScaleUpPreservUploadPolicy:
+  #  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #  Properties:
+  #    PolicyName: !Sub '${IngestpreservationuploaderService}MemoryScaleUpPolicy'
+  #    PolicyType: StepScaling
+  #    ScalingTargetId: !Ref AutoScalingPreservUploadTarget
+  #    StepScalingPolicyConfiguration:
+  #      AdjustmentType: ChangeInCapacity
+  #      Cooldown: 120
+  #      MetricAggregationType: Average
+  #      StepAdjustments:
+  #        - MetricIntervalLowerBound: 0
+  #          MetricIntervalUpperBound: 650
+  #          ScalingAdjustment: 1
+  #        - MetricIntervalLowerBound: 650
+  #          #MetricIntervalUpperBound: 1200
+  #          ScalingAdjustment: 2
 
 
-  AlarmHighMemoryPreservUpload:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled: TRUE
-      AlarmActions:
-        - !Ref ScaleUpPreservUploadPolicy
-      AlarmDescription: 'Scaling alarm based on memory usage for ecs-upload'
-      ComparisonOperator: GreaterThanThreshold
-      DatapointsToAlarm: 2
+  #ScaleDownPreservUploadPolicy:
+  #  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #  Properties:
+  #    PolicyName: !Sub '${IngestpreservationuploaderService}MemoryScaleDownPolicy'
+  #    PolicyType: StepScaling
+  #    ScalingTargetId: !Ref AutoScalingPreservUploadTarget
+  #    StepScalingPolicyConfiguration:
+  #      AdjustmentType: ChangeInCapacity
+  #      Cooldown: 120
+  #      MetricAggregationType: Average
+  #      StepAdjustments:
+  #        - MetricIntervalUpperBound: 0
+  #          ScalingAdjustment: -1
+
+  #ScaleUpPreservUploadCPUPolicy:
+  #  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #  Properties:
+  #    PolicyName: !Sub '{IngestpreservationuploaderService}CPUScaleUpPolicy'
+  #    PolicyType: StepScaling
+  #    ScalingTargetId: !Ref AutoScalingPreservUploadTarget
+  #    StepScalingPolicyConfiguration:
+  #      AdjustmentType: ChangeInCapacity
+  #      Cooldown: 120
+  #      MetricAggregationType: Average
+  #      StepAdjustments:
+  #        - MetricIntervalLowerBound: 0
+  #          MetricIntervalUpperBound: 650
+  #          ScalingAdjustment: 1
+  #        - MetricIntervalLowerBound: 650
+  #          #MetricIntervalUpperBound: 1200
+  #          ScalingAdjustment: 2
+
+  #ScaleDownPreservUploadCPUPolicy:
+  #  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #  Properties:
+  #    PolicyName: !Sub '${IngestpreservationuploaderService}CPUScaleDownPolicy'
+  #    PolicyType: StepScaling
+  #    ScalingTargetId: !Ref AutoScalingPreservUploadTarget
+  #    StepScalingPolicyConfiguration:
+  #      AdjustmentType: ChangeInCapacity
+  #      Cooldown: 200
+  #      MetricAggregationType: Average
+  #      StepAdjustments:
+  #        - MetricIntervalLowerBound: 0
+  #          ScalingAdjustment: -1
+
+
+  #AlarmHighMemoryPreservUpload:
+  #  Type: AWS::CloudWatch::Alarm
+  #  Properties:
+  #    ActionsEnabled: TRUE
+  #    AlarmActions:
+  #      - !Ref ScaleUpPreservUploadPolicy
+  #    AlarmDescription: 'Scaling alarm based on memory usage for ecs-upload'
+  #    ComparisonOperator: GreaterThanThreshold
+  #    DatapointsToAlarm: 2
       # the dimensions can be found in the console after selecting a namespace to filter by
-      Dimensions:
-        - Name: ClusterName
-          Value: !Sub "ecs-preserv-${DNS}"
-        - Name: ServiceName
-          Value: ecs-uploader
-      EvaluationPeriods: 3
+  #    Dimensions:
+  #      - Name: ClusterName
+  #        Value: !Sub "ecs-preserv-${DNS}"
+  #      - Name: ServiceName
+  #        Value: ecs-uploader
+  #    EvaluationPeriods: 3
       # the metric name can be found in the console on the screen before a metric is graphed
-      MetricName: MemoryUtilized
+  #    MetricName: MemoryUtilized
       # the namespace can be found in the console on the first screen before filtering metrics
-      Namespace: ECS/ContainerInsights
-      OKActions:
-        - !Ref ScaleDownPreservUploadPolicy
-      Statistic: Sum
-      Period: 60
-      Threshold: 350
-      TreatMissingData: ignore
+  #    Namespace: ECS/ContainerInsights
+  #    OKActions:
+  #      - !Ref ScaleDownPreservUploadPolicy
+  #    Statistic: Sum
+  #    Period: 60
+  #    Threshold: 350
+  #    TreatMissingData: ignore
 
-  AlarmHighCPUPreservUploader:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled: TRUE
-      AlarmActions:
-        - !Ref ScaleUpPreservUploadCPUPolicy
-      AlarmDescription: 'Scaling alarm based on cpu usage for ecs-uploader'
-      ComparisonOperator: GreaterThanThreshold
-      DatapointsToAlarm: 2
+  #AlarmHighCPUPreservUploader:
+  #  Type: AWS::CloudWatch::Alarm
+  #  Properties:
+  #    ActionsEnabled: TRUE
+  #    AlarmActions:
+  #      - !Ref ScaleUpPreservUploadCPUPolicy
+  #    AlarmDescription: 'Scaling alarm based on cpu usage for ecs-uploader'
+  #    ComparisonOperator: GreaterThanThreshold
+  #    DatapointsToAlarm: 2
       # the dimensions can be found in the console after selecting a namespace to filter by
-      Dimensions:
-        - Name: ClusterName
-          Value: !Sub "ecs-preserv-${DNS}"
-        - Name: ServiceName
-          Value: ecs-uploader
-      EvaluationPeriods: 3
+  #    Dimensions:
+  #      - Name: ClusterName
+  #        Value: !Sub "ecs-preserv-${DNS}"
+  #      - Name: ServiceName
+  #        Value: ecs-uploader
+  #    EvaluationPeriods: 3
       # the metric name can be found in the console on the screen before a metric is graphed
-      MetricName: CpuUtilized
+  #    MetricName: CpuUtilized
       # the namespace can be found in the console on the first screen before filtering metrics
-      Namespace: ECS/ContainerInsights
-      OKActions:
-        - !Ref ScaleDownPreservUploadCPUPolicy
-      Statistic: Sum
-      Period: 60
-      Threshold: 70
-      TreatMissingData: ignore
+  #    Namespace: ECS/ContainerInsights
+  #    OKActions:
+  #      - !Ref ScaleDownPreservUploadCPUPolicy
+  #    Statistic: Sum
+  #    Period: 60
+  #    Threshold: 70
+  #    TreatMissingData: ignore
 
   #Fixity Alarm and Scaling Policies
 

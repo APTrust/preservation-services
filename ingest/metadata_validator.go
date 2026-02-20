@@ -344,7 +344,7 @@ func (v *MetadataValidator) AnythingGoes(list []string) bool {
 	// There's actually more nuance than that, as any items in a required
 	// list must also be in an allowed list. We should validate that when
 	// validating the profile, not here.
-	return list == nil || len(list) == 0 || util.StringListContains(list, "*")
+	return len(list) == 0 || util.StringListContains(list, "*")
 }
 
 func (v *MetadataValidator) ValidateAllowed(filetype string, allowedInProfile, presentInBag []string) bool {
