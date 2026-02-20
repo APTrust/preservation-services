@@ -49,7 +49,7 @@ func (v *MetadataValidator) Run() (fileCount int, errors []*service.ProcessingEr
 	// Validation errors are fatal. We can't ingest an invalid bag.
 	if !v.IsValid() {
 		for _, err := range v.Errors {
-			errors = append(errors, v.Error(v.IngestObject.Identifier(), fmt.Errorf(err), true))
+			errors = append(errors, v.Error(v.IngestObject.Identifier(), fmt.Errorf("%s", err), true))
 		}
 		v.IngestObject.ShouldDeleteFromReceiving = true
 		err := v.IngestObjectSave()
@@ -282,7 +282,7 @@ func (v *MetadataValidator) IngestFileOk(f *service.IngestFile) bool {
 	ok := true
 	_, err := f.IdentifierIsLegal()
 	if err != nil {
-		v.AddError(err.Error())
+		v.AddError("%s", err.Error())
 		ok = false
 	}
 	if !v.ValidateChecksums(f, constants.FileTypeManifest, v.IngestObject.Manifests) {
@@ -317,7 +317,7 @@ func (v *MetadataValidator) ValidateChecksums(f *service.IngestFile, manifestTyp
 		if manifestIsPresent {
 			_, err := f.ChecksumsMatch(manifestName)
 			if err != nil {
-				v.AddError(err.Error())
+				v.AddError("%s", err.Error())
 				ok = false
 			}
 		}
