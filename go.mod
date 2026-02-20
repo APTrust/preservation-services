@@ -2,16 +2,12 @@ module github.com/APTrust/preservation-services
 
 go 1.24.11
 
-// Force use of nsq v1.2.0 because v1.3.0 has breaking changes.
-replace github.com/nsqio/nsq => github.com/nsqio/nsq v1.2.0
-
 require (
 	github.com/go-redis/redis/v7 v7.4.1
 	github.com/google/uuid v1.6.0
 	github.com/minio/minio-go/v7 v7.0.89
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/nsqio/go-nsq v1.1.0
-	github.com/nsqio/nsq v1.2.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/richardlehane/siegfried v1.11.4
 	github.com/spf13/viper v1.21.0
@@ -19,16 +15,13 @@ require (
 )
 
 require (
-	github.com/blang/semver v3.5.1+incompatible // indirect
-	github.com/bmizerany/perks v0.0.0-20141205001514-d9a9656a3a4b // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
-	github.com/golang/snappy v0.0.1 // indirect
-	github.com/julienschmidt/httprouter v1.2.0 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/minio/crc64nvme v1.0.1 // indirect
