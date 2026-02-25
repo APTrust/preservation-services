@@ -69,7 +69,7 @@ services:
       image: aptrust/glacier_restorer:${DOCKER_TAG_NAME:-latest}
       <<: *default
    nsqlookupd:
-      image: nsqio/nsq:v1.2.0
+      image: nsqio/nsq:v1.3.0
       restart: always
       hostname: nsqlookupd
       command: /nsqlookupd
@@ -83,7 +83,7 @@ services:
       env_file:
          - .env.docker
    nsqd:
-      image: nsqio/nsq:v1.2.0
+      image: nsqio/nsq:v1.3.0
       hostname: nsqd
       restart: always
       command: /nsqd --lookupd-tcp-address=${NSQ_LOOKUPD_TCP_ADDRESS} --data-path=/data --broadcast-address=${NSQ_BROADCAST_ADDRESS} --msg-timeout=${NSQ_MSG_TIMEOUT} --max-msg-timeout=${NSQ_MAX_MSG_TIMEOUT} --max-msg-size=${NSQ_MAX_MSG_SIZE} -mem-queue-size=${NSQ_MEM_QUEUE_SIZE} -max-req-timeout=${NSQ_MAX_REQ_TIMEOUT} -max-heartbeat-interval=${NSQ_MAX_HEARTBEAT_INTERVAL}
@@ -103,7 +103,7 @@ services:
          - "4151:4151"
 # TODO: needs labels for basicauth and routable address
    nsqadmin:
-      image: nsqio/nsq:v1.2.0
+      image: nsqio/nsq:v1.3.0
       restart: always
       command: /nsqadmin --lookupd-http-address=${NSQ_LOOKUPD_HTTP_ADDRESS}
       depends_on:
