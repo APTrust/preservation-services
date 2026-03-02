@@ -136,7 +136,14 @@ func (r *BagRestorer) initUploader() {
 
 	go func() {
 		s3Client := r.Context.S3Clients[constants.StorageProviderAWS]
-		//s3Client.TraceOn(nil)
+
+		// NOTE: For debugging complex issues with the S3 client,
+		// uncommenting the TraceOn line in INCREDIBLY useful.
+		// Just don't do this in production, if you can help it,
+		// because it will output a ton of info to STDOUT for every
+		// file we upload.
+		//
+		// s3Client.TraceOn(nil)
 
 		defer func() {
 			if rec := recover(); rec != nil {
@@ -153,6 +160,14 @@ func (r *BagRestorer) initUploader() {
 		// impossible for us to predict the exact size of the
 		// restored bag because sizes of tag files and manifests
 		// vary.
+		//
+		// When size is -1, Minio SDK uses multipart upload.
+		// AutoChecksum causes issues with multipart uploads of
+		// unknown size because the SDK sends FULL_OBJECT checksum
+		// type in CompleteMultipartUpload with a part checksum,
+		// which doesn't match the server's computation.
+		// So we disable AutoChecksum for streaming uploads.
+		putOpts := minio.PutObjectOptions{}
 		var uploadInfo minio.UploadInfo
 		uploadInfo, r.uploadError = s3Client.PutObject(
 			ctx.Background(),
@@ -160,7 +175,7 @@ func (r *BagRestorer) initUploader() {
 			r.RestorationObject.Identifier+".tar",
 			r.tarPipeWriter.GetReader(),
 			-1,
-			r.Context.Config.MinioDefaultPutOptions,
+			putOpts,
 		)
 		r.bytesWritten = uploadInfo.Size
 		r.Context.Logger.Infof("Finished uploading tar file %s", r.RestorationObject.Identifier)
