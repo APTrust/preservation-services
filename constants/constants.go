@@ -14,6 +14,7 @@ const (
 	ActionIngest               = "Ingest"
 	ActionRestoreFile          = "Restore File"
 	ActionRestoreObject        = "Restore Object"
+	AdminAPIPrefix             = "admin-api"
 	AlgMd5                     = "md5"
 	AlgSha1                    = "sha1"
 	AlgSha256                  = "sha256"
@@ -70,6 +71,7 @@ const (
 	MaxS3ObjectSize            = int64(5497558138880) // 5TB
 	MaxServerSideCopySize      = int64(5368709120)    // 5GB
 	MaxValidationErrors        = 30
+	MemberAPIPrefix            = "member-api" // DART uses this
 	NarrowNonBreakingSpace     = " "
 	OutcomeFailure             = "Failure"
 	OutcomeSuccess             = "Success"

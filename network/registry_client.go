@@ -31,7 +31,7 @@ type RegistryClient struct {
 
 // NewRegistryClient creates a new registry client. Param HostUrl should
 // come from the config.json file.
-func NewRegistryClient(HostURL, APIVersion, APIUser, APIKey string, logger *logging.Logger) (*RegistryClient, error) {
+func NewRegistryClient(HostURL, APIVersion, APIUser, APIKey, APIPrefix string, logger *logging.Logger) (*RegistryClient, error) {
 	if !util.TestsAreRunning() && (APIUser == "" || APIKey == "") {
 		panic("Env vars REGISTRY_API_USER and REGISTRY_API_KEY cannot be empty.")
 	}
@@ -69,7 +69,7 @@ func NewRegistryClient(HostURL, APIVersion, APIUser, APIKey string, logger *logg
 		APIVersion: APIVersion,
 		APIUser:    APIUser,
 		APIKey:     APIKey,
-		apiPrefix:  "admin-api",
+		apiPrefix:  APIPrefix,
 		logger:     logger,
 		httpClient: httpClient,
 		transport:  transport}, nil
