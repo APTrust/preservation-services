@@ -4,6 +4,7 @@ import (
 	ctx "context"
 	"fmt"
 
+	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/network"
 	"github.com/APTrust/preservation-services/util/logger"
 	"github.com/minio/minio-go/v7"
@@ -67,6 +68,7 @@ func getRegistryClient(config *Config, logger *logging.Logger) *network.Registry
 		config.RegistryAPIVersion,
 		config.RegistryAPIUser,
 		config.RegistryAPIKey,
+		constants.AdminAPIPrefix,
 		logger)
 	if err != nil {
 		msg := fmt.Sprintf("Could not initialize Registry client: %v", err)
