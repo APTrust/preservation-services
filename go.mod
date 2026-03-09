@@ -1,6 +1,6 @@
 module github.com/APTrust/preservation-services
 
-go 1.24.11
+go 1.25
 
 // Force use of nsq v1.2.0 because v1.3.0 has breaking changes.
 replace github.com/nsqio/nsq => github.com/nsqio/nsq v1.2.0
@@ -8,7 +8,7 @@ replace github.com/nsqio/nsq => github.com/nsqio/nsq v1.2.0
 require (
 	github.com/go-redis/redis/v7 v7.4.1
 	github.com/google/uuid v1.6.0
-	github.com/minio/minio-go/v7 v7.0.89
+	github.com/minio/minio-go/v7 v7.0.99
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/nsqio/nsq v1.2.0
@@ -26,15 +26,16 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
-	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/julienschmidt/httprouter v1.2.0 // indirect
-	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
-	github.com/minio/crc64nvme v1.0.1 // indirect
+	github.com/klauspost/compress v1.18.2 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
+	github.com/klauspost/crc32 v1.3.0 // indirect
+	github.com/minio/crc64nvme v1.1.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/nsqio/go-diskqueue v0.0.0-20180306152900-74cfbc9de839 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
+	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/richardlehane/characterize v1.0.0 // indirect
 	github.com/richardlehane/match v1.0.5 // indirect
@@ -50,10 +51,11 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/tinylib/msgp v1.6.1 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/image v0.35.0 // indirect
-	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
