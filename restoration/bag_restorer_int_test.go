@@ -109,7 +109,8 @@ func setup(t *testing.T, context *common.Context) {
 				bucket,
 				file.Name(),
 				fullpath,
-				minio.PutObjectOptions{})
+				minio.PutObjectOptions{},
+			)
 			require.Nil(t, err)
 		}
 	}
