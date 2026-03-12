@@ -67,7 +67,7 @@ func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingErr
 	if m.IngestObject.S3Key == "miami.edu.asm0314_2.tar" {
 		m.Context.Logger.Infof("Turning on trace for 7TB Miami bag")
 		client := m.Context.S3Clients[m.IngestObject.S3Bucket]
-		client.TraceOn(nil)
+		client.TraceOn(os.Stdout)
 	}
 	// End Section 1
 
