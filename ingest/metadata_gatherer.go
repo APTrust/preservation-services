@@ -63,11 +63,28 @@ func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingErr
 		m.Context.RedisClient.WorkItemDelete(m.WorkItemID)
 	}
 
+	// Miami 7TB bag debug code - Section 1
+	if m.IngestObject.S3Key == "miami.edu.asm0314_2.tar" {
+		m.Context.Logger.Infof("Turning on trace for 7TB Miami bag")
+		client := m.Context.S3Clients[m.IngestObject.S3Bucket]
+		client.TraceOn(nil)
+	}
+	// End Section 1
+
 	tarredBag, err := m.Context.S3GetObject(
 		constants.StorageProviderAWS,
 		m.IngestObject.S3Bucket,
 		m.IngestObject.S3Key,
 	)
+
+	// Miami 7TB bag debug code - Section 2
+	if m.IngestObject.S3Key == "miami.edu.asm0314_2.tar" {
+		m.Context.Logger.Infof("Turning off trace for 7TB Miami bag")
+		client := m.Context.S3Clients[m.IngestObject.S3Bucket]
+		client.TraceOff()
+	}
+	// End Section 2
+
 	if err != nil {
 		isFatal := false
 		if strings.Contains(err.Error(), "key does not exist") {
