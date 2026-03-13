@@ -63,11 +63,24 @@ func (m *MetadataGatherer) Run() (fileCount int, errors []*service.ProcessingErr
 		m.Context.RedisClient.WorkItemDelete(m.WorkItemID)
 	}
 
-	tarredBag, err := m.Context.S3GetObject(
-		constants.StorageProviderAWS,
-		m.IngestObject.S3Bucket,
-		m.IngestObject.S3Key,
-	)
+	var tarredBag io.ReadCloser
+	var err error
+
+	// Choose how to get the bag. If it's over 5TB, we need
+	// to call GetLargeObject.
+	if m.IngestObject.Size <= constants.MaxS3RequestSize {
+		tarredBag, err = m.Context.S3GetObject(
+			constants.StorageProviderAWS,
+			m.IngestObject.S3Bucket,
+			m.IngestObject.S3Key,
+		)
+	} else {
+		tarredBag, err = m.Context.GetLargeObject(
+			constants.StorageProviderAWS,
+			m.IngestObject.S3Bucket,
+			m.IngestObject.S3Key,
+		)
+	}
 
 	if err != nil {
 		isFatal := false

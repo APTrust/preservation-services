@@ -3,6 +3,8 @@ package common
 import (
 	ctx "context"
 	"fmt"
+	"io"
+	"math"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/network"
@@ -139,7 +141,10 @@ func (context *Context) S3StatObject(provider, bucket, key string) (minio.Object
 	return info, err
 }
 
+// S3GetObject retrieves objects of up to 5TB from S3.
+// For objects larger than 5TB, use GetLargeObject().
 func (context *Context) S3GetObject(provider, bucket, key string) (*minio.Object, error) {
+	context.Logger.Infof("Retrieving object %s from bucket %s", key, bucket)
 	client := context.S3Clients[bucket]
 	if client == nil {
 		client = context.S3Clients[provider]
@@ -148,4 +153,80 @@ func (context *Context) S3GetObject(provider, bucket, key string) (*minio.Object
 		return nil, fmt.Errorf("No S3 client for provider %s or bucket %s", provider, bucket)
 	}
 	return client.GetObject(ctx.Background(), bucket, key, minio.GetObjectOptions{})
+}
+
+const (
+	minChunkSize    = 64 * 1024 * 1024       // 64 MiB
+	maxChunkSize    = 5 * 1024 * 1024 * 1024 // 5 GiB (S3 max part size)
+	targetPartCount = 10000
+)
+
+// ComputeChunkSize computes the chunk size for retrieving a large
+// object (> 5TB) from S3.
+func (context *Context) ComputeChunkSize(objectSize int64) int64 {
+	chunkSize := int64(math.Ceil(float64(objectSize / targetPartCount)))
+	if chunkSize < minChunkSize {
+		chunkSize = minChunkSize
+	}
+	if chunkSize > maxChunkSize {
+		chunkSize = maxChunkSize
+	}
+	return chunkSize
+}
+
+// GetLargeObject returns a ReadCloser to download large objects
+// (> 5TB) from S3.
+func (context *Context) GetLargeObject(provider, bucket, key string) (io.ReadCloser, error) {
+	context.Logger.Infof("Retrieving large object %s from bucket %s", key, bucket)
+	client := context.S3Clients[bucket]
+	if client == nil {
+		client = context.S3Clients[provider]
+	}
+	if client == nil {
+		return nil, fmt.Errorf("No S3 client for provider %s or bucket %s", provider, bucket)
+	}
+	info, err := client.StatObject(ctx.Background(), bucket, key, minio.StatObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	chunkSize := context.ComputeChunkSize(info.Size)
+	pr, pw := io.Pipe()
+
+	go func() {
+		var writeErr error
+		var offset int64
+
+		for offset < info.Size {
+			end := offset + chunkSize - 1
+			if end >= info.Size {
+				end = info.Size - 1
+			}
+
+			opts := minio.GetObjectOptions{}
+			if err := opts.SetRange(offset, end); err != nil {
+				writeErr = err
+				break
+			}
+
+			obj, err := client.GetObject(ctx.Background(), bucket, key, opts)
+			if err != nil {
+				writeErr = err
+				break
+			}
+
+			if _, err := io.Copy(pw, obj); err != nil {
+				obj.Close()
+				writeErr = err
+				break
+			}
+			obj.Close()
+
+			offset = end + 1
+		}
+
+		pw.CloseWithError(writeErr)
+	}()
+
+	return pr, nil
 }
