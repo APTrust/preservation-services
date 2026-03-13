@@ -68,7 +68,7 @@ const (
 	MatchTypeContainer         = "container"
 	MatchTypeExtension         = "extension"
 	MatchTypeSignature         = "signature"
-	MaxS3ObjectSize            = int64(5497558138880) // 5TB - Not used anywhere?
+	MaxS3RequestSize           = int64(5497558138880) // 5TB - Max size for single PUT/POST/GET request
 	MaxServerSideCopySize      = int64(5368709120)    // 5GB
 	MaxValidationErrors        = 30
 	MemberAPIPrefix            = "member-api" // DART uses this
