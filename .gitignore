@@ -15,7 +15,7 @@
 # doesn't belong in the repo.
 nsqd.dat
 
-# The build script in scripts/build.rb puts our binaries here.
+# The build script in scripts/build.sh puts our binaries here.
 bin/go-bin
 
 # VSCode and copy of .env file are for visual debugging

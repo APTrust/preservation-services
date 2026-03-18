@@ -395,8 +395,8 @@ For items stored in Glacier and Glacier Deep Archive, we'll need a first step si
 
 ## Checklist for Adding New Services and Binaries
 
-* Add to scripts/build.rb
-* Add to scripts/test.rb
+* Add to scripts/build.sh
+* Add to scripts/test.sh
 * Add to docker-compose.yml
 * Add to docker-compose.integration.yml
 * Add new container repo in Docker Hub
