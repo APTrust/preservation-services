@@ -107,7 +107,8 @@ setup_env() {
 }
 
 create_nsq_topics() {
-  local -a topics=(
+  # Worker topics: create both topic and channel so workers can subscribe.
+  local -a worker_topics=(
     "ingest01_prefetch"
     "ingest02_bag_validation"
     "ingest03_reingest_check"
@@ -121,27 +122,39 @@ create_nsq_topics() {
     "restore_file"
     "delete_item"
     "fixity_check"
+  )
+  for t in "${worker_topics[@]}"; do
+    local channel="${t}_worker_chan"
+    curl -s -X POST "http://127.0.0.1:4151/topic/create?topic=${t}" > /dev/null || true
+    curl -s -X POST "http://127.0.0.1:4151/channel/create?topic=${t}&channel=${channel}" > /dev/null || true
+  done
+
+  # E2E test topics: create topic ONLY (no channel). The e2e test checks
+  # topic depth to detect completion. If a channel exists, NSQ routes
+  # messages into the channel immediately and topic depth stays at zero,
+  # causing the test to wait forever. Without a channel, messages accumulate
+  # in the topic queue and the depth check works correctly.
+  local -a e2e_topics=(
     "e2e_deletion_post_test"
     "e2e_fixity_post_test"
     "e2e_ingest_post_test"
     "e2e_reingest_post_test"
     "e2e_restoration_post_test"
   )
-  for t in "${topics[@]}"; do
-    local channel="${t}_worker_chan"
+  for t in "${e2e_topics[@]}"; do
     curl -s -X POST "http://127.0.0.1:4151/topic/create?topic=${t}" > /dev/null || true
-    curl -s -X POST "http://127.0.0.1:4151/channel/create?topic=${t}&channel=${channel}" > /dev/null || true
   done
 }
 
 start_service() {
   local name="$1"
-  local cmd="$2"
-  local msg="$3"
+  local chdir="$2"
+  local cmd="$3"
+  local msg="$4"
   local log_file
   log_file="$(log_file_path "$name")"
 
-  "$cmd" > "$log_file" 2>&1 &
+  (cd "$chdir" && exec env APT_ENV="${APT_ENV}" APT_E2E="${APT_E2E:-}" APT_CONFIG_DIR="${APT_CONFIG_DIR}" "$cmd") > "$log_file" 2>&1 &
   local pid=$!
 
   if [[ "$name" == "redis-server" ]]; then
@@ -203,7 +216,7 @@ stop_all_services() {
   for name in ${PIDS_NAMES[@]+"${PIDS_NAMES[@]}"}; do
     stop_service "$name" "$(pids_get "$name")"
   done
-  docker-compose -f docker-compose-local.yml down || true
+  (cd "$PROJECT_ROOT" && docker-compose -f docker-compose-local.yml down) || true
   SERVICES_STOPPED=true
 }
 
@@ -232,7 +245,7 @@ start_ingest_services() {
   done
   for name in "${names[@]}"; do
     echo "Starting $name"
-    start_service "$name" "$INGEST_BIN_DIR/$name" "Started $name"
+    start_service "$name" "$PROJECT_ROOT" "$INGEST_BIN_DIR/$name" "Started $name"
   done
 }
 
@@ -271,22 +284,27 @@ registry_start() {
   ) &
   local registry_pid=$!
 
+  # Always track the go run process so it is killed on exit.
+  # go run does not forward SIGTERM to its child on macOS, so we must
+  # kill go run directly; we find and kill the compiled binary separately.
+  pids_set registry_gorun "$registry_pid"
+
   sleep 3
 
-  # go run compiles an executable into a temp dir and runs it as a new process.
-  # Find the pid of the compiled binary. Note: /var/folders pattern is macOS-specific.
+  # go run compiles an executable, puts it in a temp directory, and runs it
+  # as a child process. Find the pid of that compiled binary.
+  # Note: /var/folders is macOS-specific.
   local registry_process
   registry_process=$(ps -ef | grep registry | grep /var/folders | head -1 || true)
-  local pid
-  pid=$(echo "$registry_process" | awk '{print $2}')
+  local child_pid
+  child_pid=$(echo "$registry_process" | awk '{print $2}')
 
-  if [[ -n "$pid" && "$pid" =~ ^[0-9]+$ && "$pid" != "0" ]]; then
-    pids_set registry "$pid"
+  if [[ -n "$child_pid" && "$child_pid" =~ ^[0-9]+$ && "$child_pid" != "0" ]]; then
+    pids_set registry "$child_pid"
+    echo "Started Registry with command '$cmd', go run pid $registry_pid, binary pid $child_pid"
   else
-    pids_set registry "$registry_pid"
+    echo "Started Registry with command '$cmd' and pid $registry_pid"
   fi
-
-  echo "Started Registry with command '$cmd' and pid $(pids_get registry)"
 }
 
 # Runs the bucket reader once (--run-once), rather than as a long-running service.
@@ -304,7 +322,7 @@ init_for_integration() {
   make_test_dirs
   registry_start
   sleep 8
-  docker-compose -f docker-compose-local.yml up -d
+  (cd "$PROJECT_ROOT" && docker-compose -f docker-compose-local.yml up -d)
   sleep 5
   create_nsq_topics
 }
@@ -332,7 +350,7 @@ run_unit_tests() {
   local arg="${1:-}"
   clean_test_cache
   make_test_dirs
-  docker-compose -f docker-compose-local.yml up -d
+  (cd "$PROJECT_ROOT" && docker-compose -f docker-compose-local.yml up -d)
   run_go_unit_tests "$arg"
   # EXIT trap will stop all services
 }
@@ -362,7 +380,7 @@ run_e2e_tests() {
   sleep 15
 
   echo "Starting end-to-end tests..."
-  local -a cmd_args=(go test -p 1 -tags=e2e ./e2e/...)
+  local -a cmd_args=(go test -p 1 -timeout 6m -tags=e2e ./e2e/...)
   echo "${cmd_args[*]}"
   local exit_code=0
   (cd "$PROJECT_ROOT" && "${cmd_args[@]}") || exit_code=$?
@@ -466,6 +484,8 @@ fi
 
 setup_env
 trap 'stop_all_services || true' EXIT
+trap 'stop_all_services || true; exit 130' INT
+trap 'stop_all_services || true; exit 143' TERM
 
 case "$TEST_NAME" in
   units)
