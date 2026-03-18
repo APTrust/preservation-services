@@ -216,6 +216,14 @@ stop_all_services() {
   for name in ${PIDS_NAMES[@]+"${PIDS_NAMES[@]}"}; do
     stop_service "$name" "$(pids_get "$name")"
   done
+  # Kill whatever process holds port 8080 (the registry). This catches cases
+  # where PID tracking missed the process or the registry was started externally.
+  local registry_port_pid
+  registry_port_pid=$(lsof -ti tcp:8080 2>/dev/null | head -1 || true)
+  if [[ -n "$registry_port_pid" ]]; then
+    echo "Stopping registry process on port 8080 (pid $registry_port_pid)"
+    kill -TERM "$registry_port_pid" 2>/dev/null || true
+  fi
   (cd "$PROJECT_ROOT" && docker-compose -f docker-compose-local.yml down) || true
   SERVICES_STOPPED=true
 }
@@ -270,6 +278,18 @@ registry_load_fixtures() {
 registry_start() {
   if [[ -n "$(pids_get registry)" ]]; then
     return
+  fi
+
+  # Check if an existing registry process is already listening on port 8080.
+  local existing_pid
+  existing_pid=$(lsof -ti tcp:8080 2>/dev/null | head -1 || true)
+  if [[ -n "$existing_pid" ]]; then
+    echo ""
+    echo "Error: Registry is already running on port 8080 (pid $existing_pid)."
+    echo "Kill it with: kill $existing_pid"
+    echo "Then try running this script again."
+    echo
+    exit 1
   fi
   registry_load_fixtures
 
