@@ -35,7 +35,7 @@ export APT_ENV=test
 
 TLDR: Whenever you make changes to preservation services code, and whenever you make changes to Registry code that might affect Registry's behavoir, you should run:
 
-`./scripts/test.rb integration && ./scripts/test.rb e2e`
+`./scripts/test.sh integration && ./scripts/test.sh e2e`
 
 That runs Preserve's integration tests and end-to-end (e2e) tests to ensure that Preserve and Registry still work together as expected. The end-to-end test suite contains the tests most likely to catch subtle regressions. This suite runs a series of ingests, restorations and deletions and then carefully checks for all expected post-conditions, such as alerts and premis events created, presence of specific files in specific S3 buckets, etc.
 
@@ -45,13 +45,13 @@ The integration tests usually take 1-2 minutes to complete. The end-to-end (e2e)
 
 ## Unit Tests
 
-To run unit tests: `ruby scripts/test.rb units`
+To run unit tests: `ruby scripts/test.sh units`
 
 The unit tests start two lightweight services, redis and minio, Mac and Linux versions of which are included in this source repo.
 
 ## Integration Tests
 
-To run integration tests: `ruby scripts/test.rb integration`
+To run integration tests: `ruby scripts/test.sh integration`
 
 Note that integration tests require the following:
 
@@ -85,7 +85,7 @@ Note that you should restart the Registry service with the first command above e
 
 ## End to End Tests
 
-To run integration tests: `ruby scripts/test.rb e2e`
+To run integration tests: `ruby scripts/test.sh e2e`
 
 End to end tests have the same system requirements as integration tests, starting
 instances of Redis, NSQ, Minio, and Pharos. The use the `+build e2e` build tag.
@@ -131,7 +131,7 @@ git clone ssh://git@github.com/aptrust/registry.git
 REGISTRY_ROOT="the absolute system path to the registry clone directory"
 ```
 
-You can then launch interactive tests with `./scripts/test.rb interactive`
+You can then launch interactive tests with `./scripts/test.sh interactive`
 
 If the prior steps have not been correctly configured, you will see the following message.
 Please check that you have the registry code pulled down and that REGISTRY_ROOT is properly configured

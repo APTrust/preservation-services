@@ -12,7 +12,6 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
-	"github.com/minio/minio-go/v7"
 )
 
 // StagingUploader unpacks a tarfile from a receiving bucket and
@@ -45,11 +44,24 @@ func NewStagingUploader(context *common.Context, workItemID int64, ingestObject 
 //
 // This is the only method external callers need to call.
 func (s *StagingUploader) Run() (filesCopied int, errors []*service.ProcessingError) {
-	tarredBag, err := s.Context.S3GetObject(
-		constants.StorageProviderAWS,
-		s.IngestObject.S3Bucket,
-		s.IngestObject.S3Key,
-	)
+	var tarredBag io.ReadCloser
+	var err error
+
+	// Choose how to get the bag. If it's over 5TB, we need
+	// to call GetLargeObject.
+	if s.IngestObject.Size <= constants.MaxS3RequestSize {
+		tarredBag, err = s.Context.S3GetObject(
+			constants.StorageProviderAWS,
+			s.IngestObject.S3Bucket,
+			s.IngestObject.S3Key,
+		)
+	} else {
+		tarredBag, err = s.Context.GetLargeObject(
+			constants.StorageProviderAWS,
+			s.IngestObject.S3Bucket,
+			s.IngestObject.S3Key,
+		)
+	}
 	if err != nil {
 		isFatal := strings.Contains(err.Error(), "key does not exist")
 		return 0, append(errors, s.Error(s.IngestObject.Identifier(), err, isFatal))
@@ -71,7 +83,7 @@ func (s *StagingUploader) Run() (filesCopied int, errors []*service.ProcessingEr
 // file to an S3 staging bucket so we can work with individual files
 // later. There is no need to call this directly. Use Run()
 // instead.
-func (s *StagingUploader) CopyFiles(tarredBag *minio.Object) (int, error) {
+func (s *StagingUploader) CopyFiles(tarredBag io.ReadCloser) (int, error) {
 	filesCopied := 0
 	errCount := 0
 	tarReader := tar.NewReader(tarredBag)

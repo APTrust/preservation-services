@@ -48,7 +48,7 @@ func (r *FileRestorer) Run() (fileCount int, errors []*service.ProcessingError) 
 		gf.Identifier,
 		obj,
 		gf.Size,
-		r.Context.Config.MinioDefaultPutOptions)
+		minio.PutObjectOptions{})
 	if err != nil {
 		errors = append(errors, r.Error(gf.Identifier, err, false))
 	}
