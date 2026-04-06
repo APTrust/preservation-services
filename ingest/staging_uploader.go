@@ -12,7 +12,6 @@ import (
 	"github.com/APTrust/preservation-services/models/common"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
-	"github.com/minio/minio-go/v7"
 )
 
 // StagingUploader unpacks a tarfile from a receiving bucket and
@@ -38,18 +37,31 @@ func NewStagingUploader(context *common.Context, workItemID int64, ingestObject 
 //
 // 1. Retrieving the tarred bag from the depositor's receiving bucket.
 //
-// 2. Copying the bag's individual files to a staging bucket with correct
-//    metadata.
+//  2. Copying the bag's individual files to a staging bucket with correct
+//     metadata.
 //
 // 3. Telling Redis that each file has been copied.
 //
 // This is the only method external callers need to call.
 func (s *StagingUploader) Run() (filesCopied int, errors []*service.ProcessingError) {
-	tarredBag, err := s.Context.S3GetObject(
-		constants.StorageProviderAWS,
-		s.IngestObject.S3Bucket,
-		s.IngestObject.S3Key,
-	)
+	var tarredBag io.ReadCloser
+	var err error
+
+	// Choose how to get the bag. If it's over 5TB, we need
+	// to call GetLargeObject.
+	if s.IngestObject.Size <= constants.MaxS3RequestSize {
+		tarredBag, err = s.Context.S3GetObject(
+			constants.StorageProviderAWS,
+			s.IngestObject.S3Bucket,
+			s.IngestObject.S3Key,
+		)
+	} else {
+		tarredBag, err = s.Context.GetLargeObject(
+			constants.StorageProviderAWS,
+			s.IngestObject.S3Bucket,
+			s.IngestObject.S3Key,
+		)
+	}
 	if err != nil {
 		isFatal := strings.Contains(err.Error(), "key does not exist")
 		return 0, append(errors, s.Error(s.IngestObject.Identifier(), err, isFatal))
@@ -71,7 +83,7 @@ func (s *StagingUploader) Run() (filesCopied int, errors []*service.ProcessingEr
 // file to an S3 staging bucket so we can work with individual files
 // later. There is no need to call this directly. Use Run()
 // instead.
-func (s *StagingUploader) CopyFiles(tarredBag *minio.Object) (int, error) {
+func (s *StagingUploader) CopyFiles(tarredBag io.ReadCloser) (int, error) {
 	filesCopied := 0
 	errCount := 0
 	tarReader := tar.NewReader(tarredBag)
@@ -120,12 +132,12 @@ func (s *StagingUploader) CopyFileToStaging(tarReader *tar.Reader, ingestFile *s
 	bucket := s.Context.Config.StagingBucket
 	key := s.S3KeyFor(ingestFile)
 
-	// Work-around for narrow non-breaking space bug. https://trello.com/c/euql70E3
-	// For a case where a narrow non-breaking space is included in the file path, use bagpath-encoded header. For all others, use bagpath.
+	// Work-around for whitespace bug. https://trello.com/c/euql70E3
+	// For a case where a whitespace is included in the file path, use bagpath-encoded header. For all others, use bagpath.
 	// Note that UserMetadata initially contains both.
-	if strings.Contains(ingestFile.PathInBag, constants.NarrowNonBreakingSpace) {
+	if strings.Contains(ingestFile.PathInBag, constants.NarrowNonBreakingSpace) || strings.ContainsRune(ingestFile.PathInBag, constants.LineSeparator) {
 		delete(putOptions.UserMetadata, "bagpath")
-		s.Context.Logger.Infof("A narrow non-breaking space character was detected, using header 'bagpath-encoded' with value %s", putOptions.UserMetadata["bagpath-encoded"])
+		s.Context.Logger.Infof("A whitespace character was detected, using header 'bagpath-encoded' with value %s", putOptions.UserMetadata["bagpath-encoded"])
 	} else {
 		delete(putOptions.UserMetadata, "bagpath-encoded") // not necessary for other cases
 	}

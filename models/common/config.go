@@ -13,7 +13,6 @@ import (
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/util"
-	"github.com/minio/minio-go/v7"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 )
@@ -42,7 +41,6 @@ type Config struct {
 	MaxFileSize                int64
 	MaxFixityItemsPerRun       int
 	MaxWorkerAttempts          int
-	MinioDefaultPutOptions     minio.PutObjectOptions
 	NsqLookupd                 string
 	NsqURL                     string
 	PreservationBuckets        []*PreservationBucket
@@ -87,7 +85,6 @@ func NewConfig() *Config {
 	config.initPreservationBuckets()
 	config.sanityCheck()
 	config.makeDirs()
-	config.initMinioPutObjectSettings()
 	return config
 }
 
@@ -173,25 +170,25 @@ func loadConfig() *Config {
 				SecretKey: v.GetString("S3_LOCAL_SECRET"),
 			},
 			constants.StorageProviderWasabiOR: {
-				Host:      v.GetString("S3_WASABI_HOST_OR"),
-				KeyID:     v.GetString("S3_WASABI_KEY"),
-				SecretKey: v.GetString("S3_WASABI_SECRET"),
+				Host:      v.GetString("S3_NEWSTORAGEOPTION_HOST_OR"),
+				KeyID:     v.GetString("S3_NEWSTORAGEOPTION_KEY"),
+				SecretKey: v.GetString("S3_NEWSTORAGEOPTION_SECRET"),
 			},
 			constants.StorageProviderWasabiTX: {
-				Host:      v.GetString("S3_WASABI_HOST_TX"),
-				KeyID:     v.GetString("S3_WASABI_KEY"),
-				SecretKey: v.GetString("S3_WASABI_SECRET"),
+				Host:      v.GetString("S3_NEWSTORAGEOPTION_HOST_TX"),
+				KeyID:     v.GetString("S3_NEWSTORAGEOPTION_KEY"),
+				SecretKey: v.GetString("S3_NEWSTORAGEOPTION_SECRET"),
 			},
 			constants.StorageProviderWasabiVA: {
-				Host:      v.GetString("S3_WASABI_HOST_VA"),
-				KeyID:     v.GetString("S3_WASABI_KEY"),
-				SecretKey: v.GetString("S3_WASABI_SECRET"),
+				Host:      v.GetString("S3_NEWSTORAGEOPTION_HOST_VA"),
+				KeyID:     v.GetString("S3_NEWSTORAGEOPTION_KEY"),
+				SecretKey: v.GetString("S3_NEWSTORAGEOPTION_SECRET"),
 			},
 		},
 		S3LocalHost:          v.GetString("S3_LOCAL_HOST"),
-		S3WasabiHostOR:       v.GetString("S3_WASABI_HOST_OR"),
-		S3WasabiHostTX:       v.GetString("S3_WASABI_HOST_TX"),
-		S3WasabiHostVA:       v.GetString("S3_WASABI_HOST_VA"),
+		S3WasabiHostOR:       v.GetString("S3_NEWSTORAGEOPTION_HOST_OR"),
+		S3WasabiHostTX:       v.GetString("S3_NEWSTORAGEOPTION_HOST_TX"),
+		S3WasabiHostVA:       v.GetString("S3_NEWSTORAGEOPTION_HOST_VA"),
 		StagingBucket:        v.GetString("STAGING_BUCKET"),
 		StagingUploadRetryMs: v.GetDuration("STAGING_UPLOAD_RETRY_MS"),
 		VolumeServiceURL:     v.GetString("VOLUME_SERVICE_URL"),
@@ -683,55 +680,6 @@ func (config *Config) initPreservationBuckets() {
 			RestorePriority: 2,
 			StorageClass:    constants.StorageClassWasabi,
 		},
-	}
-}
-
-// initMinioPutObjectSettings should increase upload
-// speeds on S3 put operations, but it may also
-// increase memory usage.
-//
-// This is experimental, so we will need to watch it
-// to ensure it doesn't cause memory issues.
-// Part of issue https://trello.com/c/W8JXAdUO
-//
-// Using algorithm ChecksumCRC64NVME, which is Amazon's
-// new default and works in Wasabi-TX and Wasabi-OR.
-//
-// As of April 10, 2025, all large file uploads to Wasabi-VA
-// fail, regardless of the checksum algorithm.
-//
-// See https://docs.google.com/document/d/12CslMv7Un9IUzrJcygo9tJ-fhxeySUoJNLBmz0UcKro/edit?tab=t.0
-//
-// See https://github.com/mattermost/mattermost/issues/27293.
-// Also https://github.com/stonith404/pingvin-share/issues/788.
-//
-// And finally, using multiple threads instantly crashes our tiny
-// containers, such as the bag restorer (1/2 CPU, 512 MB RAM).
-// So for now, and probably for good, concurrent multi-threaded
-// uploads are turned off. It looks like minio allocates byte
-// slices immediately, before the upload even starts. So, 8 threads
-// times minimum 50MB chunk size = 400 MB of RAM before the upload
-// starts. (The logs show the out-of-memory crash before any bytes
-// go across the wire to the remote s3 service.) This always
-// crashes tiny containers and will likely crash larger ones
-// if we have 2+ large uploads going at the same time.
-// So, for now, NumThreads and ConcurrentStreamParts are off.
-//
-// For all practical purposes, we always max out our network
-// bandwidth even without concurrent upload/download streams,
-// so I'm not sure what these changes buy us.
-//
-// Flavia's changes to os-level TCP settings should give us
-// more reliable connections, which will buy us fewer failures
-// due to dropped connections.
-func (config *Config) initMinioPutObjectSettings() {
-	// Using threads allows concurrent uploading.
-	// Minio docs say we should let Minio calculate
-	// chunk size internally, so we don't set that here.
-	config.MinioDefaultPutOptions = minio.PutObjectOptions{
-		// NumThreads:            8,
-		// ConcurrentStreamParts: true,
-		AutoChecksum: minio.ChecksumCRC64NVME, // ChecksumCRC32, ChecksumCRC32C, ChecksumCRC64NVME
 	}
 }
 

@@ -563,7 +563,7 @@ func TestIngestBase_ShouldRetry(t *testing.T) {
 
 // You can also test this manually:
 //
-// From the project root dir, run ./scripts/test.rb interactive
+// From the project root dir, run ./scripts/test.sh interactive
 //
 // Kill a single worker using one of the following:
 //

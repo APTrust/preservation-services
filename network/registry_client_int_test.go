@@ -30,6 +30,7 @@ func GetRegistryClient(t *testing.T) *network.RegistryClient {
 		config.RegistryAPIVersion,
 		config.RegistryAPIUser,
 		config.RegistryAPIKey,
+		constants.AdminAPIPrefix,
 		_logger,
 	)
 	require.Nil(t, err)

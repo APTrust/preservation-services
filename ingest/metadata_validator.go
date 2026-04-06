@@ -49,7 +49,7 @@ func (v *MetadataValidator) Run() (fileCount int, errors []*service.ProcessingEr
 	// Validation errors are fatal. We can't ingest an invalid bag.
 	if !v.IsValid() {
 		for _, err := range v.Errors {
-			errors = append(errors, v.Error(v.IngestObject.Identifier(), fmt.Errorf(err), true))
+			errors = append(errors, v.Error(v.IngestObject.Identifier(), fmt.Errorf("%s", err), true))
 		}
 		v.IngestObject.ShouldDeleteFromReceiving = true
 		err := v.IngestObjectSave()
@@ -282,7 +282,7 @@ func (v *MetadataValidator) IngestFileOk(f *service.IngestFile) bool {
 	ok := true
 	_, err := f.IdentifierIsLegal()
 	if err != nil {
-		v.AddError(err.Error())
+		v.AddError("%s", err.Error())
 		ok = false
 	}
 	if !v.ValidateChecksums(f, constants.FileTypeManifest, v.IngestObject.Manifests) {
@@ -317,7 +317,7 @@ func (v *MetadataValidator) ValidateChecksums(f *service.IngestFile, manifestTyp
 		if manifestIsPresent {
 			_, err := f.ChecksumsMatch(manifestName)
 			if err != nil {
-				v.AddError(err.Error())
+				v.AddError("%s", err.Error())
 				ok = false
 			}
 		}
@@ -344,7 +344,7 @@ func (v *MetadataValidator) AnythingGoes(list []string) bool {
 	// There's actually more nuance than that, as any items in a required
 	// list must also be in an allowed list. We should validate that when
 	// validating the profile, not here.
-	return list == nil || len(list) == 0 || util.StringListContains(list, "*")
+	return len(list) == 0 || util.StringListContains(list, "*")
 }
 
 func (v *MetadataValidator) ValidateAllowed(filetype string, allowedInProfile, presentInBag []string) bool {
