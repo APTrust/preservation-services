@@ -1,6 +1,6 @@
 module github.com/APTrust/preservation-services
 
-go 1.24.11
+go 1.25
 
 // Force use of nsq v1.2.0 because v1.3.0 has breaking changes.
 replace github.com/nsqio/nsq => github.com/nsqio/nsq v1.2.0
@@ -8,7 +8,7 @@ replace github.com/nsqio/nsq => github.com/nsqio/nsq v1.2.0
 require (
 	github.com/go-redis/redis/v7 v7.4.1
 	github.com/google/uuid v1.6.0
-	github.com/minio/minio-go/v7 v7.0.98
+	github.com/minio/minio-go/v7 v7.1.0
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/nsqio/nsq v1.2.0
@@ -21,6 +21,7 @@ require (
 require (
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/bmizerany/perks v0.0.0-20141205001514-d9a9656a3a4b // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
@@ -52,6 +53,7 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tinylib/msgp v1.6.1 // indirect
+	github.com/zeebo/xxh3 v1.1.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/image v0.35.0 // indirect
