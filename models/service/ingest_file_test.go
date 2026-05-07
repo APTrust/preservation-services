@@ -319,7 +319,7 @@ func TestToGenericFile(t *testing.T) {
 	assert.Equal(t, "256256", gf.Checksums[1].Digest)
 
 	require.Equal(t, 9, len(gf.PremisEvents))
-	eventTypeCounts := make(map[string]int)
+	eventTypeCounts := make(map[int]int)
 	for _, event := range gf.PremisEvents {
 		if _, ok := eventTypeCounts[event.EventType]; !ok {
 			eventTypeCounts[event.EventType] = 0

@@ -288,3 +288,25 @@ func ToHumanSize(size int64) string {
 	}
 	return fmt.Sprintf("%.2f %s", hs, suffix)
 }
+
+// In the database we store event types as ints.
+// At times it may be necessary to convert event type strings into ints.
+func ConvertEventTypeToInt(eventType string) int {
+	switch eventType {
+	default:
+		return 0
+	}
+}
+
+// In the database we store event types as ints.
+// At times it may be necessary to convert these raw values into strings.
+func ConvertEventTypeToString(eventType int) string {
+	switch eventType {
+	case 0:
+		return ""
+	case 1:
+		return ""
+	default:
+		return ""
+	}
+}
