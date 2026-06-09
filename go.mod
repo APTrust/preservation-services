@@ -1,6 +1,6 @@
 module github.com/APTrust/preservation-services
 
-go 1.24.11
+go 1.25.10
 
 require (
 	github.com/go-redis/redis/v7 v7.4.1
