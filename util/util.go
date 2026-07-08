@@ -12,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 	"unicode"
+
+	"github.com/APTrust/preservation-services/constants"
 )
 
 // StringListContains returns true if the list of strings contains item.
@@ -287,4 +289,94 @@ func ToHumanSize(size int64) string {
 		}
 	}
 	return fmt.Sprintf("%.2f %s", hs, suffix)
+}
+
+// In the database we store event types as ints.
+// At times it may be necessary to convert event type strings into ints.
+func ConvertEventTypeToInt(eventType string) int {
+	switch eventType {
+	case constants.EventStringAccessAssignment:
+		return constants.EventAccessAssignment
+	case constants.EventStringCapture:
+		return constants.EventCapture
+	case constants.EventStringCompression:
+		return constants.EventCompression
+	case constants.EventStringCreation:
+		return constants.EventCreation
+	case constants.EventStringDeaccession:
+		return constants.EventDeaccession
+	case constants.EventStringDecompression:
+		return constants.EventDecompression
+	case constants.EventStringDecryption:
+		return constants.EventDecryption
+	case constants.EventStringDeletion:
+		return constants.EventDeletion
+	case constants.EventStringDigestCalculation:
+		return constants.EventDigestCalculation
+	case constants.EventStringFixityCheck:
+		return constants.EventFixityCheck
+	case constants.EventStringIdentifierAssignment:
+		return constants.EventIdentifierAssignment
+	case constants.EventStringIngestion:
+		return constants.EventIngestion
+	case constants.EventStringMigration:
+		return constants.EventMigration
+	case constants.EventStringNormalization:
+		return constants.EventNormalization
+	case constants.EventStringReplication:
+		return constants.EventReplication
+	case constants.EventStringSignatureValidation:
+		return constants.EventSignatureValidation
+	case constants.EventStringValidation:
+		return constants.EventValidation
+	case constants.EventStringVirusCheck:
+		return constants.EventVirusCheck
+	default:
+		return 0
+	}
+}
+
+// In the database we store event types as ints.
+// At times it may be necessary to convert these raw values into strings.
+func ConvertEventTypeToString(eventType int) string {
+	switch eventType {
+	case constants.EventAccessAssignment:
+		return constants.EventStringAccessAssignment
+	case constants.EventCapture:
+		return constants.EventStringCapture
+	case constants.EventCompression:
+		return constants.EventStringCompression
+	case constants.EventCreation:
+		return constants.EventStringCreation
+	case constants.EventDeaccession:
+		return constants.EventStringDeaccession
+	case constants.EventDecompression:
+		return constants.EventStringDecompression
+	case constants.EventDecryption:
+		return constants.EventStringDecryption
+	case constants.EventDeletion:
+		return constants.EventStringDeletion
+	case constants.EventDigestCalculation:
+		return constants.EventStringDigestCalculation
+	case constants.EventFixityCheck:
+		return constants.EventStringFixityCheck
+	case constants.EventIdentifierAssignment:
+		return constants.EventStringIdentifierAssignment
+	case constants.EventIngestion:
+		return constants.EventStringIngestion
+	case constants.EventMigration:
+		return constants.EventStringMigration
+	case constants.EventNormalization:
+		return constants.EventStringNormalization
+	case constants.EventReplication:
+		return constants.EventStringReplication
+	case constants.EventSignatureValidation:
+		return constants.EventStringSignatureValidation
+	case constants.EventValidation:
+		return constants.EventStringValidation
+	case constants.EventVirusCheck:
+		return constants.EventStringVirusCheck
+	default:
+		return "Unknown Event Type"
+	}
 }

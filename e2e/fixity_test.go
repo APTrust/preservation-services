@@ -5,6 +5,7 @@ package e2e_test
 
 import (
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/APTrust/preservation-services/constants"
@@ -27,7 +28,7 @@ func testFixityResults() {
 func getLatestFixityCheckEvent(gfIdentifier string) *registry.PremisEvent {
 	params := url.Values{}
 	params.Set("generic_file_identifier", gfIdentifier)
-	params.Set("event_type", constants.EventFixityCheck)
+	params.Set("event_type", strconv.FormatInt(constants.EventFixityCheck, 10))
 	params.Set("page", "1")
 	params.Set("per_page", "1")
 	params.Set("sort", "date_time__desc")

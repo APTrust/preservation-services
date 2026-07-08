@@ -153,7 +153,7 @@ func testFileDeletionEvents(t *testing.T, context *common.Context, gfID int64) {
 	instId := getInstId(t, context)
 	values := url.Values{}
 	values.Set("generic_file_id", strconv.FormatInt(gfID, 10))
-	values.Set("event_type", constants.EventDeletion)
+	values.Set("event_type", strconv.FormatInt(constants.EventDeletion, 10))
 	values.Set("page", "1")
 	values.Set("per_page", "20")
 	resp := context.RegistryClient.PremisEventList(values)
@@ -177,7 +177,7 @@ func testFileDeletionEvents(t *testing.T, context *common.Context, gfID int64) {
 func testObjectDeletionEvent(t *testing.T, context *common.Context) {
 	values := url.Values{}
 	values.Set("intellectual_object_id", strconv.FormatInt(savedObj.ID, 10))
-	values.Set("event_type", constants.EventDeletion)
+	values.Set("event_type", strconv.FormatInt(constants.EventDeletion, 10))
 	values.Set("page", "1")
 	values.Set("per_page", "100")
 	resp := context.RegistryClient.PremisEventList(values)

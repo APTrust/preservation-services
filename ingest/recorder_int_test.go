@@ -104,7 +104,7 @@ func testObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder) {
 	events := resp.PremisEvents()
 	require.NotEmpty(t, events)
 
-	eventTypes := make(map[string]int)
+	eventTypes := make(map[int]int)
 	for _, event := range events {
 		if _, ok := eventTypes[event.EventType]; !ok {
 			eventTypes[event.EventType] = 0
@@ -185,7 +185,7 @@ func testFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, gf *regis
 	events := resp.PremisEvents()
 	require.NotEmpty(t, events)
 
-	eventTypes := make(map[string]int)
+	eventTypes := make(map[int]int)
 	for _, event := range events {
 		if _, ok := eventTypes[event.EventType]; !ok {
 			eventTypes[event.EventType] = 0
@@ -369,7 +369,7 @@ func testUpdatedObjectEventsInRegistry(t *testing.T, recorder *ingest.Recorder, 
 	events := resp.PremisEvents()
 	require.NotEmpty(t, events)
 
-	eventTypes := make(map[string]int)
+	eventTypes := make(map[int]int)
 	for _, event := range events {
 		if _, ok := eventTypes[event.EventType]; !ok {
 			eventTypes[event.EventType] = 0
@@ -456,7 +456,7 @@ func testUpdatedFileEventsInRegistry(t *testing.T, recorder *ingest.Recorder, gf
 	events := resp.PremisEvents()
 	require.NotEmpty(t, events)
 
-	eventTypes := make(map[string]int)
+	eventTypes := make(map[int]int)
 	for _, event := range events {
 		if _, ok := eventTypes[event.EventType]; !ok {
 			eventTypes[event.EventType] = 0
