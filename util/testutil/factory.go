@@ -8,7 +8,6 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
-	"github.com/APTrust/preservation-services/util"
 	"github.com/google/uuid"
 )
 
@@ -173,11 +172,11 @@ func GetGenericFileForObj(obj *registry.IntellectualObject, suffix int, withChec
 	}
 	if withEvents {
 		gf.PremisEvents = []*registry.PremisEvent{
-			GetPremisEvent(gf, constants.EventStringAccessAssignment),
-			GetPremisEvent(gf, constants.EventStringDigestCalculation),
-			GetPremisEvent(gf, constants.EventStringIdentifierAssignment),
-			GetPremisEvent(gf, constants.EventStringIngestion),
-			GetPremisEvent(gf, constants.EventStringReplication),
+			GetPremisEvent(gf, constants.EventAccessAssignment),
+			GetPremisEvent(gf, constants.EventDigestCalculation),
+			GetPremisEvent(gf, constants.EventIdentifierAssignment),
+			GetPremisEvent(gf, constants.EventIngestion),
+			GetPremisEvent(gf, constants.EventReplication),
 		}
 	}
 	return gf
@@ -192,12 +191,12 @@ func GetChecksum(gf *registry.GenericFile, alg string) *registry.Checksum {
 	}
 }
 
-func GetPremisEvent(gf *registry.GenericFile, eventType string) *registry.PremisEvent {
+func GetPremisEvent(gf *registry.GenericFile, eventType int) *registry.PremisEvent {
 	return &registry.PremisEvent{
 		Agent:                "Maxwell Smart",
 		DateTime:             Bloomsday,
 		Detail:               "Fake event detail",
-		EventType:            util.ConvertEventTypeToInt(eventType),
+		EventType:            eventType,
 		GenericFileID:        gf.ID,
 		Identifier:           uuid.New().String(),
 		InstitutionID:        gf.InstitutionID,

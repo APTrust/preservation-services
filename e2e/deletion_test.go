@@ -59,7 +59,7 @@ func verifyFileDeletion(gf *registry.GenericFile) {
 func verifyObjectDeletionEvent(obj *registry.IntellectualObject) {
 	params := url.Values{}
 	params.Add("intellectual_object_id", strconv.FormatInt(obj.ID, 10))
-	params.Add("event_type", constants.EventDeletion)
+	params.Add("event_type", strconv.FormatInt(constants.EventDeletion, 10))
 	params.Add("generic_file_id__is_null", "true")
 	params.Add("sort", "date_time__desc")
 	params.Add("page", "1")
@@ -81,7 +81,7 @@ func verifyObjectDeletionEvent(obj *registry.IntellectualObject) {
 
 func verifyFileDeletionEvent(gf *registry.GenericFile) {
 	params := url.Values{}
-	params.Add("event_type", constants.EventDeletion)
+	params.Add("event_type", strconv.FormatInt(constants.EventDeletion, 10))
 	params.Add("generic_file_id", strconv.FormatInt(gf.ID, 10))
 	params.Add("sort", "date_time__desc")
 	params.Add("page", "1")
