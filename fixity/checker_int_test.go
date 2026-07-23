@@ -72,13 +72,11 @@ func createRegistryRecords(t *testing.T, context *common.Context, records []*reg
 	now := time.Now().UTC()
 	checksum := &registry.Checksum{
 		Algorithm:     constants.AlgSha256,
-		CreatedAt:     now,
 		DateTime:      now,
 		Digest:        expectedFixity,
 		GenericFileID: gf.ID,
 		ID:            0,
 		InstitutionID: gf.InstitutionID,
-		UpdatedAt:     now,
 	}
 	resp = context.RegistryClient.ChecksumCreate(checksum)
 	require.Nil(t, resp.Error)

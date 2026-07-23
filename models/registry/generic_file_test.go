@@ -37,7 +37,6 @@ var genericFile = &registry.GenericFile{
 	PremisEvents: []*registry.PremisEvent{
 		{
 			Agent:                        "Maxwell Smart",
-			CreatedAt:                    testutil.Bloomsday,
 			DateTime:                     testutil.Bloomsday,
 			Detail:                       "detail?",
 			EventType:                    "accession",
@@ -51,7 +50,6 @@ var genericFile = &registry.GenericFile{
 			OutcomeDetail:                "just fine",
 			OutcomeInformation:           "fine I say",
 			Outcome:                      "stop asking",
-			UpdatedAt:                    testutil.Bloomsday,
 		},
 	},
 	Size:          int64(8900),

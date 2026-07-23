@@ -21,7 +21,5 @@ func (cs *IngestChecksum) ToRegistryChecksum(genericFileID int64) *registry.Chec
 		DateTime:      cs.DateTime,
 		Digest:        cs.Digest,
 		GenericFileID: genericFileID,
-		CreatedAt:     cs.DateTime,
-		UpdatedAt:     cs.DateTime,
 	}
 }
