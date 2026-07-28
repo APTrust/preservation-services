@@ -18,7 +18,7 @@ var cs = &registry.Checksum{
 	ID:            5432,
 }
 
-var csJson = `{"id":5432,"algorithm":"sha256","digest":"12345678","datetime":"1904-06-16T15:04:05Z","generic_file_id":999,"created_at":"1904-06-16T15:04:05Z","updated_at":"1904-06-16T15:04:05Z","generic_file_identifier":"","intellectual_object_id":0,"institution_id":0}`
+var csJson = `{"id":5432,"algorithm":"sha256","digest":"12345678","datetime":"1904-06-16T15:04:05Z","generic_file_id":999,"generic_file_identifier":"","intellectual_object_id":0,"institution_id":0}`
 
 func TestChecksumFromJson(t *testing.T) {
 	checksum, err := registry.ChecksumFromJSON([]byte(csJson))
