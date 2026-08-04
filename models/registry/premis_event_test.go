@@ -11,7 +11,7 @@ import (
 )
 
 var event = &registry.PremisEvent{
-	Agent:                        "Maxwell Smart",
+	Agent:                        constants.EventAgentTestAlt,
 	CreatedAt:                    testutil.Bloomsday,
 	DateTime:                     testutil.Bloomsday,
 	Detail:                       "detail-123",
@@ -22,14 +22,14 @@ var event = &registry.PremisEvent{
 	InstitutionID:                21,
 	IntellectualObjectID:         3433,
 	IntellectualObjectIdentifier: "test.edu/bag",
-	Object:                       "object-321",
+	Object:                       constants.EventObjectTest,
 	OutcomeDetail:                "outcome detail",
 	OutcomeInformation:           "outcome information",
 	Outcome:                      "outcome",
 	UpdatedAt:                    testutil.Bloomsday,
 }
 
-var eventJson = `{"agent":"Maxwell Smart","created_at":"1904-06-16T15:04:05Z","date_time":"1904-06-16T15:04:05Z","detail":"detail-123","event_type":"ingestion","generic_file_id":432,"generic_file_identifier":"test.edu/bag/data/file.txt","identifier":"uuid goes here","institution_id":21,"intellectual_object_id":3433,"intellectual_object_identifier":"test.edu/bag","object":"object-321","outcome_detail":"outcome detail","outcome_information":"outcome information","outcome":"outcome","updated_at":"1904-06-16T15:04:05Z"}`
+var eventJson = `{"agent":"Maxwell Smart","created_at":"1904-06-16T15:04:05Z","date_time":"1904-06-16T15:04:05Z","detail":"detail-123","event_type":"ingestion","generic_file_id":432,"generic_file_identifier":"test.edu/bag/data/file.txt","identifier":"uuid goes here","institution_id":21,"intellectual_object_id":3433,"intellectual_object_identifier":"test.edu/bag","object":"scissors","outcome_detail":"outcome detail","outcome_information":"outcome information","outcome":"outcome","updated_at":"1904-06-16T15:04:05Z"}`
 
 const eObjIdent = "test.edu/obj"
 const eFileIdent = "test.edu/obj/file.txt"

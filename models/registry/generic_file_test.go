@@ -36,7 +36,7 @@ var genericFile = &registry.GenericFile{
 	LastFixityCheck:      testutil.Bloomsday,
 	PremisEvents: []*registry.PremisEvent{
 		{
-			Agent:                        "Maxwell Smart",
+			Agent:                        constants.EventAgentTestAlt,
 			CreatedAt:                    testutil.Bloomsday,
 			DateTime:                     testutil.Bloomsday,
 			Detail:                       "detail?",
@@ -47,7 +47,7 @@ var genericFile = &registry.GenericFile{
 			InstitutionID:                9355,
 			IntellectualObjectID:         1000,
 			IntellectualObjectIdentifier: "test.edu/bag",
-			Object:                       "scissors",
+			Object:                       constants.EventObjectTest,
 			OutcomeDetail:                "just fine",
 			OutcomeInformation:           "fine I say",
 			Outcome:                      "stop asking",

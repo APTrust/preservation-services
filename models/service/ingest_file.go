@@ -537,7 +537,7 @@ func (f *IngestFile) NewFileIngestEvent() (*registry.PremisEvent, error) {
 		Detail:                       fmt.Sprintf("Completed copy to preservation storage (%s)", f.UUID),
 		Outcome:                      constants.StatusSuccess,
 		OutcomeDetail:                fmt.Sprintf("md5:%s", md5Checksum.Digest),
-		Object:                       "preservation-services + Minio S3 client",
+		Object:                       constants.EventObjectPreservMinio,
 		Agent:                        constants.S3ClientName,
 		OutcomeInformation:           "Put using md5 checksum",
 		IntellectualObjectIdentifier: f.ObjectIdentifier,

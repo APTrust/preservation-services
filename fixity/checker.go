@@ -163,8 +163,8 @@ func (c *Checker) RecordFixityEvent(gf *registry.GenericFile, url, expectedFixit
 
 func (c *Checker) GetFixityEvent(gf *registry.GenericFile, url, expectedFixity, actualFixity string) *registry.PremisEvent {
 	eventId := uuid.New()
-	object := "Go language crypto/sha256"
-	agent := "http://golang.org/pkg/crypto/sha256/"
+	object := constants.EventObjectSHA256
+	agent := constants.EventAgentSHA256
 	outcomeInformation := fmt.Sprintf("Fixity matches at %s: %s", url, actualFixity)
 	outcome := string(constants.StatusSuccess)
 	if expectedFixity != actualFixity {
