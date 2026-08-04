@@ -101,6 +101,13 @@ setup_env() {
   fi
   export APT_CONFIG_DIR="$PROJECT_ROOT"
   export APT_ENV=test
+  # Ensure docker-compose-local bind mounts are written as the invoking user.
+  # Otherwise, files created by the services will be owned by root and the
+  # invoking user won't be able to delete them.
+  export LOCAL_UID
+  LOCAL_UID="$(id -u)"
+  export LOCAL_GID
+  LOCAL_GID="$(id -g)"
   if [[ "$TEST_NAME" == "e2e" ]]; then
     export APT_E2E=true
   fi
