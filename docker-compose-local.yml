@@ -6,7 +6,7 @@ services:
     command: /nsqlookupd
     # platform: linux/arm64
     volumes:
-      - ~/tmp/nsq/nsqlookupd:/data
+      - nsqlookupd_data:/data
     ports:
       - "4160:4160"
       - "4161:4161"
@@ -20,7 +20,7 @@ services:
     command: /nsqd --data-path=/data --lookupd-tcp-address=nsqlookupd:4160 --broadcast-address=localhost
     # platform: linux/arm64
     volumes:
-      - ~/tmp/nsq/nsqd:/data
+      - nsqd_data:/data
     depends_on:
       - nsqlookupd
     ports:
@@ -49,6 +49,7 @@ services:
 
   minio:
     image: quay.io/minio/minio
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     command: server /data --console-address ":9001"
     # platform: linux/arm64
     environment:
