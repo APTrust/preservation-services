@@ -70,7 +70,7 @@ const (
 	EventObjectStringMinio     = "Minio S3 client"
 	EventObjectMinioAlt        = 3
 	EventObjectStringMinioAlt  = "Minio S3 library"
-	EventObjectPreservMinio    = 4
+	EventObjectPreMinio        = 4
 	EventObjectStringPreMinio  = "preservation-services + Minio S3 client"
 	EventObjectUUIDMinio       = 5
 	EventObjectStringUUIDMinio = "Go uuid library + Minio S3 library"
@@ -80,6 +80,10 @@ const (
 	EventObjectStringMD5       = "Go language crypto/md5"
 	EventObjectTest            = 8
 	EventObjectStringTest      = "scissors"
+	EventObjectExchange        = 9
+	EventObjectStringExchange  = "APTrust exchange/ingest processor"
+	EventObjectTestAlt         = 10
+	EventObjectStringTestAlt   = "Fake event object"
 	EventReplication           = "replication"
 	EventSignatureValidation   = "digital signature validation"
 	EventValidation            = "validation"

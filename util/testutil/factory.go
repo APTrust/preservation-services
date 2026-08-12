@@ -193,7 +193,7 @@ func GetChecksum(gf *registry.GenericFile, alg string) *registry.Checksum {
 
 func GetPremisEvent(gf *registry.GenericFile, eventType string) *registry.PremisEvent {
 	return &registry.PremisEvent{
-		Agent:                "Maxwell Smart",
+		Agent:                constants.EventAgentTestAlt,
 		DateTime:             Bloomsday,
 		Detail:               "Fake event detail",
 		EventType:            eventType,
@@ -201,7 +201,7 @@ func GetPremisEvent(gf *registry.GenericFile, eventType string) *registry.Premis
 		Identifier:           uuid.New().String(),
 		InstitutionID:        gf.InstitutionID,
 		IntellectualObjectID: gf.IntellectualObjectID,
-		Object:               "Fake event object",
+		Object:               constants.EventObjectTestAlt,
 		OutcomeDetail:        constants.OutcomeSuccess,
 		OutcomeInformation:   "Fake outcome information",
 		Outcome:              constants.OutcomeSuccess,
