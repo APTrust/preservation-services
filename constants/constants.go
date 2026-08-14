@@ -51,6 +51,10 @@ const (
 	EventAgentStringTest       = "Registry Unit Test"
 	EventAgentTestAlt          = 11
 	EventAgentStringTestAlt    = "Maxwell Smart"
+	EventAgentFixture          = 12
+	EventAgentStringFixture    = "https://github.com/APTrust/exchange"
+	EventAgentUUIDPast         = 13
+	EventAgentStringUUIDPast   = "http://github.com/satori/go.uuid"
 	EventCapture               = "capture"
 	EventCompression           = "compression"
 	EventCreation              = "creation"
@@ -84,6 +88,14 @@ const (
 	EventObjectStringExchange  = "APTrust exchange/ingest processor"
 	EventObjectTestAlt         = 10
 	EventObjectStringTestAlt   = "Fake event object"
+	EventObjectFixS3           = 11
+	EventObjectStringFixS3     = "APTrust Go Exchange + Amazon S3 client"
+	EventObjectFixSHA          = 12
+	EventObjectStringFixSHA    = "SHA-256 thingy"
+	EventObjectFixExch         = 13
+	EventObjectStringFixExch   = "Exchange ingest code"
+	EventObjectFixDelete       = 14
+	EventObjectStringFixDelete = "Deleterbot code"
 	EventReplication           = "replication"
 	EventSignatureValidation   = "digital signature validation"
 	EventValidation            = "validation"
