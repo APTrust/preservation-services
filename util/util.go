@@ -321,6 +321,22 @@ func ConvertEventAgentToInt(eventAgent string) int {
 		return constants.EventAgentFixture
 	case constants.EventAgentStringUUIDPast:
 		return constants.EventAgentUUIDPast
+	case constants.EventAgentStringNu7Hatch:
+		return constants.EventAgentNu7Hatch
+	case constants.EventAgentStringBagman:
+		return constants.EventAgentBagman
+	case constants.EventAgentStringAwsSdk:
+		return constants.EventAgentAwsSdk
+	case constants.EventAgentStringGoamz:
+		return constants.EventAgentGoamz
+	case constants.EventAgentStringMarcel:
+		return constants.EventAgentMarcel
+	case constants.EventAgentStringUuidHttps:
+		return constants.EventAgentUuidHttps
+	case constants.EventAgentStringLaunchpad:
+		return constants.EventAgentLaunchpad
+	case constants.EventAgentStringAudit:
+		return constants.EventAgentAudit
 	default:
 		return 0
 	}
@@ -356,6 +372,22 @@ func ConvertEventAgentToString(eventAgent int) string {
 		return constants.EventAgentStringFixture
 	case constants.EventAgentUUIDPast:
 		return constants.EventAgentStringUUIDPast
+	case constants.EventAgentNu7Hatch:
+		return constants.EventAgentStringNu7Hatch
+	case constants.EventAgentBagman:
+		return constants.EventAgentStringBagman
+	case constants.EventAgentAwsSdk:
+		return constants.EventAgentStringAwsSdk
+	case constants.EventAgentGoamz:
+		return constants.EventAgentStringGoamz
+	case constants.EventAgentMarcel:
+		return constants.EventAgentStringMarcel
+	case constants.EventAgentUuidHttps:
+		return constants.EventAgentStringUuidHttps
+	case constants.EventAgentLaunchpad:
+		return constants.EventAgentStringLaunchpad
+	case constants.EventAgentAudit:
+		return constants.EventAgentStringAudit
 	default:
 		return "unknown event agent"
 	}
@@ -393,6 +425,46 @@ func ConvertEventObjectToInt(eventObject string) int {
 		return constants.EventObjectFixExch
 	case constants.EventObjectStringFixDelete:
 		return constants.EventObjectFixDelete
+	case constants.EventObjectStringBagman:
+		return constants.EventObjectBagman
+	case constants.EventObjectStringBagProc:
+		return constants.EventObjectBagProc
+	case constants.EventObjectStringExchOld:
+		return constants.EventObjectExchOld
+	case constants.EventObjectStringExDelete:
+		return constants.EventObjectExDelete
+	case constants.EventObjectStringExIngest:
+		return constants.EventObjectExIngest
+	case constants.EventObjectStringExUUID:
+		return constants.EventObjectExUUID
+	case constants.EventObjectStringAwsClient:
+		return constants.EventObjectAwsClient
+	case constants.EventObjectStringAwsLib:
+		return constants.EventObjectAwsLib
+	case constants.EventObjectStringBagmanGo:
+		return constants.EventObjectBagmanGo
+	case constants.EventObjectStringExAws:
+		return constants.EventObjectExAws
+	case constants.EventObjectStringExGoamz:
+		return constants.EventObjectExGoamz
+	case constants.EventObjectStringGoamz:
+		return constants.EventObjectGoamz
+	case constants.EventObjectStringGoamzAlt:
+		return constants.EventObjectGoamzAlt
+	case constants.EventObjectStringCryptoh:
+		return constants.EventObjectCryptoh
+	case constants.EventObjectStringMD5Past:
+		return constants.EventObjectMD5Past
+	case constants.EventObjectStringDPN:
+		return constants.EventObjectDPN
+	case constants.EventObjectStringUuidAws:
+		return constants.EventObjectUuidAws
+	case constants.EventObjectStringUuidGoamz:
+		return constants.EventObjectUuidGoamz
+	case constants.EventObjectStringRuby:
+		return constants.EventObjectRuby
+	case constants.EventObjectStringAudit:
+		return constants.EventObjectAudit
 	default:
 		return 0
 	}
@@ -430,6 +502,46 @@ func ConvertEventObjectToString(eventObject int) string {
 		return constants.EventObjectStringFixExch
 	case constants.EventObjectFixDelete:
 		return constants.EventObjectStringFixDelete
+	case constants.EventObjectBagman:
+		return constants.EventObjectStringBagman
+	case constants.EventObjectBagProc:
+		return constants.EventObjectStringBagProc
+	case constants.EventObjectExchOld:
+		return constants.EventObjectStringExchOld
+	case constants.EventObjectExDelete:
+		return constants.EventObjectStringExDelete
+	case constants.EventObjectExIngest:
+		return constants.EventObjectStringExIngest
+	case constants.EventObjectExUUID:
+		return constants.EventObjectStringExUUID
+	case constants.EventObjectAwsClient:
+		return constants.EventObjectStringAwsClient
+	case constants.EventObjectAwsLib:
+		return constants.EventObjectStringAwsLib
+	case constants.EventObjectBagmanGo:
+		return constants.EventObjectStringBagmanGo
+	case constants.EventObjectExAws:
+		return constants.EventObjectStringExAws
+	case constants.EventObjectExGoamz:
+		return constants.EventObjectStringExGoamz
+	case constants.EventObjectGoamz:
+		return constants.EventObjectStringGoamz
+	case constants.EventObjectGoamzAlt:
+		return constants.EventObjectStringGoamzAlt
+	case constants.EventObjectCryptoh:
+		return constants.EventObjectStringCryptoh
+	case constants.EventObjectMD5Past:
+		return constants.EventObjectStringMD5Past
+	case constants.EventObjectDPN:
+		return constants.EventObjectStringDPN
+	case constants.EventObjectUuidAws:
+		return constants.EventObjectStringUuidAws
+	case constants.EventObjectUuidGoamz:
+		return constants.EventObjectStringUuidGoamz
+	case constants.EventObjectRuby:
+		return constants.EventObjectStringRuby
+	case constants.EventObjectAudit:
+		return constants.EventObjectStringAudit
 	default:
 		return "unknown event object"
 	}
