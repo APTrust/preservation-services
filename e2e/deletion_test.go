@@ -10,6 +10,7 @@ import (
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/e2e"
 	"github.com/APTrust/preservation-services/models/registry"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/minio/minio-go/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -69,7 +70,7 @@ func verifyObjectDeletionEvent(obj *registry.IntellectualObject) {
 	deletionEvent := resp.PremisEvent()
 	require.NotNil(ctx.T, deletionEvent, obj.Identifier)
 
-	assert.Equal(ctx.T, "APTrust preservation services", deletionEvent.Agent)
+	assert.Equal(ctx.T, "APTrust preservation services", util.ConvertEventAgentToString(deletionEvent.Agent))
 	assert.Equal(ctx.T, constants.EventDeletion, deletionEvent.EventType)
 	assert.Equal(ctx.T, obj.ID, deletionEvent.IntellectualObjectID)
 	assert.Equal(ctx.T, "Object deleted at the request of admin@test.edu. Institutional approver: admin@test.edu.", deletionEvent.OutcomeInformation)
@@ -91,7 +92,7 @@ func verifyFileDeletionEvent(gf *registry.GenericFile) {
 	deletionEvent := resp.PremisEvent()
 	require.NotNil(ctx.T, deletionEvent, gf.Identifier)
 
-	assert.Equal(ctx.T, "APTrust preservation services", deletionEvent.Agent)
+	assert.Equal(ctx.T, "APTrust preservation services", util.ConvertEventAgentToString(deletionEvent.Agent))
 	assert.Equal(ctx.T, constants.EventDeletion, deletionEvent.EventType)
 	assert.Equal(ctx.T, gf.IntellectualObjectID, deletionEvent.IntellectualObjectID)
 	assert.Equal(ctx.T, "File deleted at the request of admin@test.edu. Institutional approver: admin@test.edu. This event confirms all preservation copies have been deleted.", deletionEvent.OutcomeInformation)

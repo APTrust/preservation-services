@@ -303,8 +303,8 @@ func TestNewObjectCreationEvent(t *testing.T) {
 	assert.Equal(t, "Object created", event.Detail)
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "Intellectual object created", event.OutcomeDetail)
-	assert.Equal(t, "APTrust preservation services", event.Object)
-	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
+	assert.Equal(t, constants.EventObjectPreserv, event.Object)
+	assert.Equal(t, constants.EventAgentPreserv, event.Agent)
 	assert.Equal(t, "Object created, files copied to preservation storage", event.OutcomeInformation)
 }
 
@@ -317,8 +317,8 @@ func TestNewObjectIngestEvent(t *testing.T) {
 	assert.Equal(t, "Copied files to perservation storage", event.Detail)
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "12 files copied", event.OutcomeDetail)
-	assert.Equal(t, "Minio S3 client", event.Object)
-	assert.Equal(t, constants.S3ClientName, event.Agent)
+	assert.Equal(t, constants.EventObjectMinio, event.Object)
+	assert.Equal(t, util.ConvertEventAgentToInt(constants.S3ClientName), event.Agent)
 	assert.Equal(t, "Multipart put using s3 etags", event.OutcomeInformation)
 }
 
@@ -331,8 +331,8 @@ func TestNewObjectIdentifierEvent(t *testing.T) {
 	assert.Equal(t, "Assigned object identifier test.edu/some-bag", event.Detail)
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "test.edu/some-bag", event.OutcomeDetail)
-	assert.Equal(t, "APTrust preservation services", event.Object)
-	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
+	assert.Equal(t, constants.EventObjectPreserv, event.Object)
+	assert.Equal(t, constants.EventAgentPreserv, event.Agent)
 	assert.Equal(t, "Institution domain + tar file name", event.OutcomeInformation)
 }
 
@@ -345,8 +345,8 @@ func TestNewObjectRightsEvent(t *testing.T) {
 	assert.Equal(t, "Assigned object access rights", event.Detail)
 	assert.Equal(t, constants.StatusSuccess, event.Outcome)
 	assert.Equal(t, "consortia", event.OutcomeDetail)
-	assert.Equal(t, "APTrust preservation services", event.Object)
-	assert.Equal(t, "https://github.com/APTrust/preservation-services", event.Agent)
+	assert.Equal(t, constants.EventObjectPreserv, event.Object)
+	assert.Equal(t, constants.EventAgentPreserv, event.Agent)
 	assert.Equal(t, "Set access to consortia", event.OutcomeInformation)
 }
 

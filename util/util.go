@@ -12,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 	"unicode"
+
+	"github.com/APTrust/preservation-services/constants"
 )
 
 // StringListContains returns true if the list of strings contains item.
@@ -287,4 +289,260 @@ func ToHumanSize(size int64) string {
 		}
 	}
 	return fmt.Sprintf("%.2f %s", hs, suffix)
+}
+
+// Event agents are enumerated and stored as ints.
+// If we need to convert from the string version to the int version, we can use this function.
+func ConvertEventAgentToInt(eventAgent string) int {
+	switch eventAgent {
+	case constants.EventAgentStringMinioV4:
+		return constants.EventAgentMinioV4
+	case constants.EventAgentStringMinioV5:
+		return constants.EventAgentMinioV5
+	case constants.EventAgentStringMinioV6:
+		return constants.EventAgentMinioV6
+	case constants.EventAgentStringMinioV7:
+		return constants.EventAgentMinioV7
+	case constants.EventAgentStringPreserv:
+		return constants.EventAgentPreserv
+	case constants.EventAgentStringPreservAlt:
+		return constants.EventAgentPreservAlt
+	case constants.EventAgentStringUUID:
+		return constants.EventAgentUUID
+	case constants.EventAgentStringSHA256:
+		return constants.EventAgentSHA256
+	case constants.EventAgentStringMD5:
+		return constants.EventAgentMD5
+	case constants.EventAgentStringTest:
+		return constants.EventAgentTest
+	case constants.EventAgentStringTestAlt:
+		return constants.EventAgentTestAlt
+	case constants.EventAgentStringFixture:
+		return constants.EventAgentFixture
+	case constants.EventAgentStringUUIDPast:
+		return constants.EventAgentUUIDPast
+	case constants.EventAgentStringNu7Hatch:
+		return constants.EventAgentNu7Hatch
+	case constants.EventAgentStringBagman:
+		return constants.EventAgentBagman
+	case constants.EventAgentStringAwsSdk:
+		return constants.EventAgentAwsSdk
+	case constants.EventAgentStringGoamz:
+		return constants.EventAgentGoamz
+	case constants.EventAgentStringMarcel:
+		return constants.EventAgentMarcel
+	case constants.EventAgentStringUuidHttps:
+		return constants.EventAgentUuidHttps
+	case constants.EventAgentStringLaunchpad:
+		return constants.EventAgentLaunchpad
+	case constants.EventAgentStringAudit:
+		return constants.EventAgentAudit
+	default:
+		return 0
+	}
+}
+
+// If we need to convert an Event Agent from its int code
+// to its string form, we can use this function.
+func ConvertEventAgentToString(eventAgent int) string {
+	switch eventAgent {
+	case constants.EventAgentMinioV4:
+		return constants.EventAgentStringMinioV4
+	case constants.EventAgentMinioV5:
+		return constants.EventAgentStringMinioV5
+	case constants.EventAgentMinioV6:
+		return constants.EventAgentStringMinioV6
+	case constants.EventAgentMinioV7:
+		return constants.EventAgentStringMinioV7
+	case constants.EventAgentPreserv:
+		return constants.EventAgentStringPreserv
+	case constants.EventAgentPreservAlt:
+		return constants.EventAgentStringPreservAlt
+	case constants.EventAgentUUID:
+		return constants.EventAgentStringUUID
+	case constants.EventAgentSHA256:
+		return constants.EventAgentStringSHA256
+	case constants.EventAgentMD5:
+		return constants.EventAgentStringMD5
+	case constants.EventAgentTest:
+		return constants.EventAgentStringTest
+	case constants.EventAgentTestAlt:
+		return constants.EventAgentStringTestAlt
+	case constants.EventAgentFixture:
+		return constants.EventAgentStringFixture
+	case constants.EventAgentUUIDPast:
+		return constants.EventAgentStringUUIDPast
+	case constants.EventAgentNu7Hatch:
+		return constants.EventAgentStringNu7Hatch
+	case constants.EventAgentBagman:
+		return constants.EventAgentStringBagman
+	case constants.EventAgentAwsSdk:
+		return constants.EventAgentStringAwsSdk
+	case constants.EventAgentGoamz:
+		return constants.EventAgentStringGoamz
+	case constants.EventAgentMarcel:
+		return constants.EventAgentStringMarcel
+	case constants.EventAgentUuidHttps:
+		return constants.EventAgentStringUuidHttps
+	case constants.EventAgentLaunchpad:
+		return constants.EventAgentStringLaunchpad
+	case constants.EventAgentAudit:
+		return constants.EventAgentStringAudit
+	default:
+		return "unknown event agent"
+	}
+}
+
+// Event objects are enumerated and stored as ints.
+// If we need to convert from the string version to the int version, we can use this function.
+func ConvertEventObjectToInt(eventObject string) int {
+	switch eventObject {
+	case constants.EventObjectStringPreserv:
+		return constants.EventObjectPreserv
+	case constants.EventObjectStringMinio:
+		return constants.EventObjectMinio
+	case constants.EventObjectStringMinioAlt:
+		return constants.EventObjectMinioAlt
+	case constants.EventObjectStringPreMinio:
+		return constants.EventObjectPreMinio
+	case constants.EventObjectStringUUIDMinio:
+		return constants.EventObjectUUIDMinio
+	case constants.EventObjectStringSHA256:
+		return constants.EventObjectSHA256
+	case constants.EventObjectStringMD5:
+		return constants.EventObjectMD5
+	case constants.EventObjectStringTest:
+		return constants.EventObjectTest
+	case constants.EventObjectStringExchange:
+		return constants.EventObjectExchange
+	case constants.EventObjectStringTestAlt:
+		return constants.EventObjectTestAlt
+	case constants.EventObjectStringFixS3:
+		return constants.EventObjectFixS3
+	case constants.EventObjectStringFixSHA:
+		return constants.EventObjectFixSHA
+	case constants.EventObjectStringFixExch:
+		return constants.EventObjectFixExch
+	case constants.EventObjectStringFixDelete:
+		return constants.EventObjectFixDelete
+	case constants.EventObjectStringBagman:
+		return constants.EventObjectBagman
+	case constants.EventObjectStringBagProc:
+		return constants.EventObjectBagProc
+	case constants.EventObjectStringExchOld:
+		return constants.EventObjectExchOld
+	case constants.EventObjectStringExDelete:
+		return constants.EventObjectExDelete
+	case constants.EventObjectStringExIngest:
+		return constants.EventObjectExIngest
+	case constants.EventObjectStringExUUID:
+		return constants.EventObjectExUUID
+	case constants.EventObjectStringAwsClient:
+		return constants.EventObjectAwsClient
+	case constants.EventObjectStringAwsLib:
+		return constants.EventObjectAwsLib
+	case constants.EventObjectStringBagmanGo:
+		return constants.EventObjectBagmanGo
+	case constants.EventObjectStringExAws:
+		return constants.EventObjectExAws
+	case constants.EventObjectStringExGoamz:
+		return constants.EventObjectExGoamz
+	case constants.EventObjectStringGoamz:
+		return constants.EventObjectGoamz
+	case constants.EventObjectStringGoamzAlt:
+		return constants.EventObjectGoamzAlt
+	case constants.EventObjectStringCryptoh:
+		return constants.EventObjectCryptoh
+	case constants.EventObjectStringMD5Past:
+		return constants.EventObjectMD5Past
+	case constants.EventObjectStringDPN:
+		return constants.EventObjectDPN
+	case constants.EventObjectStringUuidAws:
+		return constants.EventObjectUuidAws
+	case constants.EventObjectStringUuidGoamz:
+		return constants.EventObjectUuidGoamz
+	case constants.EventObjectStringRuby:
+		return constants.EventObjectRuby
+	case constants.EventObjectStringAudit:
+		return constants.EventObjectAudit
+	default:
+		return 0
+	}
+}
+
+// If we need to convert an Event Agent from its int code
+// to its string form, we can use this function.
+func ConvertEventObjectToString(eventObject int) string {
+	switch eventObject {
+	case constants.EventObjectPreserv:
+		return constants.EventObjectStringPreserv
+	case constants.EventObjectMinio:
+		return constants.EventObjectStringMinio
+	case constants.EventObjectMinioAlt:
+		return constants.EventObjectStringMinioAlt
+	case constants.EventObjectPreMinio:
+		return constants.EventObjectStringPreMinio
+	case constants.EventObjectUUIDMinio:
+		return constants.EventObjectStringUUIDMinio
+	case constants.EventObjectSHA256:
+		return constants.EventObjectStringSHA256
+	case constants.EventObjectMD5:
+		return constants.EventObjectStringMD5
+	case constants.EventObjectTest:
+		return constants.EventObjectStringTest
+	case constants.EventObjectExchange:
+		return constants.EventObjectStringExchange
+	case constants.EventObjectTestAlt:
+		return constants.EventObjectStringTestAlt
+	case constants.EventObjectFixS3:
+		return constants.EventObjectStringFixS3
+	case constants.EventObjectFixSHA:
+		return constants.EventObjectStringFixSHA
+	case constants.EventObjectFixExch:
+		return constants.EventObjectStringFixExch
+	case constants.EventObjectFixDelete:
+		return constants.EventObjectStringFixDelete
+	case constants.EventObjectBagman:
+		return constants.EventObjectStringBagman
+	case constants.EventObjectBagProc:
+		return constants.EventObjectStringBagProc
+	case constants.EventObjectExchOld:
+		return constants.EventObjectStringExchOld
+	case constants.EventObjectExDelete:
+		return constants.EventObjectStringExDelete
+	case constants.EventObjectExIngest:
+		return constants.EventObjectStringExIngest
+	case constants.EventObjectExUUID:
+		return constants.EventObjectStringExUUID
+	case constants.EventObjectAwsClient:
+		return constants.EventObjectStringAwsClient
+	case constants.EventObjectAwsLib:
+		return constants.EventObjectStringAwsLib
+	case constants.EventObjectBagmanGo:
+		return constants.EventObjectStringBagmanGo
+	case constants.EventObjectExAws:
+		return constants.EventObjectStringExAws
+	case constants.EventObjectExGoamz:
+		return constants.EventObjectStringExGoamz
+	case constants.EventObjectGoamz:
+		return constants.EventObjectStringGoamz
+	case constants.EventObjectGoamzAlt:
+		return constants.EventObjectStringGoamzAlt
+	case constants.EventObjectCryptoh:
+		return constants.EventObjectStringCryptoh
+	case constants.EventObjectMD5Past:
+		return constants.EventObjectStringMD5Past
+	case constants.EventObjectDPN:
+		return constants.EventObjectStringDPN
+	case constants.EventObjectUuidAws:
+		return constants.EventObjectStringUuidAws
+	case constants.EventObjectUuidGoamz:
+		return constants.EventObjectStringUuidGoamz
+	case constants.EventObjectRuby:
+		return constants.EventObjectStringRuby
+	case constants.EventObjectAudit:
+		return constants.EventObjectStringAudit
+	default:
+		return "unknown event object"
+	}
 }
