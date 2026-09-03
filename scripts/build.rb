@@ -25,6 +25,9 @@ class Build
       "ingest_recorder/ingest_recorder.go",
       "ingest_cleanup/ingest_cleanup.go",
       "ingest_bucket_reader/ingest_bucket_reader.go",
+      "object_transfer_copier/object_transfer_copier.go",
+      "object_transfer_validator/object_transfer_validator.go",
+      "object_transfer_cleanup/object_transfer_cleanup.go"
     ]
   end
 

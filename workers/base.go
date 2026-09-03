@@ -15,6 +15,7 @@ import (
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/network"
+	"github.com/APTrust/preservation-services/transfer"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/nsqio/go-nsq"
 )
@@ -122,6 +123,10 @@ type Base struct {
 	// processorConstructor is a function that returns an instance of
 	// *ingest.Base that will handle the processing for this worker.
 	processorConstructor ingest.BaseConstructor
+
+	// processorConstructor is a function that returns an instance of
+	// *ingest.Base that will handle the processing for this worker.
+	transferProcessorConstructor transfer.BaseConstructor
 
 	// sigTermState contains info about whether the current worker received
 	// SIGTERM or SIGINT, and what cleanup work it did after receiving the

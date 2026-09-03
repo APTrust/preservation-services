@@ -48,6 +48,9 @@ class TestRunner
       "bag_restorer",
       "file_restorer",
       "glacier_restorer",
+      "object_transfer_copier",
+      "object_transfer_validator",
+      "object_transfer_cleanup"
     ]
     unless @options[:nocleanup]
       names += ['ingest_cleanup']
@@ -196,7 +199,10 @@ class TestRunner
       "e2e_fixity_post_test",
       "e2e_ingest_post_test",
       "e2e_reingest_post_test",
-      "e2e_restoration_post_test"
+      "e2e_restoration_post_test",
+      "transfer01_copier",
+      "transfer02_validator",
+      "transfer03_cleanup"
     ]
     topics.each do |t|
       channel = "#{t}_worker_chan"

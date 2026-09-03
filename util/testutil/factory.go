@@ -85,6 +85,40 @@ func GetIngestObject() *service.IngestObject {
 	}
 }
 
+func GetTransferFile(withChecksums, withStorageRecords bool) *service.TransferFile {
+	f := service.NewTransferFile(ObjIdentifier, "data/image.jpg")
+	f.ErrorMessage = "no error"
+	f.FileFormat = "text/javascript"
+	f.ID = 999
+	f.InstitutionID = 9855
+	f.IntellectualObjectID = 4432
+	f.ObjectIdentifier = "test.edu/some-bag"
+	f.PathInBag = "data/text/file.txt"
+	f.Size = 5555
+	f.SourceStorageOption = "Standard"
+	f.TargetStorageOption = "Glacier-VA"
+	f.UUID = constants.EmptyUUID
+	if withChecksums {
+		f.SetChecksum(GetIngestChecksum(constants.AlgMd5, constants.SourceIngest))
+		f.SetChecksum(GetIngestChecksum(constants.AlgMd5, constants.SourceRegistry))
+	}
+	if withStorageRecords {
+		f.StorageRecords = append(
+			f.StorageRecords,
+			&service.StorageRecord{
+				URL:      "https://example.com/storage/record/1",
+				StoredAt: Bloomsday,
+			})
+		f.StorageRecords = append(
+			f.StorageRecords,
+			&service.StorageRecord{
+				URL:      "https://example.com/storage/record/2",
+				StoredAt: Bloomsday,
+			})
+	}
+	return f
+}
+
 func GetStorageRecord(provider, bucket, url string) *service.StorageRecord {
 	return &service.StorageRecord{
 		Bucket:   bucket,

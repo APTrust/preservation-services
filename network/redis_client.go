@@ -59,6 +59,30 @@ func (c *RedisClient) IngestObjectSave(workItemID int64, obj *service.IngestObje
 	return err
 }
 
+// TransferObjectGet returns an TransferObject from Redis.
+func (c *RedisClient) TransferObjectGet(workItemID int64, objIdentifier string) (*service.TransferObject, error) {
+	key := strconv.FormatInt(workItemID, 10)
+	field := fmt.Sprintf("object:%s", objIdentifier)
+	data, err := c.client.HGet(key, field).Result()
+	if err != nil {
+		return nil, fmt.Errorf("TransferObjectGet (%d, %s): %s",
+			workItemID, objIdentifier, err.Error())
+	}
+	return service.TransferObjectFromJSON(data)
+}
+
+// TransferObjectSave saves an IngestObject to Redis.
+func (c *RedisClient) TransferObjectSave(workItemID int64, obj *service.TransferObject) error {
+	key := strconv.FormatInt(workItemID, 10)
+	field := fmt.Sprintf("object:%s", obj.Identifier())
+	jsonData, err := obj.ToJSON()
+	if err != nil {
+		return err
+	}
+	_, err = c.client.HSet(key, field, jsonData).Result()
+	return err
+}
+
 // IngestObjectDelete deletes an IngestObject from Redis.
 // Note that this deletes the object record only, not the file records.
 func (c *RedisClient) IngestObjectDelete(workItemID int64, objIdentifier string) error {
@@ -124,6 +148,30 @@ func (c *RedisClient) IngestFileSave(workItemID int64, f *service.IngestFile) er
 	return err
 }
 
+// TransferFileGet returns a TransferFile from Redis.
+func (c *RedisClient) TransferFileGet(workItemID int64, fileIdentifier string) (*service.TransferFile, error) {
+	key := strconv.FormatInt(workItemID, 10)
+	field := fmt.Sprintf("file:%s", fileIdentifier)
+	data, err := c.client.HGet(key, field).Result()
+	if err != nil {
+		return nil, fmt.Errorf("TransferFileGet (%d, %s): %s",
+			workItemID, fileIdentifier, err.Error())
+	}
+	return service.TransferFileFromJSON(data)
+}
+
+// TransferFileSave saves a TransferFile to Redis.
+func (c *RedisClient) TransferFileSave(workItemID int64, f *service.TransferFile) error {
+	key := strconv.FormatInt(workItemID, 10)
+	field := fmt.Sprintf("file:%s", f.Identifier())
+	jsonData, err := f.ToJSON()
+	if err != nil {
+		return err
+	}
+	_, err = c.client.HSet(key, field, jsonData).Result()
+	return err
+}
+
 // IngestFileDelete deletes an IngestFile from Redis.
 func (c *RedisClient) IngestFileDelete(workItemID int64, fileIdentifier string) error {
 	key := strconv.FormatInt(workItemID, 10)
@@ -172,6 +220,41 @@ func (c *RedisClient) GetBatchOfFileKeys(workItemID int64, offset uint64, limit 
 			return nil, 0, err
 		}
 		keysAndValues[key] = ingestFile
+	}
+	return keysAndValues, nextOffset, nil
+}
+
+// GetBatchOfFileKeys returns a batch of file keys from redis,
+// starting at offset and return up to limit results. The string
+// slice returned is a list of keys. The int64 value is the offset
+// for the next batch. If the int64 is zero, there are no more keys
+// to get. See redis_client_test.go for sample usage.
+//
+// SCAN can return more or less than the number of items requested.
+// See https://redis.io/commands/scan
+func (c *RedisClient) GetBatchOfTransferFileKeys(workItemID int64, offset uint64, limit int64) (map[string]*service.TransferFile, uint64, error) {
+	key := strconv.FormatInt(workItemID, 10)
+	keys, nextOffset, err := c.client.HScan(
+		key,
+		offset,
+		"file:*",
+		limit).Result()
+	if err != nil {
+		return nil, uint64(0), fmt.Errorf(
+			"Error scanning Redis hash keys for WorkItem %d: %v",
+			workItemID, err)
+	}
+	keysAndValues := make(map[string]*service.TransferFile, len(keys)/2)
+	for i, key := range keys {
+		if i%2 == 1 {
+			continue // this is a value, not a key
+		}
+		jsonData := keys[i+1]
+		transferFile, err := service.TransferFileFromJSON(jsonData)
+		if err != nil {
+			return nil, 0, err
+		}
+		keysAndValues[key] = transferFile
 	}
 	return keysAndValues, nextOffset, nil
 }
@@ -230,6 +313,79 @@ func (c *RedisClient) IngestFilesApply(fn service.IngestFileApplyFn, options ser
 					procErr := service.NewProcessingError(
 						options.WorkItemID,
 						ingestFile.Identifier(),
+						err.Error(),
+						false,
+					)
+					errors = append(errors, procErr)
+					if len(errors) >= options.MaxErrors {
+						return count, errors
+					}
+				}
+			}
+			count++
+		}
+		// If next offset is zero, we've reached the end
+		if nextOffset == 0 {
+			break
+		}
+	}
+	return count, errors
+}
+
+// TransferFilesApply applies function fn to all IngestFiles belonging
+// the the specified workItemID. Note that this saves changes applied
+// by fn back to Redis.
+//
+// This stops processing on the first error and returns the number of
+// items on which the function was run successfully.
+//
+// TODO: Change to use IngestFileForeachOptions
+func (c *RedisClient) TransferFilesApply(fn service.TransferFileApplyFn, options service.TransferFileApplyOptions) (count int, errors []*service.ProcessingError) {
+	var err error
+	nextOffset := uint64(0)
+	var fileMap map[string]*service.TransferFile
+	for {
+		// Get a batch of files from Redis
+		fileMap, nextOffset, err = c.GetBatchOfTransferFileKeys(
+			options.WorkItemID, nextOffset, int64(200))
+		if err != nil {
+			procErr := service.NewProcessingError(
+				options.WorkItemID,
+				"",
+				err.Error(),
+				false,
+			)
+			errors = append(errors, procErr)
+			if len(errors) >= options.MaxErrors {
+				return count, errors
+			}
+		}
+		// For each file in the batch...
+		for _, transferFile := range fileMap {
+			var procErrors []*service.ProcessingError
+			// Apply the function up to Retries times, with the
+			// specified interval between retries.
+			for attempt := 0; attempt < options.MaxRetries; attempt++ {
+				procErrors = fn(transferFile)
+				if len(procErrors) == 0 {
+					break
+				}
+				time.Sleep(time.Duration(options.RetryMs) * time.Millisecond)
+			}
+			// Keep the processing error only after the last attempt.
+			if len(procErrors) > 0 {
+				errors = append(errors, procErrors...)
+				if len(errors) >= options.MaxErrors {
+					return count, errors
+				}
+			}
+			// Save the file back to Redis if options say so.
+			if options.SaveChanges {
+				err = c.TransferFileSave(options.WorkItemID, transferFile)
+				if err != nil {
+					procErr := service.NewProcessingError(
+						options.WorkItemID,
+						transferFile.Identifier(),
 						err.Error(),
 						false,
 					)
