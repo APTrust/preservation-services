@@ -63,3 +63,30 @@ var IngestStages = []Stage{
 		NSQTopic: IngestCleanup,
 	},
 }
+
+var TransferStages = []Stage{
+	{
+		Action:   ActionMove,
+		Name:     StageRequested,
+		Order:    1,
+		NSQTopic: TransferCopier,
+	},
+	{
+		Action:   ActionMove,
+		Name:     StageTransferring,
+		Order:    2,
+		NSQTopic: TransferCopier,
+	},
+	{
+		Action:   ActionMove,
+		Name:     StageValidateTransfer,
+		Order:    3,
+		NSQTopic: TransferValidator,
+	},
+	{
+		Action:   ActionMove,
+		Name:     StageTransferCleanup,
+		Order:    4,
+		NSQTopic: TransferCleanup,
+	},
+}

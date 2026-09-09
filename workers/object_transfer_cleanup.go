@@ -23,15 +23,15 @@ func NewObjectTransferCleanup(bufSize, numWorkers, maxAttempts int) *ObjectTrans
 		DeleteFromReceivingAfterFatalError:        false,
 		DeleteFromReceivingAfterMaxFailedAttempts: false,
 		MaxAttempts:                         maxAttempts,
-		NSQChannel:                          constants.IngestCleanup + "_worker_chan",
-		NSQTopic:                            constants.IngestCleanup,
+		NSQChannel:                          constants.TransferCleanup + "_worker_chan",
+		NSQTopic:                            constants.TransferCleanup,
 		NextQueueTopic:                      "",
 		NextWorkItemStage:                   constants.StageTransferCleanup,
 		NumberOfWorkers:                     numWorkers,
 		PushToCleanupAfterMaxFailedAttempts: false,
 		PushToCleanupOnFatalError:           false,
 		RequeueTimeout:                      (1 * time.Minute),
-		WorkItemSuccessNote:                 "Finished cleanup. Ingest complete.",
+		WorkItemSuccessNote:                 "Finished cleanup. Transfer complete.",
 	}
 	worker := &ObjectTransferCleanup{
 		TransferBase: NewTransferBase(

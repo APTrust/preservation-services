@@ -112,7 +112,7 @@ func TestTransferSetChecksum(t *testing.T) {
 }
 
 func TestTransferGetChecksum(t *testing.T) {
-	f := testutil.GetIngestFile(true, false)
+	f := testutil.GetTransferFile(true, false)
 
 	ingestMd5 := f.GetChecksum(constants.SourceIngest, constants.AlgMd5)
 	assert.Equal(t, constants.SourceIngest, ingestMd5.Source)
@@ -129,7 +129,7 @@ func TestTransferGetChecksum(t *testing.T) {
 }
 
 func TestTransferSetAndGetStorageRecord(t *testing.T) {
-	f := testutil.GetIngestFile(false, false)
+	f := testutil.GetTransferFile(false, false)
 	rec1 := testutil.GetStorageRecord(
 		"ExampleProvider",
 		"PresBucket",
@@ -166,12 +166,12 @@ func TestTransferSetAndGetStorageRecord(t *testing.T) {
 }
 
 func TestTransferIdentifierIsLegal(t *testing.T) {
-	ingestFile := service.NewIngestFile(testutil.ObjIdentifier, "data/legal.txt")
-	ok, err := ingestFile.IdentifierIsLegal()
+	transferFile := service.NewTransferFile(testutil.ObjIdentifier, "data/legal.txt")
+	ok, err := transferFile.IdentifierIsLegal()
 	assert.True(t, ok)
 	assert.Nil(t, err)
 
-	badFile := service.NewIngestFile(testutil.ObjIdentifier, "data/illegal_\u007F.txt")
+	badFile := service.NewTransferFile(testutil.ObjIdentifier, "data/illegal_\u007F.txt")
 	ok, err = badFile.IdentifierIsLegal()
 	assert.False(t, ok)
 	require.NotNil(t, err)
@@ -179,7 +179,7 @@ func TestTransferIdentifierIsLegal(t *testing.T) {
 }
 
 func TestTransferManifestChecksumRequired(t *testing.T) {
-	f := service.NewIngestFile(testutil.ObjIdentifier, "data/legal.txt")
+	f := service.NewTransferFile(testutil.ObjIdentifier, "data/legal.txt")
 
 	// Required because payload file MUST appear in payload manifest
 	ok := f.ManifestChecksumRequired("manifest-sha256.txt")
@@ -190,7 +190,7 @@ func TestTransferManifestChecksumRequired(t *testing.T) {
 	assert.False(t, ok)
 
 	// Required because manifest checksum MUST appear in tag manifest
-	f = service.NewIngestFile(testutil.ObjIdentifier, "manifest-md5.txt")
+	f = service.NewTransferFile(testutil.ObjIdentifier, "manifest-md5.txt")
 	ok = f.ManifestChecksumRequired("tagmanifest-sha256.txt")
 	assert.True(t, ok)
 
@@ -201,7 +201,7 @@ func TestTransferManifestChecksumRequired(t *testing.T) {
 
 	// Not required. Tag manifest checksum does not have to appear
 	// in any manifest.
-	f = service.NewIngestFile(testutil.ObjIdentifier, "tagmanifest-md5.txt")
+	f = service.NewTransferFile(testutil.ObjIdentifier, "tagmanifest-md5.txt")
 	ok = f.ManifestChecksumRequired("manifest-sha256.txt")
 	assert.False(t, ok)
 
@@ -209,7 +209,7 @@ func TestTransferManifestChecksumRequired(t *testing.T) {
 	assert.False(t, ok)
 
 	// Not required because tag file must not appear in payload manifest
-	f = service.NewIngestFile(testutil.ObjIdentifier, "tag-file.txt")
+	f = service.NewTransferFile(testutil.ObjIdentifier, "tag-file.txt")
 	ok = f.ManifestChecksumRequired("manifest-sha256.txt")
 	assert.False(t, ok)
 
@@ -227,7 +227,7 @@ func TestTransferManifestChecksumRequired(t *testing.T) {
 
 func TestTransferChecksumsMatch(t *testing.T) {
 	allChecksums := testutil.GetIngestChecksumSet()
-	f := service.NewIngestFile(testutil.ObjIdentifier, "data/image.jpg")
+	f := service.NewTransferFile(testutil.ObjIdentifier, "data/image.jpg")
 	f.Checksums = allChecksums
 
 	manifests := []string{
@@ -286,7 +286,7 @@ func TestTransferChecksumsMatch(t *testing.T) {
 }
 
 func TestTransferURI(t *testing.T) {
-	f := testutil.GetIngestFile(true, true)
+	f := testutil.GetTransferFile(true, true)
 	assert.Equal(t, "https://example.com/storage/record/1", f.URI())
 }
 
@@ -381,13 +381,13 @@ func TestTransferHasPreservableName(t *testing.T) {
 		"tag-dir/some-other-tag-file.xml",
 	}
 	for _, pathInBag := range no {
-		f := &service.IngestFile{
+		f := &service.TransferFile{
 			PathInBag: pathInBag,
 		}
 		assert.False(t, f.HasPreservableName(), pathInBag)
 	}
 	for _, pathInBag := range yes {
-		f := &service.IngestFile{
+		f := &service.TransferFile{
 			PathInBag: pathInBag,
 		}
 		assert.True(t, f.HasPreservableName(), pathInBag)
@@ -395,21 +395,21 @@ func TestTransferHasPreservableName(t *testing.T) {
 }
 
 func TestTransferHasRegistryURL(t *testing.T) {
-	ingestFile := &service.IngestFile{
+	transferFile := &service.TransferFile{
 		RegistryURLs: []string{
 			"url1",
 			"url2",
 		},
 	}
-	assert.True(t, ingestFile.HasRegistryURL("url1"))
-	assert.True(t, ingestFile.HasRegistryURL("url2"))
-	assert.False(t, ingestFile.HasRegistryURL("url3"))
+	assert.True(t, transferFile.HasRegistryURL("url1"))
+	assert.True(t, transferFile.HasRegistryURL("url2"))
+	assert.False(t, transferFile.HasRegistryURL("url3"))
 }
 
 func TestTransferNeedsSaveAt(t *testing.T) {
 	provider := "example-provider"
 	bucket := "example-bucket"
-	f := &service.IngestFile{
+	f := &service.TransferFile{
 		PathInBag: "data/some-file.txt",
 		NeedsSave: true,
 	}
@@ -430,7 +430,7 @@ func TestTransferNeedsSaveAt(t *testing.T) {
 	assert.False(t, f.NeedsSaveAt(provider, bucket))
 
 	// Try a new ingest file...
-	f = &service.IngestFile{
+	f = &service.TransferFile{
 		PathInBag: "bagit.txt",
 	}
 
@@ -438,7 +438,7 @@ func TestTransferNeedsSaveAt(t *testing.T) {
 	assert.False(t, f.NeedsSaveAt(provider, bucket))
 
 	// Try NeedsSave = false
-	f = &service.IngestFile{
+	f = &service.TransferFile{
 		PathInBag: "data/my_file.txt",
 		NeedsSave: false,
 	}
@@ -449,18 +449,18 @@ func TestTransferNeedsSaveAt(t *testing.T) {
 }
 
 func TestTransferGetPutOptions(t *testing.T) {
-	ingestFile := &service.IngestFile{
+	transferFile := &service.TransferFile{
 		FileFormat:       "image/jpeg",
 		ObjectIdentifier: "example.edu/bag-of-photos",
 		PathInBag:        "data/image  with   spaces&?:Junk.jpg",
 	}
-	ingestFile.SetChecksum(
+	transferFile.SetChecksum(
 		&service.IngestChecksum{
 			Algorithm: constants.AlgMd5,
 			Digest:    "12345",
 			Source:    constants.SourceIngest,
 		})
-	ingestFile.SetChecksum(
+	transferFile.SetChecksum(
 		&service.IngestChecksum{
 			Algorithm: constants.AlgSha256,
 			Digest:    "98765",
@@ -468,8 +468,12 @@ func TestTransferGetPutOptions(t *testing.T) {
 		})
 
 	for _, storageOption := range constants.StorageOptions {
-		ingestFile.StorageOption = storageOption
-		opts, err := ingestFile.GetPutOptions()
+		transferFile.SourceStorageOption = storageOption
+
+		// TODO
+		// transferFile.TargetStorageOption = storageOption
+
+		opts, err := transferFile.GetPutOptions()
 		require.Nil(t, err)
 		assert.Equal(t, "example.edu", opts.UserMetadata["institution"])
 		assert.Equal(t, "example.edu/bag-of-photos", opts.UserMetadata["bag"])

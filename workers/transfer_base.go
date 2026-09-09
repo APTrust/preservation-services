@@ -102,7 +102,7 @@ func (b *TransferBase) ProcessSuccessChannel() {
 				// We shouldn't have to set this, but somehow the cleanup worker
 				// keeps picking up completed items. We need to find the root of that.
 				task.WorkItem.Retry = false
-				task.WorkItem.IntellectualObjectID = task.Processor.IngestObjectGet().ID
+				task.WorkItem.IntellectualObjectID = task.TransferProcessor.TransferObjectGet().ID
 				// TEMP
 				if task.WorkItem.IntellectualObjectID == 0 {
 					panic("ID SHOULD NOT BE ZERO!")
@@ -146,9 +146,9 @@ func (b *TransferBase) ProcessErrorChannel() {
 
 			// Go to NSQ cleanup or not?
 			if b.Settings.PushToCleanupAfterMaxFailedAttempts {
-				task.Processor.IngestObjectGet().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterMaxFailedAttempts
-				task.Processor.IngestObjectSave()
-				task.NextQueueTopic = constants.IngestCleanup
+				task.TransferProcessor.TransferObjectGet().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterMaxFailedAttempts
+				task.TransferProcessor.TransferObjectSave()
+				task.NextQueueTopic = constants.TransferCleanup
 			} else {
 				task.NextQueueTopic = ""
 			}
@@ -183,12 +183,12 @@ func (b *TransferBase) ProcessFatalErrorChannel() {
 		task.WorkItem.Retry = false
 		task.WorkItem.NeedsAdminReview = true
 		task.WorkItem.Status = constants.StatusFailed
-		task.WorkItem.Outcome = "Ingest failed due to fatal error."
+		task.WorkItem.Outcome = "Transfer failed due to fatal error."
 
 		// NSQ
-		if b.Settings.PushToCleanupOnFatalError && task.WorkItem.Stage != constants.StageCleanup {
-			task.Processor.IngestObjectGet().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterFatalError
-			task.Processor.IngestObjectSave()
+		if b.Settings.PushToCleanupOnFatalError && task.WorkItem.Stage != constants.TransferCleanup {
+			task.TransferProcessor.TransferObjectGet().ShouldDeleteFromReceiving = b.Settings.DeleteFromReceivingAfterFatalError
+			task.TransferProcessor.TransferObjectSave()
 			b.Context.Logger.Errorf("Pushing WorkItem %d (%s) to NSQ cleanup topic due to fatal errors. Delete from receiving bucket = %t",
 				task.WorkItem.ID, task.WorkItem.Name, b.Settings.DeleteFromReceivingAfterFatalError)
 			task.NextQueueTopic = constants.IngestCleanup
@@ -210,7 +210,7 @@ func (b *TransferBase) ProcessFatalErrorChannel() {
 // GetTaskObject returns an object representing the task to be implemented.
 // This object will be passed from channel to channel during processing.
 func (b *TransferBase) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
-	ingestObject, err := b.TransferObjectGet(workItem)
+	transferObject, err := b.TransferObjectGet(workItem)
 	if err != nil {
 		message := fmt.Sprintf("WorkItem %d: %v", workItem.ID, err)
 		b.Context.Logger.Error(message)
@@ -223,11 +223,12 @@ func (b *TransferBase) GetTaskObject(message *nsq.Message, workItem *registry.Wo
 
 	// Set up the Task.
 	task := &Task{
-		NSQMessage:   message,
-		WasCancelled: workItem.Status == constants.StatusCancelled,
-		WorkResult:   workResult,
-		WorkItem:     workItem,
-		Processor:    b.processorConstructor(b.Context, workItem.ID, ingestObject),
+		NSQMessage:        message,
+		WasCancelled:      workItem.Status == constants.StatusCancelled,
+		WorkResult:        workResult,
+		WorkItem:          workItem,
+		Processor:         nil,
+		TransferProcessor: b.transferProcessorConstructor(b.Context, workItem.ID, transferObject),
 	}
 	return task, nil
 }
@@ -353,30 +354,32 @@ func (b *TransferBase) ShouldSkipThis(workItem *registry.WorkItem) bool {
 	return workerStage == workItemStage
 }*/
 
-// IngestObjectGet returns the IngestObject for the specified WorkItem from
-// Redis, or it creates a new one. For the first phase of ingest (PreFetch),
-// this will almost always have to create a new IngestObject. For subsequent
+// TransferObjectGet returns the TransferObject for the specified WorkItem from
+// Redis, or it creates a new one. For the first phase of transfer (TransferCopier),
+// this will almost always have to create a new TransferObject. For subsequent
 // phases, it should never have to create one.
-func (b *TransferBase) TransferObjectGet(workItem *registry.WorkItem) (*service.IngestObject, error) {
+func (b *TransferBase) TransferObjectGet(workItem *registry.WorkItem) (*service.TransferObject, error) {
 	instIdentifier, err := b.GetInstitutionIdentifier(workItem.InstitutionID)
 	if err != nil {
 		return nil, b.Error(workItem.ID, "", err, true)
 	}
 	objName := util.StripFileExtension(workItem.Name)
 	objIdentifier := fmt.Sprintf("%s/%s", instIdentifier, objName)
-	ingestObject, err := b.Context.RedisClient.IngestObjectGet(workItem.ID, objIdentifier)
-	if err == nil && ingestObject != nil {
-		return ingestObject, nil
+	transferObject, err := b.Context.RedisClient.TransferObjectGet(workItem.ID, objIdentifier)
+	if err == nil && transferObject != nil {
+		return transferObject, nil
 	}
-	if err != nil && b.Settings.NSQTopic != constants.IngestPreFetch {
-		errMsg := fmt.Sprintf("Ingest object not found in Redis: %v. ", err)
-		_, s3Err := b.Context.S3StatObject(constants.StorageProviderAWS, workItem.Bucket, workItem.Name)
+	if err != nil && b.Settings.NSQTopic != constants.TransferCopier {
+		errMsg := fmt.Sprintf("Transfer object not found in Redis: %v. ", err)
+		// We don't need to check this for transfers because we can assume the data is already in APTrust storage.
+		// i.e. we don't have to check the receiving bucket for anything or error out here
+		/*_, s3Err := b.Context.S3StatObject(constants.StorageProviderAWS, workItem.Bucket, workItem.Name)
 		if s3Err != nil && strings.Contains(s3Err.Error(), "key does not exist") {
 			errMsg += "Also, the bag is no longer in the receiving bucket. It may have been deleted due to validation failure or completed ingest, or the depositor may have deleted it."
-		}
+		}*/
 		return nil, fmt.Errorf(errMsg)
 	}
-	return service.NewIngestObject(
+	return service.NewTransferObject(
 		workItem.Bucket,
 		workItem.Name,
 		workItem.ETag,
@@ -608,7 +611,7 @@ func (b *IngestBase) ObjectAlreadyTransferred(workItem *registry.WorkItem) bool 
 func (b *TransferBase) QueueE2E(task *Task) {
 	if b.Context.Config.IsE2ETest() && b.Settings.NextQueueTopic == "" {
 		e2eTopic := constants.TopicE2EIngest
-		if task.Processor.IngestObjectGet().IsReingest {
+		if task.TransferProcessor.TransferObjectGet().IsReingest {
 			e2eTopic = constants.TopicE2EReingest
 		}
 		b.Context.Logger.Infof("Pushing %s (%d) into e2e topic %s", task.WorkItem.Name, task.WorkItem.ID, e2eTopic)

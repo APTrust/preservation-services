@@ -53,6 +53,8 @@ func (copier *ObjectTransferCopier) Run() (int, []*service.ProcessingError) {
 		SaveChanges: true,
 		WorkItemID:  copier.WorkItemID,
 	}
+	// TODO check on the following call
+	copier.TransferObjectSave()
 	return copier.Context.RedisClient.TransferFilesApply(copyFn, options)
 }
 

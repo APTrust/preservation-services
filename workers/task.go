@@ -6,6 +6,7 @@ import (
 	"github.com/APTrust/preservation-services/ingest"
 	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
+	"github.com/APTrust/preservation-services/transfer"
 	"github.com/nsqio/go-nsq"
 )
 
@@ -36,6 +37,10 @@ type Task struct {
 	// Processor is handles whatever phase of the ingest process
 	// this worker is responsible for (validation, storage, recording, etc.)
 	Processor ingest.Runnable
+
+	// Processor for transfer process.
+	// Handles transfer phases (copying, validation, cleanup)
+	TransferProcessor transfer.Runnable
 
 	// RestorationObject contains information about a file or object to be
 	// restored. This will be nil for all workers except the bag and file

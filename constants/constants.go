@@ -12,6 +12,7 @@ const (
 	ActionFixityCheck          = "Fixity Check"
 	ActionGlacierRestore       = "Glacier Restore"
 	ActionIngest               = "Ingest"
+	ActionMove                 = "Move"
 	ActionRestoreFile          = "Restore File"
 	ActionRestoreObject        = "Restore Object"
 	ActionTransferObject       = "Move"
@@ -275,6 +276,12 @@ func TopicFor(action, stage, fileIdentifier string) (topic string, err error) {
 		topic = TopicGlacierRestore
 	} else if action == ActionDelete {
 		topic = TopicDelete
+	} else if action == ActionMove {
+		for _, s := range TransferStages {
+			if s.Name == stage {
+				topic = s.NSQTopic
+			}
+		}
 	}
 	if topic == "" {
 		err = fmt.Errorf("No NSQ topic for %s/%s", action, stage)
@@ -290,6 +297,18 @@ func IngestStageFor(topic string) (stage string, err error) {
 	}
 	if stage == "" {
 		err = fmt.Errorf("Cannot map NSQ topic %s to any ingest stage", topic)
+	}
+	return stage, err
+}
+
+func TransferStageFor(topic string) (stage string, err error) {
+	for _, s := range TransferStages {
+		if s.NSQTopic == topic {
+			stage = s.Name
+		}
+	}
+	if stage == "" {
+		err = fmt.Errorf("Cannot map NSQ topic %s to any transfer stage", topic)
 	}
 	return stage, err
 }

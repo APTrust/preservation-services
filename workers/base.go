@@ -124,8 +124,8 @@ type Base struct {
 	// *ingest.Base that will handle the processing for this worker.
 	processorConstructor ingest.BaseConstructor
 
-	// processorConstructor is a function that returns an instance of
-	// *ingest.Base that will handle the processing for this worker.
+	// transferProcessorConstructor is a function that returns an instance of
+	// *transfer.Base that will handle the processing for this worker.
 	transferProcessorConstructor transfer.BaseConstructor
 
 	// sigTermState contains info about whether the current worker received
@@ -229,7 +229,13 @@ func (b *Base) ProcessItem() {
 
 func (b *Base) processItem(task *Task) {
 	b.Context.Logger.Infof("WorkItem %d (%s) is in ProcessChannel", task.WorkItem.ID, task.WorkItem.Name)
-	count, errors := task.Processor.Run()
+	count := 0
+	errors := []*service.ProcessingError{}
+	if task.WorkItem.Action == constants.ActionMove {
+		count, errors = task.TransferProcessor.Run()
+	} else {
+		count, errors = task.Processor.Run()
+	}
 	task.WorkResult.Errors = errors
 
 	b.Context.Logger.Infof("WorkItem %d: count %d", task.WorkItem.ID, count)

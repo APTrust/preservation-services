@@ -71,7 +71,7 @@ func (c *RedisClient) TransferObjectGet(workItemID int64, objIdentifier string) 
 	return service.TransferObjectFromJSON(data)
 }
 
-// TransferObjectSave saves an IngestObject to Redis.
+// TransferObjectSave saves an TransferObject to Redis.
 func (c *RedisClient) TransferObjectSave(workItemID int64, obj *service.TransferObject) error {
 	key := strconv.FormatInt(workItemID, 10)
 	field := fmt.Sprintf("object:%s", obj.Identifier())
