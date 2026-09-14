@@ -17,21 +17,12 @@ type Checksum struct {
 	Digest string `json:"digest"`
 
 	// DateTime is the timestamp of when this digest was calculated.
-	// Use this instead of CreatedAt and UpdatedAt.
+	// Use this instead of CreatedAt.
 	DateTime time.Time `json:"datetime"`
 
 	// GenericFileID is the ID of the GenericFile to which this
 	// checksum belongs.
 	GenericFileID int64 `json:"generic_file_id"`
-
-	// CreatedAt is a legacy timestamp from the old Rails app.
-	// Ignore this and use DateTime instead.
-	CreatedAt time.Time `json:"created_at,omitempty"`
-
-	// UpdatedAt is a legacy timestamp from the old Rails app.
-	// Ignore this and use DateTime instead. Also note that
-	// checksums are never updated.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
 
 	// GenericFileIdentifier is the identifier of the GenericFile to
 	// which this checksum belongs. This is a read-only field from
@@ -50,6 +41,10 @@ type Checksum struct {
 	// the Registry's ChecksumView object. No need to fill this on
 	// POST or PUT requests. Registry will ignore it.
 	InstitutionID int64 `json:"institution_id"`
+
+	// CreatedAt is a legacy timestamp from the old Rails app.
+	// Ignore this and use DateTime instead.
+	CreatedAt time.Time `json:"created_at,omitempty"`
 }
 
 func ChecksumFromJSON(jsonData []byte) (*Checksum, error) {
