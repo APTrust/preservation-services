@@ -6,7 +6,7 @@ import (
 )
 
 type PremisEvent struct {
-	Agent         string    `json:"agent"`
+	Agent         int       `json:"agent"`
 	DateTime      time.Time `json:"date_time"`
 	Detail        string    `json:"detail"`
 	EventType     int       `json:"event_type"`
@@ -21,7 +21,7 @@ type PremisEvent struct {
 
 	// IntellectualObjectIdentifier is read-only, from PremisEventView
 	IntellectualObjectIdentifier string `json:"intellectual_object_identifier"`
-	Object                       string `json:"object"`
+	Object                       int    `json:"object"`
 	OutcomeDetail                string `json:"outcome_detail"`
 	OutcomeInformation           string `json:"outcome_information"`
 	Outcome                      string `json:"outcome"`

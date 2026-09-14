@@ -536,8 +536,8 @@ func (f *IngestFile) NewFileIngestEvent() (*registry.PremisEvent, error) {
 		Detail:                       fmt.Sprintf("Completed copy to preservation storage (%s)", f.UUID),
 		Outcome:                      constants.StatusSuccess,
 		OutcomeDetail:                fmt.Sprintf("md5:%s", md5Checksum.Digest),
-		Object:                       "preservation-services + Minio S3 client",
-		Agent:                        constants.S3ClientName,
+		Object:                       constants.EventObjectPreMinio,
+		Agent:                        util.ConvertEventAgentToInt(constants.S3ClientName),
 		OutcomeInformation:           "Put using md5 checksum",
 		IntellectualObjectIdentifier: f.ObjectIdentifier,
 		GenericFileIdentifier:        f.Identifier(),
@@ -563,8 +563,8 @@ func (f *IngestFile) NewFileFixityCheckEvent(manifestChecksum *IngestChecksum) *
 		Detail:                       "Fixity check against registered hash",
 		Outcome:                      props["outcome"],
 		OutcomeDetail:                fmt.Sprintf("%s:%s", manifestChecksum.Algorithm, manifestChecksum.Digest),
-		Object:                       props["object"],
-		Agent:                        props["agent"],
+		Object:                       util.ConvertEventObjectToInt(props["object"]),
+		Agent:                        util.ConvertEventAgentToInt(props["agent"]),
 		OutcomeInformation:           props["outcomeInformation"],
 		IntellectualObjectIdentifier: f.ObjectIdentifier,
 		GenericFileIdentifier:        f.Identifier(),
@@ -585,8 +585,8 @@ func (f *IngestFile) NewFileDigestEvent(ingestChecksum *IngestChecksum) *registr
 		Detail:                       "Calculated fixity value",
 		Outcome:                      props["outcome"],
 		OutcomeDetail:                fmt.Sprintf("%s:%s", ingestChecksum.Algorithm, ingestChecksum.Digest),
-		Object:                       props["object"],
-		Agent:                        props["agent"],
+		Object:                       util.ConvertEventObjectToInt(props["object"]),
+		Agent:                        util.ConvertEventAgentToInt(props["agent"]),
 		OutcomeInformation:           "Calculated fixity value",
 		IntellectualObjectIdentifier: f.ObjectIdentifier,
 		GenericFileIdentifier:        f.Identifier(),
@@ -602,12 +602,12 @@ func (f *IngestFile) NewFileIdentifierEvent(identifier, identifierType string) (
 		return nil, fmt.Errorf("Param identifier cannot be empty.")
 	}
 	eventId := uuid.New()
-	object := "APTrust exchange/ingest processor"
-	agent := "https://github.com/APTrust/preservation-services"
+	object := constants.EventObjectStringExchange
+	agent := constants.EventAgentStringPreserv
 	detail := "Assigned new institution.bag/path identifier"
 	if identifierType == constants.IdTypeStorageURL {
-		object = "Go uuid library + Minio S3 library"
-		agent = "http://github.com/google/uuid"
+		object = constants.EventObjectStringUUIDMinio
+		agent = constants.EventAgentStringUUID
 		detail = "Assigned new storage URL identifier"
 	}
 	return &registry.PremisEvent{
@@ -617,8 +617,8 @@ func (f *IngestFile) NewFileIdentifierEvent(identifier, identifierType string) (
 		Detail:                       detail,
 		Outcome:                      string(constants.StatusSuccess),
 		OutcomeDetail:                identifier,
-		Object:                       object,
-		Agent:                        agent,
+		Object:                       util.ConvertEventObjectToInt(object),
+		Agent:                        util.ConvertEventAgentToInt(agent),
 		OutcomeInformation:           fmt.Sprintf("Assigned %s identifier", identifierType),
 		IntellectualObjectIdentifier: f.ObjectIdentifier,
 		GenericFileIdentifier:        f.Identifier(),
@@ -645,8 +645,8 @@ func (f *IngestFile) NewFileReplicationEvent(replicationRecord *StorageRecord) (
 		Detail:                       "Copied to replication storage and assigned replication URL identifier",
 		Outcome:                      constants.StatusSuccess,
 		OutcomeDetail:                replicationRecord.URL,
-		Object:                       "Go uuid library + Minio S3 library",
-		Agent:                        "http://github.com/google/uuid",
+		Object:                       constants.EventObjectUUIDMinio,
+		Agent:                        constants.EventAgentUUID,
 		OutcomeInformation:           "Replicated to secondary storage",
 		IntellectualObjectIdentifier: f.ObjectIdentifier,
 		GenericFileIdentifier:        f.Identifier(),
@@ -657,13 +657,13 @@ func (f *IngestFile) NewFileReplicationEvent(replicationRecord *StorageRecord) (
 
 func getFixityProps(fixityAlg string, fixityMatched bool) map[string]string {
 	details := make(map[string]string)
-	details["object"] = "Go language crypto/md5"
-	details["agent"] = "http://golang.org/pkg/crypto/md5/"
+	details["object"] = constants.EventObjectStringMD5
+	details["agent"] = constants.EventAgentStringMD5
 	details["outcomeInformation"] = "Fixity matches"
 	details["outcome"] = string(constants.StatusSuccess)
 	if fixityAlg == constants.AlgSha256 {
-		details["object"] = "Go language crypto/sha256"
-		details["agent"] = "http://golang.org/pkg/crypto/sha256/"
+		details["object"] = constants.EventObjectStringSHA256
+		details["agent"] = constants.EventAgentStringSHA256
 	}
 	if fixityMatched == false {
 		details["outcome"] = string(constants.StatusFailed)
