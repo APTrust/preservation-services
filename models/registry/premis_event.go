@@ -9,7 +9,7 @@ type PremisEvent struct {
 	Agent         string    `json:"agent"`
 	DateTime      time.Time `json:"date_time"`
 	Detail        string    `json:"detail"`
-	EventType     string    `json:"event_type"`
+	EventType     int       `json:"event_type"`
 	GenericFileID int64     `json:"generic_file_id,omitempty"`
 
 	// GenericFileIdentifier is read-only, from PremisEventView
