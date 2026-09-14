@@ -118,8 +118,6 @@ func (r *Recorder) recordObjectEvents() (errors []*service.ProcessingError) {
 			event.GenericFileID = savedEvent.GenericFileID
 			event.InstitutionID = savedEvent.InstitutionID
 			event.IntellectualObjectID = savedEvent.IntellectualObjectID
-			event.CreatedAt = savedEvent.CreatedAt
-			event.UpdatedAt = savedEvent.UpdatedAt
 		}
 	}
 	err := r.IngestObjectSave()

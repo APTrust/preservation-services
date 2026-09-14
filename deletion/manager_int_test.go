@@ -310,7 +310,5 @@ func getFileIngestEvent(gf *registry.GenericFile) *registry.PremisEvent {
 		OutcomeInformation:   "blah blah blah",
 		InstitutionID:        gf.InstitutionID,
 		IntellectualObjectID: gf.IntellectualObjectID,
-		CreatedAt:            timestamp,
-		UpdatedAt:            timestamp,
 	}
 }

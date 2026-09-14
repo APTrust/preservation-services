@@ -7,7 +7,6 @@ import (
 
 type PremisEvent struct {
 	Agent         string    `json:"agent"`
-	CreatedAt     time.Time `json:"created_at,omitempty"`
 	DateTime      time.Time `json:"date_time"`
 	Detail        string    `json:"detail"`
 	EventType     string    `json:"event_type"`
@@ -21,12 +20,11 @@ type PremisEvent struct {
 	IntellectualObjectID  int64  `json:"intellectual_object_id"`
 
 	// IntellectualObjectIdentifier is read-only, from PremisEventView
-	IntellectualObjectIdentifier string    `json:"intellectual_object_identifier"`
-	Object                       string    `json:"object"`
-	OutcomeDetail                string    `json:"outcome_detail"`
-	OutcomeInformation           string    `json:"outcome_information"`
-	Outcome                      string    `json:"outcome"`
-	UpdatedAt                    time.Time `json:"updated_at,omitempty"`
+	IntellectualObjectIdentifier string `json:"intellectual_object_identifier"`
+	Object                       string `json:"object"`
+	OutcomeDetail                string `json:"outcome_detail"`
+	OutcomeInformation           string `json:"outcome_information"`
+	Outcome                      string `json:"outcome"`
 }
 
 func PremisEventFromJSON(jsonData []byte) (*PremisEvent, error) {

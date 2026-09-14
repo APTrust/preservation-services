@@ -465,8 +465,6 @@ func (obj *IngestObject) NewObjectCreationEvent() *registry.PremisEvent {
 		InstitutionID:        obj.InstitutionID,
 		Agent:                "https://github.com/APTrust/preservation-services",
 		OutcomeInformation:   "Object created, files copied to preservation storage",
-		CreatedAt:            timestamp,
-		UpdatedAt:            timestamp,
 	}
 }
 
@@ -488,8 +486,6 @@ func (obj *IngestObject) NewObjectIngestEvent() *registry.PremisEvent {
 		InstitutionID:        obj.InstitutionID,
 		Agent:                constants.S3ClientName,
 		OutcomeInformation:   "Multipart put using s3 etags",
-		CreatedAt:            timestamp,
-		UpdatedAt:            timestamp,
 	}
 }
 
@@ -511,8 +507,6 @@ func (obj *IngestObject) NewObjectIdentifierEvent() *registry.PremisEvent {
 		InstitutionID:        obj.InstitutionID,
 		Agent:                "https://github.com/APTrust/preservation-services",
 		OutcomeInformation:   "Institution domain + tar file name",
-		CreatedAt:            timestamp,
-		UpdatedAt:            timestamp,
 	}
 }
 
@@ -534,7 +528,5 @@ func (obj *IngestObject) NewObjectRightsEvent() *registry.PremisEvent {
 		InstitutionID:        obj.InstitutionID,
 		Agent:                "https://github.com/APTrust/preservation-services",
 		OutcomeInformation:   "Set access to " + obj.Access(),
-		CreatedAt:            timestamp,
-		UpdatedAt:            timestamp,
 	}
 }

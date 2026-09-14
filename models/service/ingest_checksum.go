@@ -18,10 +18,9 @@ type IngestChecksum struct {
 func (cs *IngestChecksum) ToRegistryChecksum(genericFileID int64) *registry.Checksum {
 	return &registry.Checksum{
 		Algorithm:     cs.Algorithm,
+		CreatedAt:     cs.DateTime,
 		DateTime:      cs.DateTime,
 		Digest:        cs.Digest,
 		GenericFileID: genericFileID,
-		CreatedAt:     cs.DateTime,
-		UpdatedAt:     cs.DateTime,
 	}
 }

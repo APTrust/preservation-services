@@ -74,8 +74,6 @@ func verifyObjectDeletionEvent(obj *registry.IntellectualObject) {
 	assert.Equal(ctx.T, obj.ID, deletionEvent.IntellectualObjectID)
 	assert.Equal(ctx.T, "Object deleted at the request of admin@test.edu. Institutional approver: admin@test.edu.", deletionEvent.OutcomeInformation)
 	assert.NotEmpty(ctx.T, deletionEvent.DateTime)
-	assert.NotEmpty(ctx.T, deletionEvent.CreatedAt)
-	assert.NotEmpty(ctx.T, deletionEvent.UpdatedAt)
 	assert.Empty(ctx.T, deletionEvent.GenericFileID)
 }
 
@@ -96,8 +94,6 @@ func verifyFileDeletionEvent(gf *registry.GenericFile) {
 	assert.Equal(ctx.T, gf.IntellectualObjectID, deletionEvent.IntellectualObjectID)
 	assert.Equal(ctx.T, "File deleted at the request of admin@test.edu. Institutional approver: admin@test.edu. This event confirms all preservation copies have been deleted.", deletionEvent.OutcomeInformation)
 	assert.NotEmpty(ctx.T, deletionEvent.DateTime)
-	assert.NotEmpty(ctx.T, deletionEvent.CreatedAt)
-	assert.NotEmpty(ctx.T, deletionEvent.UpdatedAt)
 	assert.Equal(ctx.T, gf.ID, deletionEvent.GenericFileID)
 }
 
