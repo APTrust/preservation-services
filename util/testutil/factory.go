@@ -191,7 +191,7 @@ func GetChecksum(gf *registry.GenericFile, alg string) *registry.Checksum {
 	}
 }
 
-func GetPremisEvent(gf *registry.GenericFile, eventType string) *registry.PremisEvent {
+func GetPremisEvent(gf *registry.GenericFile, eventType int) *registry.PremisEvent {
 	return &registry.PremisEvent{
 		Agent:                constants.EventAgentTestAlt,
 		DateTime:             Bloomsday,

@@ -7,10 +7,9 @@ import (
 
 type PremisEvent struct {
 	Agent         int       `json:"agent"`
-	CreatedAt     time.Time `json:"created_at,omitempty"`
 	DateTime      time.Time `json:"date_time"`
 	Detail        string    `json:"detail"`
-	EventType     string    `json:"event_type"`
+	EventType     int       `json:"event_type"`
 	GenericFileID int64     `json:"generic_file_id,omitempty"`
 
 	// GenericFileIdentifier is read-only, from PremisEventView
@@ -21,12 +20,11 @@ type PremisEvent struct {
 	IntellectualObjectID  int64  `json:"intellectual_object_id"`
 
 	// IntellectualObjectIdentifier is read-only, from PremisEventView
-	IntellectualObjectIdentifier string    `json:"intellectual_object_identifier"`
-	Object                       int       `json:"object"`
-	OutcomeDetail                string    `json:"outcome_detail"`
-	OutcomeInformation           string    `json:"outcome_information"`
-	Outcome                      string    `json:"outcome"`
-	UpdatedAt                    time.Time `json:"updated_at,omitempty"`
+	IntellectualObjectIdentifier string `json:"intellectual_object_identifier"`
+	Object                       int    `json:"object"`
+	OutcomeDetail                string `json:"outcome_detail"`
+	OutcomeInformation           string `json:"outcome_information"`
+	Outcome                      string `json:"outcome"`
 }
 
 func PremisEventFromJSON(jsonData []byte) (*PremisEvent, error) {

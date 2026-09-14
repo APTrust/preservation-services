@@ -8,6 +8,7 @@ import (
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/registry"
+	"github.com/APTrust/preservation-services/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,5 +39,5 @@ func eventKey(event *registry.PremisEvent) string {
 	if event.EventType == constants.EventIdentifierAssignment || event.EventType == constants.EventReplication {
 		suffix = event.OutcomeInformation
 	}
-	return fmt.Sprintf("%s / %s", event.EventType, suffix)
+	return fmt.Sprintf("%s / %s", util.ConvertEventTypeToString(event.EventType), suffix)
 }

@@ -60,7 +60,7 @@ func verifyFileDeletion(gf *registry.GenericFile) {
 func verifyObjectDeletionEvent(obj *registry.IntellectualObject) {
 	params := url.Values{}
 	params.Add("intellectual_object_id", strconv.FormatInt(obj.ID, 10))
-	params.Add("event_type", constants.EventDeletion)
+	params.Add("event_type", strconv.FormatInt(constants.EventDeletion, 10))
 	params.Add("generic_file_id__is_null", "true")
 	params.Add("sort", "date_time__desc")
 	params.Add("page", "1")
@@ -75,14 +75,12 @@ func verifyObjectDeletionEvent(obj *registry.IntellectualObject) {
 	assert.Equal(ctx.T, obj.ID, deletionEvent.IntellectualObjectID)
 	assert.Equal(ctx.T, "Object deleted at the request of admin@test.edu. Institutional approver: admin@test.edu.", deletionEvent.OutcomeInformation)
 	assert.NotEmpty(ctx.T, deletionEvent.DateTime)
-	assert.NotEmpty(ctx.T, deletionEvent.CreatedAt)
-	assert.NotEmpty(ctx.T, deletionEvent.UpdatedAt)
 	assert.Empty(ctx.T, deletionEvent.GenericFileID)
 }
 
 func verifyFileDeletionEvent(gf *registry.GenericFile) {
 	params := url.Values{}
-	params.Add("event_type", constants.EventDeletion)
+	params.Add("event_type", strconv.FormatInt(constants.EventDeletion, 10))
 	params.Add("generic_file_id", strconv.FormatInt(gf.ID, 10))
 	params.Add("sort", "date_time__desc")
 	params.Add("page", "1")
@@ -97,8 +95,6 @@ func verifyFileDeletionEvent(gf *registry.GenericFile) {
 	assert.Equal(ctx.T, gf.IntellectualObjectID, deletionEvent.IntellectualObjectID)
 	assert.Equal(ctx.T, "File deleted at the request of admin@test.edu. Institutional approver: admin@test.edu. This event confirms all preservation copies have been deleted.", deletionEvent.OutcomeInformation)
 	assert.NotEmpty(ctx.T, deletionEvent.DateTime)
-	assert.NotEmpty(ctx.T, deletionEvent.CreatedAt)
-	assert.NotEmpty(ctx.T, deletionEvent.UpdatedAt)
 	assert.Equal(ctx.T, gf.ID, deletionEvent.GenericFileID)
 }
 
