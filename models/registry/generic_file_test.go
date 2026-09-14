@@ -36,12 +36,7 @@ var genericFile = &registry.GenericFile{
 	LastFixityCheck:      testutil.Bloomsday,
 	PremisEvents: []*registry.PremisEvent{
 		{
-<<<<<<< HEAD
 			Agent:                        constants.EventAgentTestAlt,
-			CreatedAt:                    testutil.Bloomsday,
-=======
-			Agent:                        "Maxwell Smart",
->>>>>>> qadb
 			DateTime:                     testutil.Bloomsday,
 			Detail:                       "detail?",
 			EventType:                    2,
