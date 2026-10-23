@@ -55,12 +55,19 @@ func (copier *ObjectTransferCopier) Run() (int, []*service.ProcessingError) {
 	}
 	// TODO check on the following call
 	copier.TransferObjectSave()
+
+	// We can save each individual transfer file that is part of this object as a TransferFile in Redis temporarily
+	// Then delete them when we are done with them (cleanup step)
 	return copier.Context.RedisClient.TransferFilesApply(copyFn, options)
 }
 
 func (copier *ObjectTransferCopier) getCopyFunction() service.TransferFileApplyFn {
 	// If Object is locked by another work item - do not run
 	// Add double validation like with deletes
+
+	// Hard coding the source and target options for now
+	copier.TransferObject.TargetStorageOption = constants.StorageGlacierVA
+	copier.TransferObject.SourceStorageOption = constants.StorageStandard
 
 	targetPreservationBuckets := copier.Context.Config.PreservationBucketsFor(copier.TransferObject.TargetStorageOption)
 	sourcePreservationBuckets := copier.Context.Config.PreservationBucketsFor(copier.TransferObject.SourceStorageOption)

@@ -180,6 +180,14 @@ func (c *RedisClient) IngestFileDelete(workItemID int64, fileIdentifier string) 
 	return err
 }
 
+// TransferFileDelete deletes an IngestFile from Redis.
+func (c *RedisClient) TransferFileDelete(workItemID int64, fileIdentifier string) error {
+	key := strconv.FormatInt(workItemID, 10)
+	field := fmt.Sprintf("file:%s", fileIdentifier)
+	_, err := c.client.HDel(key, field).Result()
+	return err
+}
+
 // WorkItemDelete deletes the Redis copy (NOT the Registry copy) of a WorkItem,
 // along with its associated IngestObject and IngestFile records. Call
 // this only when ingest is complete and no further workers will need to
