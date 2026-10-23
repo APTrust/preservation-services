@@ -13,6 +13,10 @@ type Checksum struct {
 	// See constants.DigestAlgorithms.
 	Algorithm string `json:"algorithm"`
 
+	// CreatedAt is a legacy timestamp from the old Rails app.
+	// Ignore this and use DateTime instead.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+
 	// Digest is the checksum digest.
 	Digest string `json:"digest"`
 
@@ -41,10 +45,6 @@ type Checksum struct {
 	// the Registry's ChecksumView object. No need to fill this on
 	// POST or PUT requests. Registry will ignore it.
 	InstitutionID int64 `json:"institution_id"`
-
-	// CreatedAt is a legacy timestamp from the old Rails app.
-	// Ignore this and use DateTime instead.
-	CreatedAt time.Time `json:"created_at,omitempty"`
 }
 
 func ChecksumFromJSON(jsonData []byte) (*Checksum, error) {
