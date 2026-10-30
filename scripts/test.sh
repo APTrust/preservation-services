@@ -101,6 +101,13 @@ setup_env() {
   fi
   export APT_CONFIG_DIR="$PROJECT_ROOT"
   export APT_ENV=test
+  # Ensure docker-compose-local bind mounts are written as the invoking user.
+  # Otherwise, files created by the services will be owned by root and the
+  # invoking user won't be able to delete them.
+  export LOCAL_UID
+  LOCAL_UID="$(id -u)"
+  export LOCAL_GID
+  LOCAL_GID="$(id -g)"
   if [[ "$TEST_NAME" == "e2e" ]]; then
     export APT_E2E=true
   fi
@@ -228,6 +235,12 @@ stop_all_services() {
   SERVICES_STOPPED=true
 }
 
+# Start each test run with a clean Compose state.
+# NSQ topic/message depth persistence can cause e2e wait checks to pass early.
+reset_local_compose() {
+  (cd "$PROJECT_ROOT" && docker-compose -f docker-compose-local.yml down -v --remove-orphans) || true
+}
+
 # Starts all ingest worker services. Pass any extra service names as arguments.
 start_ingest_services() {
   local -a names=(
@@ -342,6 +355,7 @@ init_for_integration() {
   make_test_dirs
   registry_start
   sleep 8
+  reset_local_compose
   (cd "$PROJECT_ROOT" && docker-compose -f docker-compose-local.yml up -d)
   sleep 5
   create_nsq_topics
@@ -370,6 +384,7 @@ run_unit_tests() {
   local arg="${1:-}"
   clean_test_cache
   make_test_dirs
+  reset_local_compose
   (cd "$PROJECT_ROOT" && docker-compose -f docker-compose-local.yml up -d)
   run_go_unit_tests "$arg"
   # EXIT trap will stop all services
