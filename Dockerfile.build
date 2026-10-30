@@ -112,6 +112,8 @@ ENV LOG_DIR="~/tmp/logs"
 
 WORKDIR /app
 
+RUN apk upgrade --no-cache ca-certificates-bundle ca-certificates
+
 #VOLUME ["/app/tmp"]
 
 # Note: Using main as app name because CMD doesn't support env expansion and
