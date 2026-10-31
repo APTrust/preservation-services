@@ -78,6 +78,7 @@ func (copier *ObjectTransferCopier) Run() (int, []*service.ProcessingError) {
 			}
 			transferFile := service.NewTransferFile(copier.TransferObject.ObjectIdentifier, pathInBag)
 			transferFile.UUID = gf.UUID
+			transferFile.Size = gf.Size
 			copier.TransferFileSave(transferFile)
 		}
 		if len(files) == 0 {
