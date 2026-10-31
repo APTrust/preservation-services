@@ -15,7 +15,6 @@ const (
 	ActionMove                 = "Move"
 	ActionRestoreFile          = "Restore File"
 	ActionRestoreObject        = "Restore Object"
-	ActionTransferObject       = "Move"
 	AlgMd5                     = "md5"
 	AlgSha1                    = "sha1"
 	AlgSha256                  = "sha256"
