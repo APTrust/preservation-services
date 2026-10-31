@@ -96,6 +96,46 @@ func GetRestorationObject(context *common.Context, workItem *registry.WorkItem, 
 	}, nil
 }
 
+func GetTransferObject(context *common.Context, workItem *registry.WorkItem, restorationSource string) (*service.TransferObject, error) {
+	resp := context.RegistryClient.IntellectualObjectByIdentifier(workItem.ObjectIdentifier)
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	intelObj := resp.IntellectualObject()
+	if intelObj == nil {
+		return nil, fmt.Errorf("Registry returned nil for IntellectualObject %s", workItem.ObjectIdentifier)
+	}
+	resp = context.RegistryClient.InstitutionByIdentifier(intelObj.InstitutionIdentifier)
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	institution := resp.Institution()
+	if institution == nil {
+		return nil, fmt.Errorf("Registry returned nil for Institution %s", intelObj.InstitutionIdentifier)
+	}
+
+	objectSize := intelObj.Size
+	// restorationType := constants.RestorationTypeObject
+	identifier := workItem.ObjectIdentifier
+	itemID := workItem.IntellectualObjectID
+	if workItem.GenericFileIdentifier != "" {
+		// restorationType = constants.RestorationTypeFile
+		identifier = workItem.GenericFileIdentifier
+		itemID = workItem.GenericFileID
+		fileSize, err := GetFileSize(context, identifier)
+		if err != nil {
+			return nil, err
+		}
+		objectSize = fileSize
+	}
+
+	return &service.TransferObject{
+		ObjectIdentifier: identifier,
+		ID:               itemID,
+		Size:             objectSize,
+	}, nil
+}
+
 // GetFileSize returns the size of the GenericFile with the specified identifier.
 func GetFileSize(context *common.Context, gfIdentifier string) (int64, error) {
 	resp := context.RegistryClient.GenericFileByIdentifier(gfIdentifier)

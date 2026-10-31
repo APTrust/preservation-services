@@ -3,11 +3,14 @@ package transfer
 import (
 	ctx "context"
 	"fmt"
+	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/APTrust/preservation-services/constants"
 	"github.com/APTrust/preservation-services/models/common"
+	"github.com/APTrust/preservation-services/models/registry"
 	"github.com/APTrust/preservation-services/models/service"
 	"github.com/APTrust/preservation-services/util"
 	"github.com/minio/minio-go/v7"
@@ -55,6 +58,33 @@ func (copier *ObjectTransferCopier) Run() (int, []*service.ProcessingError) {
 	}
 	// TODO check on the following call
 	copier.TransferObjectSave()
+
+	pageNumber := 1
+	for {
+		files, err := GetBatchOfFiles(copier.Context, copier.TransferObject.ID, pageNumber)
+		if err != nil {
+			copier.Context.Logger.Errorf("Could not get batch of files for transfer of object: %s", copier.TransferObject.ID)
+		}
+		for _, gf := range files {
+			// Get the file.
+			// obj, _, err := copier.getS3Object(gf)
+			// if err != nil {
+			// copier.Context.Logger.Errorf("Could not get file for transfer: %s", gf.Identifier)
+			// }
+			// defer obj.Close()
+			pathInBag, err := gf.PathInBag()
+			if err != nil {
+				copier.Context.Logger.Errorf("Could not get path in bag for file: %s", gf.Identifier)
+			}
+			transferFile := service.NewTransferFile(copier.TransferObject.ObjectIdentifier, pathInBag)
+			transferFile.UUID = gf.UUID
+			copier.TransferFileSave(transferFile)
+		}
+		if len(files) == 0 {
+			break
+		}
+		pageNumber++
+	}
 
 	// We can save each individual transfer file that is part of this object as a TransferFile in Redis temporarily
 	// Then delete them when we are done with them (cleanup step)
@@ -139,7 +169,7 @@ func (copier *ObjectTransferCopier) CopyToTargetPreservationServerSide(transferF
 	// userMeta map[string]string, which can come from ingestFile.GetPutOptions()
 	sourceOpts := minio.CopySrcOptions{
 		Bucket: sourcePreservationBucket.Bucket,
-		Object: copier.S3KeyFor(transferFile),
+		Object: transferFile.UUID, // copier.S3KeyFor(transferFile),
 	}
 	destOpts := minio.CopyDestOptions{
 		Bucket: targetPreservationBucket.Bucket,
@@ -252,4 +282,54 @@ func (copier *ObjectTransferCopier) getS3Client(providerOrBucket string) (*minio
 		return nil, fmt.Errorf("Cannot find S3 client for provider or bucket %s", providerOrBucket)
 	}
 	return client, nil
+}
+
+// getS3Object returns a *minio.Object and digest map for the specified
+// GenericFile, so we can stream it to wherever it needs to go.
+func (copier *ObjectTransferCopier) getS3Object(gf *registry.GenericFile) (obj *minio.Object, digests map[string]string, err error) {
+	digests = make(map[string]string)
+	b, _, err := BestSource(copier.Context, gf)
+	if err != nil {
+		return nil, digests, err
+	}
+	copier.Context.Logger.Infof("Getting %s from %s with UUID %s", gf.Identifier, b.Bucket, gf.UUID)
+	client := copier.Context.S3Clients[b.Bucket]
+	obj, err = client.GetObject(ctx.Background(), b.Bucket, gf.UUID, minio.GetObjectOptions{})
+	return obj, digests, err
+}
+
+// BestSource returns the best preservation bucket from which
+// to obtain a file. We generally want to source from S3 over Glacier,
+// and US East over other regions. We only need to figure this out once,
+// since all of an object's files will be stored in the same preservation
+// bucket or buckets.
+func BestSource(context *common.Context, gf *registry.GenericFile) (bestSource *common.PreservationBucket, storageRecord *registry.StorageRecord, err error) {
+	priority := 10000
+	for _, sr := range gf.StorageRecords {
+		for _, preservationBucket := range context.Config.PreservationBuckets {
+			if preservationBucket.HostsURL(sr.URL) && preservationBucket.RestorePriority < priority {
+				bestSource = preservationBucket
+				storageRecord = sr
+				priority = preservationBucket.RestorePriority
+			}
+		}
+	}
+	if priority == 10000 {
+		err = fmt.Errorf("Could not find any suitable source for %s. (%d preservation URLS, %d PreservationBuckets)", gf.Identifier, len(gf.StorageRecords), len(context.Config.PreservationBuckets))
+	} else {
+		context.Logger.Infof("Most accessible source for %s is %s", gf.Identifier, bestSource.Bucket)
+	}
+	return bestSource, storageRecord, err
+}
+
+// GetBatchOfFiles returns a batch of GenericFile records from Registry.
+func GetBatchOfFiles(context *common.Context, objectID int64, pageNumber int) (genericFiles []*registry.GenericFile, err error) {
+	params := url.Values{}
+	params.Set("intellectual_object_id", strconv.FormatInt(objectID, 10))
+	params.Set("page", strconv.Itoa(pageNumber))
+	params.Set("per_page", strconv.Itoa(100))
+	params.Set("sort", "identifier")
+	params.Set("state", "A")
+	resp := context.RegistryClient.GenericFileList(params)
+	return resp.GenericFiles(), resp.Error
 }

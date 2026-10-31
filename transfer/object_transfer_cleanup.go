@@ -37,6 +37,8 @@ func (c *ObjectTransferCleanup) Run() (fileCount int, errors []*service.Processi
 	ready := false
 	if ready {
 		fileCount, errors = c.deleteFilesFromSourceIfReady()
+
+		// Save IntellectualObject metadata - StorageOption is now TargetStorageOption
 	}
 	if len(errors) == 0 {
 		c.Context.Logger.Infof("Deleting WorkItem %d from Redis", c.WorkItemID)

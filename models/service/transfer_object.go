@@ -74,6 +74,8 @@ type TransferObject struct {
 	// E.g. "manifest-md5.txt", "manifest-256.txt"
 	Manifests []string `json:"manifests"`
 
+	ObjectIdentifier string
+
 	// ParsableTagFiles contains a list of the relative paths of all tag
 	// files within the bag that appear to be parsable bagit tag files.
 	// E.g. "bagit.txt", "bag-info.txt", etc.

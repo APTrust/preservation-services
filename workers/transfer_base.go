@@ -210,7 +210,18 @@ func (b *TransferBase) ProcessFatalErrorChannel() {
 // GetTaskObject returns an object representing the task to be implemented.
 // This object will be passed from channel to channel during processing.
 func (b *TransferBase) GetTaskObject(message *nsq.Message, workItem *registry.WorkItem, workResult *service.WorkResult) (*Task, error) {
-	transferObject, err := b.TransferObjectGet(workItem)
+	// transferObject, err := b.TransferObjectGet(workItem)
+	// if err != nil {
+	// message := fmt.Sprintf("WorkItem %d: %v", workItem.ID, err)
+	// b.Context.Logger.Error(message)
+	// workItem.Note = message
+	// b.SaveWorkItem(workItem)
+	// workResult.Attempt++
+	// b.SaveWorkResult(workItem.ID, workResult)
+	// return nil, err
+	// }
+
+	transferObj, err := GetTransferObject(b.Context, workItem, constants.RestorationSourceS3)
 	if err != nil {
 		message := fmt.Sprintf("WorkItem %d: %v", workItem.ID, err)
 		b.Context.Logger.Error(message)
@@ -228,7 +239,7 @@ func (b *TransferBase) GetTaskObject(message *nsq.Message, workItem *registry.Wo
 		WorkResult:        workResult,
 		WorkItem:          workItem,
 		Processor:         nil,
-		TransferProcessor: b.transferProcessorConstructor(b.Context, workItem.ID, transferObject),
+		TransferProcessor: b.transferProcessorConstructor(b.Context, workItem.ID, transferObj),
 	}
 	return task, nil
 }
