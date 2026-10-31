@@ -16,11 +16,10 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-// Based on ingest_preservation_uploader
-
+// Based on ingest_preservation_uploader and bag_restorer.
 // TODO: Use the StorageRecord in models/services
 
-// ObjectTransferCopier copies files from one bucket to another.
+// ObjectTransferCopier copies files from one bucket to another by admin request.
 type ObjectTransferCopier struct {
 	Base
 }
@@ -59,6 +58,7 @@ func (copier *ObjectTransferCopier) Run() (int, []*service.ProcessingError) {
 	// TODO check on the following call
 	copier.TransferObjectSave()
 
+	// First things first. We need to save a temporary record of each file in this object - in Redis.
 	pageNumber := 1
 	for {
 		files, err := GetBatchOfFiles(copier.Context, copier.TransferObject.ID, pageNumber)
@@ -79,6 +79,8 @@ func (copier *ObjectTransferCopier) Run() (int, []*service.ProcessingError) {
 			transferFile := service.NewTransferFile(copier.TransferObject.ObjectIdentifier, pathInBag)
 			transferFile.UUID = gf.UUID
 			transferFile.Size = gf.Size
+			// Save checksums for fixity check after the transfer
+			// Save to Redis.
 			copier.TransferFileSave(transferFile)
 		}
 		if len(files) == 0 {
@@ -86,17 +88,17 @@ func (copier *ObjectTransferCopier) Run() (int, []*service.ProcessingError) {
 		}
 		pageNumber++
 	}
+	// We will delete these temporary records from Redis when we're done transferring
 
-	// We can save each individual transfer file that is part of this object as a TransferFile in Redis temporarily
-	// Then delete them when we are done with them (cleanup step)
 	return copier.Context.RedisClient.TransferFilesApply(copyFn, options)
 }
 
+// This is the file copier. Run() runs it on each file in this object.
 func (copier *ObjectTransferCopier) getCopyFunction() service.TransferFileApplyFn {
 	// If Object is locked by another work item - do not run
-	// Add double validation like with deletes
+	// Add double validation like with deletes.
 
-	// Hard coding the source and target options for now
+	// Hard coding the source and target options for now.
 	copier.TransferObject.TargetStorageOption = constants.StorageGlacierVA
 	copier.TransferObject.SourceStorageOption = constants.StorageStandard
 
@@ -105,6 +107,8 @@ func (copier *ObjectTransferCopier) getCopyFunction() service.TransferFileApplyF
 
 	return func(transferFile *service.TransferFile) (errors []*service.ProcessingError) {
 		for _, preservationBucket := range targetPreservationBuckets {
+
+			// Should always try to save here - will check back
 			if !transferFile.NeedsSaveAt(preservationBucket.Provider, preservationBucket.Bucket) {
 				reason := "file has already been uploaded or copied over in transfer"
 				if !transferFile.HasPreservableName() {
@@ -122,9 +126,8 @@ func (copier *ObjectTransferCopier) getCopyFunction() service.TransferFileApplyF
 			// User S3 server-side copying only in US East 1, where our
 			// receiving buckets are. Cross-region server-side copying
 			// is too slow. https://trello.com/c/52YwknCr
-
 			// TODO: Since we could be copying from anywhere with the transfer case,
-			// we may only use this when the source and target buckets are in the same region
+			// we may only use this when the source and target buckets are in the same region, not just east 1
 			if preservationBucket.Provider == constants.StorageProviderAWS && preservationBucket.Region == constants.RegionAWSUSEast1 {
 				processingError = copier.CopyToTargetPreservationServerSide(transferFile, sourcePreservationBuckets[0], preservationBucket)
 			} else {
@@ -170,19 +173,19 @@ func (copier *ObjectTransferCopier) CopyToTargetPreservationServerSide(transferF
 	// userMeta map[string]string, which can come from ingestFile.GetPutOptions()
 	sourceOpts := minio.CopySrcOptions{
 		Bucket: sourcePreservationBucket.Bucket,
-		Object: transferFile.UUID, // copier.S3KeyFor(transferFile),
+		Object: transferFile.UUID, // source file uses existing UUID key so we don't need copier.S3KeyFor(transferFile),
 	}
 	destOpts := minio.CopyDestOptions{
 		Bucket: targetPreservationBucket.Bucket,
-		Object: transferFile.UUID,
+		Object: transferFile.UUID, // keep the same UUID even though we're transferring to a different bucket, it's just easier!
 	}
 
 	// CopyObject handles objects only up to 5GB.
 	if transferFile.Size <= constants.MaxServerSideCopySize {
-		copier.Context.Logger.Infof("Copying during transfer %s from %s to %s as %s using CopyObject()", transferFile.Identifier(), copier.Context.Config.StagingBucket, targetPreservationBucket.Bucket, transferFile.UUID)
+		copier.Context.Logger.Infof("Copying during transfer %s from %s to %s as %s using CopyObject()", transferFile.Identifier(), sourcePreservationBucket.Bucket, targetPreservationBucket.Bucket, transferFile.UUID)
 		_, err = client.CopyObject(ctx.Background(), destOpts, sourceOpts)
 	} else {
-		copier.Context.Logger.Infof("Copying during transfer %s from %s to %s as %s using ComposeObject()", transferFile.Identifier(), copier.Context.Config.StagingBucket, targetPreservationBucket.Bucket, transferFile.UUID)
+		copier.Context.Logger.Infof("Copying during transfer %s from %s to %s as %s using ComposeObject()", transferFile.Identifier(), sourcePreservationBucket.Bucket, targetPreservationBucket.Bucket, transferFile.UUID)
 		// ComposeObject handles items up to 5TB in a multipart server-to-server put.
 		_, err = client.ComposeObject(ctx.Background(), destOpts, sourceOpts)
 	}
@@ -195,7 +198,7 @@ func (copier *ObjectTransferCopier) CopyToTargetPreservationServerSide(transferF
 }
 
 // CopyToPreservation copies an object from AWS staging to an
-// external S3 provider, like Wasabi.
+// external S3 provider.
 //
 // When copying from AWS staging to an external provider, we need two
 // Minio clients: one that has credentials to connect to the source,
@@ -258,6 +261,7 @@ func (copier *ObjectTransferCopier) CopyToTargetPreservation(transferFile *servi
 
 	copier.Context.Logger.Infof("Copying via transfer %s (%s) from %s to %s using PutObject()", transferFile.Identifier(), transferFile.UUID, sourcePreservationBucket.Bucket, targetPreservationBucket.Bucket)
 
+	// Send it!
 	uploadInfo, err := destClient.PutObject(
 		ctx.Background(),
 		targetPreservationBucket.Bucket,
@@ -277,6 +281,7 @@ func (copier *ObjectTransferCopier) CopyToTargetPreservation(transferFile *servi
 	return nil
 }
 
+// getS3Client for this provider or bucket
 func (copier *ObjectTransferCopier) getS3Client(providerOrBucket string) (*minio.Client, error) {
 	client := copier.Context.S3Clients[providerOrBucket]
 	if client == nil {
@@ -287,17 +292,17 @@ func (copier *ObjectTransferCopier) getS3Client(providerOrBucket string) (*minio
 
 // getS3Object returns a *minio.Object and digest map for the specified
 // GenericFile, so we can stream it to wherever it needs to go.
-func (copier *ObjectTransferCopier) getS3Object(gf *registry.GenericFile) (obj *minio.Object, digests map[string]string, err error) {
-	digests = make(map[string]string)
-	b, _, err := BestSource(copier.Context, gf)
-	if err != nil {
-		return nil, digests, err
-	}
-	copier.Context.Logger.Infof("Getting %s from %s with UUID %s", gf.Identifier, b.Bucket, gf.UUID)
-	client := copier.Context.S3Clients[b.Bucket]
-	obj, err = client.GetObject(ctx.Background(), b.Bucket, gf.UUID, minio.GetObjectOptions{})
-	return obj, digests, err
-}
+// func (copier *ObjectTransferCopier) getS3Object(gf *registry.GenericFile) (obj *minio.Object, digests map[string]string, err error) {
+// digests = make(map[string]string)
+// b, _, err := BestSource(copier.Context, gf)
+// if err != nil {
+// return nil, digests, err
+// }
+// copier.Context.Logger.Infof("Getting %s from %s with UUID %s", gf.Identifier, b.Bucket, gf.UUID)
+// client := copier.Context.S3Clients[b.Bucket]
+// obj, err = client.GetObject(ctx.Background(), b.Bucket, gf.UUID, minio.GetObjectOptions{})
+// return obj, digests, err
+// }
 
 // BestSource returns the best preservation bucket from which
 // to obtain a file. We generally want to source from S3 over Glacier,
@@ -324,6 +329,8 @@ func BestSource(context *common.Context, gf *registry.GenericFile) (bestSource *
 }
 
 // GetBatchOfFiles returns a batch of GenericFile records from Registry.
+// This allows us to retrieve our records for every file of the existing object so we can copy them to their new destination.
+// Check if StorageOption is in DB at Object or File level
 func GetBatchOfFiles(context *common.Context, objectID int64, pageNumber int) (genericFiles []*registry.GenericFile, err error) {
 	params := url.Values{}
 	params.Set("intellectual_object_id", strconv.FormatInt(objectID, 10))
